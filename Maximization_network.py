@@ -63,12 +63,13 @@ def Mix_loss():
         loss2 = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(y_true, y_pred)
         return loss2 + loss1/100
     return mixloss
-def create_model(input_shape, k):
+def create_MLP_model(input_shape, k):
     inputs = Input(shape=input_shape)
     x = perception_model(inputs, k, 5)
-    x = Softmax()(x)
     model = Model(inputs, x, name="max_nn")
     return model
+def create_MLP_model_with_transform(input_shape, k):
+    pass
 def perception_model(x, output, layer, logit=True):
     for i in range(layer-1):
         x = Dense(100)(x)
@@ -78,8 +79,10 @@ def perception_model(x, output, layer, logit=True):
         return x
     else:
         return Softmax(x)
-def quantizing_network():
-    pass
+def ranking_transform(x):
+    transform = tf.constant(0,shape=(x.shape[0], x.shape[1], x.shape[2]))
+    print(transform.shape)
+
 def test_model():
     model = tf.keras.models.load_model("models/three_layer_MLP_1800_epoch.h5")
     test_throughput = ExpectedThroughput(name="test_throughput")
@@ -104,7 +107,7 @@ if __name__ == "__main__":
     k = 10
     EPOCHS = 500
     tf.random.set_seed(80)
-    model = create_model((k,), k)
+    model = create_MLP_model((k,), k)
     # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     # loss_object = tf.keras.losses.Hinge()
     loss_object = ThroughoutLoss()
@@ -113,7 +116,7 @@ if __name__ == "__main__":
     train_throughput = ExpectedThroughput(name='train_throughput')
     test_loss = tf.keras.metrics.Mean(name='test_loss')
     test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='test_accuracy')
-    train_ds = gen_data(10000, k, 0, 1).shuffle(buffer_size=1000)
+    train_ds = gen_data(N, k, 0, 1).shuffle(buffer_size=1000)
     test_ds = gen_data(100, k, 0, 1)
     # cycle = {0:(0,1), 1:(0,2), 2:(2,3), 3:(4,5), 4:(6,7), 5:(1,3)}
 
