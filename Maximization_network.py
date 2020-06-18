@@ -78,6 +78,6 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-    fname_template = "./trained_models/N_{}_5_Layer_MLP_min_throughput_preprocess{}"
+    fname_template = "./trained_models/N_{}_5_Layer_MLP_preprocess_min_throughput{}"
     np.save(fname_template.format(N, ".npy"), graphing_data)
     model.save(fname_template.format(N, ".h5"))
