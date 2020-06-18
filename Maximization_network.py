@@ -32,13 +32,14 @@ if __name__ == "__main__":
     # A[2]
     N = 10000
     k = 10
-    EPOCHS = 500
+    EPOCHS = 100
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # es = tf.keras.callbacks.EarlyStopping(monitor="train_loss", mode="min", patience="30")
     # model = create_MLP_model_with_transform((k,k), k)
     # model = tf.keras.models.load_model("trained_models/N_10000_5_Layer_MLP_regression.h5")
-    model = create_LSTM_model_backwards(k, [k, 1])
+    # model = create_LSTM_model(k, [k, 1])
+    model = create_encoding_model(k, 4, (k,))
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     # loss_object = tf.keras.losses.Hinge()
     # loss_object = Throughput()
