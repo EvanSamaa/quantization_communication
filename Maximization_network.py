@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # es = tf.keras.callbacks.EarlyStopping(monitor="train_loss", mode="min", patience="30")
     # model = create_MLP_model_with_transform((k,k), k)
     # model = tf.keras.models.load_model("trained_models/N_10000_5_Layer_MLP_regression.h5")
-    model = create_LSTM_model(k, [k, 1])
+    model = create_LSTM_model_backwards(k, [k, 1])
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     # loss_object = tf.keras.losses.Hinge()
     # loss_object = Throughput()
@@ -78,6 +78,6 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-    fname_template = "./trained_models/N_{}_LSTM_CEloss{}"
+    fname_template = "./trained_models/N_{}_LSTM_backwards_CEloss{}"
     np.save(fname_template.format(N, ".npy"), graphing_data)
     model.save(fname_template.format(N, ".h5"))

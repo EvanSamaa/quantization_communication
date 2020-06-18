@@ -50,7 +50,7 @@ def create_LSTM_model(k, input_shape=[]):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
-def create_LSTM_model(k, input_shape=[]):
+def create_LSTM_model_backwards(k, input_shape=[]):
     inputs = Input(shape=input_shape)
     print(inputs.shape)
     x = tf.keras.layers.LSTM(30, go_backwards=True)(inputs)
