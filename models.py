@@ -40,6 +40,29 @@ def create_regression_MLP_netowkr(input_shape, k):
     x = tf.squeeze(x)
     model = Model(inputs, x, name="max_nn_with_regression")
     return model
+def create_LSTM_model(k, input_shape=[]):
+    inputs = Input(shape=input_shape)
+    print(inputs.shape)
+    x = tf.keras.layers.LSTM(30)(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(20)(x)
+    x = LeakyReLU()(x)
+    x = Dense(10)(x)
+    model = Model(inputs, x, name="max_rnn")
+    return model
+def create_LSTM_model(k, input_shape=[]):
+    inputs = Input(shape=input_shape)
+    print(inputs.shape)
+    x = tf.keras.layers.LSTM(30, go_backwards=True)(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(20)(x)
+    x = LeakyReLU()(x)
+    x = Dense(10)(x)
+    model = Model(inputs, x, name="max_rnn")
+    return model
+
+
+
 def perception_model(x, output, layer, logit=True):
     for i in range(layer-1):
         x = Dense(50)(x)
