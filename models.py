@@ -33,10 +33,13 @@ def create_uniformed_quantization_model(input_shape, k):
     x = tf.round(inputs * 1000)/1000
     x = perception_model(x, k, 5)
     model = Model(inputs, x, name="max_nn_with_rounding")
+    return model
 def create_regression_MLP_netowkr(input_shape, k):
     inputs = Input(shape=input_shape)
     x = perception_model(inputs, 1, 5)
+    x = tf.squeeze(x)
     model = Model(inputs, x, name="max_nn_with_regression")
+    return model
 def perception_model(x, output, layer, logit=True):
     for i in range(layer-1):
         x = Dense(50)(x)
