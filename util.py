@@ -32,6 +32,41 @@ class ExpectedThroughput(tf.keras.metrics.Metric):
         self.count.assign_add(y_true.shape[0])
     def result(self):
         return self.max_throughput/self.count, self.expected_throughput/self.count
+
+class Regression_ExpectedThroughput(tf.keras.metrics.Metric):
+    def __init__(self, name='expected_throughput', **kwargs):
+        super(Regression_ExpectedThroughput, self).__init__(name=name, **kwargs)
+        self.max_throughput = self.add_weight(name='tp', initializer='zeros')
+        self.expected_throughput = self.add_weight(name='tp2', initializer='zeros')
+        self.count = self.add_weight(name='tp3', initializer='zeros')
+        self.a = tf.math.log(tf.cast(2, dtype=tf.float32))
+    def update_state(self, y_true, y_pred, x):
+        c_max = tf.gather(x, y_true, axis=1, batch_dims=1)
+        i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
+        y_pred_rounded = tf.cast(tf.math.round(y_pred), tf.int32)
+        y_pred_rounded = tf.where(y_pred_rounded >= x.shape[1], x.shape[1]-1, y_pred_rounded)
+        y_pred_rounded = tf.where(y_pred_rounded < 0, 0, y_pred_rounded)
+        c_pred = tf.gather(x, y_pred_rounded, axis=1, batch_dims=1)
+        i_pred = tf.math.log(1 - 1.5 * tf.math.log(1 - c_pred)) / self.a
+        self.max_throughput.assign_add(tf.math.reduce_sum(i_max, axis=0))
+        self.expected_throughput.assign_add(tf.math.reduce_sum(i_pred, axis=0))
+        self.count.assign_add(y_true.shape[0])
+    def result(self):
+        return self.max_throughput/self.count, self.expected_throughput/self.count
+class Regression_Accuracy(tf.keras.metrics.Metric):
+    def __init__(self, name='expected_throughput', **kwargs):
+        super(Regression_Accuracy, self).__init__(name=name, **kwargs)
+        self.correct = self.add_weight(name='tp', initializer='zeros')
+        self.count = self.add_weight(name='tp2', initializer='zeros')
+    def update_state(self, y_true, y_pred):
+        y_rounded_pred = tf.cast(tf.math.round(y_pred), tf.int64)
+        diff = y_true - y_rounded_pred
+        count = tf.cast(tf.reduce_sum(tf.where(diff == 0, 1, 0)), tf.float32)
+        # i_pred = tf.reshape((tf.math.log(1 - 1.5*tf.math.log(1 - c_pred))/self.a), (i_max.shape[0], ))
+        self.correct.assign_add(count)
+        self.count.assign_add(y_true.shape[0])
+    def result(self):
+        return self.correct/self.count
 # ============================  Loss fn  ============================
 
 def Throughout_diff_Loss():

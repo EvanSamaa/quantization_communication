@@ -9,8 +9,8 @@ from util import *
 from models import *
 def train_step(features, labels):
     with tf.GradientTape() as tape:
-        predictions = model(features)
-        # predictions = model(ranking_transform(features))
+        # predictions = model(features)
+        predictions = model(ranking_transform(features))
         loss = loss_object(predictions, features)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -20,50 +20,34 @@ def train_step(features, labels):
 def test_step(features, labels):
     # training=False is only needed if there are layers with different
     # behavior during training versus inference (e.g. Dropout).
-    predictions = model(features)
-    # predictions = model(ranking_transform(features))
+    # predictions = model(features)
+    predictions = model(ranking_transform(features))
     t_loss = loss_object(predictions, features)
     test_loss(t_loss)
     test_accuracy(labels, predictions)
     test_throughput(labels, predictions, features)
 
-def test_model():
-    model = tf.keras.models.load_model("models/three_layer_MLP_1800_epoch.h5")
-    test_throughput = ExpectedThroughput(name="test_throughput")
-    expected_throughput = 0
-    max_throughput = 0
-
-    for i in range(0, 100):
-        test_throughput.reset_states()
-        test_ds = gen_data(100, 10, 0, 1)
-        for features, labels in test_ds:
-            prediction = model.predict(features)
-            test_throughput(labels, prediction, features)
-        expected_throughput = expected_throughput + test_throughput.result()[1]
-        max_throughput = max_throughput + test_throughput.result()[0]
-    print(expected_throughput/10000)
-    print(max_throughput/10000)
-    print(max_throughput/10000 - expected_throughput/10000)
 if __name__ == "__main__":
     # test_model()
     # A[2]
     N = 10000
     k = 10
-    EPOCHS = 500
+    EPOCHS = 50
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
-    es = tf.keras.callbacks.EarlyStopping(monitor="train_loss", mode="min", patience="30")
-    model = create_MLP_model((k,), k)
+    # es = tf.keras.callbacks.EarlyStopping(monitor="train_loss", mode="min", patience="30")
+    model = create_MLP_model_with_transform((k,k), k)
+    # model = tf.keras.models.load_model("trained_models/N_10000_5_Layer_MLP_regression.h5")
     # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     # loss_object = tf.keras.losses.Hinge()
     loss_object = Throughput()
     optimizer = tf.keras.optimizers.Adam()
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_throughput = ExpectedThroughput(name='train_throughput')
-    train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
+    train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
     test_loss = tf.keras.metrics.Mean(name='test_loss')
-    test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='test_accuracy')
     test_throughput = ExpectedThroughput(name='test_throughput')
+    test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
     train_ds = gen_data(N, k, 0, 1).shuffle(buffer_size=1000)
     test_ds = gen_data(100, k, 0, 1)
     # cycle = {0:(0,1), 1:(0,2), 2:(2,3), 3:(4,5), 4:(6,7), 5:(1,3)}
@@ -94,6 +78,6 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-    fname_template = "./trained_models/N_{}_5_Layer_MLP_min_throughput{}"
+    fname_template = "./trained_models/N_{}_5_Layer_MLP_preprocess_min_throughput{}"
     np.save(fname_template.format(N, ".npy"), graphing_data)
     model.save(fname_template.format(N, ".h5"))
