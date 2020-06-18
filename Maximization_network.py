@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 from util import *
-
+from models import *
 def train_step(features, labels):
     with tf.GradientTape() as tape:
         predictions = model(features)
