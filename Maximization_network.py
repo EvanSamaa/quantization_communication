@@ -27,39 +27,6 @@ def test_step(features, labels):
     test_accuracy(labels, predictions)
     test_throughput(labels, predictions, features)
 
-def create_MLP_model(input_shape, k):
-    inputs = Input(shape=input_shape)
-    x = perception_model(inputs, k, 5)
-    model = Model(inputs, x, name="max_nn")
-    return model
-def create_MLP_model_with_transform(input_shape, k):
-    inputs = Input(shape=input_shape)
-    x = Flatten()(inputs)
-    x = perception_model(x, k, 5)
-    model = Model(inputs, x, name="max_nn")
-    return model
-def create_uniformed_quantization_model(input_shape, k):
-    inputs = Input(shape=input_shape)
-    x = tf.round(inputs * 1000)/1000
-    x = perception_model(x, k, 5)
-    model = Model(inputs, x, name="max_nn_with_rounding")
-def perception_model(x, output, layer, logit=True):
-    for i in range(layer-1):
-        x = Dense(50)(x)
-        x = LeakyReLU()(x)
-    x = Dense(output)(x)
-    if logit:
-        return x
-    else:
-        return Softmax(x)
-def ranking_transform(x):
-    out = np.zeros((x.shape[0], x.shape[1], x.shape[1]))
-    for k in range(x.shape[0]):
-        for i in range(0, x.shape[1]):
-            for j in range(0, x.shape[1]):
-                if x[k, i] >= x[k, j]:
-                    out[k, i, j] = 1
-    return tf.convert_to_tensor(out, dtype=tf.float32)
 def test_model():
     model = tf.keras.models.load_model("models/three_layer_MLP_1800_epoch.h5")
     test_throughput = ExpectedThroughput(name="test_throughput")
