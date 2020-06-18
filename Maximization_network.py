@@ -78,6 +78,6 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-    fname_template = "./trained_models/N_{}_LSTM_backwards_CEloss{}"
+    fname_template = "./trained_models/N_{}auto_encoding_MLP_with_tanh{}"
     np.save(fname_template.format(N, ".npy"), graphing_data)
     model.save(fname_template.format(N, ".h5"))
