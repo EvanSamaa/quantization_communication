@@ -9,9 +9,9 @@ from util import *
 from models import *
 def train_step(features, labels):
     with tf.GradientTape() as tape:
-        # predictions = model(features)
-        predictions = model(ranking_transform(features))
-        loss = loss_object(predictions, features)
+        predictions = model(features)
+        # predictions = model(ranking_transform(features))
+        loss = loss_object(labels, predictions)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -20,9 +20,9 @@ def train_step(features, labels):
 def test_step(features, labels):
     # training=False is only needed if there are layers with different
     # behavior during training versus inference (e.g. Dropout).
-    # predictions = model(features)
-    predictions = model(ranking_transform(features))
-    t_loss = loss_object(predictions, features)
+    predictions = model(features)
+    # predictions = model(ranking_transform(features))
+    t_loss = loss_object(labels, predictions)
     test_loss(t_loss)
     test_accuracy(labels, predictions)
     test_throughput(labels, predictions, features)
@@ -32,15 +32,17 @@ if __name__ == "__main__":
     # A[2]
     N = 10000
     k = 10
-    EPOCHS = 50
+    EPOCHS = 400
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # es = tf.keras.callbacks.EarlyStopping(monitor="train_loss", mode="min", patience="30")
-    model = create_MLP_model_with_transform((k,k), k)
-    # model = tf.keras.models.load_model("trained_models/N_10000_5_Layer_MLP_regression.h5")
-    # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    # model = create_MLP_model_with_transform((k,k), k)
+    model = tf.keras.models.load_model("trained_models/N_10000_auto_encoding_MLP.h5")
+    # model = create_LSTM_model(k, [k, 1])
+    # model = create_encoding_model(k, 4, (k,))
+    loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     # loss_object = tf.keras.losses.Hinge()
-    loss_object = Throughput()
+    # loss_object = Throughput()
     optimizer = tf.keras.optimizers.Adam()
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_throughput = ExpectedThroughput(name='train_throughput')
@@ -50,7 +52,6 @@ if __name__ == "__main__":
     test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
     train_ds = gen_data(N, k, 0, 1).shuffle(buffer_size=1000)
     test_ds = gen_data(100, k, 0, 1)
-    # cycle = {0:(0,1), 1:(0,2), 2:(2,3), 3:(4,5), 4:(6,7), 5:(1,3)}
     for epoch in range(EPOCHS):
         # Reset the metrics at the start of the next epoch
         train_loss.reset_states()
@@ -78,6 +79,6 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-    fname_template = "./trained_models/N_{}_5_Layer_MLP_preprocess_min_throughput{}"
+    fname_template = "./trained_models/N_{}_auto_encoding_MLP_continue{}"
     np.save(fname_template.format(N, ".npy"), graphing_data)
     model.save(fname_template.format(N, ".h5"))
