@@ -78,7 +78,7 @@ def Encoder_module(L):
         x = Dense(20)(x)
         x = LeakyReLU()(x)
         x = Dense(L)(x)
-        x = sigmoid(x) + tf.stop_gradient(tf.math.sign(x) - sigmoid(x))
+        x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
         return x
     return encoder_module
 
