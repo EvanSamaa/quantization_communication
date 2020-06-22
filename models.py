@@ -42,7 +42,6 @@ def create_regression_MLP_netowkr(input_shape, k):
     return model
 def create_LSTM_model(k, input_shape=[]):
     inputs = Input(shape=input_shape)
-    print(inputs.shape)
     x = tf.keras.layers.LSTM(30)(inputs)
     x = LeakyReLU()(x)
     x = Dense(20)(x)
@@ -53,7 +52,7 @@ def create_LSTM_model(k, input_shape=[]):
 
 def create_LSTM_model_backwards(k, input_shape=[]):
     inputs = Input(shape=input_shape)
-    x = tf.keras.layers.LSTM(30, go_backwards=True)(inputs)
+    x = tf.keras.layers.LSTM(10, go_backwards=True)(inputs)
     x = LeakyReLU()(x)
     x = Dense(20)(x)
     x = LeakyReLU()(x)
@@ -71,8 +70,6 @@ def create_encoding_model(k, l, input_shape):
     model = Model(inputs, out, name="auto_encoder_nn")
     return model
 
-
-
 def Encoder_module(L):
     def encoder_module(x):
         x = Dense(20)(x)
@@ -82,6 +79,12 @@ def Encoder_module(L):
         return x
     return encoder_module
 
+def Encoder_module(x):
+    x = Dense(20)(x)
+    x = LeakyReLU()(x)
+    x = Dense(L)(x)
+    x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
+    return x
 
 
 def perception_model(x, output, layer, logit=True):

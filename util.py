@@ -15,24 +15,27 @@ def gen_data(N, k, low=0, high=1, batchsize=30):
 
 # ============================  Metrics  ============================
 class ExpectedThroughput(tf.keras.metrics.Metric):
-    def __init__(self, name='expected_throughput', **kwargs):
+    def __init__(self, name='expected_throughput', logit=True, **kwargs):
         super(ExpectedThroughput, self).__init__(name=name, **kwargs)
         self.max_throughput = self.add_weight(name='tp', initializer='zeros')
         self.expected_throughput = self.add_weight(name='tp2', initializer='zeros')
         self.count = self.add_weight(name='tp3', initializer='zeros')
         self.a = tf.math.log(tf.cast(2, dtype=tf.float32))
+        self.logit = logit
 
     def update_state(self, y_true, y_pred, x):
         c_max = tf.gather(x, y_true, axis=1, batch_dims=1)
         i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
-        weighted_c = tf.math.multiply(Softmax()(y_pred), x)
+        if self.logit:
+            weighted_c = tf.math.multiply(Softmax()(y_pred), x)
+        else:
+            weighted_c = tf.math.multiply(y_pred, x)
         i_expected = tf.math.reduce_sum(tf.math.log(1 - 1.5*tf.math.log(1 - weighted_c))/self.a, axis=1)
         self.max_throughput.assign_add(tf.math.reduce_sum(i_max, axis=0))
         self.expected_throughput.assign_add(tf.math.reduce_sum(i_expected, axis=0))
         self.count.assign_add(y_true.shape[0])
     def result(self):
         return self.max_throughput/self.count, self.expected_throughput/self.count
-
 class Regression_ExpectedThroughput(tf.keras.metrics.Metric):
     def __init__(self, name='expected_throughput', **kwargs):
         super(Regression_ExpectedThroughput, self).__init__(name=name, **kwargs)
@@ -67,6 +70,29 @@ class Regression_Accuracy(tf.keras.metrics.Metric):
         self.count.assign_add(y_true.shape[0])
     def result(self):
         return self.correct/self.count
+
+class TargetThroughput(tf.keras.metrics.Metric):
+    def __init__(self, name='expected_throughput', logit=True, **kwargs):
+        super(TargetThroughput, self).__init__(name=name, **kwargs)
+        self.max_throughput = self.add_weight(name='tp', initializer='zeros')
+        self.expected_throughput = self.add_weight(name='tp2', initializer='zeros')
+        self.count = self.add_weight(name='tp3', initializer='zeros')
+        self.a = tf.math.log(tf.cast(2, dtype=tf.float32))
+        self.logit = logit
+
+    def update_state(self, y_true, y_pred, x):
+        c_max = tf.gather(x, y_true, axis=1, batch_dims=1)
+        i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
+        if self.logit:
+            weighted_c = tf.math.multiply(Softmax()(y_pred), x)
+        else:
+            weighted_c = tf.math.multiply(y_pred, x)
+        i_expected = tf.math.reduce_sum(tf.math.log(1 - 1.5*tf.math.log(1 - weighted_c))/self.a, axis=1)
+        self.max_throughput.assign_add(tf.math.reduce_sum(i_max, axis=0))
+        self.expected_throughput.assign_add(tf.math.reduce_sum(i_expected, axis=0))
+        self.count.assign_add(y_true.shape[0])
+    def result(self):
+        return self.max_throughput/self.count, self.expected_throughput/self.count
 # ============================  Loss fn  ============================
 
 def Throughout_diff_Loss():
