@@ -59,7 +59,15 @@ def create_LSTM_model_backwards(k, input_shape=[]):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
-
+def create_LSTM_model_with2states(k, input_shape=[], state_size=10):
+    inputs = Input(shape=input_shape)
+    x = tf.keras.layers.LSTM(30, return_sequences=True)(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(20)(x)
+    x = LeakyReLU()(x)
+    x = Dense(10)(x)
+    model = Model(inputs, x, name="max_rnn")
+    return model
 def create_encoding_model(k, l, input_shape):
     inputs = Input(shape=input_shape)
     x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
@@ -79,12 +87,12 @@ def Encoder_module(L):
         return x
     return encoder_module
 
-def Encoder_module(x):
-    x = Dense(20)(x)
-    x = LeakyReLU()(x)
-    x = Dense(L)(x)
-    x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
-    return x
+# def Encoder_module(x):
+#     x = Dense(20)(x)
+#     x = LeakyReLU()(x)
+#     x = Dense(L)(x)
+#     x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
+#     return x
 
 
 def perception_model(x, output, layer, logit=True):

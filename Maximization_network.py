@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # A[2]
     N = 10000
     k = 10
-    EPOCHS = 400
+    EPOCHS = 600
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # es = tf.keras.callbacks.EarlyStopping(monitor="train_loss", mode="min", patience="30")
@@ -79,6 +79,6 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-    fname_template = "trained_models/Sept 22_23/N_{}_LSTM_small_cell_state{}"
+    fname_template = "./trained_models/Sept 22_23/N_{}_LSTM_10_cell_states{}"
     np.save(fname_template.format(N, ".npy"), graphing_data)
     model.save(fname_template.format(N, ".h5"))
