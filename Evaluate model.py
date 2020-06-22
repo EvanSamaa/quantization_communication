@@ -102,8 +102,6 @@ if __name__ == "__main__":
     training_data_path = file + ".npy"
     training_data_continues = file + "_continue.npy"
     model = tf.keras.models.load_model(model_path)
-    print(model.summary())
-    A[1]
     trainingdata = np.concatenate((np.load(training_data_path), np.load(training_data_continues)), axis = 0)
     # trainingdata = np.load(training_data_path)
     plot_data(trainingdata)

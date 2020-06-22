@@ -62,7 +62,7 @@ def create_LSTM_model_backwards(k, input_shape=[]):
 def create_LSTM_model_with2states(k, input_shape=[], state_size=10):
     inputs = Input(shape=input_shape)
     x, final_memory_state, final_carry_state = tf.keras.layers.LSTM(30, return_sequences=True, return_state=True)(inputs)
-    x = tf.keras.Flatten()(x[:])
+    x = tf.keras.layers.Flatten()(x[:, -2:]) # looking only at the last 2 layers
     x = LeakyReLU()(x)
     x = Dense(20)(x)
     x = LeakyReLU()(x)
