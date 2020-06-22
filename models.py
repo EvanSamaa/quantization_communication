@@ -69,6 +69,17 @@ def create_LSTM_model_with2states(k, input_shape=[], state_size=10):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
+def create_BLSTM_model_with2states(k, input_shape=[], state_size=10):
+    inputs = Input(shape=input_shape)
+    x, final_memory_state, final_carry_state = tf.keras.layers.LSTM(30, go_backwards=True, return_sequences=True, return_state=True)(inputs)
+    x_1 = tf.keras.layers.Flatten()(x[:, -1:]) # looking only at the last 2 layers
+    x = tf.concat((tf.keras.layers.Flatten()(x[:, -1]), tf.keras.layers.Flatten()(x[:, 0])), axis=1)
+    x = LeakyReLU()(x)
+    x = Dense(20)(x)
+    x = LeakyReLU()(x)
+    x = Dense(10)(x)
+    model = Model(inputs, x, name="max_rnn")
+    return model
 def create_encoding_model(k, l, input_shape):
     inputs = Input(shape=input_shape)
     x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
