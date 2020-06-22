@@ -42,7 +42,7 @@ def create_regression_MLP_netowkr(input_shape, k):
     return model
 def create_LSTM_model(k, input_shape=[]):
     inputs = Input(shape=input_shape)
-    x = tf.keras.layers.LSTM(30)(inputs)
+    x = tf.keras.layers.LSTM(10)(inputs)
     x = LeakyReLU()(x)
     x = Dense(20)(x)
     x = LeakyReLU()(x)
@@ -52,7 +52,7 @@ def create_LSTM_model(k, input_shape=[]):
 
 def create_LSTM_model_backwards(k, input_shape=[]):
     inputs = Input(shape=input_shape)
-    x = tf.keras.layers.LSTM(10, go_backwards=True)(inputs)
+    x = tf.keras.layers.LSTM(30, go_backwards=True)(inputs)
     x = LeakyReLU()(x)
     x = Dense(20)(x)
     x = LeakyReLU()(x)
