@@ -83,11 +83,9 @@ class TargetThroughput(tf.keras.metrics.Metric):
     def update_state(self, y_true, y_pred, x):
         c_max = tf.gather(x, y_true, axis=1, batch_dims=1)
         i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
-        if self.logit:
-            weighted_c = tf.math.multiply(Softmax()(y_pred), x)
-        else:
-            weighted_c = tf.math.multiply(y_pred, x)
-        i_expected = tf.math.reduce_sum(tf.math.log(1 - 1.5*tf.math.log(1 - weighted_c))/self.a, axis=1)
+        c_picked = tf.argmax(y_pred, axis=1)
+        c_picked = tf.gather(x, y_true, axis=1, batch_dims=1)
+        i_expected = tf.math.reduce_sum(tf.math.log(1 - 1.5*tf.math.log(1 - c_picked))/self.a, axis=1)
         self.max_throughput.assign_add(tf.math.reduce_sum(i_max, axis=0))
         self.expected_throughput.assign_add(tf.math.reduce_sum(i_expected, axis=0))
         self.count.assign_add(y_true.shape[0])
@@ -104,7 +102,16 @@ def Throughout_diff_Loss():
         i_expected = tf.math.reduce_sum(tf.math.log(1 - 1.5 * tf.math.log(1 - weighted_c)) / a, axis=1)
         return tf.square(tf.math.reduce_sum(i_max, axis=0) - tf.math.reduce_sum(i_expected, axis=0))
     return through_put_loss
-def Throughput():
+def ThroughputLoss():
+    def through_put_loss(y_true, y_pred, x=None):
+        a = tf.math.log(tf.cast(2, dtype=tf.float32))
+        max_x = tf.argmax(y_pred, axis=1)
+        c_chosen = tf.gather(x, max_x, axis=1, batch_dims=1)
+        i_expected = tf.math.log(1 - 1.5 * tf.math.log(1 - c_chosen)) / a,
+        cost = -tf.math.reduce_sum(i_expected, axis=0)
+        return cost
+    return through_put_loss
+def ExpectedThroughputLoss():
     def through_put_loss(y_pred, x=None):
         # apply softmax to get distribution
         a = tf.math.log(tf.cast(2, dtype=tf.float32))
@@ -124,3 +131,11 @@ def Mix_loss():
         loss2 = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(y_true, y_pred)
         return loss2 + loss1/100
     return mixloss
+
+# =========================== Custom function for straight through estimation ============================
+
+@tf.custom_gradient
+def step_relu_STE(x):
+    tf.math.sign(x)
+    def grad(dy):
+        return dy*
