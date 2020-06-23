@@ -5,6 +5,7 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, ThresholdedReLU, Flatten
 from tensorflow.keras.activations import sigmoid
 import random
+from util import *
 def create_MLP_model(input_shape, k):
     # outputs logit
     inputs = Input(shape=input_shape)
@@ -118,7 +119,8 @@ def Encoder_module(L):
         x = Dense(20)(x)
         x = LeakyReLU()(x)
         x = Dense(L)(x)
-        x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
+        # x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
+        x = sign_relu_STE(x)
         return x
     return encoder_module
 

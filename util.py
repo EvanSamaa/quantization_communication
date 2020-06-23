@@ -135,7 +135,10 @@ def Mix_loss():
 # =========================== Custom function for straight through estimation ============================
 
 @tf.custom_gradient
-def step_relu_STE(x):
-    tf.math.sign(x)
+def sign_relu_STE(x):
+    rtv = tf.math.sign(x)
     def grad(dy):
-        return dy*
+        alpha = 2
+        grad_val = dy*tf.where(rtv>=0, alpha, -alpha)
+        return grad_val
+    return rtv, grad

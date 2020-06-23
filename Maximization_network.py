@@ -39,7 +39,8 @@ if __name__ == "__main__":
     # model = create_uniformed_quantization_model(10)
     # model = create_LSTM_model(k, [k, 1])
     # model = create_BLSTM_model_with2states(k, [k, 1], state_size=30)
-    model = create_uniform_encoding_model(k, 10, (k,))
+    # model = create_uniform_encoding_model(k, 10, (k,))
+    model = create_encoding_model(k, 10, (k, ))
     # model = create_MLP_model(input_shape=(k, ), k=k)
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     # loss_object = tf.keras.losses.Hinge()
@@ -81,6 +82,6 @@ if __name__ == "__main__":
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
 
-    fname_template = "./trained_models/Sept 22_23/N_{}_auto_uniform_encoding_MLP_k10{}"
+    fname_template = "./trained_models/Sept 22_23/N_{}_auto_relu_STE_MLP_k10{}"
     np.save(fname_template.format(N, ".npy"), graphing_data)
     model.save(fname_template.format(N, ".h5"))
