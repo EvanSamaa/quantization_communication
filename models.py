@@ -52,9 +52,9 @@ def create_regression_MLP_netowkr(input_shape, k):
     x = tf.squeeze(x)
     model = Model(inputs, x, name="max_nn_with_regression0")
     return model
-def create_LSTM_model(k, input_shape=[]):
+def create_LSTM_model(k, input_shape=[], state_size=10):
     inputs = Input(shape=input_shape)
-    x = tf.keras.layers.LSTM(10)(inputs)
+    x = tf.keras.layers.LSTM(state_size)(inputs)
     x = LeakyReLU()(x)
     x = Dense(20)(x)
     x = LeakyReLU()(x)
