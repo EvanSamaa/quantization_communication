@@ -96,7 +96,7 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "models/three_layer_MLP_1800_epoch"
+    file = "trained_models/Sept 19th/N_10000_auto_encoding_MLP_k10"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     model = tf.keras.models.load_model(model_path)
