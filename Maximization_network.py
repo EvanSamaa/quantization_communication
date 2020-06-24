@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # A[2]
     N = 10000
     k = 10
-    EPOCHS = 3000
+    EPOCHS = 10000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = create_MLP_model_with_transform((k,k), k)
@@ -85,11 +85,11 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-        # if epoch%300 == 0:
-        #     improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-200: epoch-100, 0].mean()
-        #     print("the accuracy improvement in the past 100 epochs is ", improvement)
-        #     if improvement <= 0.0001:
-        #         break
+        if epoch%500 == 0:
+            improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-200: epoch-100, 0].mean()
+            print("the accuracy improvement in the past 100 epochs is ", improvement)
+            if improvement <= 0.0001:
+                break
 
     fname_template = "./trained_models/Sept 22_23/Data_gen_LSTM_10_cell{}"
     np.save(fname_template.format(".npy"), graphing_data)
