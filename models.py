@@ -50,9 +50,8 @@ def create_regression_MLP_netowkr(input_shape, k):
     inputs = Input(shape=input_shape)
     x = perception_model(inputs, 1, 5)
     x = tf.squeeze(x)
-    model = Model(inputs, x, name="max_nn_with_regression")
+    model = Model(inputs, x, name="max_nn_with_regression0")
     return model
-
 def create_LSTM_model(k, input_shape=[]):
     inputs = Input(shape=input_shape)
     x = tf.keras.layers.LSTM(10)(inputs)
@@ -101,6 +100,7 @@ def create_encoding_model(k, l, input_shape):
         encoding = tf.concat((encoding, Encoder_module(l)(item)), axis=1)
     out = perception_model(encoding, k, 5)
     model = Model(inputs, out, name="auto_encoder_nn")
+    print(model.summary())
     return model
 def create_uniform_encoding_model(k, l, input_shape):
     inputs = Input(shape=input_shape)
@@ -111,7 +111,16 @@ def create_uniform_encoding_model(k, l, input_shape):
         encoding = tf.concat((encoding, encoder_module(item)), axis=1)
     out = perception_model(encoding, k, 5)
     model = Model(inputs, out, name="auto_encoder_nn")
-
+    return model
+def boosting_regression_model(models, input_shape, k):
+    inputs = Input(shape=input_shape)
+    x = models[0](inputs)
+    print(x.shape)
+    for model in models[1:]:
+        x = tf.concat((x, model(inputs)), axis=1)
+    initializer = tf.keras.initializers.Constant(1./2)
+    x = Dense(1, kernel_initializer=initializer)(x)
+    model = Model(inputs, x, name="ensemble")
     return model
 
 def Encoder_module(L):
@@ -119,8 +128,8 @@ def Encoder_module(L):
         x = Dense(20)(x)
         x = LeakyReLU()(x)
         x = Dense(L)(x)
-        # x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
-        x = sign_relu_STE(x)
+        x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
+        # x = sign_relu_STE(x)
         return x
     return encoder_module
 
@@ -133,6 +142,9 @@ def Uniform_Encoder_module(k, l, input_shape):
     model = Model(inputs, x, name="encoder_unit")
     return model
 
+def ensemble_regression(k, input_shape):
+    regression_1 = create_regression_MLP_netowkr(input_shape, k)
+    regression_2 = tf.keras.models.load_model("trained_models/Sept 19th/N_10000_5_Layer_MLP_regression.h5")
 
 def perception_model(x, output, layer, logit=True):
     for i in range(layer-1):

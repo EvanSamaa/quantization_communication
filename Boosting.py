@@ -26,39 +26,29 @@ def test_step(features, labels):
     test_loss(t_loss)
     test_accuracy(labels, predictions)
     test_throughput(labels, predictions, features)
-
 if __name__ == "__main__":
-    # test_model()
-    # A[2]
     N = 10000
     k = 10
-    EPOCHS = 10000
+    EPOCHS = 2000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
-    # model = create_MLP_model_with_transform((k,k), k)
-    model = tf.keras.models.load_model("trained_models/Sept 22_23/Data_gen_auto_encoding_MLP_k10_cont.h5")
-    # model = create_uniformed_quantization_model(10)
-    # model = create_LSTM_model(k, [k, 1])
-    # model = create_BLSTM_model_with2states(k, [k, 1], state_size=30)
-    # model = create_uniform_encoding_model(k, 10, (k,))
-    # model = create_encoding_model(k, 10, (k, ))
-    # model = create_MLP_model(input_shape=(k, ), k=k)
-    loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    # loss_object = tf.keras.losses.Hinge()
-    # loss_object = ThroughputLoss()
+    model0 = tf.keras.models.load_model("trained_models/Sept 19th/N_10000_5_Layer_MLP_regression.h5")
+    model1 = create_regression_MLP_netowkr((k,), k)
+    model = boosting_regression_model([model0, model1],[k, 1], k)
+    loss_object = tf.keras.losses.MeanSquaredError()
     optimizer = tf.keras.optimizers.Adam()
     train_loss = tf.keras.metrics.Mean(name='train_loss')
-    train_throughput = ExpectedThroughput(name='train_throughput')
-    train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
+    train_throughput = Regression_ExpectedThroughput(name='train_throughput')
+    train_accuracy = Regression_Accuracy()
     test_loss = tf.keras.metrics.Mean(name='test_loss')
-    test_throughput = ExpectedThroughput(name='test_throughput')
-    test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
-    # train_ds = gen_data(N, k, 0, 1).shuffle(buffer_size=1000)
+    test_throughput = Regression_ExpectedThroughput(name='test_throughput')
+    test_accuracy = Regression_Accuracy()
+    train_ds = gen_data(N, k, 0, N)
     test_ds = gen_data(100, k, 0, 1)
     current_acc = 0
     for epoch in range(EPOCHS):
         # Reset the metrics at the start of the next epoch
-        train_ds = gen_data(N, k, 0, 1, N)
+        train_ds = gen_data(N, k, 0, N)
         train_loss.reset_states()
         train_throughput.reset_states()
         train_accuracy.reset_states()
@@ -85,12 +75,7 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-        if epoch%300 == 0:
-            improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-200: epoch-100, 0].mean()
-            print("the accuracy improvement in the past 100 epochs is ", improvement)
-            if improvement <= 0.0001:
-                break
-
-    fname_template = "./trained_models/Sept 22_23/Data_gen_auto_encoding_MLP_k10_cont2{}"
+    fname_template = "./trained_models/Sept 22_23/N_{}_boosting_regression_1{}"
+    # fname_template = "./trained_models/Sept 22_23/Data_gen_boosting_regression_1{}"
     np.save(fname_template.format(".npy"), graphing_data)
-    model.save(fname_template.format(".h5"))
+    model.save(fname_template.format(N, ".h5"))

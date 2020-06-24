@@ -13,6 +13,7 @@ def gen_data(N, k, low=0, high=1, batchsize=30):
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
     return dataset
 
+
 # ============================  Metrics  ============================
 class ExpectedThroughput(tf.keras.metrics.Metric):
     def __init__(self, name='expected_throughput', logit=True, **kwargs):
@@ -136,9 +137,9 @@ def Mix_loss():
 
 @tf.custom_gradient
 def sign_relu_STE(x):
-    rtv = tf.math.sign(x)
+    rtv = tf.cast(tf.where(x>=0, 1, -1), dtype=tf.float32)
     def grad(dy):
-        alpha = 2
-        grad_val = dy*tf.where(rtv>=0, alpha, -alpha)
+        alpha = 1
+        grad_val = tf.multiply(tf.multiply(alpha, dy), rtv)
         return grad_val
     return rtv, grad

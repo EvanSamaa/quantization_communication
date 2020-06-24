@@ -9,9 +9,10 @@ from util import *
 from models import *
 def variance_graph(model, N = 10000):
     # tp_fn = ExpectedThroughput(name = "throughput")
-    # a_fn = tf.keras.metrics.SparseCategoricalAccuracy(name='test_accuracy')
-    tp_fn = Regression_ExpectedThroughput()
-    a_fn = Regression_Accuracy()
+    tp_fn = TargetThroughput(name = "target throughput")
+    a_fn = tf.keras.metrics.SparseCategoricalAccuracy(name='test_accuracy')
+    # tp_fn = Regression_ExpectedThroughput()
+    # a_fn = Regression_Accuracy()
     result = np.zeros((N,2))
     acc = np.zeros((N, ))
     tf.random.set_seed(80)
@@ -43,9 +44,6 @@ def three_run_avg(model, N=3000):
     tf.random.set_seed(80)
     tp_fn = ExpectedThroughput(name="throughput")
     a_fn = tf.keras.metrics.SparseCategoricalAccuracy(name='test_accuracy')
-
-
-
     result = np.zeros((N, 2))
     acc = np.zeros((N,))
     tf.random.set_seed(80)
@@ -97,13 +95,10 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/N_10000_LSTM_CEloss"
-    model_path = file + ".h5"
-    training_data_path = file + ".npy"
-    training_data_continues = file + "_continue.npy"
-    model = tf.keras.models.load_model(model_path)
-    trainingdata = np.concatenate((np.load(training_data_path), np.load(training_data_continues)), axis = 0)
-    # trainingdata = np.load(training_data_path)
-    plot_data(trainingdata)
-    # variance_graph(model, N=1000)
+    # file = "models/three_layer_with_pro_processing_10E"
+    # model_path = file + ".h5"
+    # training_data_path = file + ".npy"
+    # model = tf.keras.models.load_model(model_path)
+    model = create_uniformed_quantization_model(10)
+    variance_graph(model, N=1000)
 
