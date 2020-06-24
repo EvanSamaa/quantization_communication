@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # model = create_MLP_model_with_transform((k,k), k)
     # model = tf.keras.models.load_model("trained_models/Sept 22_23/Data_gen_baseline_count.h5")
     # model = create_uniformed_quantization_model(10)
-    model = create_LSTM_model_with2states(k, [k, 1])
+    model = create_LSTM_model(k, [k, 1], 10)
     # model = create_BLSTM_model_with2states(k, [k, 1], state_size=30)
     # model = create_uniform_encoding_model(k, 10, (k,))
     # model = create_encoding_model(k, 10, (k, ))
