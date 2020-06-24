@@ -86,10 +86,11 @@ class TargetThroughput(tf.keras.metrics.Metric):
         i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
         c_picked = tf.argmax(y_pred, axis=1)
         c_picked = tf.gather(x, y_true, axis=1, batch_dims=1)
-        i_expected = tf.math.reduce_sum(tf.math.log(1 - 1.5*tf.math.log(1 - c_picked))/self.a, axis=1)
+        i_expected = tf.math.log(1 - 1.5*tf.math.log(1 - c_picked))/self.a
         self.max_throughput.assign_add(tf.math.reduce_sum(i_max, axis=0))
         self.expected_throughput.assign_add(tf.math.reduce_sum(i_expected, axis=0))
         self.count.assign_add(y_true.shape[0])
+
     def result(self):
         return self.max_throughput/self.count, self.expected_throughput/self.count
 # ============================  Loss fn  ============================

@@ -22,7 +22,8 @@ def variance_graph(model, N = 10000):
         a_fn.reset_states()
         ds = gen_data(1, k=10, batchsize=1)
         for features, labels in ds:
-            prediction = tf.reshape(model(features), (1,))
+            # prediction = tf.reshape(model(features), (1,))
+            prediction = model(features)
             tp_fn(labels, prediction, features)
             a_fn(labels, prediction)
             if a_fn.result() != 1:
