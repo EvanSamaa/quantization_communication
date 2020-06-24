@@ -96,11 +96,17 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 19th/N_10000_auto_encoding_MLP_k10"
+    file = "trained_models/Sept 22_23/Data_gen_baseline"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
+    training_data_path1 = file + "_count.npy"
+    training_data_path2 = file + "_count2.npy"
+    print(np.load(training_data_path).shape)
+    print(np.load(training_data_path1).shape)
+    training_data = np.concatenate((np.load(training_data_path), np.load(training_data_path1), np.load(training_data_path2)), axis=1)
     model = tf.keras.models.load_model(model_path)
     # model = create_uniformed_quantization_model(k=10, bin_num=2*10)
-    print(model.summary())
-    variance_graph(model, N=1000)
+    print(training_data.shape)
+    # print(model.summary())
+    # variance_graph(model, N=1000)
 
