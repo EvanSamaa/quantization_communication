@@ -28,9 +28,9 @@ def variance_graph(model, N = 10000):
             a_fn(labels, prediction)
             if a_fn.result() != 1:
                 print(features, '\n', prediction)
-            if e%1000 == 0:
-                template = "At Test case {}, The The maximum Throughput is {}, Expected Throughout is {}, the Accuracy is {}"
-                print(template.format(e, tp_fn.result()[0], tp_fn.result()[1], a_fn.result()))
+            # if e%1000 == 0:
+            #     template = "At Test case {}, The The maximum Throughput is {}, Expected Throughout is {}, the Accuracy is {}"
+            #     print(template.format(e, tp_fn.result()[0], tp_fn.result()[1], a_fn.result()))
         result[e, 0] = tp_fn.result()[0]
         result[e, 1] = tp_fn.result()[1]
         acc[e] = a_fn.result()
@@ -96,10 +96,11 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    # file = "models/three_layer_with_pro_processing_10E"
-    # model_path = file + ".h5"
-    # training_data_path = file + ".npy"
-    # model = tf.keras.models.load_model(model_path)
-    model = create_uniformed_quantization_model(10)
+    file = "trained_models/Sept 19th/N_10000_LSTM_CEloss"
+    model_path = file + ".h5"
+    training_data_path = file + ".npy"
+    model = tf.keras.models.load_model(model_path)
+    # model = create_uniformed_quantization_model(k=10, bin_num=2*10)
+    print(model.summary())
     variance_graph(model, N=1000)
 
