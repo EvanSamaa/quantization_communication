@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # A[2]
     N = 10000
     k = 10
-    EPOCHS = 10000
+    EPOCHS = 20000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = create_MLP_model_with_transform((k,k), k)
@@ -88,12 +88,12 @@ if __name__ == "__main__":
         graphing_data[epoch, 7] = test_throughput.result()[1]
         if epoch%500 == 0:
             if epoch >= 1000:
-                improvement = graphing_data[epoch-100: epoch, 1].mean() - graphing_data[epoch-600: epoch-500, 1].mean()
+                improvement = graphing_data[epoch-500: epoch, 1].mean() - graphing_data[epoch-1000: epoch-500, 1].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:
                     break
 
-    fname_template = "./trained_models/Sept 25/Data_gen_encoder_L10_hard_tanh{}"
+    fname_template = "./trained_models/Sept 25/Data_gen_encoder_L10_relu{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))
