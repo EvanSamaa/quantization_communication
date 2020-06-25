@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # A[2]
     N = 10000
     k = 10
-    EPOCHS = 10000
+    EPOCHS = 10
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = create_MLP_model_with_transform((k,k), k)
