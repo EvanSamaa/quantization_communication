@@ -159,6 +159,12 @@ def leaky_hard_tanh(x):
 def clippedRelu(x):
     return tf.maximum(tf.minimum(0.01 * x, x), 0.01 * x)
 def annealing_sigmoid(x, N):
-    alpha = tf.minimum(8.0, 1.0 + 0.01*N)
+    alpha = tf.minimum(5.0, 1.0 + 0.01*N)
     out = tf.sigmoid(alpha*x)
     return out
+def annealing_tanh(x, N):
+    alpha = tf.minimum(5.0, 1.0 + 0.01*N)
+    out = tf.tanh(alpha*x)
+    return out
+
+# ========================================== misc ==========================================

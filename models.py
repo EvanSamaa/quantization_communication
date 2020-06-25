@@ -12,12 +12,28 @@ def create_MLP_model(input_shape, k):
     x = perception_model(inputs, k, 5)
     model = Model(inputs, x, name="max_nn")
     return model
+def create_MLP_mean0_model(input_shape, k):
+    # outputs logit
+    inputs = Input(shape=input_shape)
+    x = inputs - 0.5
+    x = perception_model(x, k, 5)
+    model = Model(inputs, x, name="max_nn")
+    return model
+def create_large_MLP_model(input_shape, k):
+    inputs = Input(shape=input_shape)
+    x = perception_model(inputs, 50, 10)
+    x = LeakyReLU()(x)
+    x = Dense(10)(x)
+    model = Model(inputs, x, name="Deep_max_nn")
+    print(model.summary())
+    return model
+
 def create_MLP_model_with_transform(input_shape, k):
     # needs to call transform first
     # outputs logit
     inputs = Input(shape=input_shape)
     x = Flatten()(inputs)
-    x = perception_model(x, k, 5)
+    x = perception_model(x, k, 2)
     model = Model(inputs, x, name="max_nn")
     return model
 def ranking_transform(x):
@@ -152,7 +168,7 @@ def create_encoding_model_with_annealing(k, l, input_shape):
     for item in x_list[1:]:
         encoding = tf.concat((encoding, Encoder_module_annealing(l)(item, epoch)), axis=1)
     out = perception_model(encoding, k, 5)
-    model = Model(inputs, out, name="auto_encoder_nn")
+    model = Model(inputs, out, name="tanh_annealing_nn")
     print(model.summary())
     return model
 def Encoder_module_annealing(L):
@@ -161,7 +177,7 @@ def Encoder_module_annealing(L):
         x = LeakyReLU()(x)
         x = Dense(L)(x)
         # x = sign_relu_STE(x)
-        x = annealing_sigmoid(x, N) + tf.stop_gradient(tf.sign(x) - annealing_sigmoid(x, N))
+        x = annealing_tanh(x, N) + tf.stop_gradient(tf.sign(x) - annealing_sigmoid(x, N))
         return x
     return encoder_module
 
