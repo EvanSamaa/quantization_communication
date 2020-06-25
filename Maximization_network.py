@@ -87,7 +87,7 @@ if __name__ == "__main__":
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
         if epoch%500 == 0:
-            if epoch >= 1000:
+            if epoch >= 3000:
                 improvement = graphing_data[epoch-500: epoch, 1].mean() - graphing_data[epoch-1000: epoch-500, 1].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:

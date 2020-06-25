@@ -152,6 +152,7 @@ def hard_tanh(x):
     pos = tf.constant(1, dtype=tf.float32)
     rtv = tf.maximum(tf.minimum(x, pos), neg)
     return rtv
-def step_relu_STE(x):
-    rtv = tf.maximum(0, tf.sign(x))
+def step_func(x):
+    rtv = tf.maximum(0.0, tf.sign(x))
+    return rtv
 
