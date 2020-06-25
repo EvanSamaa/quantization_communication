@@ -6,6 +6,7 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 from util import *
+import os
 from models import *
 def train_step(features, labels):
     with tf.GradientTape() as tape:
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     # A[2]
     N = 10000
     k = 10
-    EPOCHS = 10000
+    EPOCHS = 10
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = create_MLP_model_with_transform((k,k), k)
@@ -85,12 +86,14 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-        if epoch%500 == 0:
-            improvement = graphing_data[epoch-500: epoch, 0].mean() - graphing_data[epoch-1000: epoch-500, 0].mean()
+        if epoch%100 == 0:
+            improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-1000: epoch-500, 0].mean()
             print("the accuracy improvement in the past 500 epochs is ", improvement)
             if improvement <= 0.0001:
                 break
 
     fname_template = "./trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
+    fname_template = "trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
+    print(os.listdir("./"))
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))
