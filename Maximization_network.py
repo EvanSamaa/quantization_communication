@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 break
 
     fname_template = "./trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
-    fname_template = "trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
+    fname_template = "./trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     print(os.listdir("./"))
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))
