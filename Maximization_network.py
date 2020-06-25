@@ -28,6 +28,27 @@ def test_step(features, labels):
     test_accuracy(labels, predictions)
     test_throughput(labels, predictions, features)
 
+def train_step_with_annealing(features, labels, N):
+    features_mod = tf.ones((features.shape[0], 1)) * N
+    features_mod = tf.concat((features_mod, features), axis=1)
+    with tf.GradientTape() as tape:
+        predictions = model(features_mod)
+        # predictions = model(ranking_transform(features))
+        loss = loss_object(labels, predictions)
+    gradients = tape.gradient(loss, model.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    train_loss(loss)
+    train_throughput(labels, predictions, features)
+    train_accuracy(labels, predictions)
+def test_step_with_annealing(features, labels, N):
+    features_mod = tf.ones((features.shape[0], 1)) * N
+    features_mod = tf.concat((features_mod, features), axis=1)
+    predictions = model(features_mod)
+    t_loss = loss_object(labels, predictions)
+    test_loss(t_loss)
+    test_accuracy(labels, predictions)
+    test_throughput(labels, predictions, features)
+
 if __name__ == "__main__":
     # test_model()
     # A[2]
@@ -42,7 +63,8 @@ if __name__ == "__main__":
     # model = create_LSTM_model(k, [k, 1], 10)
     # model = create_BLSTM_model_with2states(k, [k, 1], state_size=30)
     # model = create_uniform_encoding_model(k, 10, (k,))
-    model = create_encoding_model(k, 10, (k, ))
+    # model = create_encoding_model(k, 10, (k, ))
+    model = create_encoding_model_with_annealing(k, 10, (k+1, ))
     # model = create_MLP_model(input_shape=(k, ), k=k)
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     # loss_object = tf.keras.losses.Hinge()
@@ -67,9 +89,11 @@ if __name__ == "__main__":
         test_accuracy.reset_states()
         test_throughput.reset_states()
         for features, labels in train_ds:
-            train_step(features, labels)
+            # train_step(features, labels)
+            train_step_with_annealing(features, labels, epoch)
         for features, labels in test_ds:
-            test_step(features, labels)
+            # test_step(features, labels)
+            test_step_with_annealing(features, labels, epoch)
         template = 'Epoch {}, Loss: {}, Accuracy:{}, max: {}, expected:{}, Test Loss: {}, Test Accuracy: {}'
         print(template.format(epoch + 1,
                               train_loss.result(),
@@ -93,7 +117,7 @@ if __name__ == "__main__":
                 if improvement <= 0.0001:
                     break
 
-    fname_template = "./trained_models/Sept 25/Data_gen_encoder_L10_leaky_hard_tanh{}"
+    fname_template = "./trained_models/Sept 25/Data_gen_encoder_L10_annealing_sigmoid{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))

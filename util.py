@@ -140,10 +140,11 @@ def Mix_loss():
 def sign_relu_STE(x):
     rtv = tf.sign(x)
     def grad(dy):
-        neg = tf.constant(-1)
-        pos = tf.constant(1)
-        back = tf.maximum(tf.minimum(x, pos), neg)
-        grad_val = tf.multiply(dy, back)
+        one = tf.constant(1, dtype=tf.float32)
+        zero = tf.constant(0, dtype=tf.float32)
+        # back = tf.maximum(tf.minimum(x, pos), neg)
+        back = tf.where(tf.abs(x) >= 0, one, zero)
+        grad_val = dy * back
         return grad_val
     return rtv, grad
 
@@ -155,9 +156,9 @@ def hard_tanh(x):
 def leaky_hard_tanh(x):
     rtv = tf.maximum(tf.minimum(x, 1.0 + 0.01 * x), -1.0 + 0.01 * x)
     return rtv
-def step_func(x):
-    rtv = tf.maximum(0.0, tf.sign(x))
-    return rtv
 def clippedRelu(x):
     return tf.maximum(tf.minimum(0.01 * x, x), 0.01 * x)
-
+def annealing_sigmoid(x, N):
+    alpha = tf.minimum(5.0, 1.0 + 0.04*N)
+    out = tf.sigmoid(alpha*x)
+    return out

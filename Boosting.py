@@ -76,6 +76,6 @@ if __name__ == "__main__":
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
     fname_template = "./trained_models/Sept 22_23/N_{}_boosting_regression_1{}"
-    # fname_template = "./trained_models/Sept 22_23/Data_gen_boosting_regression_1{}"
+    fname_template = "./trained_models/Sept 22_23/Data_gen_boosting_regression_1{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(N, ".h5"))
