@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 if improvement <= 0.0001:
                     break
 
-    fname_template = "./trained_models/Sept 25/Data_gen_encoder_L10_relu{}"
+    fname_template = "./trained_models/Sept 25/Data_gen_encoder_L10_clipped_relu{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))

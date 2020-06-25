@@ -152,7 +152,12 @@ def hard_tanh(x):
     pos = tf.constant(1, dtype=tf.float32)
     rtv = tf.maximum(tf.minimum(x, pos), neg)
     return rtv
+def leaky_hard_tanh(x):
+    rtv = tf.maximum(tf.minimum(x, 1.0 + 0.01 * x), -1.0 + 0.01 * x)
+    return rtv
 def step_func(x):
     rtv = tf.maximum(0.0, tf.sign(x))
     return rtv
+def clippedRelu(x):
+    return tf.maximum(tf.minimum(0.01 * x, x), 0.01 * x)
 
