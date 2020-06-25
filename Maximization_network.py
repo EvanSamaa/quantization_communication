@@ -86,11 +86,12 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-        if epoch%100 == 0:
-            improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-1000: epoch-500, 0].mean()
-            print("the accuracy improvement in the past 500 epochs is ", improvement)
-            if improvement <= 0.0001:
-                break
+        if epoch%500 == 0:
+            if epoch >= 1000:
+                improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-600: epoch-500, 0].mean()
+                print("the accuracy improvement in the past 500 epochs is ", improvement)
+                if improvement <= 0.0001:
+                    break
 
     fname_template = "./trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
