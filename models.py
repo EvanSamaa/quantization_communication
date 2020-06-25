@@ -128,8 +128,9 @@ def Encoder_module(L):
         x = Dense(20)(x)
         x = LeakyReLU()(x)
         x = Dense(L)(x)
-        x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
+        # x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
         # x = sign_relu_STE(x)
+        x = hard_tanh(x) + tf.stop_gradient(tf.math.sign(x) - hard_tanh(x))
         return x
     return encoder_module
 

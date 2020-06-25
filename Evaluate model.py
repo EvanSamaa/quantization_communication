@@ -7,6 +7,10 @@ from tensorflow.keras.activations import sigmoid
 from matplotlib import pyplot as plt
 from util import *
 from models import *
+def quantizaton_evaluation(model, granuality = 0.0001):
+    print(model.summary())
+    # layer_output = model.get_layer(layer_name).output
+
 def variance_graph(model, N = 10000):
     # tp_fn = ExpectedThroughput(name = "throughput")
     tp_fn = TargetThroughput(name = "target throughput")
@@ -96,17 +100,16 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 22_23/Data_gen_baseline"
+    file = "trained_models/Sept 22_23/N_10000_auto_uniform_encoding_MLP_k10"
     model_path = file + ".h5"
-    training_data_path = file + ".npy"
-    training_data_path1 = file + "_count.npy"
-    training_data_path2 = file + "_count2.npy"
-    print(np.load(training_data_path).shape)
-    print(np.load(training_data_path1).shape)
-    training_data = np.concatenate((np.load(training_data_path), np.load(training_data_path1), np.load(training_data_path2)), axis=1)
+    # training_data_path = file + ".npy"
+    # training_data_path1 = file + "_cont.npy"
+    # training_data_path2 = file + "_cont2.npy"
+    # training_data = np.concatenate((np.load(training_data_path), np.load(training_data_path1)), axis=0)
     model = tf.keras.models.load_model(model_path)
     # model = create_uniformed_quantization_model(k=10, bin_num=2*10)
-    print(training_data.shape)
+    # plot_data(training_data)
     # print(model.summary())
     # variance_graph(model, N=1000)
+    quantizaton_evaluation(model)
 

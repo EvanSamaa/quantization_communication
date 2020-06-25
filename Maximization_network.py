@@ -36,12 +36,12 @@ if __name__ == "__main__":
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = create_MLP_model_with_transform((k,k), k)
-    model = tf.keras.models.load_model("trained_models/Sept 22_23/Data_gen_LSTM_10_cell.h5")
+    # model = tf.keras.models.load_model("trained_models/Sept 22_23/Data_gen_LSTM_10_cell.h5")
     # model = create_uniformed_quantization_model(10)
     # model = create_LSTM_model(k, [k, 1], 10)
     # model = create_BLSTM_model_with2states(k, [k, 1], state_size=30)
     # model = create_uniform_encoding_model(k, 10, (k,))
-    # model = create_encoding_model(k, 10, (k, ))
+    model = create_encoding_model(k, 10, (k, ))
     # model = create_MLP_model(input_shape=(k, ), k=k)
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     # loss_object = tf.keras.losses.Hinge()
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     test_loss = tf.keras.metrics.Mean(name='test_loss')
     test_throughput = ExpectedThroughput(name='test_throughput')
     test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
-    # train_ds = gen_data(N, k, 0, 1).shuffle(buffer_size=1000)
+    # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
     test_ds = gen_data(100, k, 0, 1)
     current_acc = 0
     for epoch in range(EPOCHS):
@@ -85,12 +85,12 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-        # if epoch%500 == 0:
-        #     improvement = graphing_data[epoch-500: epoch, 0].mean() - graphing_data[epoch-1000: epoch-500, 0].mean()
-        #     print("the accuracy improvement in the past 100 epochs is ", improvement)
-        #     if improvement <= 0.0001:
-        #         break
+        if epoch%500 == 0:
+            improvement = graphing_data[epoch-500: epoch, 0].mean() - graphing_data[epoch-1000: epoch-500, 0].mean()
+            print("the accuracy improvement in the past 500 epochs is ", improvement)
+            if improvement <= 0.0001:
+                break
 
-    fname_template = "./trained_models/Sept 22_23/Data_gen_LSTM_10_cell_cont{}"
+    fname_template = "./trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))

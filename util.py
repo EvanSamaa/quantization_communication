@@ -138,9 +138,18 @@ def Mix_loss():
 
 @tf.custom_gradient
 def sign_relu_STE(x):
-    rtv = tf.cast(tf.where(x>=0, 1, -1), dtype=tf.float32)
+    rtv = tf.sign(x)
     def grad(dy):
-        alpha = 1
-        grad_val = tf.multiply(tf.multiply(alpha, dy), rtv)
+        neg = tf.constant(-1)
+        pos = tf.constant(1)
+        back = tf.maximum(tf.minimum(x, pos), neg)
+        grad_val = tf.multiply(dy, back)
         return grad_val
     return rtv, grad
+
+def hard_tanh(x):
+    neg = tf.constant(-1, dtype=tf.float32)
+    pos = tf.constant(1, dtype=tf.float32)
+    rtv = tf.maximum(tf.minimum(x, pos), neg)
+    return rtv
+
