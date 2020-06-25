@@ -100,13 +100,14 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 22_23/N_10000_auto_uniform_encoding_MLP_k10"
+    file = "trained_models/Sept 25/Data_gen_encoder_L10_hard_tanh"
     model_path = file + ".h5"
     # training_data_path = file + ".npy"
     # training_data_path1 = file + "_cont.npy"
     # training_data_path2 = file + "_cont2.npy"
     # training_data = np.concatenate((np.load(training_data_path), np.load(training_data_path1)), axis=0)
     model = tf.keras.models.load_model(model_path)
+    print(model.summary())
     # model = create_uniformed_quantization_model(k=10, bin_num=2*10)
     # plot_data(training_data)
     # print(model.summary())

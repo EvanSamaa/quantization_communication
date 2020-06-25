@@ -100,7 +100,6 @@ def create_encoding_model(k, l, input_shape):
         encoding = tf.concat((encoding, Encoder_module(l)(item)), axis=1)
     out = perception_model(encoding, k, 5)
     model = Model(inputs, out, name="auto_encoder_nn")
-    print(model.summary())
     return model
 def create_uniform_encoding_model(k, l, input_shape):
     inputs = Input(shape=input_shape)
@@ -129,12 +128,11 @@ def Encoder_module(L):
         x = LeakyReLU()(x)
         x = Dense(L)(x)
         # x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
-        # x = sign_relu_STE(x)
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = leaky_hard_tanh(x) + tf.stop_gradient(tf.sign(x) - leaky_hard_tanh(x))
+        x = sign_relu_STE(x)
+        # x = tf.keras.layers.BatchNormalization()(x)
+        # x = hard_tanh(x) + tf.stop_gradient(tf.sign(x) - hard_tanh(x))
         return x
     return encoder_module
-
 def Uniform_Encoder_module(k, l, input_shape):
     inputs = Input(shape=input_shape)
     x = Dense(20)(inputs)
@@ -143,6 +141,29 @@ def Uniform_Encoder_module(k, l, input_shape):
     x = tf.keras.activations.sigmoid(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.sigmoid(x))
     model = Model(inputs, x, name="encoder_unit")
     return model
+
+def create_encoding_model_with_annealing(k, l, input_shape):
+    inputs = Input(shape=input_shape)
+    epoch = inputs[:, 1][0]
+    inputs_mod = inputs[:, 1:]
+    print(inputs.shape)
+    x_list = tf.split(inputs_mod, num_or_size_splits=k, axis=1)
+    encoding = Encoder_module_annealing(l)(x_list[0], epoch)
+    for item in x_list[1:]:
+        encoding = tf.concat((encoding, Encoder_module_annealing(l)(item, epoch)), axis=1)
+    out = perception_model(encoding, k, 5)
+    model = Model(inputs, out, name="auto_encoder_nn")
+    print(model.summary())
+    return model
+def Encoder_module_annealing(L):
+    def encoder_module(x, N):
+        x = Dense(20)(x)
+        x = LeakyReLU()(x)
+        x = Dense(L)(x)
+        # x = sign_relu_STE(x)
+        x = annealing_sigmoid(x, N) + tf.stop_gradient(tf.sign(x) - annealing_sigmoid(x, N))
+        return x
+    return encoder_module
 
 def ensemble_regression(k, input_shape):
     regression_1 = create_regression_MLP_netowkr(input_shape, k)
