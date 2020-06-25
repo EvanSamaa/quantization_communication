@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # A[2]
     N = 10000
     k = 10
-    EPOCHS = 10
+    EPOCHS = 10000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = create_MLP_model_with_transform((k,k), k)
@@ -95,6 +95,6 @@ if __name__ == "__main__":
 
     fname_template = "./trained_models/Sept 25/Data_gen_encoder_L10_hard_tanh{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
-    print(os.listdir("./"))
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))
+    print("Training data and ")
