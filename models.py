@@ -198,7 +198,16 @@ def create_encoding_model_with_annealing_LSTM(k, l, input_shape):
 def ensemble_regression(k, input_shape):
     regression_1 = create_regression_MLP_netowkr(input_shape, k)
     regression_2 = tf.keras.models.load_model("trained_models/Sept 19th/N_10000_5_Layer_MLP_regression.h5")
-
+def create_uniform_encoding_model_with_annealing(k, l, input_shape):
+    inputs = Input(shape=input_shape)
+    x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
+    encoder_module = Uniform_Encoder_module(1, l, (1,))
+    encoding = encoder_module(x_list[0])
+    for item in x_list[1:]:
+        encoding = tf.concat((encoding, encoder_module(item)), axis=1)
+    out = perception_model(encoding, k, 5)
+    model = Model(inputs, out, name="auto_encoder_nn")
+    return model
 def perception_model(x, output, layer, logit=True):
     for i in range(layer-1):
         x = Dense(50)(x)

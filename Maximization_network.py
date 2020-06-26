@@ -85,7 +85,7 @@ if __name__ == "__main__":
     current_acc = 0
     for epoch in range(EPOCHS):
         # Reset the metrics at the start of the next epoch
-        train_ds = gen_data(1, k, 0, 1, N)
+        train_ds = gen_data(N, k, 0, 1, N)
         train_loss.reset_states()
         train_throughput.reset_states()
         train_accuracy.reset_states()
@@ -114,13 +114,13 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-        if epoch%500 == 0:
-            if epoch >= 1000:
-                improvement = graphing_data[epoch-500: epoch, 1].mean() - graphing_data[epoch-1000: epoch-500, 1].mean()
+        if epoch%100 == 0:
+            if epoch >= 200:
+                improvement = graphing_data[epoch-100: epoch, 1].mean() - graphing_data[epoch-200: epoch-100, 1].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:
                     break
-    fname_template = "./trained_models/Sept 25/k=2, L=2/Data_gen_encoder_small_batch_L=1_k=2_tanh_annealing{}"
+    fname_template = "./trained_models/Sept 25/k=2, L=2/Data_gen_common_encoder_L=1_k=2_tanh_annealing{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))
