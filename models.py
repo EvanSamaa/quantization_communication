@@ -12,12 +12,28 @@ def create_MLP_model(input_shape, k):
     x = perception_model(inputs, k, 5)
     model = Model(inputs, x, name="max_nn")
     return model
+def create_MLP_mean0_model(input_shape, k):
+    # outputs logit
+    inputs = Input(shape=input_shape)
+    x = inputs - 0.5
+    x = perception_model(x, k, 5)
+    model = Model(inputs, x, name="max_nn")
+    return model
+def create_large_MLP_model(input_shape, k):
+    inputs = Input(shape=input_shape)
+    x = perception_model(inputs, 50, 10)
+    x = LeakyReLU()(x)
+    x = Dense(10)(x)
+    model = Model(inputs, x, name="Deep_max_nn")
+    print(model.summary())
+    return model
+
 def create_MLP_model_with_transform(input_shape, k):
     # needs to call transform first
     # outputs logit
     inputs = Input(shape=input_shape)
     x = Flatten()(inputs)
-    x = perception_model(x, k, 5)
+    x = perception_model(x, k, 2)
     model = Model(inputs, x, name="max_nn")
     return model
 def ranking_transform(x):
@@ -128,9 +144,9 @@ def Encoder_module(L):
         x = LeakyReLU()(x)
         x = Dense(L)(x)
         # x = tf.keras.activations.tanh(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.tanh(x))
-        x = sign_relu_STE(x)
+        # x = sign_relu_STE(x)
         # x = tf.keras.layers.BatchNormalization()(x)
-        # x = hard_tanh(x) + tf.stop_gradient(tf.sign(x) - hard_tanh(x))
+        x = hard_tanh(x) + tf.stop_gradient(tf.sign(x) - hard_tanh(x))
         return x
     return encoder_module
 def Uniform_Encoder_module(k, l, input_shape):
@@ -141,7 +157,6 @@ def Uniform_Encoder_module(k, l, input_shape):
     x = tf.keras.activations.sigmoid(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.sigmoid(x))
     model = Model(inputs, x, name="encoder_unit")
     return model
-
 def create_encoding_model_with_annealing(k, l, input_shape):
     inputs = Input(shape=input_shape)
     epoch = inputs[:, 1][0]
@@ -152,19 +167,34 @@ def create_encoding_model_with_annealing(k, l, input_shape):
     for item in x_list[1:]:
         encoding = tf.concat((encoding, Encoder_module_annealing(l)(item, epoch)), axis=1)
     out = perception_model(encoding, k, 5)
-    model = Model(inputs, out, name="auto_encoder_nn")
+    model = Model(inputs, out, name="k2_L2_annealing_nn")
     print(model.summary())
     return model
 def Encoder_module_annealing(L):
     def encoder_module(x, N):
+        x = Dense(50)(x)
+        x = LeakyReLU()(x)
         x = Dense(20)(x)
         x = LeakyReLU()(x)
         x = Dense(L)(x)
         # x = sign_relu_STE(x)
-        x = annealing_sigmoid(x, N) + tf.stop_gradient(tf.sign(x) - annealing_sigmoid(x, N))
+        x = annealing_tanh(x, N) + tf.stop_gradient(tf.sign(x) - annealing_tanh(x, N))
+        # x = hard_tanh(x) + tf.stop_gradient(tf.sign(x) - hard_tanh(x))
         return x
     return encoder_module
-
+def create_encoding_model_with_annealing_LSTM(k, l, input_shape):
+    inputs = Input(shape=input_shape)
+    epoch = inputs[:, 1][0]
+    inputs_mod = inputs[:, 1:]
+    print(inputs.shape)
+    x_list = tf.split(inputs_mod, num_or_size_splits=k, axis=1)
+    encoding = Encoder_module_annealing(l)(x_list[0], epoch)
+    for item in x_list[1:]:
+        encoding = tf.concat((encoding, Encoder_module_annealing(l)(item, epoch)), axis=1)
+    out = create_LSTM_model_with2states(k, [k, 1], 10)
+    model = Model(inputs, out, name="k2_L2_annealing_nn_LSTM")
+    print(model.summary())
+    return model
 def ensemble_regression(k, input_shape):
     regression_1 = create_regression_MLP_netowkr(input_shape, k)
     regression_2 = tf.keras.models.load_model("trained_models/Sept 19th/N_10000_5_Layer_MLP_regression.h5")

@@ -7,9 +7,36 @@ from tensorflow.keras.activations import sigmoid
 from matplotlib import pyplot as plt
 from util import *
 from models import *
-def quantizaton_evaluation(model, granuality = 0.0001):
-    print(model.summary())
+def quantizaton_evaluation(model, granuality = 0.0001, k=2):
+    submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
+    count = np.arange(0, 1, 0.0001)
+    bin = np.zeros((k, count.shape[0]))
+    for i in range(count.shape[0]):
+        channel_data = tf.ones((1, k)) * count[i]
+        channel_label = tf.math.argmax(channel_data, axis=1)
+        ds = Dataset.from_tensor_slices((channel_data, channel_label))
+        for features, labels in ds:
+            features_mod = tf.ones((1, 1))
+            features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[0]))), axis=1)
+            out = submodel(features_mod)
+            bin = log_bin(bin, out, i)
+    plt.plot(count, bin[0, :])
+    plt.plot(count, bin[1, :])
+    plt.show()
     # layer_output = model.get_layer(layer_name).output
+def log_bin(bin, output, n):
+    for i in range(output.shape[1]):
+        bin[i, n] = get_num_from_binary(output[:, i]) + i*2**output.shape[0]
+    return bin
+def get_num_from_binary(binary):
+    power = 0
+    sum = 0
+    for i in range(binary.shape[0]-1, -1, -1):
+        if binary[i] > 0:
+            sum = sum + 2**power
+        power = power + 1
+    return sum
+
 
 def variance_graph(model, N = 10000):
     # tp_fn = ExpectedThroughput(name = "throughput")
@@ -100,14 +127,13 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 25/Data_gen_encoder_L10_hard_tanh"
+    file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing_2"
     model_path = file + ".h5"
     # training_data_path = file + ".npy"
     # training_data_path1 = file + "_cont.npy"
     # training_data_path2 = file + "_cont2.npy"
     # training_data = np.concatenate((np.load(training_data_path), np.load(training_data_path1)), axis=0)
     model = tf.keras.models.load_model(model_path)
-    print(model.summary())
     # model = create_uniformed_quantization_model(k=10, bin_num=2*10)
     # plot_data(training_data)
     # print(model.summary())
