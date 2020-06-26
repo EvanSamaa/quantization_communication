@@ -22,7 +22,7 @@ def train_step(features, labels, N=None):
     train_accuracy(labels, predictions)
 def test_step(features, labels, N=None):
     if N != None:
-        return train_step_with_annealing(features, labels, N)
+        return test_step_with_annealing(features, labels, N)
     predictions = model(features)
     # predictions = model(ranking_transform(features))
     t_loss = loss_object(labels, predictions)
@@ -55,7 +55,8 @@ if __name__ == "__main__":
     # test_model()
     # A[2]
     N = 10000
-    k = 10
+    k = 2
+    L = 1
     EPOCHS = 20000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
@@ -66,7 +67,7 @@ if __name__ == "__main__":
     # model = create_BLSTM_model_with2states(k, [k, 1], state_size=30)
     # model = create_uniform_encoding_model(k, 10, (k,))
     # model = create_encoding_model(k, 10, (k, ))
-    model = create_encoding_model_with_annealing(k, 10, (k+1, ))
+    model = create_encoding_model_with_annealing(k, L, (k+1, ))
     # model = create_MLP_mean0_model([k, ], k)
     # model = create_MLP_model(input_shape=(k, ), k=k)
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -84,7 +85,7 @@ if __name__ == "__main__":
     current_acc = 0
     for epoch in range(EPOCHS):
         # Reset the metrics at the start of the next epoch
-        train_ds = gen_data(N, k, 0, 1, N)
+        train_ds = gen_data(1, k, 0, 1, N)
         train_loss.reset_states()
         train_throughput.reset_states()
         train_accuracy.reset_states()
@@ -92,11 +93,11 @@ if __name__ == "__main__":
         test_accuracy.reset_states()
         test_throughput.reset_states()
         for features, labels in train_ds:
-            train_step(features, labels)
-            # train_step(features, labels, epoch)
+            # train_step(features, labels)
+            train_step(features, labels, epoch)
         for features, labels in test_ds:
-            test_step(features, labels)
-            # test_step(features, labels, epoch)
+            # test_step(features, labels)
+            test_step(features, labels, epoch)
         template = 'Epoch {}, Loss: {}, Accuracy:{}, max: {}, expected:{}, Test Loss: {}, Test Accuracy: {}'
         print(template.format(epoch + 1,
                               train_loss.result(),
@@ -113,13 +114,13 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-        if epoch%500 == 0:
-            if epoch >= 1000:
-                improvement = graphing_data[epoch-500: epoch, 1].mean() - graphing_data[epoch-1000: epoch-500, 1].mean()
+        if epoch%100 == 0:
+            if epoch >= 200:
+                improvement = graphing_data[epoch-100: epoch, 1].mean() - graphing_data[epoch-200: epoch-100, 1].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:
                     break
-    fname_template = "./trained_models/Sept 25/Data_gen_encoder_L10_tanh_annealing{}"
+    fname_template = "./trained_models/Sept 25/k=2, L=2/Data_gen_encoder_small_batch_L=1_k=2_tanh_annealing{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))
