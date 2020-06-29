@@ -6,6 +6,7 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 from util import *
 from BinaryEncodingModel import *
+from models import *
 
 def freeze_encoder_layers(model):
     for layer in model.layers:
@@ -30,11 +31,11 @@ def train_step(features, labels, N=None):
         return train_step_with_annealing(features, labels, N)
     with tf.GradientTape() as tape:
         predictions = model(features)
-        quantization = submodel(features)
+        # quantization = submodel(features)
         # predictions = model(ranking_transform(features))
         loss = loss_object(labels, predictions)
-        loss_2 = encoding_loss(quantization)
-        loss = loss + 0.5*loss_2
+        # loss_2 = encoding_loss(quantization)
+        loss = loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -55,10 +56,10 @@ def train_step_with_annealing(features, labels, N):
     with tf.GradientTape() as tape:
         predictions = model(features_mod)
         # predictions = model(ranking_transform(features))
-        quantization = submodel(features_mod)
+        # quantization = submodel(features_mod)
         loss = loss_object(labels, predictions)
-        loss_2 = encoding_loss(quantization)
-        loss = loss + loss_2
+        # loss_2 = encoding_loss(quantization)
+        loss = loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -82,19 +83,22 @@ if __name__ == "__main__":
     EPOCHS = 20000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
-    model = binary_encoding_model((9,), 1)
-    submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
-    loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    encoding_loss = Encoding_distance()
+    # model = binary_encoding_model((9,), 1)
+    model = LSTM_loss_function(k=1, input_shape=[10000, 3])
+    # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
+    # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    loss_object = tf.keras.losses.MeanSquaredError()
+    # encoding_loss = Encoding_distance()
     optimizer = tf.keras.optimizers.Adam()
     train_loss = tf.keras.metrics.Mean(name='train_loss')
-    # train_throughput = ExpectedThroughput(name='train_throughput')
-    train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
+    # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
+    train_accuracy = Regression_Accuracy(name="train_acc")
     test_loss = tf.keras.metrics.Mean(name='test_loss')
-    # test_throughput = ExpectedThroughput(name='test_throughput')
-    test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
+    # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
+    test_accuracy = Regression_Accuracy(name="test_accuracy")
     # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
-    test_ds = gen_number_data()
+    train_ds = gen_encoding_data(N=1000)
+    test_ds = gen_encoding_data(N=100)
     current_acc = 0
     for epoch in range(EPOCHS):
         # if epoch % switch == 0 and epoch % (2*switch) == 0:
@@ -104,7 +108,7 @@ if __name__ == "__main__":
         #     print("training encoder")
         #     model = freeze_decoder_layers(model)
         # Reset the metrics at the start of the next epoch
-        train_ds = gen_number_data()
+        # train_ds = gen_number_data()
         train_loss.reset_states()
         # train_throughput.reset_states()
         train_accuracy.reset_states()
@@ -112,11 +116,11 @@ if __name__ == "__main__":
         test_accuracy.reset_states()
         # test_throughput.reset_states()
         for features, labels in train_ds:
-            # train_step(features, labels)
-            train_step(features, labels, epoch)
+            train_step(features, labels)
+            # train_step(features, labels, epoch)
         for features, labels in test_ds:
-            # test_step(features, labels)
-            test_step(features, labels, epoch)
+            test_step(features, labels)
+            # test_step(features, labels, epoch)
         template = 'Epoch {}, Loss: {}, Accuracy:{}, max: {}, expected:{}, Test Loss: {}, Test Accuracy: {}'
         print(template.format(epoch + 1,
                               train_loss.result(),
@@ -139,7 +143,7 @@ if __name__ == "__main__":
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:
                     break
-    fname_template = "./trained_models/Sept 29/binary_encoder_one_hot_max_variance{}"
+    fname_template = "./trained_models/Sept 29/LSTM_Loss_function{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model = unfreeze_all(model)
