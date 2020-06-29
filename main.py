@@ -138,7 +138,7 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         # graphing_data[epoch, 6] = test_throughput.result()[0]
         # graphing_data[epoch, 7] = test_throughput.result()[1]
-        if train_loss.result() <= 0.4:
+        if train_loss.result() <= 0.25:
             break
         if epoch%100 == 0:
             if epoch >= 200:
