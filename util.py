@@ -130,6 +130,12 @@ def Encoding_distance():
             loss = loss + tf.norm((encode[i], encode[i+1]))
         return -loss/encode.shape[0]
     return encoding_distance
+def Loss_LSTM_encoding_diversity():
+    model_path = "trained_models/Sept 29/LSTM_Loss_function.h5"
+    loss_model = tf.keras.models.load_model(model_path)
+    for item in loss_model.layers:
+        item.trainable = False
+    return loss_model
 def Regularization_loss():
     def regulariztion_loss(y_pred):
         loss = -tf.reduce_sum(tf.square(y_pred))/(y_pred.shape[0] * y_pred.shape[1])
