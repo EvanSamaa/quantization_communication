@@ -79,13 +79,13 @@ def create_LSTM_model(k, input_shape=[], state_size=10):
     return model
 
 
-def LSTM_loss_function(k, input_shape=[], state_size=10):
+def LSTM_loss_function(k, input_shape=[], state_size=30):
     inputs = Input(shape=input_shape)
     x = tf.keras.layers.LSTM(state_size)(inputs)
     x = LeakyReLU()(x)
     x = Dense(20)(x)
     x = LeakyReLU()(x)
-    x = Dense(10)(x)
+    x = Dense(30)(x)
     x = LeakyReLU()(x)
     x = Dense(1)(x)
     model = Model(inputs, x, name="category_count_LSTM")

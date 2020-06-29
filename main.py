@@ -84,7 +84,7 @@ if __name__ == "__main__":
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = binary_encoding_model((9,), 1)
-    model = LSTM_loss_function(k=1, input_shape=[1000, 3])
+    model = LSTM_loss_function(k=1, input_shape=[500, 3])
     # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
     # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     loss_object = tf.keras.losses.MeanSquaredError()
@@ -97,9 +97,9 @@ if __name__ == "__main__":
     # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
     test_accuracy = Regression_Accuracy(name="test_accuracy")
     # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
-    train_ds = gen_encoding_data(N=9000, Sequence_length=10000)
+    train_ds = gen_encoding_data(N=10000, Sequence_length=500, batchsize=1000)
     print("data_generated")
-    test_ds = gen_encoding_data(N=100, Sequence_length=10000)
+    test_ds = gen_encoding_data(N=100, Sequence_length=500, batchsize=100)
     current_acc = 0
     for epoch in range(EPOCHS):
         # if epoch % switch == 0 and epoch % (2*switch) == 0:
@@ -146,7 +146,7 @@ if __name__ == "__main__":
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:
                     break
-    fname_template = "./trained_models/Sept 29/LSTM_Loss_function{}"
+    fname_template = "./trained_models/Sept 29/LSTM_Loss_function_smol{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model = unfreeze_all(model)
