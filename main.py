@@ -60,7 +60,7 @@ def train_step_with_annealing(features, labels, N):
         loss = loss_object(labels, predictions)
         # loss_2 = encoding_loss(quantization)
         quantization = tf.reshape(quantization, (1, 10000, 3))
-        loss = loss - loss_model(quantization)
+        loss = loss + loss_model(quantization)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -146,10 +146,10 @@ if __name__ == "__main__":
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:
                     break
-    fname_template = "./trained_models/Sept 29/LSTM_Loss_function_smol{}"
+    fname_template = "./trained_models/Sept 29/with_LSTM_loss_function{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model = unfreeze_all(model)
     # model = replace_tanh_with_sign(model, binary_encoding_model_regularization, k=8)
     model.save(fname_template.format(".h5"))
-    print("Training data dnd ")
+    print("Training data end ")
