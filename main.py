@@ -80,11 +80,11 @@ if __name__ == "__main__":
     k = 2
     L = 1
     switch = 20
-    EPOCHS = 20000
+    EPOCHS = 300
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = binary_encoding_model((9,), 1)
-    model = LSTM_loss_function(k=1, input_shape=[10000, 3])
+    model = LSTM_loss_function(k=1, input_shape=[1000, 3])
     # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
     # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     loss_object = tf.keras.losses.MeanSquaredError()
@@ -97,9 +97,9 @@ if __name__ == "__main__":
     # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
     test_accuracy = Regression_Accuracy(name="test_accuracy")
     # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
-    train_ds = gen_encoding_data(N=10000)
+    train_ds = gen_encoding_data(N=9000, Sequence_length=10000)
     print("data_generated")
-    test_ds = gen_encoding_data(N=100)
+    test_ds = gen_encoding_data(N=100, Sequence_length=10000)
     current_acc = 0
     for epoch in range(EPOCHS):
         # if epoch % switch == 0 and epoch % (2*switch) == 0:
@@ -138,6 +138,8 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         # graphing_data[epoch, 6] = test_throughput.result()[0]
         # graphing_data[epoch, 7] = test_throughput.result()[1]
+        if train_loss.result() <= 0.4:
+            break
         if epoch%100 == 0:
             if epoch >= 200:
                 improvement = graphing_data[epoch-100: epoch, 1].mean() - graphing_data[epoch-200: epoch-100, 1].mean()
