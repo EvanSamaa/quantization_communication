@@ -85,7 +85,7 @@ if __name__ == "__main__":
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = binary_encoding_model((9,), 1)
-    model = LSTM_loss_function(k=1, input_shape=[10000, 3])
+    model = LSTM_loss_function(k=1, input_shape=[1000, 3])
     # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
     # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     loss_object = tf.keras.losses.MeanSquaredError()
@@ -100,8 +100,8 @@ if __name__ == "__main__":
     test_accuracy = Regression_Accuracy(name="test_accuracy")
     # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
     print("start gen data")
-    train_ds = gen_encoding_data(N=500, Sequence_length=10000, batchsize=1000)
-    print("stop gen data")
+    train_ds = gen_encoding_data(N=500, Sequence_length=1000, batchsize=1000)
+    print("finish gen data")
     test_ds = gen_encoding_data(N=100, Sequence_length=100, batchsize=100)
     # test_ds = gen_number_data(N=100)
     current_acc = 0
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         # Reset the metrics at the start of the next epoch
         # train_ds = gen_number_data()
         if epoch%10 == 0:
-            train_ds = gen_encoding_data(N=500, Sequence_length=10000, batchsize=1000)
+            train_ds = gen_encoding_data(N=500, Sequence_length=1000, batchsize=1000)
         train_loss.reset_states()
         # train_throughput.reset_states()
         train_accuracy.reset_states()
