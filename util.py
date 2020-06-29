@@ -12,7 +12,15 @@ def gen_data(N, k, low=0, high=1, batchsize=30):
     channel_label = tf.math.argmax(channel_data, axis=1)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
     return dataset
-
+def gen_number_data(N=10000, k = 7.5, batchsize=1000):
+    channel_data_num = tf.random.uniform((N, 1), 0, k)
+    channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
+    # channel_data_num = tf.round(channel_data_num)
+    channel_data = tf.cast(tf.one_hot(channel_data_num, depth=8, on_value=1.0, off_value=0.0), tf.float32)
+    channel_data = tf.reshape(channel_data, (N, 8))
+    channel_label = channel_data_num
+    dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
+    return dataset
 
 # ============================  Metrics  ============================
 class ExpectedThroughput(tf.keras.metrics.Metric):
@@ -94,7 +102,23 @@ class TargetThroughput(tf.keras.metrics.Metric):
     def result(self):
         return self.max_throughput/self.count, self.expected_throughput/self.count
 # ============================  Loss fn  ============================
-
+def Encoding_variance():
+    def encoding_variance(encode):
+        loss = -tf.reduce_sum(tf.math.reduce_variance(encode, axis=0))
+        return loss
+    return encoding_variance
+def Encoding_distance():
+    def encoding_distance(encode):
+        loss = 0
+        for i in range(0, encode.shape[0]-1):
+            loss = loss + tf.norm((encode[i], encode[i+1]))
+        return -loss/encode.shape[0]
+    return encoding_distance
+def Regularization_loss():
+    def regulariztion_loss(y_pred):
+        loss = -tf.reduce_sum(tf.square(y_pred))/(y_pred.shape[0] * y_pred.shape[1])
+        return loss
+    return regulariztion_loss
 def Throughout_diff_Loss():
     def through_put_loss(y_true, y_pred, x=None):
         a = tf.math.log(tf.cast(2, dtype=tf.float32))
@@ -168,3 +192,8 @@ def annealing_tanh(x, N):
     return out
 
 # ========================================== misc ==========================================
+def replace_tanh_with_sign(model, model_func, k):
+    model.save_weights('weights.hdf5')
+    new_model = model_func((k, ), k, saved=True)
+    new_model.load_weights('weights.hdf5')
+    return new_model

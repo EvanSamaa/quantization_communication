@@ -170,6 +170,16 @@ def create_encoding_model_with_annealing(k, l, input_shape):
     model = Model(inputs, out, name="k2_L2_annealing_nn")
     print(model.summary())
     return model
+def Uniform_Encoder_module_with_annealing(k, l, input_shape):
+    inputs = Input(shape=input_shape)
+    epoch = inputs[:, 1][0]
+    inputs_mod = inputs[:, 1:]
+    x = Dense(20)(inputs_mod)
+    x = LeakyReLU()(x)
+    x = Dense(l)(x)
+    x = annealing_tanh(x, epoch) + tf.stop_gradient(tf.math.sign(x) - annealing_tanh(x, epoch))
+    model = Model(inputs, x, name="encoder_unit")
+    return model
 def Encoder_module_annealing(L):
     def encoder_module(x, N):
         x = Dense(50)(x)
@@ -186,7 +196,6 @@ def create_encoding_model_with_annealing_LSTM(k, l, input_shape):
     inputs = Input(shape=input_shape)
     epoch = inputs[:, 1][0]
     inputs_mod = inputs[:, 1:]
-    print(inputs.shape)
     x_list = tf.split(inputs_mod, num_or_size_splits=k, axis=1)
     encoding = Encoder_module_annealing(l)(x_list[0], epoch)
     for item in x_list[1:]:
@@ -200,11 +209,13 @@ def ensemble_regression(k, input_shape):
     regression_2 = tf.keras.models.load_model("trained_models/Sept 19th/N_10000_5_Layer_MLP_regression.h5")
 def create_uniform_encoding_model_with_annealing(k, l, input_shape):
     inputs = Input(shape=input_shape)
-    x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
-    encoder_module = Uniform_Encoder_module(1, l, (1,))
-    encoding = encoder_module(x_list[0])
-    for item in x_list[1:]:
-        encoding = tf.concat((encoding, encoder_module(item)), axis=1)
+    x_list = tf.split(inputs, num_or_size_splits=k+1, axis=1)
+    encoder_module = Uniform_Encoder_module_with_annealing(1, l, (2,))
+    x_mod = tf.concat((x_list[0], x_list[1]), axis=1)
+    encoding = encoder_module(x_mod)
+    for item in x_list[2:]:
+        x_mod = tf.concat((x_list[0], item), axis=1)
+        encoding = tf.concat((encoding, encoder_module(x_mod)), axis=1)
     out = perception_model(encoding, k, 5)
     model = Model(inputs, out, name="auto_encoder_nn")
     return model
