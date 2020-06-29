@@ -81,7 +81,7 @@ if __name__ == "__main__":
     k = 2
     L = 1
     switch = 20
-    EPOCHS = 300
+    EPOCHS = 20000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = binary_encoding_model((9,), 1)
