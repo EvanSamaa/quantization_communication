@@ -118,11 +118,11 @@ if __name__ == "__main__":
         test_accuracy.reset_states()
         # test_throughput.reset_states()
         for features, labels in train_ds:
-            train_step(features, labels)
-            # train_step(features, labels, epoch)
+            # train_step(features, labels)
+            train_step(features, labels, epoch)
         for features, labels in test_ds:
-            test_step(features, labels)
-            # test_step(features, labels, epoch)
+            # test_step(features, labels)
+            test_step(features, labels, epoch)
         template = 'Epoch {}, Loss: {}, Accuracy:{}, max: {}, expected:{}, Test Loss: {}, Test Accuracy: {}'
         print(template.format(epoch + 1,
                               train_loss.result(),
