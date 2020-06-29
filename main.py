@@ -35,7 +35,7 @@ def train_step(features, labels, N=None):
         # predictions = model(ranking_transform(features))
         loss = loss_object(labels, predictions)
         # loss_2 = encoding_loss(quantization)
-        loss = loss
+        # loss = loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
     test_accuracy = Regression_Accuracy(name="test_accuracy")
     # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
-    train_ds = gen_encoding_data(N=9000, Sequence_length=10000, batchsize=1000)
+    train_ds = gen_encoding_data(N=1000, Sequence_length=10000, batchsize=1000)
     test_ds = gen_encoding_data(N=100, Sequence_length=100, batchsize=100)
     # test_ds = gen_number_data(N=100)
     current_acc = 0
@@ -112,6 +112,8 @@ if __name__ == "__main__":
         #     model = freeze_decoder_layers(model)
         # Reset the metrics at the start of the next epoch
         # train_ds = gen_number_data()
+        if epoch%10 == 0:
+            train_ds = gen_encoding_data(N=500, Sequence_length=10000, batchsize=1000)
         train_loss.reset_states()
         # train_throughput.reset_states()
         train_accuracy.reset_states()
