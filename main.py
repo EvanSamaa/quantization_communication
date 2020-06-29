@@ -97,7 +97,8 @@ if __name__ == "__main__":
     # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
     test_accuracy = Regression_Accuracy(name="test_accuracy")
     # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
-    train_ds = gen_encoding_data(N=1000)
+    train_ds = gen_encoding_data(N=10000)
+    print("data_generated")
     test_ds = gen_encoding_data(N=100)
     current_acc = 0
     for epoch in range(EPOCHS):
@@ -149,4 +150,4 @@ if __name__ == "__main__":
     model = unfreeze_all(model)
     # model = replace_tanh_with_sign(model, binary_encoding_model_regularization, k=8)
     model.save(fname_template.format(".h5"))
-    print("Training data and ")
+    print("Training data dnd ")
