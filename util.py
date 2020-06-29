@@ -12,7 +12,7 @@ def gen_data(N, k, low=0, high=1, batchsize=30):
     channel_label = tf.math.argmax(channel_data, axis=1)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
     return dataset
-def gen_number_data(N=10000, k = 7.5, batchsize=1000):
+def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_data_num = tf.random.uniform((N, 1), 0, k)
     channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
     # channel_data_num = tf.round(channel_data_num)
