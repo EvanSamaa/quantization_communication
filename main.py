@@ -4,7 +4,6 @@ from tensorflow.data import Dataset
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, ThresholdedReLU, Flatten
 from tensorflow.keras.activations import sigmoid
-from matplotlib import pyplot as plt
 from util import *
 from BinaryEncodingModel import *
 
