@@ -176,7 +176,7 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 29/binary_encoder_one_hot_max_variance"
+    file = "trained_models/Sept 29/with_LSTM_loss_function"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data_path1 = file + "_cont.npy"
@@ -189,5 +189,5 @@ if __name__ == "__main__":
     # plot_data(training_data)
     # quantizaton_evaluation(model)
     quantizaton_evaluation_numbers(model)
-    variance_graph_accuracy(model, N=1000)
+    # variance_graph_accuracy(model, N=1000)
 
