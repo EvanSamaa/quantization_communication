@@ -121,7 +121,7 @@ if __name__ == "__main__":
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:
                     break
-    fname_template = "./trained_models/Sept 25/k=2, L=2/Data_gen_common_encoder_L=1_k=2_tanh_annealing{}"
+    fname_template = "./trained_models/Sept 29/LSTM_Loss_function{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model.save(fname_template.format(".h5"))

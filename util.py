@@ -21,6 +21,22 @@ def gen_number_data(N=10000, k = 7.5, batchsize=1000):
     channel_label = channel_data_num
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
     return dataset
+def gen_encoding_data(N=1000, Sequence_length=10000, k=8, batchsize = 100):
+    dict_list = [[-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1]]
+    output = np.zeros((N, Sequence_length, 3))
+    channel_label = np.zeros((N, 1))
+    for n in range(N):
+        random.shuffle(dict_list)
+        current = random.randint(1,8)
+        current_encoding = np.array(dict_list[:current])
+        idx = np.random.randint(0, current, size=Sequence_length)
+        for m in range(Sequence_length):
+            output[n, m] = current_encoding[idx[m]]
+        channel_label[n] = current
+    channel_label = tf.cast(channel_label, tf.float32)
+    output = tf.cast(output, tf.float32)
+    dataset = Dataset.from_tensor_slices((output, channel_label)).batch(batchsize)
+    return dataset
 
 # ============================  Metrics  ============================
 class ExpectedThroughput(tf.keras.metrics.Metric):
@@ -71,7 +87,7 @@ class Regression_Accuracy(tf.keras.metrics.Metric):
         self.correct = self.add_weight(name='tp', initializer='zeros')
         self.count = self.add_weight(name='tp2', initializer='zeros')
     def update_state(self, y_true, y_pred):
-        y_rounded_pred = tf.cast(tf.math.round(y_pred), tf.int64)
+        y_rounded_pred = tf.cast(tf.math.round(y_pred), tf.float32)
         diff = y_true - y_rounded_pred
         count = tf.cast(tf.reduce_sum(tf.where(diff == 0, 1, 0)), tf.float32)
         # i_pred = tf.reshape((tf.math.log(1 - 1.5*tf.math.log(1 - c_pred))/self.a), (i_max.shape[0], ))
@@ -197,3 +213,6 @@ def replace_tanh_with_sign(model, model_func, k):
     new_model = model_func((k, ), k, saved=True)
     new_model.load_weights('weights.hdf5')
     return new_model
+
+if __name__ == "__main__":
+    gen_encoding_data()
