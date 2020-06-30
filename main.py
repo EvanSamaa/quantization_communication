@@ -107,7 +107,7 @@ if __name__ == "__main__":
     test_accuracy = Regression_Accuracy(name="test_accuracy")
     # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
     print("start gen data")
-    train_ds = gen_encoding_data(N=3000, Sequence_length=1000, batchsize=1000)
+    train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
     print("finish gen data")
     test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
     # test_ds = gen_number_data(N=100)
@@ -124,7 +124,7 @@ if __name__ == "__main__":
         #     encode_onlyy = True
         #     model = freeze_decoder_layers(model)
         # Reset the metrics at the start of the next epoch
-        train_ds = gen_encoding_data(N=3000, Sequence_length=1000, batchsize=1000)
+        train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
         train_loss.reset_states()
         # train_throughput.reset_states()
         train_accuracy.reset_states()
