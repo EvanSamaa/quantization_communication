@@ -45,7 +45,7 @@ def binary_encoding_model(input_shape, k):
     x = LeakyReLU()(x)
     x = Dense(20, name="decoder_dense_2")(x)
     x = LeakyReLU()(x)
-    out = Dense(16, name="decoder_dense_3")(x)
+    out = Dense(8, name="decoder_dense_3")(x)
     model = Model(inputs, out, name = "binary encoding model")
     print(model.summary())
     return model

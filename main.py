@@ -91,7 +91,7 @@ if __name__ == "__main__":
     EPOCHS = 10000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
-    model = binary_encoding_model((17,), 1)
+    model = binary_encoding_model((2,), 1)
     # model = MLP_loss_function()
     # model = LSTM_loss_function(k=1, input_shape=[1000, 3])
     # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
@@ -163,7 +163,7 @@ if __name__ == "__main__":
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:
                     break
-    fname_template = "trained_models/Sept 29/binary_encoder_one_hot_16num{}"
+    fname_template = "trained_models/Sept 29/binary_encoder_4bit{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model = unfreeze_all(model)
