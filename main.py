@@ -26,9 +26,9 @@ def unfreeze_all(model):
     for layer in model.layers:
         layer.trainable = True
     return model
-def train_step(features, labels, N=None):
+def train_step(features, labels, N=None, encode_only=False):
     if N != None:
-        return train_step_with_annealing(features, labels, N)
+        return train_step_with_annealing(features, labels, N, encode_only)
     with tf.GradientTape() as tape:
         predictions = model(features)
         # quantization = submodel(features)
@@ -50,16 +50,23 @@ def test_step(features, labels, N=None):
     test_loss(t_loss)
     test_accuracy(labels, predictions)
     # test_throughput(labels, predictions, features)
-def train_step_with_annealing(features, labels, N):
+def train_step_with_annealing(features, labels, N, encode_only=False):
     features_mod = tf.ones((features.shape[0], 1)) * N
     features_mod = tf.concat((features_mod, features), axis=1)
-    with tf.GradientTape() as tape:
+    if encode_only == False:
+        with tf.GradientTape() as tape:
+            predictions = model(features_mod)
+            # predictions = model(ranking_transform(features))
+            # quantization = submodel(features_mod)
+            loss = loss_object(labels, predictions)
+            # quantization = tf.reshape(quantization, (1, 10000, 3))
+            # loss = loss - 3*loss_model(quantization)
+    else:
         predictions = model(features_mod)
-        # predictions = model(ranking_transform(features))
-        quantization = submodel(features_mod)
-        loss = loss_object(labels, predictions)
-        quantization = tf.reshape(quantization, (1, 10000, 3))
-        loss = loss - 3*loss_model(quantization)
+        with tf.GradientTape() as tape:
+            quantization = submodel(features_mod)
+            quantization = tf.reshape(quantization, (1, 10000, 3))
+            loss = - loss_model(quantization)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -79,7 +86,7 @@ if __name__ == "__main__":
     N = 10000
     k = 2
     L = 1
-    switch = 20
+    switch = 50
     EPOCHS = 10000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
@@ -104,13 +111,16 @@ if __name__ == "__main__":
     # test_ds = gen_encoding_data(N=100, Sequence_length=100, batchsize=100)
     test_ds = gen_number_data(N=100)
     current_acc = 0
+    encode_onlyy = True
     for epoch in range(EPOCHS):
-        # if epoch % switch == 0 and epoch % (2*switch) == 0:
-        #     print("training decoder")
-        #     model = unfreeze_all(model)
-        # elif epoch % switch == 0 and epoch % (2*switch) != 0:
-        #     print("training encoder")
-        #     model = freeze_decoder_layers(model)
+        if epoch % switch == 0 and epoch % (2*switch) == 0:
+            print("training decoder")
+            encode_onlyy = False
+            # model = unfreeze_all(model)
+        elif epoch % switch == 0 and epoch % (2*switch) != 0:
+            print("training encoder")
+            encode_onlyy = True
+            # model = freeze_decoder_layers(model)
         # Reset the metrics at the start of the next epoch
         train_ds = gen_number_data()
         # train_ds = gen_encoding_data(N=3000, Sequence_length=1000, batchsize=1000)
@@ -122,7 +132,7 @@ if __name__ == "__main__":
         # test_throughput.reset_states()
         for features, labels in train_ds:
             # train_step(features, labels)
-            train_step(features, labels, epoch)
+            train_step(features, labels, epoch, encode_onlyy)
         for features, labels in test_ds:
             # test_step(features, labels)
             test_step(features, labels, epoch)
@@ -148,7 +158,7 @@ if __name__ == "__main__":
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.0001:
                     break
-    fname_template = "trained_models/Sept 29/binary_encoder_one_hot_tanh_annealing_3xLSTMLoss{}"
+    fname_template = "trained_models/Sept 29/binary_encoder_one_hot_tanh_annealing_3xLSTMLoss_EM{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model = unfreeze_all(model)
