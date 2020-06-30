@@ -113,16 +113,17 @@ if __name__ == "__main__":
     current_acc = 0
     encode_onlyy = True
     for epoch in range(EPOCHS):
-        # if epoch % switch == 0 and epoch % (2*switch) == 0:
-        #     print("training decoder")
-        #     encode_onlyy = False
-        #     # model = unfreeze_all(model)
-        # elif epoch % switch == 0 and epoch % (2*switch) != 0:
-        #     print("training encoder")
-        #     encode_onlyy = True
-            # model = freeze_decoder_layers(model)
+        if epoch % switch == 0 and epoch % (2*switch) == 0:
+            print("training decoder")
+            encode_onlyy = False
+            # model = unfreeze_all(model)
+        elif epoch % switch == 0 and epoch % (2*switch) != 0:
+            print("training encoder")
+            encode_onlyy = True
+            model = freeze_decoder_layers(model)
         # Reset the metrics at the start of the next epoch
-        train_ds = gen_number_data()
+        if encode_onlyy == False:
+            train_ds = gen_number_data()
         # train_ds = gen_encoding_data(N=3000, Sequence_length=1000, batchsize=1000)
         train_loss.reset_states()
         # train_throughput.reset_states()
