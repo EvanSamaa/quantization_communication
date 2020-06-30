@@ -66,7 +66,7 @@ def train_step_with_annealing(features, labels, N, encode_only=False):
         with tf.GradientTape() as tape:
             quantization = submodel(features_mod)
             quantization = tf.reshape(quantization, (1, 10000, 3))
-            loss = - loss_model(quantization)
+            loss = -loss_model(quantization)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -114,17 +114,15 @@ if __name__ == "__main__":
     encode_onlyy = True
     train_ds = gen_number_data()
     for epoch in range(EPOCHS):
-        if epoch % switch == 0 and epoch % (2*switch) == 0:
-            print("training decoder")
-            encode_onlyy = False
-            # model = unfreeze_all(model)
-        elif epoch % switch == 0 and epoch % (2*switch) != 0:
-            print("training encoder")
-            encode_onlyy = True
-            model = freeze_decoder_layers(model)
+        # if epoch % switch == 0 and epoch % (2*switch) == 0:
+        #     print("training decoder")
+        #     encode_onlyy = False
+        #     # model = unfreeze_all(model)
+        # elif epoch % switch == 0 and epoch % (2*switch) != 0:
+        #     print("training encoder")
+        #     encode_onlyy = True
+        #     model = freeze_decoder_layers(model)
         # Reset the metrics at the start of the next epoch
-        if encode_onlyy == False:
-            train_ds = gen_number_data()
         # train_ds = gen_encoding_data(N=3000, Sequence_length=1000, batchsize=1000)
         train_loss.reset_states()
         # train_throughput.reset_states()
