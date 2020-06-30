@@ -66,7 +66,7 @@ def train_step_with_annealing(features, labels, N, encode_only=False):
         with tf.GradientTape() as tape:
             quantization = submodel(features_mod)
             quantization = tf.reshape(quantization, (1, 10000, 3))
-            loss = - loss_model(quantization)
+            loss = - tf.square(loss_model(quantization))
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     N = 10000
     k = 2
     L = 1
-    switch = 50
+    switch = 100
     EPOCHS = 10000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
