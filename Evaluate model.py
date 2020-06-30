@@ -176,7 +176,7 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 29/with_LSTM_loss_function"
+    file = "trained_models/Sept 29/binary_encoder_EM"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data_path1 = file + "_cont.npy"
