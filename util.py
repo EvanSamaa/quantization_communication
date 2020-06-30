@@ -131,7 +131,7 @@ def Encoding_distance():
         return -loss/encode.shape[0]
     return encoding_distance
 def Loss_LSTM_encoding_diversity():
-    model_path = "trained_models/Sept 29/LSTM_Loss_function.h5"
+    model_path = "trained_models/Sept 29/LSTM_Loss_function_2gi.h5"
     loss_model = tf.keras.models.load_model(model_path)
     for item in loss_model.layers:
         item.trainable = False

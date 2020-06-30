@@ -23,7 +23,9 @@ def Encoder_module_annealing(L, i=0):
     return encoder_module
 def Encoder_module_regularization(L, i=0, saved=False):
     def encoder_module(x):
-        x = Dense(20, name="encoder_dense_1_{}".format(i))(x)
+        x = Dense(50, name="encoder_dense_1_{}".format(i))(x)
+        x = LeakyReLU()(x)
+        x = Dense(80, name="encoder_dense_2_{}".format(i))(x)
         x = LeakyReLU()(x)
         x = Dense(L, name="encoder_dense_3_{}".format(i))(x)
         if saved == False:
