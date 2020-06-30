@@ -12,7 +12,31 @@ def gen_data(N, k, low=0, high=1, batchsize=30):
     channel_label = tf.math.argmax(channel_data, axis=1)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
     return dataset
-
+def gen_number_data(N=10000, k = 7.5, batchsize=10000):
+    channel_data_num = tf.random.uniform((N, 1), 0, k)
+    channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
+    # channel_data_num = tf.round(channel_data_num)
+    channel_data = tf.cast(tf.one_hot(channel_data_num, depth=8, on_value=1.0, off_value=0.0), tf.float32)
+    channel_data = tf.reshape(channel_data, (N, 8))
+    channel_label = channel_data_num
+    dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
+    return dataset
+def gen_encoding_data(N=1000, Sequence_length=10000, k=8, batchsize = 100):
+    dict_list = [[-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1]]
+    output = np.zeros((N, Sequence_length, 3))
+    channel_label = np.zeros((N, 1))
+    for n in range(N):
+        random.shuffle(dict_list)
+        current = random.randint(1,8)
+        current_encoding = np.array(dict_list[:current])
+        idx = np.random.randint(0, current, size=Sequence_length)
+        for m in range(Sequence_length):
+            output[n, m] = current_encoding[idx[m]]
+        channel_label[n] = current
+    channel_label = tf.cast(channel_label, tf.float32)
+    output = tf.cast(output, tf.float32)
+    dataset = Dataset.from_tensor_slices((output, channel_label)).batch(batchsize)
+    return dataset
 
 # ============================  Metrics  ============================
 class ExpectedThroughput(tf.keras.metrics.Metric):
@@ -63,7 +87,7 @@ class Regression_Accuracy(tf.keras.metrics.Metric):
         self.correct = self.add_weight(name='tp', initializer='zeros')
         self.count = self.add_weight(name='tp2', initializer='zeros')
     def update_state(self, y_true, y_pred):
-        y_rounded_pred = tf.cast(tf.math.round(y_pred), tf.int64)
+        y_rounded_pred = tf.cast(tf.math.round(y_pred), tf.float32)
         diff = y_true - y_rounded_pred
         count = tf.cast(tf.reduce_sum(tf.where(diff == 0, 1, 0)), tf.float32)
         # i_pred = tf.reshape((tf.math.log(1 - 1.5*tf.math.log(1 - c_pred))/self.a), (i_max.shape[0], ))
@@ -94,7 +118,29 @@ class TargetThroughput(tf.keras.metrics.Metric):
     def result(self):
         return self.max_throughput/self.count, self.expected_throughput/self.count
 # ============================  Loss fn  ============================
-
+def Encoding_variance():
+    def encoding_variance(encode):
+        loss = -tf.reduce_sum(tf.math.reduce_variance(encode, axis=0))
+        return loss
+    return encoding_variance
+def Encoding_distance():
+    def encoding_distance(encode):
+        loss = 0
+        for i in range(0, encode.shape[0]-1):
+            loss = loss + tf.norm((encode[i], encode[i+1]))
+        return -loss/encode.shape[0]
+    return encoding_distance
+def Loss_LSTM_encoding_diversity():
+    model_path = "trained_models/Sept 29/LSTM_Loss_function_2gi.h5"
+    loss_model = tf.keras.models.load_model(model_path)
+    for item in loss_model.layers:
+        item.trainable = False
+    return loss_model
+def Regularization_loss():
+    def regulariztion_loss(y_pred):
+        loss = -tf.reduce_sum(tf.square(y_pred))/(y_pred.shape[0] * y_pred.shape[1])
+        return loss
+    return regulariztion_loss
 def Throughout_diff_Loss():
     def through_put_loss(y_true, y_pred, x=None):
         a = tf.math.log(tf.cast(2, dtype=tf.float32))
@@ -159,6 +205,20 @@ def leaky_hard_tanh(x):
 def clippedRelu(x):
     return tf.maximum(tf.minimum(0.01 * x, x), 0.01 * x)
 def annealing_sigmoid(x, N):
-    alpha = tf.minimum(8.0, 1.0 + 0.01*N)
+    alpha = tf.minimum(5.0, 1.0 + 0.01*N)
     out = tf.sigmoid(alpha*x)
     return out
+def annealing_tanh(x, N):
+    alpha = tf.minimum(5.0, 1.0 + 0.01*N)
+    out = tf.tanh(alpha*x)
+    return out
+
+# ========================================== misc ==========================================
+def replace_tanh_with_sign(model, model_func, k):
+    model.save_weights('weights.hdf5')
+    new_model = model_func((k, ), k, saved=True)
+    new_model.load_weights('weights.hdf5')
+    return new_model
+
+if __name__ == "__main__":
+    gen_encoding_data()
