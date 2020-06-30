@@ -77,7 +77,16 @@ def create_LSTM_model(k, input_shape=[], state_size=10):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
-
+def MLP_loss_function(inputshape=[1000, 3]):
+    inputs = Input(shape=inputshape)
+    x = tf.keras.layers.Reshape((3000, ))(inputs)
+    x = Dense(100)(x)
+    x = LeakyReLU()(x)
+    x = Dense(200)(x)
+    x = LeakyReLU()(x)
+    x = Dense(1)(x)
+    model = Model(inputs, x, name="category_count_MLP")
+    return model
 
 def LSTM_loss_function(k, input_shape=[], state_size=30):
     inputs = Input(shape=input_shape)
