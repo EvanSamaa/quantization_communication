@@ -60,7 +60,7 @@ def train_step_with_annealing(features, labels, N, encode_only=False):
             quantization = submodel(features_mod)
             loss = loss_object(labels, predictions)
             quantization = tf.reshape(quantization, (1, 10000, 3))
-            loss = loss - loss_model(quantization)
+            # loss = loss - loss_model(quantization)
     else:
         predictions = model(features_mod)
         with tf.GradientTape() as tape:
@@ -112,6 +112,7 @@ if __name__ == "__main__":
     test_ds = gen_number_data(N=100)
     current_acc = 0
     encode_onlyy = True
+    train_ds = gen_number_data()
     for epoch in range(EPOCHS):
         if epoch % switch == 0 and epoch % (2*switch) == 0:
             print("training decoder")
