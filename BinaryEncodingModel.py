@@ -11,13 +11,13 @@ from util import *
 
 def Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
-        x = Dense(50, name="encoder_dense_1_{}".format(i))(x)
+        x = Dense(100, name="encoder_dense_1_{}".format(i))(x)
         x = LeakyReLU()(x)
-        x = Dense(20, name="encoder_dense_2_{}".format(i))(x)
-        x = LeakyReLU()(x)
+        # x = Dense(20, name="encoder_dense_2_{}".format(i))(x)
+        # x = LeakyReLU()(x)
         x = Dense(L, name="encoder_dense_3_{}".format(i))(x)
         # x = sign_relu_STE(x)
-        x = annealing_tanh(x, N) + tf.stop_gradient(tf.sign(x) - annealing_tanh(x, N))
+        x = annealing_tanh(x, N, name="tanh_pos") + tf.stop_gradient(tf.sign(x) - annealing_tanh(x, N, name="tanh_neg"))
         # x = hard_tanh(x) + tf.stop_gradient(tf.sign(x) - hard_tanh(x))
         return x
     return encoder_module

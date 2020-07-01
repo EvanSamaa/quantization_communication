@@ -44,8 +44,8 @@ def get_num_from_binary(binary):
 def quantizaton_evaluation_numbers(model, granuality = 0.0001, k=2):
     sub_model = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
     for i in range(0, 8):
-        # features = tf.ones((1,1))*i
-        features = tf.one_hot([0, 1, 2, 3, 4, 5, 6, 7], depth=8)[i]
+        features = tf.ones((1,1))*i
+        # features = tf.one_hot([0, 1, 2, 3, 4, 5, 6, 7], depth=8)[i]
         features_mod = tf.ones((1, 1))
         features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[0]))), axis=1)
         out = sub_model(features_mod)
@@ -169,14 +169,14 @@ def plot_data(arr):
     # plt.plot(x, arr[:,3])
     # plt.plot(x, arr[:,7])
     # plt.plot(x, arr[:,2])
-    plt.plot(x, arr[:, 1])
-    plt.plot(x, arr[:, 5])
-    plt.title("Accuracy")
+    plt.plot(x, arr[:, 0])
+    plt.plot(x, arr[:, 4])
+    plt.title("Loss")
     # plt.legend(("Training", "Test", "Maximum"))
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 29/binary_encoder_onehot_hardtahn"
+    file = "trained_models/Sept 29/just_max_combination"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data_path1 = file + "_cont.npy"
@@ -186,8 +186,8 @@ if __name__ == "__main__":
     model = tf.keras.models.load_model(model_path)
     # model = create_uniformed_quantization_model(k=2, bin_num=2)
     # print(model.summary())
-    # plot_data(training_data)
+    plot_data(training_data)
     # quantizaton_evaluation(model)
-    # quantizaton_evaluation_numbers(model)
-    variance_graph_accuracy(model, N=1000)
+    quantizaton_evaluation_numbers(model)
+    # variance_graph_accuracy(model, N=1000)
 

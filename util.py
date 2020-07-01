@@ -14,12 +14,12 @@ def gen_data(N, k, low=0, high=1, batchsize=30):
     return dataset
 def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_data_num = tf.random.uniform((N, 1), 0, k)
-    # channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
-    channel_data_num = tf.round(channel_data_num)
-    # channel_data = tf.cast(tf.one_hot(channel_data_num, depth=8, on_value=1.0, off_value=0.0), tf.float32)
-    # channel_data = tf.reshape(channel_data, (N, 8))
+    channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
+    # channel_data_num = tf.round(channel_data_num)
+    channel_data = tf.cast(tf.one_hot(channel_data_num, depth=8, on_value=1.0, off_value=0.0), tf.float32)
+    channel_data = tf.reshape(channel_data, (N, 8))
     channel_label = channel_data_num
-    dataset = Dataset.from_tensor_slices((channel_data_num, channel_label)).batch(batchsize)
+    dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
     return dataset
 def gen_encoding_data(N=1000, Sequence_length=10000, k=16, batchsize = 100, bit = 4):
     # dict_list = [[-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1]]
@@ -134,11 +134,11 @@ def Encoding_distance():
             loss = loss + tf.norm((encode[i], encode[i+1]))
         return -loss/encode.shape[0]
     return encoding_distance
-def Loss_LSTM_encoding_diversity():
-    model_path = "trained_models/Sept 29/MLP_Loss_function.h5"
+def Loss_NN_encoding_diversity():
+    model_path = "trained_models/Sept 29/Conv_net_loss_function_2.h5"
     loss_model = tf.keras.models.load_model(model_path)
-    # for item in loss_model.layers:
-    #     item.trainable = False
+    for item in loss_model.layers:
+        item.trainable = False
     return loss_model
 def Regularization_loss():
     def regulariztion_loss(y_pred):
@@ -219,9 +219,9 @@ def annealing_sigmoid(x, N):
     alpha = tf.minimum(5.0, 1.0 + 0.01*N)
     out = tf.sigmoid(alpha*x)
     return out
-def annealing_tanh(x, N):
+def annealing_tanh(x, N, name):
     alpha = tf.minimum(5.0, 1.0 + 0.01*N)
-    out = tf.tanh(alpha*x)
+    out = tf.tanh(alpha*x, name=name)
     return out
 
 # ========================================== misc ==========================================

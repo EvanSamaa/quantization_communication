@@ -57,16 +57,11 @@ def train_step_with_annealing(features, labels, N, encode_only=False):
         with tf.GradientTape() as tape:
             predictions = model(features_mod)
             # predictions = model(ranking_transform(features))
-            # quantization0 = submodel(features_mod)[0:1000, :]
+            quantization0 = submodel(features_mod)[0:1000, :]
+            # quantization0 = tf.sign(quantization0)
             loss = loss_object(labels, predictions)
-            # quantization0 = tf.reshape(quantization0, (1, 1000, 3))
-    else:
-        predictions = model(features_mod)
-        with tf.GradientTape() as tape:
-            # quantization = submodel(features_mod)[0:1000, :]
-            # quantization = tf.reshape(quantization, (1, 1000, 3))
-            predictions = model(features_mod)
-            loss = encoding_loss(predictions)
+            quantization0 = tf.reshape(quantization0, (1, 1000, 3))
+            loss = loss + tf.exp(-loss_model(quantization0))
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -80,6 +75,16 @@ def test_step_with_annealing(features, labels, N):
     test_loss(t_loss)
     test_accuracy(labels, predictions)
     # test_throughput(labels, predictions, features)
+def quantizaton_evaluation_numbers(model, granuality=0.0001, k=2):
+    tsub_model = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
+    for i in range(0, 8):
+        features = tf.ones((1,1))*i
+        # features = tf.one_hot([0, 1, 2, 3, 4, 5, 6, 7], depth=8)[i]
+        features_mod = tf.ones((1, 1))
+        features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[0]))), axis=1)
+        out = tsub_model(features_mod)
+        out_2 = model(features_mod)
+        print(i, out, Softmax()(out_2))
 if __name__ == "__main__":
     # test_model()
     # A[2]
@@ -90,14 +95,13 @@ if __name__ == "__main__":
     EPOCHS = 10000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
-    # model = binary_encoding_model((2,), 1)
+    # model = binary_encoding_model((9,), 1)
     model = Convnet_loss_function(input_shape=[1000,4], combinations=16)
     # model = LSTM_loss_function(k=1, input_shape=[1000, 3])
-    # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
-    # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_tanh_pos").output)
+    loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     loss_object = tf.keras.losses.MeanSquaredError()
-    # loss_model = Loss_LSTM_encoding_diversity()
-    encoding_loss = Negative_shove()
+    # loss_model = Loss_NN_encoding_diversity()
     optimizer = tf.keras.optimizers.Adam()
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
@@ -107,17 +111,16 @@ if __name__ == "__main__":
     test_accuracy = Regression_Accuracy(name="test_accuracy")
     # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
     # print("start gen data")
-    train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
+    # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
     # print("finish gen data")
     test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
     # test_ds = gen_number_data(N=100)
-    current_acc = 0
+    # train_ds = gen_number_data(N=1000)
     encode_onlyy = False
-    # train_ds = gen_number_data()
     for epoch in range(EPOCHS):
         # Reset the metrics at the start of the next epoch
         train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
-        # train_ds = gen_number_data()
+        # train_ds = gen_number_data(N=1000)
         train_loss.reset_states()
         # train_throughput.reset_states()
         train_accuracy.reset_states()
@@ -148,16 +151,25 @@ if __name__ == "__main__":
         # graphing_data[epoch, 7] = test_throughput.result()[1]
         if train_loss.result() <= 0.01:
             break
-        if epoch%100 == 0:
-            if epoch >= 200:
+        # quantizaton_evaluation_numbers(model)
+        if epoch%500 == 0:
+            if epoch >= 1000:
                 improvement = graphing_data[epoch-100: epoch, 1].mean() - graphing_data[epoch-200: epoch-100, 1].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
-                if improvement <= 0.0001:
+                if improvement <= 0.001:
                     break
-    fname_template = "trained_models/Sept 29/Conv_net_loss_function_4_bits{}"
+        # if epoch%100 == 0:
+        #     if epoch >= 200:
+        #         improvement = graphing_data[epoch-100: epoch, 1].mean() - graphing_data[epoch-200: epoch-100, 1].mean()
+        #         print("the accuracy improvement in the past 500 epochs is ", improvement)
+        #         if improvement <= 0.001:
+        #             break
+    fname_template = "trained_models/Sept 29/Conv_net_loss_function_4bit{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model = unfreeze_all(model)
     # model = replace_tanh_with_sign(model, binary_encoding_model_regularization, k=8)
     model.save(fname_template.format(".h5"))
     print("Training data end ")
+
+

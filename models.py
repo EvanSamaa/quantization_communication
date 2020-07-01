@@ -31,9 +31,9 @@ def LSTM_loss_function(k, input_shape=[], state_size=30):
 def Convnet_loss_function(input_shape = [1000, 4], combinations = 8):
     # you need to format the input into (1, batchsize, encoding size)
     inputs = Input(shape=input_shape)
-    x = tf.keras.layers.Conv1D(filters=combinations*2, kernel_size=3, strides=1, name="variation_scanners_1")(inputs)
+    x = tf.keras.layers.Conv1D(filters=combinations*2, kernel_size=input_shape[1], strides=1, name="variation_scanners_1")(inputs)
     x = tf.keras.layers.MaxPool1D(pool_size=10)(x)
-    x = tf.keras.layers.Conv1D(filters=combinations, kernel_size=3, strides=1, name="variation_scanners_2")(x)
+    x = tf.keras.layers.Conv1D(filters=combinations, kernel_size=input_shape[1], strides=1, name="variation_scanners_2")(x)
     x = tf.keras.layers.MaxPool1D(pool_size=5)(x)
     x = tf.keras.layers.Reshape([combinations * 19])(x)
     x = tf.keras.layers.Dense(100)(x)
