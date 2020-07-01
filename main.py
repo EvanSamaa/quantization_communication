@@ -91,7 +91,7 @@ if __name__ == "__main__":
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = binary_encoding_model((2,), 1)
-    model = MLP_loss_function()
+    model = Convnet_loss_function()
     # model = LSTM_loss_function(k=1, input_shape=[1000, 3])
     # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
     # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
