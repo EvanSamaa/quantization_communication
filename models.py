@@ -28,7 +28,8 @@ def LSTM_loss_function(k, input_shape=[], state_size=30):
     x = Dense(1)(x)
     model = Model(inputs, x, name="category_count_LSTM")
     return model
-def convnet_loss_function()
+def convnet_loss_function(input_shape):
+    inputs = 0
 ############################## analytical model ##############################
 def create_uniformed_quantization_model(k, bin_num=10, prob=True):
     def uniformed_quantization_prob(x):
