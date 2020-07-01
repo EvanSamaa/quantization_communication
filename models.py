@@ -28,7 +28,7 @@ def LSTM_loss_function(k, input_shape=[], state_size=30):
     x = Dense(1)(x)
     model = Model(inputs, x, name="category_count_LSTM")
     return model
-def Convnet_loss_function(input_shape = [1000, 3], combinations = 8):
+def Convnet_loss_function(input_shape = [1000, 4], combinations = 8):
     # you need to format the input into (1, batchsize, encoding size)
     inputs = Input(shape=input_shape)
     x = tf.keras.layers.Conv1D(filters=combinations*2, kernel_size=3, strides=1, name="variation_scanners_1")(inputs)

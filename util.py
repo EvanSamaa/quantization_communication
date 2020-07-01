@@ -21,9 +21,13 @@ def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_label = channel_data_num
     dataset = Dataset.from_tensor_slices((channel_data_num, channel_label)).batch(batchsize)
     return dataset
-def gen_encoding_data(N=1000, Sequence_length=10000, k=8, batchsize = 100):
-    dict_list = [[-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1]]
-    output = np.zeros((N, Sequence_length, 3))
+def gen_encoding_data(N=1000, Sequence_length=10000, k=16, batchsize = 100, bit = 4):
+    # dict_list = [[-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1]]
+    dict_list = [[-1, -1, -1, -1], [-1, -1, -1, 1], [-1, -1, 1, -1], [-1, -1, 1, 1],
+                 [-1, 1, -1, -1], [-1, 1, -1, 1], [-1, 1, 1, -1], [-1, 1, 1, 1],
+                 [1, -1, -1, -1], [1, -1, -1, 1], [1, -1, 1, -1], [1, -1, 1, 1],
+                 [1, 1, -1, -1], [1, 1, -1, 1], [1, 1, 1, -1], [1, 1, 1, 1]]
+    output = np.zeros((N, Sequence_length, bit))
     channel_label = np.zeros((N, 1))
     for n in range(N):
         random.shuffle(dict_list)
