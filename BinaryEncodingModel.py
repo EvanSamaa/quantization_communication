@@ -61,3 +61,9 @@ def binary_encoding_model_regularization(input_shape, k, saved=False):
     model = Model(inputs, out, name="binary encoding model")
     print(model.summary())
     return model
+
+def binary_encoding_model_neg_sampling(input_shape, k):
+    inputs = Input(shape=input_shape)
+    epochs = inputs[:, 1][0]
+    inputs_mod = inputs[:, 1:]
+    embedding = Encoder_module_annealing(3)(inputs_mod, epochs)

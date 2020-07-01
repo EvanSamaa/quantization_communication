@@ -6,6 +6,51 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 from util import *
+
+############################## Trained Loss Functions ##############################
+def MLP_loss_function(inputshape=[1000, 3]):
+    inputs = Input(shape=inputshape)
+    x = tf.keras.layers.Reshape((3000, ))(inputs)
+    x = Dense(500)(x)
+    x = LeakyReLU()(x)
+    x = Dense(500)(x)
+    x = LeakyReLU()(x)
+    x = Dense(1)(x)
+    model = Model(inputs, x, name="category_count_MLP")
+    return model
+def LSTM_loss_function(k, input_shape=[], state_size=30):
+    inputs = Input(shape=input_shape)
+    x = tf.keras.layers.LSTM(state_size)(inputs)
+    x = Dense(60)(x)
+    x = LeakyReLU()(x)
+    x = Dense(20)(x)
+    x = LeakyReLU()(x)
+    x = Dense(1)(x)
+    model = Model(inputs, x, name="category_count_LSTM")
+    return model
+def convnet_loss_function()
+############################## analytical model ##############################
+def create_uniformed_quantization_model(k, bin_num=10, prob=True):
+    def uniformed_quantization_prob(x):
+        x = tf.round(x*bin_num)/bin_num
+        max_x = tf.argmax(x, axis=1).numpy()
+        max_x = max_x.flatten()
+        col = np.arange(0, x.shape[0])
+        out = np.zeros(x.shape)
+        out[col, max_x] = 1
+        out = tf.convert_to_tensor(out)
+        return out
+    def uniformed_quantization_reg(x):
+        x = tf.round(x*bin_num)/bin_num
+        max_x = tf.argmax(x, axis=1).numpy()
+        return max_x
+    if prob:
+        return uniformed_quantization_prob
+    else:
+        return uniformed_quantization_reg
+
+
+############################## MLP models ##############################
 def create_MLP_model(input_shape, k):
     # outputs logit
     inputs = Input(shape=input_shape)
@@ -27,7 +72,6 @@ def create_large_MLP_model(input_shape, k):
     model = Model(inputs, x, name="Deep_max_nn")
     print(model.summary())
     return model
-
 def create_MLP_model_with_transform(input_shape, k):
     # needs to call transform first
     # outputs logit
@@ -44,30 +88,13 @@ def ranking_transform(x):
                 if x[k, i] >= x[k, j]:
                     out[k, i, j] = 1
     return tf.convert_to_tensor(out, dtype=tf.float32)
-def create_uniformed_quantization_model(k, bin_num=10, prob=True):
-    def uniformed_quantization_prob(x):
-        x = tf.round(x*bin_num)/bin_num
-        max_x = tf.argmax(x, axis=1).numpy()
-        max_x = max_x.flatten()
-        col = np.arange(0, x.shape[0])
-        out = np.zeros(x.shape)
-        out[col, max_x] = 1
-        out = tf.convert_to_tensor(out)
-        return out
-    def uniformed_quantization_reg(x):
-        x = tf.round(x*bin_num)/bin_num
-        max_x = tf.argmax(x, axis=1).numpy()
-        return max_x
-    if prob:
-        return uniformed_quantization_prob
-    else:
-        return uniformed_quantization_reg
 def create_regression_MLP_netowkr(input_shape, k):
     inputs = Input(shape=input_shape)
     x = perception_model(inputs, 1, 5)
     x = tf.squeeze(x)
     model = Model(inputs, x, name="max_nn_with_regression0")
     return model
+############################## LSTM models ##############################
 def create_LSTM_model(k, input_shape=[], state_size=10):
     inputs = Input(shape=input_shape)
     x = tf.keras.layers.LSTM(state_size)(inputs)
@@ -77,28 +104,6 @@ def create_LSTM_model(k, input_shape=[], state_size=10):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
-def MLP_loss_function(inputshape=[1000, 3]):
-    inputs = Input(shape=inputshape)
-    x = tf.keras.layers.Reshape((3000, ))(inputs)
-    x = Dense(500)(x)
-    x = sigmoid(x)
-    x = Dense(500)(x)
-    x = sigmoid(x)
-    x = Dense(1)(x)
-    model = Model(inputs, x, name="category_count_MLP")
-    return model
-
-def LSTM_loss_function(k, input_shape=[], state_size=30):
-    inputs = Input(shape=input_shape)
-    x = tf.keras.layers.LSTM(state_size)(inputs)
-    x = Dense(60)(x)
-    x = LeakyReLU()(x)
-    x = Dense(20)(x)
-    x = LeakyReLU()(x)
-    x = Dense(1)(x)
-    model = Model(inputs, x, name="category_count_LSTM")
-    return model
-
 def create_LSTM_model_backwards(k, input_shape=[]):
     inputs = Input(shape=input_shape)
     x = tf.keras.layers.LSTM(30, go_backwards=True)(inputs)
@@ -129,7 +134,7 @@ def create_BLSTM_model_with2states(k, input_shape=[], state_size=10):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
-
+############################## Encoding models ##############################
 def create_encoding_model(k, l, input_shape):
     inputs = Input(shape=input_shape)
     x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
@@ -159,7 +164,6 @@ def boosting_regression_model(models, input_shape, k):
     x = Dense(1, kernel_initializer=initializer)(x)
     model = Model(inputs, x, name="ensemble")
     return model
-
 def Encoder_module(L):
     def encoder_module(x):
         x = Dense(20)(x)

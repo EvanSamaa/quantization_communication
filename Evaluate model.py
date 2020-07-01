@@ -103,9 +103,9 @@ def variance_graph_accuracy(model, N = 10000):
         ds = gen_number_data()
         for features, labels in ds:
             # prediction = tf.reshape(model(features), (1,))
-            # features_mod = tf.ones((features.shape[0], 1)) * e
-            # features_mod = tf.concat((features_mod, features), axis=1)
-            prediction = model(features)
+            features_mod = tf.ones((features.shape[0], 1)) * e
+            features_mod = tf.concat((features_mod, features), axis=1)
+            prediction = model(features_mod)
             a_fn(labels, prediction)
             # if a_fn.result() != 1:
             #     print(features, '\n', prediction)
@@ -176,7 +176,7 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 29/binary_encoder_EM"
+    file = "trained_models/Sept 29/binary_encoder_onehot_hardtahn"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data_path1 = file + "_cont.npy"
@@ -185,9 +185,9 @@ if __name__ == "__main__":
     training_data = np.load(training_data_path)
     model = tf.keras.models.load_model(model_path)
     # model = create_uniformed_quantization_model(k=2, bin_num=2)
-    print(model.summary())
+    # print(model.summary())
     # plot_data(training_data)
     # quantizaton_evaluation(model)
-    quantizaton_evaluation_numbers(model)
-    # variance_graph_accuracy(model, N=1000)
+    # quantizaton_evaluation_numbers(model)
+    variance_graph_accuracy(model, N=1000)
 

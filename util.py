@@ -16,8 +16,8 @@ def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_data_num = tf.random.uniform((N, 1), 0, k)
     # channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
     channel_data_num = tf.round(channel_data_num)
-    # channel_data = tf.cast(tf.one_hot(channel_data_num, depth=16, on_value=1.0, off_value=0.0), tf.float32)
-    # channel_data = tf.reshape(channel_data, (N, 16))
+    # channel_data = tf.cast(tf.one_hot(channel_data_num, depth=8, on_value=1.0, off_value=0.0), tf.float32)
+    # channel_data = tf.reshape(channel_data, (N, 8))
     channel_label = channel_data_num
     dataset = Dataset.from_tensor_slices((channel_data_num, channel_label)).batch(batchsize)
     return dataset
@@ -131,10 +131,10 @@ def Encoding_distance():
         return -loss/encode.shape[0]
     return encoding_distance
 def Loss_LSTM_encoding_diversity():
-    model_path = "trained_models/Sept 29/LSTM_Loss_function_no_relu.h5"
+    model_path = "trained_models/Sept 29/MLP_Loss_function.h5"
     loss_model = tf.keras.models.load_model(model_path)
-    for item in loss_model.layers:
-        item.trainable = False
+    # for item in loss_model.layers:
+    #     item.trainable = False
     return loss_model
 def Regularization_loss():
     def regulariztion_loss(y_pred):
@@ -179,6 +179,13 @@ def Mix_loss():
         loss2 = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(y_true, y_pred)
         return loss2 + loss1/100
     return mixloss
+def Negative_shove():
+    def negative_shove(y_pred, x=None):
+        values, indices = tf.nn.top_k(y_pred, 2)
+        loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(values[:,1], y_pred)
+        return -loss
+    return negative_shove
+
 
 # =========================== Custom function for straight through estimation ============================
 
