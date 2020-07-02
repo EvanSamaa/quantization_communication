@@ -63,7 +63,7 @@ def train_step_with_annealing(features, labels, N, encode_only=False):
             # quantization0 = tf.sign(quantization0)
             loss = loss_object(labels, predictions)
             quantization0 = tf.reshape(quantization0, (1, 1000, 4))
-            loss = tf.exp(10*-loss_model(quantization0))
+            loss = 10000*tf.exp(-loss_model(quantization0))
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
