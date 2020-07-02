@@ -61,7 +61,7 @@ def train_step_with_annealing(features, labels, N, encode_only=False):
             # quantization0 = tf.sign(quantization0)
             loss = loss_object(labels, predictions)
             quantization0 = tf.reshape(quantization0, (1, 1000, 4))
-            loss = loss + tf.exp(-loss_model(quantization0))
+            loss = loss + 2*tf.exp(-loss_model(quantization0))
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     k = 2
     L = 1
     switch = 20
-    EPOCHS = 10000
+    EPOCHS = 3000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     model = binary_encoding_model((17,), 16)
@@ -152,12 +152,12 @@ if __name__ == "__main__":
         # if train_loss.result() <= 0.01:
         #     break
         # quantizaton_evaluation_numbers(model)
-        if epoch%500 == 0:
-            if epoch >= 1000:
-                improvement = graphing_data[epoch-500: epoch, 1].mean() - graphing_data[epoch-1000: epoch-500, 1].mean()
-                print("the accuracy improvement in the past 500 epochs is ", improvement)
-                if improvement <= 0.001:
-                    break
+        # if epoch%500 == 0:
+        #     if epoch >= 1000:
+        #         improvement = graphing_data[epoch-500: epoch, 1].mean() - graphing_data[epoch-1000: epoch-500, 1].mean()
+        #         print("the accuracy improvement in the past 500 epochs is ", improvement)
+        #         if improvement <= 0.001:
+        #             break
         # if epoch%100 == 0:
         #     if epoch >= 200:
         #         improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-200: epoch-100, 0].mean()
