@@ -60,7 +60,7 @@ def train_step_with_annealing(features, labels, N, encode_only=False):
             quantization0 = submodel(features_mod)[0:1000, :]
             # quantization0 = tf.sign(quantization0)
             loss = loss_object(labels, predictions)
-            quantization0 = tf.reshape(quantization0, (1, 1000, 3))
+            quantization0 = tf.reshape(quantization0, (1, 1000, 4))
             loss = loss + tf.exp(-loss_model(quantization0))
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -95,32 +95,32 @@ if __name__ == "__main__":
     EPOCHS = 10000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
-    # model = binary_encoding_model((9,), 1)
-    model = Convnet_loss_function(input_shape=[1000,4], combinations=16)
+    model = binary_encoding_model((17,), 16)
+    # model = Convnet_loss_function(input_shape=[1000,4], combinations=16)
     # model = LSTM_loss_function(k=1, input_shape=[1000, 3])
-    # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_tanh_pos").output)
+    submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_tanh_pos").output)
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    loss_object = tf.keras.losses.MeanSquaredError()
-    # loss_model = Loss_NN_encoding_diversity()
+    # loss_object = tf.keras.losses.MeanSquaredError()
+    loss_model = Loss_NN_encoding_diversity()
     optimizer = tf.keras.optimizers.Adam()
     train_loss = tf.keras.metrics.Mean(name='train_loss')
-    # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
-    train_accuracy = Regression_Accuracy(name="train_acc")
+    train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
+    # train_accuracy = Regression_Accuracy(name="train_acc")
     test_loss = tf.keras.metrics.Mean(name='test_loss')
-    # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
-    test_accuracy = Regression_Accuracy(name="test_accuracy")
+    test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
+    # test_accuracy = Regression_Accuracy(name="test_accuracy")
     # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
     # print("start gen data")
     # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
     # print("finish gen data")
-    test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
-    # test_ds = gen_number_data(N=100)
+    # test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
+    test_ds = gen_number_data(N=100)
     # train_ds = gen_number_data(N=1000)
     encode_onlyy = False
     for epoch in range(EPOCHS):
         # Reset the metrics at the start of the next epoch
-        train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
-        # train_ds = gen_number_data(N=1000)
+        # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
+        train_ds = gen_number_data(N=1000)
         train_loss.reset_states()
         # train_throughput.reset_states()
         train_accuracy.reset_states()
@@ -128,11 +128,11 @@ if __name__ == "__main__":
         test_accuracy.reset_states()
         # test_throughput.reset_states()
         for features, labels in train_ds:
-            train_step(features, labels)
-            # train_step(features, labels, epoch, encode_onlyy)
+            # train_step(features, labels)
+            train_step(features, labels, epoch, encode_onlyy)
         for features, labels in test_ds:
-            test_step(features, labels)
-            # test_step(features, labels, epoch)
+            # test_step(features, labels)
+            test_step(features, labels, epoch)
         template = 'Epoch {}, Loss: {}, Accuracy:{}, max: {}, expected:{}, Test Loss: {}, Test Accuracy: {}'
         print(template.format(epoch + 1,
                               train_loss.result(),
@@ -152,19 +152,19 @@ if __name__ == "__main__":
         if train_loss.result() <= 0.01:
             break
         # quantizaton_evaluation_numbers(model)
-        if epoch%500 == 0:
-            if epoch >= 1000:
-                improvement = graphing_data[epoch-100: epoch, 1].mean() - graphing_data[epoch-200: epoch-100, 1].mean()
-                print("the accuracy improvement in the past 500 epochs is ", improvement)
-                if improvement <= 0.001:
-                    break
-        # if epoch%100 == 0:
-        #     if epoch >= 200:
+        # if epoch%500 == 0:
+        #     if epoch >= 1000:
         #         improvement = graphing_data[epoch-100: epoch, 1].mean() - graphing_data[epoch-200: epoch-100, 1].mean()
         #         print("the accuracy improvement in the past 500 epochs is ", improvement)
         #         if improvement <= 0.001:
         #             break
-    fname_template = "trained_models/Sept 29/Conv_net_loss_function_4bit{}"
+        if epoch%100 == 0:
+            if epoch >= 200:
+                improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-200: epoch-100, 0].mean()
+                print("the loss improvement in the past 500 epochs is ", improvement)
+                if improvement <= -0.001:
+                    break
+    fname_template = "trained_models/Sept 29/four_bit_binary_encoder_onehot_tanh_annealing_with_exp_convloss{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model = unfreeze_all(model)
