@@ -43,7 +43,7 @@ def get_num_from_binary(binary):
 
 def quantizaton_evaluation_numbers(model, granuality = 0.0001, k=2):
     sub_model = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
-    for i in range(0, 8):
+    for i in range(0, 16):
         features = tf.ones((1,1))*i
         # features = tf.one_hot([0, 1, 2, 3, 4, 5, 6, 7], depth=8)[i]
         features_mod = tf.ones((1, 1))
