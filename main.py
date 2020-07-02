@@ -165,7 +165,7 @@ if __name__ == "__main__":
         #         print("the loss improvement in the past 500 epochs is ", improvement)
         #         if improvement > -0.001:
         #             break
-    fname_template = "./trained_models/jul 1st/binary_encoder_onehot_tanh_annealing_with_1x_exp_LSTMloss{}"
+    fname_template = "./trained_models/Jul 1st/binary_encoder_onehot_tanh_annealing_with_1x_exp_LSTMloss{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
     model = unfreeze_all(model)
