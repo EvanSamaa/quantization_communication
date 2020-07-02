@@ -162,7 +162,7 @@ if __name__ == "__main__":
             if epoch >= 200:
                 improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-200: epoch-100, 0].mean()
                 print("the loss improvement in the past 500 epochs is ", improvement)
-                if improvement <= -0.001:
+                if improvement > -0.001:
                     break
     fname_template = "trained_models/Sept 29/four_bit_binary_encoder_onehot_tanh_annealing_with_exp_convloss{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
