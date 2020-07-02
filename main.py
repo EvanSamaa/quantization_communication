@@ -153,12 +153,12 @@ if __name__ == "__main__":
         if train_accuracy.result() == 1:
             break
         # quantizaton_evaluation_numbers(model)
-        # if epoch%500 == 0:
-        #     if epoch >= 1000:
-        #         improvement = graphing_data[epoch-500: epoch, 1].mean() - graphing_data[epoch-1000: epoch-500, 1].mean()
-        #         print("the accuracy improvement in the past 500 epochs is ", improvement)
-        #         if improvement <= 0.001:
-        #             break
+        if epoch%500 == 0:
+            if epoch >= 1000:
+                improvement = graphing_data[epoch-500: epoch, 1].mean() - graphing_data[epoch-1000: epoch-500, 1].mean()
+                print("the accuracy improvement in the past 500 epochs is ", improvement)
+                if improvement <= 0.001:
+                    break
         # if epoch%100 == 0:
         #     if epoch >= 200:
         #         improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-200: epoch-100, 0].mean()
