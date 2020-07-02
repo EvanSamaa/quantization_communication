@@ -149,21 +149,21 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         # graphing_data[epoch, 6] = test_throughput.result()[0]
         # graphing_data[epoch, 7] = test_throughput.result()[1]
-        if train_loss.result() <= 0.01:
-            break
+        # if train_loss.result() <= 0.01:
+        #     break
         # quantizaton_evaluation_numbers(model)
-        # if epoch%500 == 0:
-        #     if epoch >= 1000:
-        #         improvement = graphing_data[epoch-100: epoch, 1].mean() - graphing_data[epoch-200: epoch-100, 1].mean()
-        #         print("the accuracy improvement in the past 500 epochs is ", improvement)
-        #         if improvement <= 0.001:
-        #             break
-        if epoch%100 == 0:
-            if epoch >= 200:
-                improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-200: epoch-100, 0].mean()
-                print("the loss improvement in the past 500 epochs is ", improvement)
-                if improvement > -0.001:
+        if epoch%500 == 0:
+            if epoch >= 1000:
+                improvement = graphing_data[epoch-500: epoch, 1].mean() - graphing_data[epoch-1000: epoch-500, 1].mean()
+                print("the accuracy improvement in the past 500 epochs is ", improvement)
+                if improvement <= 0.001:
                     break
+        # if epoch%100 == 0:
+        #     if epoch >= 200:
+        #         improvement = graphing_data[epoch-100: epoch, 0].mean() - graphing_data[epoch-200: epoch-100, 0].mean()
+        #         print("the loss improvement in the past 500 epochs is ", improvement)
+        #         if improvement > -0.001:
+        #             break
     fname_template = "trained_models/Sept 29/four_bit_binary_encoder_onehot_tanh_annealing_with_exp_convloss{}"
     # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     np.save(fname_template.format(".npy"), graphing_data)
