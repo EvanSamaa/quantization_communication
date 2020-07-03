@@ -10,15 +10,18 @@ from models import *
 def quantizaton_evaluation(model, granuality = 0.0001, k=2):
     print(model.summary())
     submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
-    count = np.arange(0, 1, 0.0001)
+    count = np.arange(0, 1, 0.001)
     bin = np.zeros((k, count.shape[0]))
     for i in range(count.shape[0]):
         channel_data = tf.ones((1, k)) * count[i]
         channel_label = tf.math.argmax(channel_data, axis=1)
-        ds = Dataset.from_tensor_slices((channel_data, channel_label))
+        channel_data = float_to_floatbits(channel_data)
+        ds = Dataset.from_tensor_slices((channel_data, channel_label)).batch(1)
         for features, labels in ds:
-            features_mod = tf.ones((1, 1))
-            features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[0]))), axis=1)
+            # features_mod = tf.ones((1, 1))
+            # features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[0]))), axis=1)
+            features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
+            features_mod = tf.concat((features_mod, features), axis=2)
             out = submodel(features_mod)
             bin = log_bin(bin, out, i, k)
     plt.plot(count, bin[0, :])
@@ -40,17 +43,6 @@ def get_num_from_binary(binary):
             sum = sum + 2**power
         power = power + 1
     return sum
-
-def quantizaton_evaluation_numbers(model, granuality = 0.0001, k=2):
-    sub_model = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
-    for i in range(0, 16):
-        features = tf.ones((1,1))*i
-        # features = tf.one_hot([0, 1, 2, 3, 4, 5, 6, 7], depth=8)[i]
-        features_mod = tf.ones((1, 1))
-        features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[0]))), axis=1)
-        out = sub_model(features_mod)
-        out_2 = model(features_mod)
-        print(i, out, Softmax()(out_2))
 def variance_graph(model, N = 10000):
     # tp_fn = ExpectedThroughput(name = "throughput")
     tp_fn = TargetThroughput(name = "target throughput")
@@ -65,13 +57,13 @@ def variance_graph(model, N = 10000):
     for e in range(0, N):
         tp_fn.reset_states()
         a_fn.reset_states()
-        ds = gen_data(1, k=10, batchsize=1)
+        ds = gen_channel_quality_data_float_encoded(1, k=2)
         for features, labels in ds:
             # prediction = tf.reshape(model(features), (1,))
-            features_mod = tf.ones((features.shape[0], 1)) * e
-            features_mod = tf.concat((features_mod, features), axis=1)
+            features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
+            features_mod = tf.concat((features_mod, features), axis=2)
             prediction = model(features_mod)
-            tp_fn(labels, prediction, features)
+            # tp_fn(labels, prediction, features)
             a_fn(labels, prediction)
             # if a_fn.result() != 1:
             #     print(features, '\n', prediction)
@@ -99,8 +91,8 @@ def variance_graph_accuracy(model, N = 10000):
     print("Testing Starts")
     for e in range(0, N):
         a_fn.reset_states()
-        # ds = gen_data(1, k=10, batchsize=1)
-        ds = gen_number_data()
+        ds = gen_data(1, k=10, batchsize=1)
+        # ds = gen_number_data()
         for features, labels in ds:
             # prediction = tf.reshape(model(features), (1,))
             features_mod = tf.ones((features.shape[0], 1)) * e
@@ -176,7 +168,7 @@ def plot_data(arr):
     plt.legend(("Training", "Test"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 29/just_max_combination"
+    file = "trained_models/Jul 1st/2user_case/2_user_1_qbit_deep_encoder"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data_path1 = file + "_cont.npy"
@@ -185,9 +177,7 @@ if __name__ == "__main__":
     training_data = np.load(training_data_path)
     model = tf.keras.models.load_model(model_path)
     # model = create_uniformed_quantization_model(k=2, bin_num=2)
-    # print(model.summary())
-    plot_data(training_data)
-    # quantizaton_evaluation(model)
-    quantizaton_evaluation_numbers(model)
-    # variance_graph_accuracy(model, N=1000)
+    # plot_data(training_data)
+    quantizaton_evaluation(model)
+    # variance_graph(model, N=5000)
 
