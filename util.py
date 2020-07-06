@@ -5,6 +5,7 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, ThresholdedReLU, Flatten
 from tensorflow.keras.activations import sigmoid
 import random
+import math
 # ============================  Data gen ============================
 
 def gen_data(N, k, low=0, high=1, batchsize=30):
@@ -12,14 +13,21 @@ def gen_data(N, k, low=0, high=1, batchsize=30):
     channel_label = tf.math.argmax(channel_data, axis=1)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
     return dataset
-def gen_number_data(N=10000, k = 15.5, batchsize=10000):
+def gen_channel_quality_data_float_encoded(N, k, low=0, high=1):
+    channel_data = tf.random.uniform((N, k), low, high)
+    channel_label = tf.math.argmax(channel_data, axis=1)
+    channel_data = float_to_floatbits(channel_data)
+    dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(N)
+    return dataset
+def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_data_num = tf.random.uniform((N, 1), 0, k)
-    # channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
-    channel_data_num = tf.round(channel_data_num)
-    # channel_data = tf.cast(tf.one_hot(channel_data_num, depth=16, on_value=1.0, off_value=0.0), tf.float32)
-    # channel_data = tf.reshape(channel_data, (N, 16))
+    channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
+    # channel_data_num = tf.round(channel_data_num)
+    channel_data = tf.cast(tf.one_hot(channel_data_num, depth=math.ceil(k), on_value=1.0, off_value=0.0), tf.float32)
+    channel_data = tf.reshape(channel_data, (N, math.ceil(k)))
     channel_label = channel_data_num
-    dataset = Dataset.from_tensor_slices((channel_data_num, channel_label)).batch(batchsize)
+    dataset = Dataset.from_tensor_slices((channel_data
+                                          , channel_label)).batch(batchsize)
     return dataset
 def gen_encoding_data(N=1000, Sequence_length=10000, k=16, batchsize = 100, bit = 4):
     # dict_list = [[-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1]]
@@ -41,8 +49,32 @@ def gen_encoding_data(N=1000, Sequence_length=10000, k=16, batchsize = 100, bit 
     output = tf.cast(output, tf.float32)
     dataset = Dataset.from_tensor_slices((output, channel_label)).batch(batchsize)
     return dataset
-
+def gen_regression_data(N=10000, batchsize=10000, reduncancy=1):
+    ################
+    data_set = tf.random.uniform((N, ), 0, 1)
+    label_set = data_set
+    modified_dataset = float_to_floatbits(data_set)
+    ################
+    # ones = tf.ones((N, reduncancy))
+    # data_set = tf.random.uniform((N,1), 0, 1) # for redundancy
+    # label_set = data_set
+    # data_set = tf.concat((data_set, -data_set, tf.exp(data_set), tf.square(data_set)), axis=1)
+    # data_set = tf.multiply(ones, data_set)
+    # print(data_set)
+    dataset = Dataset.from_tensor_slices((modified_dataset, label_set)).batch(batchsize)
+    return dataset
 # ============================  Metrics  ============================
+def quantizaton_evaluation_numbers(model, granuality=0.0001, k=2):
+    tsub_model = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
+    for i in range(0, 16):
+        features = tf.ones((1,1))*i
+        # features = tf.one_hot([0, 1, 2, 3, 4, 5, 6, 7], depth=8)[i]
+        features_mod = tf.ones((1, 1))
+        features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[0]))), axis=1)
+        out = tsub_model(features_mod)
+        out_2 = model(features_mod)
+        # print(i, out, Softmax()(out_2))
+        print(i, out)
 class ExpectedThroughput(tf.keras.metrics.Metric):
     def __init__(self, name='expected_throughput', logit=True, **kwargs):
         super(ExpectedThroughput, self).__init__(name=name, **kwargs)
@@ -99,7 +131,40 @@ class Regression_Accuracy(tf.keras.metrics.Metric):
         self.count.assign_add(y_true.shape[0])
     def result(self):
         return self.correct/self.count
+def Quantization_count(x):
+    # pass in (N, encoding_size) array to delete duplicate on the first axis
+    x_shape = tf.shape(x)  # (3,2)
+    x1 = tf.tile(x, [1, x_shape[0]])  # [[1,2],[1,2],[1,2],[3,4],[3,4],[3,4]..]
+    x2 = tf.tile(x, [x_shape[0], 1])  # [[1,2],[1,2],[1,2],[3,4],[3,4],[3,4]..]
 
+    x1_2 = tf.reshape(x1, [x_shape[0] * x_shape[0], x_shape[1]])
+    x2_2 = tf.reshape(x2, [x_shape[0] * x_shape[0], x_shape[1]])
+    cond = tf.reduce_all(tf.equal(x1_2, x2_2), axis=1)
+    cond = tf.reshape(cond, [x_shape[0], x_shape[0]])  # reshaping cond to match x1_2 & x2_2
+    cond_shape = tf.shape(cond)
+    cond_cast = tf.cast(cond, tf.int32)  # convertin condition boolean to int
+    cond_zeros = tf.zeros(cond_shape, tf.int32)  # replicating condition tensor into all 0's
+
+    # CREATING RANGE TENSOR
+    r = tf.range(x_shape[0])
+    r = tf.add(tf.tile(r, [x_shape[0]]), 1)
+    r = tf.reshape(r, [x_shape[0], x_shape[0]])
+
+    # converting TRUE=1 FALSE=MAX(index)+1 (which is invalid by default) so when we take min it wont get selected & in end we will only take values <max(indx).
+    f1 = tf.multiply(tf.ones(cond_shape, tf.int32), x_shape[0] + 1)
+    f2 = tf.ones(cond_shape, tf.int32)
+    cond_cast2 = tf.where(tf.equal(cond_cast, cond_zeros), f1, f2)  # if false make it max_index+1 else keep it 1
+
+    # multiply range with new int boolean mask
+    r_cond_mul = tf.multiply(r, cond_cast2)
+    r_cond_mul2 = tf.reduce_min(r_cond_mul, axis=1)
+    r_cond_mul3, unique_idx = tf.unique(r_cond_mul2)
+    r_cond_mul4 = tf.subtract(r_cond_mul3, 1)
+
+    # get actual values from unique indexes
+    op = tf.gather(x, r_cond_mul4)
+
+    return (op.shape[0])
 class TargetThroughput(tf.keras.metrics.Metric):
     def __init__(self, name='expected_throughput', logit=True, **kwargs):
         super(TargetThroughput, self).__init__(name=name, **kwargs)
@@ -135,7 +200,7 @@ def Encoding_distance():
         return -loss/encode.shape[0]
     return encoding_distance
 def Loss_NN_encoding_diversity():
-    model_path = "trained_models/Encoding Diversity/Conv_net_loss_function_4bit.h5"
+    model_path = "trained_models/Encoding Diversity/MLP_loss_function_2.h5"
     loss_model = tf.keras.models.load_model(model_path)
     for item in loss_model.layers:
         item.trainable = False
@@ -204,7 +269,9 @@ def sign_relu_STE(x):
         grad_val = dy * back
         return grad_val
     return rtv, grad
-
+def binary_activation(x):
+    out = tf.maximum(tf.sign(x), 0)
+    return out
 def hard_tanh(x):
     neg = tf.constant(-1, dtype=tf.float32)
     pos = tf.constant(1, dtype=tf.float32)
@@ -230,6 +297,34 @@ def replace_tanh_with_sign(model, model_func, k):
     new_model = model_func((k, ), k, saved=True)
     new_model.load_weights('weights.hdf5')
     return new_model
+# def float_bits_to_float(bits_arr):
+#     cp_value_arr = bits_arr.numpy()
+#     out = np.zeros((bits_arr.shape[0], 1))
+#     for j in range(0, bits_arr.shape[1]):
+#         for i in range(0, 23):
+#             cp_value_arr[:, j] = cp_value_arr[:, j] * 2
+#             out[:, j, i] = np.where(cp_value_arr[:, j] >= 1, 1, 0)
+#             cp_value_arr[:, j] = cp_value_arr[:, j] - out[:, j, i]
+#     return tf.constant(out, dtype=tf.float32)
 
+def float_to_floatbits(value_arr):
+    cp_value_arr = value_arr.numpy()
+    # I'm not sure if the shape thing works well so might have to comeback and fix it
+    if len(value_arr.shape) == 1:
+        out = np.zeros((value_arr.shape[0], 23))
+        for i in range(0, 23):
+            cp_value_arr = cp_value_arr*2
+            out[:, i] = np.where(cp_value_arr >= 1, 1, 0)
+            cp_value_arr = cp_value_arr - out[:, i]
+        return tf.constant(out, dtype=tf.float32)
+    else:
+        out = np.zeros((value_arr.shape[0], value_arr.shape[1], 23))
+        for j in range(0, value_arr.shape[1]):
+            for i in range(0, 23):
+                cp_value_arr[:, j] = cp_value_arr[:, j] * 2
+                out[:, j, i] = np.where(cp_value_arr[:, j] >= 1, 1, 0)
+                cp_value_arr[:, j] = cp_value_arr[:, j]- out[:, j, i]
+        return tf.constant(out, dtype=tf.float32)
 if __name__ == "__main__":
-    gen_encoding_data()
+    pass
+
