@@ -56,12 +56,12 @@ def test_step_with_annealing(features, labels, N):
 
 if __name__ == "__main__":
     # test_model()
-    fname_template = "./trained_models/Jul 6th/2_user_1_qbit_4_layer_deep_encoder_tanh(relu)_seed=8{}"
+    fname_template = "./trained_models/Jul 6th/2_user_1_qbit_4_layer_deep_encoder_tanh(relu)_seed=9{}"
     N = 10000
     k = 2
     L = 1
     EPOCHS = 20000
-    tf.random.set_seed(8)
+    tf.random.set_seed(9)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = tf.keras.models.load_model("trained_models/Sept 22_23/Data_gen_LSTM_10_cell.h5")
     # model = F_create_LSTM_encoding_model_with_annealing(k, L, (k, 24))
