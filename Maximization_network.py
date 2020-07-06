@@ -56,14 +56,15 @@ def test_step_with_annealing(features, labels, N):
 
 if __name__ == "__main__":
     # test_model()
-    fname_template = "./trained_models/Jul 3nd/2_user_1_qbit_small_4_layer_deep_encoder_tanh(relu){}"
+    fname_template = "./trained_models/Jul 3nd/30_user_3_qbit_small_4_layer_deep_encoder_tanh{}"
     N = 10000
-    k = 2
-    L = 1
+    k = 30
+    L = 3
     EPOCHS = 20000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
     # model = tf.keras.models.load_model("trained_models/Sept 22_23/Data_gen_LSTM_10_cell.h5")
+    # model = F_create_LSTM_encoding_model_with_annealing(k, L, (k, 24))
     model = F_create_encoding_model_with_annealing(k, L, (k, 24))
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     # loss_object = tf.keras.losses.Hinge()
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     test_throughput = ExpectedThroughput(name='test_throughput')
     test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
 
-    min_loss = 10000
+    max_acc = -1
     test_ds = gen_channel_quality_data_float_encoded(100, k)
     current_acc = 0
     for epoch in range(EPOCHS):
@@ -110,9 +111,9 @@ if __name__ == "__main__":
         graphing_data[epoch, 5] = test_accuracy.result()
         graphing_data[epoch, 6] = test_throughput.result()[0]
         graphing_data[epoch, 7] = test_throughput.result()[1]
-        if train_loss.result() < min_loss:
+        if train_accuracy.result() > max_acc:
             model.save(fname_template.format(".h5"))
-            min_loss = train_loss.result()
+            max_acc = train_accuracy.result()
         if train_accuracy.result() == 1 or train_accuracy.result() >=0.95:
             break
         if epoch%500 == 0:

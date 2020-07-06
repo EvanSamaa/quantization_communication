@@ -283,9 +283,11 @@ def F_Encoder_module_annealing(L, i=0):
         x = Dense(5, name="encoder_dense_2_{}".format(i))(x)
         x = LeakyReLU()(x)
         x = Dense(L, name="encoder_dense_3_{}".format(i))(x)
-        # x = annealing_tanh(x, N, name="tanh_pos_{}".format(i)) + \
-        #     tf.stop_gradient(tf.math.sign(x, name="encoder_sign_{}".format(i)) - annealing_tanh(x, N, name="tanh_neg_{}".format(i)))
-        x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos_{}".format(i)) + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
+        x = annealing_tanh(x, N, name="tanh_pos_{}".format(i)) + \
+            tf.stop_gradient(tf.math.sign(x, name="encoder_sign_{}".format(i)) - annealing_tanh(x, N, name="tanh_neg_{}".format(i)))
+        # x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos_{}".format(i)) + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
+        # x = annealing_tanh(tf.keras.layers.ReLU()(x), N, name="tanh_pos_{}".format(i)) + tf.stop_gradient(
+        #     binary_activation(x) - annealing_tanh(tf.keras.layers.ReLU()(x), N, name="tanh_neg_{}".format(i)))
         return x
     return encoder_module
 def F_create_encoding_model_with_annealing(k, l, input_shape):
@@ -301,9 +303,42 @@ def F_create_encoding_model_with_annealing(k, l, input_shape):
         encoding = tf.concat((encoding, F_Encoder_module_annealing(l, i)(x_list[i][:, 0, :], epoch)), axis=1)
     x = tf.keras.layers.Dense(20)(encoding)
     x = sigmoid(x)
-    out = tf.keras.layers.Dense(2)(x)
+    out = tf.keras.layers.Dense(k)(x)
     model = Model(inputs, out, name="k2_L2_annealing_nn_on_floatpoint_bit")
     print(model.summary())
     return model
+def F_create_LSTM_encoding_model_with_annealing(k, l, input_shape):
+    # features_mod = tf.ones((features.shape[1], 1)) * N
+    # features_mod = tf.concat((features_mod, features), axis=2)
+    # F_create_encoding_model_with_annealing(2, 1, (2, 24))
+    inputs = Input(shape=input_shape)
+    epoch = inputs[0, 0, 0]
+    inputs_mod = inputs[:, :, 1:]
+    x_list = tf.split(inputs_mod, num_or_size_splits=k, axis=1)
+    encoding = F_LSTM_Encoder_module_annealing(l, 0)(x_list[0][:, 0, :], epoch)
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding, F_Encoder_module_annealing(l, i)(x_list[i][:, 0, :], epoch)), axis=1)
+    x = tf.keras.layers.Dense(20)(encoding)
+    x = sigmoid(x)
+    out = tf.keras.layers.Dense(2)(x)
+    model = Model(inputs, out, name="k2_L2_annealing_nn_on_floatpoint_bit_CNN")
+    print(model.summary())
+    return model
+def F_LSTM_Encoder_module_annealing(L, i=0):
+    def encoder_module(x, N):
+        x = tf.keras.layers.Reshape((23, 1))(x)
+        x = tf.keras.layers.LSTM(8)(x)
+        x = Dense(5, name="encoder_dense_4_{}".format(i))(x)
+        x = LeakyReLU()(x)
+        x = Dense(5, name="encoder_dense_2_{}".format(i))(x)
+        x = LeakyReLU()(x)
+        x = Dense(L, name="encoder_dense_3_{}".format(i))(x)
+        x = annealing_tanh(x, N, name="tanh_pos_{}".format(i)) + \
+            tf.stop_gradient(tf.math.sign(x, name="encoder_sign_{}".format(i)) - annealing_tanh(x, N, name="tanh_neg_{}".format(i)))
+        # x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos_{}".format(i)) + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
+        # x = annealing_tanh(tf.keras.layers.ReLU()(x), N, name="tanh_pos_{}".format(i)) + tf.stop_gradient(
+        #     binary_activation(x) - annealing_tanh(tf.keras.layers.ReLU()(x), N, name="tanh_neg_{}".format(i)))
+        return x
+    return encoder_module
 if __name__ == "__main__":
     F_create_encoding_model_with_annealing(2, 1, (2, 24))

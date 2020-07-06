@@ -7,54 +7,72 @@ from tensorflow.keras.activations import sigmoid
 from matplotlib import pyplot as plt
 from util import *
 from models import *
-def quantizaton_evaluation(model, granuality = 0.001, k=2):
-    submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
-    count = np.arange(0, 1, granuality)
-    bin = np.zeros((k, count.shape[0]))
+def quantization_evaluation(model, granuality = 0.001, k=2):
+    dim_num = int(1/granuality) + 1
+    count = np.arange(0, 1 + granuality, granuality)
+    output = np.zeros((dim_num, dim_num))
+    input = np.zeros((dim_num*dim_num, 2))
+    line = 0
     for i in range(count.shape[0]):
-        channel_data = tf.ones((1, k)) * count[i]
-        channel_label = tf.math.argmax(channel_data, axis=1)
-        channel_data = float_to_floatbits(channel_data)
-        ds = Dataset.from_tensor_slices((channel_data, channel_label)).batch(1)
-        for features, labels in ds:
-            # features_mod = tf.ones((1, 1))
-            # features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[1]))), axis=1)
-            features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
-            features_mod = tf.concat((features_mod, features), axis=2)
-            out = submodel(features_mod)
-            bin = log_bin(bin, out, i, k)
-    bin[1, :] = (bin[1, :] - 2)
-    plt_2D_quantization_comparison(bin, granuality)
-    # plt.plot(count, bin[0, :])
-    # plt.plot(count, bin[1, :])
-    # plt.show()
-    # layer_output = model.get_layer(layer_name).output
-def plt_2D_quantization_comparison(bin, granuality=0.001):
-    arr = np.zeros((bin.shape[1], bin.shape[1], 3))
-    for i in range(bin.shape[1]):
-        for j in range(bin.shape[1]):
-            if bin[0, i] > bin[1, j]:
-                arr[i, j, 0] = 1
-            elif bin[0, i] < bin[1, j]:
-                arr[i, j, 0] = 1
-            elif bin[0, i] <=0 and bin[1, j] <=0:
-                arr[i, j, 1] = 1
-                # arr[i, j, 0] = 1
-            elif bin[0, i] > 0 and bin[1, j] > 0:
-                arr[i, j, 2] = 1
-                # arr[i, j, 0] = 1
-    print(arr[:,:,0].sum()/arr.shape[0]/arr.shape[0]/2)
-    arr = np.flip(arr, axis=0)
-    plt.imshow(arr)
+        for j in range(count.shape[0]):
+            input[line, 0] = count[i]
+            input[line, 1] = count[j]
+            line = line + 1
+    channel_data = tf.constant(input)
+    channel_label = tf.math.argmax(channel_data, axis=1)
+    channel_data = float_to_floatbits(channel_data)
+    ds = Dataset.from_tensor_slices((channel_data, channel_label)).batch(dim_num*dim_num)
+    for features, labels in ds:
+        # features_mod = tf.ones((1, 1))
+        # features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[1]))), axis=1)
+        features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
+        features_mod = tf.concat((features_mod, features), axis=2)
+        out = model(features_mod)
+        prediction = tf.argmax(out, axis=1)
+    line = 0
+    for i in range(count.shape[0]):
+        for j in range(count.shape[0]):
+            if prediction[line] == labels[line]:
+                output[i, j] = 1
+            line = line + 1
+    plot_quantization_square(output, granuality)
+def plot_quantization_square(output, granuality):
+    dim_num = int(1 / granuality) + 1
+    count = np.arange(0, 1 + granuality, granuality)
+    output = np.flip(output, axis=0)
+    plt.imshow(output, cmap="gray")
+    step_x = int(dim_num / (5 - 1))
+    x_positions = np.arange(0, dim_num, step_x)
+    x_labels = count[::step_x]
+    y_labels = np.array([1, 0.75, 0.5, 0.25, 0])
+    plt.xticks(x_positions, x_labels)
+    plt.yticks(x_positions, y_labels)
     plt.show()
+def optimal_model(granuality=0.001):
+    dim_num = int(1 / granuality) + 1
+    count = np.arange(0, 1 + granuality, granuality)
+    output = np.ones((dim_num, dim_num))
+    line = 0
+    for i in range(0, dim_num):
+        for j in range(0, dim_num):
+            if count[i] >= 2/3:
+                quant1 = 1
+            else:
+                quant1 = 0
+            if count[j] >= 1/3:
+                quant2 = 1
+            else:
+                quant2 = 0
+            if quant1 == quant2 and quant1 == 0:
+                if count[i] < count[j]:
+                    output[i, j] = 0
+            elif quant1 == quant2 and quant2 == 1:
+                if count[i] < count[j]:
+                    output[i, j] = 0
+            elif quant2 > quant1 and count[j] < count[i]:
+                output[i, j] = 0
+    plot_quantization_square(output, granuality)
 
-def comparison_evaluation(model, l, k=2):
-    submodel = Model(inputs=model.get_layer("dense_1").input, outputs=model.output)
-    input = np.array([[1,0,0], [1,0,1], [1,1,0], [1,1,1]])
-def log_bin(bin, output, n, k):
-    for i in range(output.shape[1]):
-        bin[i, n] = get_num_from_binary(output[:, i]) + i*2**output.shape[0]
-    return bin
 def get_num_from_binary(binary):
     power = 0
     sum = 0
@@ -78,7 +96,7 @@ def quantization_evaluation_regression(model, granuality = 0.0001):
     plt.xlabel("input")
     plt.ylabel("output")
     plt.show()
-def variance_graph(model, N = 10000):
+def variance_graph(model, N = 100):
     # tp_fn = ExpectedThroughput(name = "throughput")
     tp_fn = TargetThroughput(name = "target throughput")
     # tp_fn = ExpectedThroughput(name = "target throughput")
@@ -92,7 +110,7 @@ def variance_graph(model, N = 10000):
     for e in range(0, N):
         tp_fn.reset_states()
         a_fn.reset_states()
-        ds = gen_channel_quality_data_float_encoded(1, k=2)
+        ds = gen_channel_quality_data_float_encoded(1000, k=2)
         for features, labels in ds:
             # prediction = tf.reshape(model(features), (1,))
             features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
@@ -108,10 +126,10 @@ def variance_graph(model, N = 10000):
         acc[e] = a_fn.result()
         result[e, 0] = tp_fn.result()[0]
         result[e, 1] = tp_fn.result()[1]
-    print("Max Throughput:", np.nanmean(result[:, 0]))
-    print("Max Throughput Variance:", np.nanvar(result[:, 0]))
-    print("Expected Throughput:", np.nanmean(result[:, 1]))
-    print("Expected Throughput Variance:", np.nanvar(result[:, 1]))
+    # print("Max Throughput:", np.nanmean(result[:, 0]))
+    # print("Max Throughput Variance:", np.nanvar(result[:, 0]))
+    # print("Expected Throughput:", np.nanmean(result[:, 1]))
+    # print("Expected Throughput Variance:", np.nanvar(result[:, 1]))
     print("Accuracy:", np.nanmean(acc))
     print("Accuracy Variance:", np.nanvar(acc))
 def variance_graph_accuracy(model, N = 10000):
@@ -196,15 +214,15 @@ def plot_data(arr):
     # plt.plot(x, arr[:,3])
     # plt.plot(x, arr[:,7])
     # plt.plot(x, arr[:,2])
-    plt.plot(x, arr[:, 0])
+    plt.plot(x, arr[:, 1])
     # plt.plot(x, arr[:, 3])
-    plt.title("Loss")
+    plt.title("Accuracy")
     # plt.legend(("Training", "Test", "Maximum"))
     # plt.legend(("loss"))
     # plt.legend(("Quantization Level Count"))
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Jul 3nd/2_user_1_qbit_small_4_layer_deep_encoder_tanh(relu)"
+    file = "trained_models/Jul 3nd/2_user_1_qbit_smaller_CNN_encoder_annealingtanh_seed80"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
@@ -216,8 +234,10 @@ if __name__ == "__main__":
     print(model.summary())
     # model = create_uniformed_quantization_model(k=2, bin_num=2)
     # plot_data(training_data)
-    quantizaton_evaluation(model)
-    variance_graph(model, N=10000)
+
+    # optimal_model()
+    # variance_graph(model, N=100)
     # variance_graph_accuracy(model, N=1000)
+    quantization_evaluation(model)
     # quantization_evaluation_regression(model)
 
