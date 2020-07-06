@@ -278,7 +278,7 @@ def F_Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
         x = Dense(7, name="encoder_dense_1_{}".format(i))(x)
         x = LeakyReLU()(x)
-        x = Dense(7, name="encoder_dense_4_{}".format(i))(x)
+        x = Dense(5, name="encoder_dense_4_{}".format(i))(x)
         x = LeakyReLU()(x)
         x = Dense(5, name="encoder_dense_2_{}".format(i))(x)
         x = LeakyReLU()(x)
