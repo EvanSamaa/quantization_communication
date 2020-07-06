@@ -56,7 +56,7 @@ def test_step_with_annealing(features, labels, N):
 
 if __name__ == "__main__":
     # test_model()
-    fname_template = "./trained_models/Jul 1st/2user_case/2_user_1_qbit_deep_encoder{}"
+    fname_template = "./trained_models/Jul 3nd/2_user_1_qbit_small_4_layer_deep_encoder_tanh(relu){}"
     N = 10000
     k = 2
     L = 1
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # loss_object = tf.keras.losses.Hinge()
     # loss_object = ThroughputLoss()
     optimizer = tf.keras.optimizers.Adam()
-
+    submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_throughput = ExpectedThroughput(name='train_throughput')
     train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
@@ -115,9 +115,9 @@ if __name__ == "__main__":
             min_loss = train_loss.result()
         if train_accuracy.result() == 1 or train_accuracy.result() >=0.95:
             break
-        if epoch%100 == 0:
-            if epoch >= 200:
-                improvement = graphing_data[epoch-200: epoch-100, 0].mean() - graphing_data[epoch-100: epoch, 0].mean()
+        if epoch%500 == 0:
+            if epoch >= 1000:
+                improvement = graphing_data[epoch-1000: epoch-500, 0].mean() - graphing_data[epoch-500: epoch, 0].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.001:
                     break

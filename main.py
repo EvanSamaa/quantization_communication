@@ -59,10 +59,10 @@ def train_step_with_annealing(features, labels, N, encode_only=False):
             predictions = model(features_mod)
             # predictions = model(ranking_transform(features))
             quantization = submodel(features_mod)[0:1000, :]
-            # quantization0 = tf.tanh(quantization) + tf.stop_gradient(tf.sign(quantization) - tf.tanh(quantization))
+            quantization0 = quantization + tf.stop_gradient(tf.sign(quantization) - quantization)
             loss = loss_object(labels, predictions)
-            # quantization0 = tf.reshape(quantization0, (1, 1000, 3))
-            # loss = loss + tf.exp(-loss_model(quantization0))
+            # quantization0 = tf.reshape(quantization, (1, 1000, 3))
+            # loss = -loss_model(quantization0)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss)
@@ -81,7 +81,7 @@ def test_step_with_annealing(features, labels, N):
 if __name__ == "__main__":
     # test_model()
     # A[2]
-    fname_template = "./trained_models/Jul 1st/BE with Regression/3_bit_regression_bitstringinput{}"
+    fname_template = "./trained_models/Jul 1st/BE with Regression/3_bit_regression_bitstring_input{}"
     N = 10000
     k = 2
     L = 1
@@ -89,8 +89,9 @@ if __name__ == "__main__":
     EPOCHS = 10000
     tf.random.set_seed(80)
     graphing_data = np.zeros((EPOCHS, 8))
-    # model = binary_encoding_model((33,), 32)
+    # model = binary_encoding_model((9,), 8)
     model = Recover_uniform_quantization(input_shape = [24,], L=3)
+    # model = Recover_uniform_quantization(input_shape=[10, ], L=3)
 
     # model = Convnet_loss_function(input_shape=[1000,4], combinations=16)
     # model = LSTM_loss_function(k=1, input_shape=[1000, 3])
@@ -113,13 +114,16 @@ if __name__ == "__main__":
     # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
     # print("finish gen data")
     # test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
-    test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=1)
+    test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=9)
+    # test_ds = gen_number_data(N=100)
     min_loss = 10000
+
     encode_onlyy = False
     for epoch in range(EPOCHS):
         # Reset the metrics at the start of the next epoch
         # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
-        train_ds = gen_regression_data(reduncancy=1)
+        # train_ds = gen_number_data()
+        train_ds = gen_regression_data(reduncancy=9)
         train_loss.reset_states()
         quantization_count.reset_states()
         gradient_record.reset_states()
