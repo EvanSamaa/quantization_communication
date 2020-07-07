@@ -83,7 +83,6 @@ class ExpectedThroughput(tf.keras.metrics.Metric):
         self.count = self.add_weight(name='tp3', initializer='zeros')
         self.a = tf.math.log(tf.cast(2, dtype=tf.float32))
         self.logit = logit
-
     def update_state(self, y_true, y_pred, x):
         c_max = tf.gather(x, y_true, axis=1, batch_dims=1)
         i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
@@ -166,19 +165,24 @@ def Quantization_count(x):
 
     return (op.shape[0])
 class TargetThroughput(tf.keras.metrics.Metric):
-    def __init__(self, name='expected_throughput', logit=True, **kwargs):
+    def __init__(self, name='expected_throughput', logit=True, bit_string = True, **kwargs):
         super(TargetThroughput, self).__init__(name=name, **kwargs)
         self.max_throughput = self.add_weight(name='tp', initializer='zeros')
         self.expected_throughput = self.add_weight(name='tp2', initializer='zeros')
         self.count = self.add_weight(name='tp3', initializer='zeros')
         self.a = tf.math.log(tf.cast(2, dtype=tf.float32))
         self.logit = logit
+        self.bit_string = bit_string
 
     def update_state(self, y_true, y_pred, x):
+        if self.bit_string:
+            mod_x = floatbits_to_float(x)
+        else:
+            mod_x = x
         c_max = tf.gather(x, y_true, axis=1, batch_dims=1)
         i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
         c_picked = tf.argmax(y_pred, axis=1)
-        c_picked = tf.gather(x, c_picked, axis=1, batch_dims=1)
+        c_picked = tf.gather(mod_x, c_picked, axis=1, batch_dims=1)
         i_expected = tf.math.log(1 - 1.5*tf.math.log(1 - c_picked))/self.a
         self.max_throughput.assign_add(tf.math.reduce_sum(i_max, axis=0))
         self.expected_throughput.assign_add(tf.math.reduce_sum(i_expected, axis=0))
@@ -306,7 +310,13 @@ def replace_tanh_with_sign(model, model_func, k):
 #             out[:, j, i] = np.where(cp_value_arr[:, j] >= 1, 1, 0)
 #             cp_value_arr[:, j] = cp_value_arr[:, j] - out[:, j, i]
 #     return tf.constant(out, dtype=tf.float32)
-
+def floatbits_to_float(value_arr):
+    np_value_arr = value_arr.numpy()
+    if len(value_arr.shape) == 3:
+        out = np.zeros((value_arr.shape[0], value_arr.shape[1]))
+        for i in range(0, 23):
+            out = out + np_value_arr[:, :, i] * np.float_power(2, -(i+1))
+        return tf.constant(out, dtype=tf.float32)
 def float_to_floatbits(value_arr):
     cp_value_arr = value_arr.numpy()
     # I'm not sure if the shape thing works well so might have to comeback and fix it
@@ -326,5 +336,3 @@ def float_to_floatbits(value_arr):
                 cp_value_arr[:, j] = cp_value_arr[:, j]- out[:, j, i]
         return tf.constant(out, dtype=tf.float32)
 if __name__ == "__main__":
-    pass
-

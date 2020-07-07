@@ -117,7 +117,7 @@ def variance_graph(model, N = 1, k=2):
             features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
             features_mod = tf.concat((features_mod, features), axis=2)
             prediction = model(features_mod)
-            # tp_fn(labels, prediction, features)
+            tp_fn(labels, prediction, features)
             a_fn(labels, prediction)
             # if a_fn.result() != 1:
             #     print(features, '\n', prediction)
@@ -127,13 +127,13 @@ def variance_graph(model, N = 1, k=2):
         acc[e] = a_fn.result()
         result[e, 0] = tp_fn.result()[0]
         result[e, 1] = tp_fn.result()[1]
-    # print("Max Throughput:", np.nanmean(result[:, 0]))
-    # print("Max Throughput Variance:", np.nanvar(result[:, 0]))
-    # print("Expected Throughput:", np.nanmean(result[:, 1]))
-    # print("Expected Throughput Variance:", np.nanvar(result[:, 1]))
+    print("Max Throughput:", np.nanmean(result[:, 0]))
+    print("Max Throughput Variance:", np.nanvar(result[:, 0]))
+    print("Expected Throughput:", np.nanmean(result[:, 1]))
+    print("Expected Throughput Variance:", np.nanvar(result[:, 1]))
     print("Accuracy:", np.nanmean(acc))
     print("Accuracy Variance:", np.nanvar(acc))
-    return np.nanmean(acc)
+    return np.nanmean(acc), np.nanmean(result[:, 0]), np.nanmean(result[:, 1])
 def variance_graph_accuracy(model, N = 10000):
     # tp_fn = ExpectedThroughput(name = "throughput")
     # tp_fn = ExpectedThroughput(name = "target throughput")
@@ -227,15 +227,27 @@ def check_multiple_models(dir_name):
     list = os.listdir(dir_name)
     print(list)
     acc_list = []
+    throughput = []
+    max_throughput = []
     for item in list:
         if item[-3:] == ".h5":
             model = tf.keras.models.load_model(dir_name + item)
             print(model.summary())
-            acc_list.append(variance_graph(model))
+            res = variance_graph(model)
+            acc_list.append(res[0])
+            throughput.append(res[1])
+            max_throughput.append(res[2])
+    throughput = np.array(throughput)
     acc_list = np.array(acc_list)
-    print("the max is ", np.max(acc_list))
-    print("the min is ", np.min(acc_list))
-    print("the mean is", np.mean(acc_list))
+    max_throughput = np.array(max_throughput)
+    print("the max accuracy is ", np.max(acc_list))
+    print("the min accuracy is ", np.min(acc_list))
+    print("the mean accuracy is", np.mean(acc_list))
+    print("the max throughput (upper bound) is", np.mean(max_throughput))
+    print("the max throughput is", np.max(throughput))
+    print("the max throughput is", np.min(throughput))
+    print("the max throughput is", np.mean(throughput))
+
 if __name__ == "__main__":
     check_multiple_models("./trained_models/Jul 6th/k=30, CNN/")
     A[2]

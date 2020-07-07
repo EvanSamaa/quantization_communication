@@ -53,7 +53,6 @@ def test_step_with_annealing(features, labels, N):
     test_loss(t_loss)
     test_accuracy(labels, predictions)
     # test_throughput(labels, predictions, features)
-
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
