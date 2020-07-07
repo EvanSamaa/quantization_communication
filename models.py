@@ -279,11 +279,11 @@ def perception_model(x, output, layer, logit=True):
 ############################## Encoding models with bitstring input ##############################
 def F_Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
-        x = Dense(10, name="encoder_dense_1_{}".format(i))(x)
+        x = Dense(80, name="encoder_dense_1_{}".format(i))(x)
         x = LeakyReLU()(x)
-        x = Dense(8, name="encoder_dense_4_{}".format(i))(x)
+        x = Dense(50, name="encoder_dense_4_{}".format(i))(x)
         x = LeakyReLU()(x)
-        x = Dense(8, name="encoder_dense_2_{}".format(i))(x)
+        x = Dense(30, name="encoder_dense_2_{}".format(i))(x)
         x = LeakyReLU()(x)
         x = Dense(L, name="encoder_dense_3_{}".format(i))(x)
         # x = annealing_tanh(x, N, name="tanh_pos_{}".format(i)) + \
@@ -380,6 +380,26 @@ def F_CNN_Encoder_module_annealing(L, i=0):
         #     binary_activation(x) - annealing_tanh(tf.keras.layers.ReLU()(x), N, name="tanh_neg_{}".format(i)))
         return x
     return encoder_module
+def Thresholdin_network(input_shape):
+    inputs = Input(shape=input_shape)
+    epoch = inputs[0, 0, 0]
+    inputs_mod = inputs[:, :, 1:]
+    x = SubtractLayer_with_noise(name="threshold")(inputs_mod)
+    x = tf.keras.layers.Reshape((2,))(x)
+    x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos") + tf.stop_gradient(
+        binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg"))
+    x = Dense(20, name="decoder_dense_1")(x)
+    x = LeakyReLU()(x)
+    x = Dense(2, name="decoder_dense_2")(x)
+    model = Model(inputs, x)
+    print(model.summary())
+    print(model.trainable_variables)
+    return model
+
+def F_swapadoo_Encoder(k, l, input_shape):
+    inputs = Input(shape=input_shape)
+
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
-    F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
+    # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
+    print(Thresholdin_network((2, )).summary())

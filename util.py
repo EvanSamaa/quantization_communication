@@ -9,7 +9,7 @@ import math
 # ============================  Data gen ============================
 
 def gen_data(N, k, low=0, high=1, batchsize=30):
-    channel_data = tf.random.uniform((N,k), low, high)
+    channel_data = tf.random.uniform((N,k,1), low, high)
     channel_label = tf.math.argmax(channel_data, axis=1)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
     return dataset
@@ -294,8 +294,22 @@ def annealing_tanh(x, N, name):
     alpha = tf.minimum(5.0, 1.0 + 0.01*N)
     out = tf.tanh(alpha*x, name=name)
     return out
+# ========================================== Layers ==========================================
+class SubtractLayer(tf.keras.layers.Layer):
+    def __init__(self, name):
+      super(SubtractLayer, self).__init__(name=name)
+      self.thre = tf.Variable(tf.constant([0.5,0.5], shape=[2,1]), trainable=True, name="threshold")
+    def call(self, inputs):
+      return inputs - self.thre
+class SubtractLayer_with_noise(tf.keras.layers.Layer):
+    def __init__(self, name):
+      super(SubtractLayer_with_noise, self).__init__(name=name)
+      self.noise = tf.constant(tf.random.uniform(shape=[2,1], minval=-0.01, maxval=0.011))
+      self.thre = tf.Variable(tf.constant([0.5,0.5], shape=[2,1]), trainable=True, name="threshold")
+    def call(self, inputs):
+      return inputs - self.thre + tf.random.normal(shape=[2, 1], mean=0, stddev=self.noise)
+# ========================================== MISC ==========================================
 
-# ========================================== misc ==========================================
 def replace_tanh_with_sign(model, model_func, k):
     model.save_weights('weights.hdf5')
     new_model = model_func((k, ), k, saved=True)

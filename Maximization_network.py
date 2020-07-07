@@ -53,10 +53,32 @@ def test_step_with_annealing(features, labels, N):
     test_loss(t_loss)
     test_accuracy(labels, predictions)
     # test_throughput(labels, predictions, features)
+def swap_weights(model, k=2):
+    layer_name = {}
+    for layer in model.layers:
+        if layer.name[0:7] == "encoder":
+            layer_name[layer.name[:-1]] = 1
+    keys = list(layer_name.keys())
+    keys.sort()
+    temp_kernel = []
+    temp_bias = []
+    for layer_name_without_index in keys:
+        temp_kernel.append(model.get_layer(layer_name_without_index+str(0)).kernel)
+        temp_bias.append(model.get_layer(layer_name_without_index+str(0)).bias)
+    for i in range(0, k-1):
+        for layer_name_without_index in layer_name.keys():
+            model.get_layer(layer_name_without_index+str(i)).kernel = model.get_layer(layer_name_without_index+str(i+1)).kernel
+            model.get_layer(layer_name_without_index + str(i)).bias = model.get_layer(layer_name_without_index+str(i+1)).bias
+    for j in range(0, len(keys)):
+        layer_name_without_index = keys[j]
+        model.get_layer(layer_name_without_index + str(k-1)).kernel = temp_kernel[j]
+        model.get_layer(layer_name_without_index + str(k-1)).bias = temp_bias[j]
+            # layer.kernel = tf.zeros(layer.kernel.shape)
+    return model
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
-        fname_template_template = "./trained_models/Jul 6th/k=2, larger DNN/2_user_1_qbit_DNN_encoder_tanh(relu)_seed={}"
+        fname_template_template = "./trained_models/Jul 6th/k=2, DNN large/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
         k = 2
@@ -68,11 +90,12 @@ if __name__ == "__main__":
         # model = F_create_LSTM_encoding_model_with_annealing(k, L, (k, 24))
         # model = F_create_CNN_encoding_model_with_annealing(k, L, (k, 24))
         model = F_create_encoding_model_with_annealing(k, L, (k, 24))
+        # model = Thresholdin_network((k, 2))
         loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         # loss_object = tf.keras.losses.Hinge()
         # loss_object = ThroughputLoss()
         optimizer = tf.keras.optimizers.Adam()
-        submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
+        # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         train_throughput = ExpectedThroughput(name='train_throughput')
         train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
@@ -82,8 +105,10 @@ if __name__ == "__main__":
 
         max_acc = -1
         test_ds = gen_channel_quality_data_float_encoded(100, k)
+        # test_ds = gen_data(100, k)
         current_acc = 0
         for epoch in range(EPOCHS):
+            # model = swap_weights(model)
             # Reset the metrics at the start of the next epoch
             # train_ds = gen_data(N, k, 0, 1, N)
             train_ds = gen_channel_quality_data_float_encoded(N, k)
