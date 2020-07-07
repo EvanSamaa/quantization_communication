@@ -230,13 +230,15 @@ def check_multiple_models(dir_name):
     for item in list:
         if item[-3:] == ".h5":
             model = tf.keras.models.load_model(dir_name + item)
+            print(model.summary())
             acc_list.append(variance_graph(model))
     acc_list = np.array(acc_list)
     print("the max is ", np.max(acc_list))
     print("the min is ", np.min(acc_list))
     print("the mean is", np.mean(acc_list))
 if __name__ == "__main__":
-    # check_multiple_models("./trained_models/Jul 6th/")
+    check_multiple_models("./trained_models/Jul 6th/k=30, CNN/")
+    A[2]
     file = "trained_models/Jul 6th/k=30/30_user_2_qbit_4_layer_deep_encoder_tanh(relu)_seed=4"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     model_path = file + ".h5"
