@@ -351,9 +351,9 @@ def F_create_CNN_encoding_model_with_annealing(k, l, input_shape):
     epoch = inputs[0, 0, 0]
     inputs_mod = inputs[:, :, 1:]
     x_list = tf.split(inputs_mod, num_or_size_splits=k, axis=1)
-    encoding = F_LSTM_Encoder_module_annealing(l, 0)(x_list[0][:, 0, :], epoch)
+    encoding = F_CNN_Encoder_module_annealing(l, 0)(x_list[0][:, 0, :], epoch)
     for i in range(1, len(x_list)):
-        encoding = tf.concat((encoding, F_LSTM_Encoder_module_annealing(l, i)(x_list[i][:, 0, :], epoch)), axis=1)
+        encoding = tf.concat((encoding, F_CNN_Encoder_module_annealing(l, i)(x_list[i][:, 0, :], epoch)), axis=1)
     x = tf.keras.layers.Dense(20)(encoding)
     x = sigmoid(x)
     out = tf.keras.layers.Dense(2)(x)
@@ -363,12 +363,14 @@ def F_create_CNN_encoding_model_with_annealing(k, l, input_shape):
 def F_CNN_Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
         x = tf.keras.layers.Reshape((23, 1))(x)
-        x = tf.keras.layers.LSTM(8, name="LSTM_{}".format(i), kernel_initializer=tf.keras.initializers.he_normal())(x)
-        x = Dense(5, name="encoder_dense_4_{}".format(i), kernel_initializer=tf.keras.initializers.he_normal())(x)
+        # x = tf.keras.layers.LSTM(8, name="LSTM_{}".format(i), kernel_initializer=tf.keras.initializers.he_normal())(x)
+        x = tf.keras.layers.Conv1D(filters=10, kernel_size=4, strides=3)(x)
+        x = tf.keras.layers.Reshape((70,))(x)
+        x = Dense(5, name="encoder_dense_4_{}".format(i))(x)
         x = LeakyReLU()(x)
-        x = Dense(5, name="encoder_dense_2_{}".format(i), kernel_initializer=tf.keras.initializers.he_normal())(x)
+        x = Dense(5, name="encoder_dense_2_{}".format(i))(x)
         x = LeakyReLU()(x)
-        x = Dense(L, name="encoder_dense_3_{}".format(i), kernel_initializer=tf.keras.initializers.he_normal())(x)
+        x = Dense(L, name="encoder_dense_3_{}".format(i))(x)
         # x = annealing_tanh(x, N, name="tanh_pos_{}".format(i)) + \
         #     tf.stop_gradient(tf.math.sign(x, name="encoder_sign_{}".format(i)) - annealing_tanh(x, N, name="tanh_neg_{}".format(i)))
         x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos_{}".format(i)) + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
@@ -377,4 +379,5 @@ def F_CNN_Encoder_module_annealing(L, i=0):
         return x
     return encoder_module
 if __name__ == "__main__":
-    F_create_encoding_model_with_annealing(2, 1, (2, 24))
+    # F_create_encoding_model_with_annealing(2, 1, (2, 24))
+    F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
