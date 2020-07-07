@@ -78,7 +78,7 @@ def swap_weights(model, k=2):
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
-        fname_template_template = "./trained_models/Jul 6th/k=2, DNN larger/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
+        fname_template_template = "./trained_models/Jul 6th/k=2, DNN 101010/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
         k = 2
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         tf.random.set_seed(i)
         graphing_data = np.zeros((EPOCHS, 8))
         # model = tf.keras.models.load_model("trained_models/Sept 22_23/Data_gen_LSTM_10_cell.h5")
-        # model = F_create_LSTM_encoding_model_with_annealing(k, L, (k, 24))
+        # model = F_create_LSTM_encogding_model_with_annealing(k, L, (k, 24))
         # model = F_create_CNN_encoding_model_with_annealing(k, L, (k, 24))
         model = F_create_encoding_model_with_annealing(k, L, (k, 24))
         # model = Thresholdin_network((k, 2))
