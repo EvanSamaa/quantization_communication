@@ -60,8 +60,8 @@ if __name__ == "__main__":
         fname_template_template = "./trained_models/Jul 6th/k=30/30_user_2_qbit_4_layer_deep_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
-        k = 30
-        L = 2
+        k = 2
+        L = 1
         EPOCHS = 20000
         tf.random.set_seed(i)
         graphing_data = np.zeros((EPOCHS, 8))
