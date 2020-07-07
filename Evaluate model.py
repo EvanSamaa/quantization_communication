@@ -249,7 +249,7 @@ def check_multiple_models(dir_name):
     print("the max throughput is", np.mean(throughput))
 
 if __name__ == "__main__":
-    check_multiple_models("./trained_models/Jul 6th/k=2, CNN/")
+    check_multiple_models("./trained_models/Jul 6th/k=2, DNN/")
     A[2]
     file = "trained_models/Jul 6th/k=30/30_user_2_qbit_4_layer_deep_encoder_tanh(relu)_seed=4"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
