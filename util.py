@@ -336,3 +336,4 @@ def float_to_floatbits(value_arr):
                 cp_value_arr[:, j] = cp_value_arr[:, j]- out[:, j, i]
         return tf.constant(out, dtype=tf.float32)
 if __name__ == "__main__":
+    pass
