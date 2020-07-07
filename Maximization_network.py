@@ -78,7 +78,7 @@ def swap_weights(model, k=2):
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
-        fname_template_template = "./trained_models/Jul 6th/k=2, DNN large/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
+        fname_template_template = "./trained_models/Jul 6th/k=2, DNN larger/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
         k = 2
