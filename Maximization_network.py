@@ -56,10 +56,10 @@ def test_step_with_annealing(features, labels, N):
 
 if __name__ == "__main__":
     # test_model()
-    fname_template = "./trained_models/Jul 6th/2_user_1_qbit_4_layer_deep_encoder_tanh(relu)_seed=3{}"
+    fname_template = "./trained_models/Jul 6th/30_user_2_qbit_4_layer_deep_encoder_tanh(relu)_seed=3{}"
     N = 10000
-    k = 2
-    L = 1
+    k = 30
+    L = 2
     EPOCHS = 20000
     tf.random.set_seed(3)
     graphing_data = np.zeros((EPOCHS, 8))

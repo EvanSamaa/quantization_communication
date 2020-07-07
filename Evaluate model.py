@@ -6,6 +6,7 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 from matplotlib import pyplot as plt
 from util import *
+import os
 from models import *
 def quantization_evaluation(model, granuality = 0.001, k=2):
     dim_num = int(1/granuality) + 1
@@ -96,7 +97,7 @@ def quantization_evaluation_regression(model, granuality = 0.0001):
     plt.xlabel("input")
     plt.ylabel("output")
     plt.show()
-def variance_graph(model, N = 100):
+def variance_graph(model, N = 1):
     # tp_fn = ExpectedThroughput(name = "throughput")
     tp_fn = TargetThroughput(name = "target throughput")
     # tp_fn = ExpectedThroughput(name = "target throughput")
@@ -110,7 +111,7 @@ def variance_graph(model, N = 100):
     for e in range(0, N):
         tp_fn.reset_states()
         a_fn.reset_states()
-        ds = gen_channel_quality_data_float_encoded(1000, k=2)
+        ds = gen_channel_quality_data_float_encoded(10000, k=2)
         for features, labels in ds:
             # prediction = tf.reshape(model(features), (1,))
             features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
@@ -132,6 +133,7 @@ def variance_graph(model, N = 100):
     # print("Expected Throughput Variance:", np.nanvar(result[:, 1]))
     print("Accuracy:", np.nanmean(acc))
     print("Accuracy Variance:", np.nanvar(acc))
+    return np.nanmean(acc)
 def variance_graph_accuracy(model, N = 10000):
     # tp_fn = ExpectedThroughput(name = "throughput")
     # tp_fn = ExpectedThroughput(name = "target throughput")
@@ -221,8 +223,21 @@ def plot_data(arr):
     # plt.legend(("loss"))
     # plt.legend(("Quantization Level Count"))
     plt.show()
+def check_multiple_models(dir_name):
+    list = os.listdir(dir_name)
+    print(list)
+    acc_list = []
+    for item in list:
+        if item[-3:] == ".h5":
+            model = tf.keras.models.load_model(dir_name + item)
+            acc_list.append(variance_graph(model))
+    acc_list = np.array(acc_list)
+    print("the max is ", np.max(acc_list))
+    print("the min is ", np.min(acc_list))
+    print("the mean is", np.mean(acc_list))
 if __name__ == "__main__":
-    file = "trained_models/Jul 3nd/2_user_1_qbit_smaller_CNN_encoder_annealingtanh_seed80"
+    # check_multiple_models("./trained_models/Jul 6th/")
+    file = "trained_models/Jul 6th/2_user_1_qbit_4_layer_deep_encoder_tanh(relu)_seed=6"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
@@ -231,10 +246,9 @@ if __name__ == "__main__":
     # training_data = np.concatenate((np.load(training_data_path), np.load(training_data_path1)), axis=0)
     training_data = np.load(training_data_path)
     model = tf.keras.models.load_model(model_path)
-    print(model.summary())
+    # print(model.summary())
     # model = create_uniformed_quantization_model(k=2, bin_num=2)
     # plot_data(training_data)
-
     # optimal_model()
     # variance_graph(model, N=100)
     # variance_graph_accuracy(model, N=1000)
