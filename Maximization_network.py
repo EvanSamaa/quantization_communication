@@ -57,7 +57,7 @@ def test_step_with_annealing(features, labels, N):
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
-        fname_template_template = "./trained_models/Jul 6th/k=30/30_user_2_qbit_4_layer_deep_encoder_tanh(relu)_seed={}"
+        fname_template_template = "./trained_models/Jul 6th/k=30, CNN/30_user_2_qbit_4_layer_deep_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
         k = 2
