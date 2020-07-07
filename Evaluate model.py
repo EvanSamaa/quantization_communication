@@ -97,7 +97,7 @@ def quantization_evaluation_regression(model, granuality = 0.0001):
     plt.xlabel("input")
     plt.ylabel("output")
     plt.show()
-def variance_graph(model, N = 1):
+def variance_graph(model, N = 1, k=2):
     # tp_fn = ExpectedThroughput(name = "throughput")
     tp_fn = TargetThroughput(name = "target throughput")
     # tp_fn = ExpectedThroughput(name = "target throughput")
@@ -111,7 +111,7 @@ def variance_graph(model, N = 1):
     for e in range(0, N):
         tp_fn.reset_states()
         a_fn.reset_states()
-        ds = gen_channel_quality_data_float_encoded(10000, k=2)
+        ds = gen_channel_quality_data_float_encoded(10000, k=k)
         for features, labels in ds:
             # prediction = tf.reshape(model(features), (1,))
             features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
@@ -237,7 +237,7 @@ def check_multiple_models(dir_name):
     print("the mean is", np.mean(acc_list))
 if __name__ == "__main__":
     # check_multiple_models("./trained_models/Jul 6th/")
-    file = "trained_models/Jul 6th/2_user_1_qbit_4_layer_deep_encoder_tanh(relu)_seed=6"
+    file = "trained_models/Jul 6th/k=30/30_user_2_qbit_4_layer_deep_encoder_tanh(relu)_seed=4"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
@@ -250,8 +250,8 @@ if __name__ == "__main__":
     # model = create_uniformed_quantization_model(k=2, bin_num=2)
     # plot_data(training_data)
     # optimal_model()
-    # variance_graph(model, N=100)
+    variance_graph(model, N=1, k=30)
     # variance_graph_accuracy(model, N=1000)
-    quantization_evaluation(model)
+    # quantization_evaluation(model)
     # quantization_evaluation_regression(model)
 

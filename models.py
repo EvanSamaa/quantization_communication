@@ -328,7 +328,7 @@ def F_LSTM_Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
         x = tf.keras.layers.Reshape((23, 1))(x)
         x = tf.keras.layers.LSTM(8)(x)
-        x = Dense(5, name="encoder_dense_4_{}".format(i))(x)
+        x = Dense(8, name="encoder_dense_4_{}".format(i))(x)
         x = LeakyReLU()(x)
         x = Dense(5, name="encoder_dense_2_{}".format(i))(x)
         x = LeakyReLU()(x)
