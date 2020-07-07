@@ -179,7 +179,7 @@ class TargetThroughput(tf.keras.metrics.Metric):
             mod_x = floatbits_to_float(x)
         else:
             mod_x = x
-        c_max = tf.gather(x, y_true, axis=1, batch_dims=1)
+        c_max = tf.gather(mod_x, y_true, axis=1, batch_dims=1)
         i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
         c_picked = tf.argmax(y_pred, axis=1)
         c_picked = tf.gather(mod_x, c_picked, axis=1, batch_dims=1)
@@ -301,15 +301,6 @@ def replace_tanh_with_sign(model, model_func, k):
     new_model = model_func((k, ), k, saved=True)
     new_model.load_weights('weights.hdf5')
     return new_model
-# def float_bits_to_float(bits_arr):
-#     cp_value_arr = bits_arr.numpy()
-#     out = np.zeros((bits_arr.shape[0], 1))
-#     for j in range(0, bits_arr.shape[1]):
-#         for i in range(0, 23):
-#             cp_value_arr[:, j] = cp_value_arr[:, j] * 2
-#             out[:, j, i] = np.where(cp_value_arr[:, j] >= 1, 1, 0)
-#             cp_value_arr[:, j] = cp_value_arr[:, j] - out[:, j, i]
-#     return tf.constant(out, dtype=tf.float32)
 def floatbits_to_float(value_arr):
     np_value_arr = value_arr.numpy()
     if len(value_arr.shape) == 3:
