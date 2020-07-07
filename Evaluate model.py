@@ -225,7 +225,7 @@ def plot_data(arr):
     plt.show()
 def check_multiple_models(dir_name):
     list = os.listdir(dir_name)
-    print(list)
+    list.sort()
     acc_list = []
     throughput = []
     max_throughput = []
@@ -240,6 +240,7 @@ def check_multiple_models(dir_name):
     throughput = np.array(throughput)
     acc_list = np.array(acc_list)
     max_throughput = np.array(max_throughput)
+    print("the best model is ",np.argmax(acc_list))
     print("the max accuracy is ", np.max(acc_list))
     print("the min accuracy is ", np.min(acc_list))
     print("the mean accuracy is", np.mean(acc_list))
@@ -247,9 +248,11 @@ def check_multiple_models(dir_name):
     print("the max throughput is", np.max(throughput))
     print("the max throughput is", np.min(throughput))
     print("the max throughput is", np.mean(throughput))
-
+    bestmodel = tf.keras.models.load_model(dir_name + list[np.argmax(acc_list)])
+    quantization_evaluation(bestmodel)
+    return
 if __name__ == "__main__":
-    check_multiple_models("./trained_models/Jul 6th/k=2, DNN/")
+    check_multiple_models("./trained_models/Jul 6th/k=2, small DNN/")
     A[2]
     file = "trained_models/Jul 6th/k=30/30_user_2_qbit_4_layer_deep_encoder_tanh(relu)_seed=4"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
