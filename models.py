@@ -317,7 +317,7 @@ def F_create_LSTM_encoding_model_with_annealing(k, l, input_shape):
     x_list = tf.split(inputs_mod, num_or_size_splits=k, axis=1)
     encoding = F_LSTM_Encoder_module_annealing(l, 0)(x_list[0][:, 0, :], epoch)
     for i in range(1, len(x_list)):
-        encoding = tf.concat((encoding, F_Encoder_module_annealing(l, i)(x_list[i][:, 0, :], epoch)), axis=1)
+        encoding = tf.concat((encoding, F_LSTM_Encoder_module_annealing(l, i)(x_list[i][:, 0, :], epoch)), axis=1)
     x = tf.keras.layers.Dense(20)(encoding)
     x = sigmoid(x)
     out = tf.keras.layers.Dense(2)(x)
@@ -327,7 +327,7 @@ def F_create_LSTM_encoding_model_with_annealing(k, l, input_shape):
 def F_LSTM_Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
         x = tf.keras.layers.Reshape((23, 1))(x)
-        x = tf.keras.layers.LSTM(8)(x)
+        x = tf.keras.layers.LSTM(8, name="LSTM_{}".format(i))(x)
         x = Dense(8, name="encoder_dense_4_{}".format(i))(x)
         x = LeakyReLU()(x)
         x = Dense(5, name="encoder_dense_2_{}".format(i))(x)

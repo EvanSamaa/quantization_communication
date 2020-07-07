@@ -126,4 +126,5 @@ if __name__ == "__main__":
                         break
         # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
         np.save(fname_template.format(".npy"), graphing_data)
+        tf.keras.backend.clear_session()
         print("Training end")
