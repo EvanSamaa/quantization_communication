@@ -6,9 +6,9 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 import math
-# import cv2
+import cv2
 import os
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 # ============================  Data gen ============================
 
 def gen_data(N, k, low=0, high=1, batchsize=30):
@@ -312,7 +312,7 @@ class SubtractLayer_with_noise(tf.keras.layers.Layer):
     def call(self, inputs):
       return inputs - self.thre + tf.random.normal(shape=[2, 1], mean=0, stddev=self.noise)
 # ========================================== MISC ==========================================
-def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, name=""):
+def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, name="", bitstring=True):
     dim_num = int(1/granuality) + 1
     count = np.arange(0, 1 + granuality, granuality)
     output = np.zeros((dim_num, dim_num))
@@ -325,13 +325,16 @@ def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, nam
             line = line + 1
     channel_data = tf.constant(input)
     channel_label = tf.math.argmax(channel_data, axis=1)
-    channel_data = float_to_floatbits(channel_data)
+    if bitstring:
+        channel_data = float_to_floatbits(channel_data)
     ds = Dataset.from_tensor_slices((channel_data, channel_label)).batch(dim_num*dim_num)
     for features, labels in ds:
-        # features_mod = tf.ones((1, 1))
-        # features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[1]))), axis=1)
-        features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
-        features_mod = tf.concat((features_mod, features), axis=2)
+        if bitstring:
+            features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
+            features_mod = tf.concat((features_mod, features), axis=2)
+        else:
+            features_mod = tf.ones((features.shape[0], features.shape[1], 1), dtype=tf.float64)
+            features_mod = tf.concat((features_mod, tf.reshape(features, (features.shape[0], features.shape[1], 1))), axis=2)
         out = model(features_mod)
         prediction = tf.argmax(out, axis=1)
     line = 0
