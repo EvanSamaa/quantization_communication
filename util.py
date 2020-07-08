@@ -8,7 +8,7 @@ import random
 import math
 # import cv2
 import os
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 # ============================  Data gen ============================
 
 def gen_data(N, k, low=0, high=1, batchsize=30):
