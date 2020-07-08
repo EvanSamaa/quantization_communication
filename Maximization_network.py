@@ -7,6 +7,7 @@ from tensorflow.keras.activations import sigmoid
 import random
 from util import *
 import os
+from keras_adabound import AdaBound
 from models import *
 def train_step(features, labels, N=None):
     if N != None:
@@ -39,7 +40,8 @@ def train_step_with_annealing(features, labels, N):
         # predictions = model(ranking_transform(features))
         loss = loss_object(labels, predictions)
     gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    optimizer.apply_gradients(gradients, model.trainable_variables)
     train_loss(loss)
     # train_throughput(labels, predictions, features)
     train_accuracy(labels, predictions)
@@ -78,7 +80,7 @@ def swap_weights(model, k=2):
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
-        fname_template_template = "./trained_models/Jul 6th/k=2 SGD/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
+        fname_template_template = "./trained_models/Jul 6th/k=2, Adabound/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
         k = 2
@@ -94,7 +96,9 @@ if __name__ == "__main__":
         loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         # loss_object = tf.keras.losses.Hinge()
         # loss_object = ThroughputLoss()
-        optimizer = tf.keras.optimizers.SGD()
+        # optimizer = tf.keras.optimizers.SGD()
+        # optimizer = tf.keras.optimizers
+        optimizer = AdaBound()
         # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         train_throughput = ExpectedThroughput(name='train_throughput')
