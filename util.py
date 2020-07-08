@@ -6,7 +6,6 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 import math
-import imageio
 import cv2
 import os
 from matplotlib import pyplot as plt
