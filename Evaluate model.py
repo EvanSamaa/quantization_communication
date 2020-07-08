@@ -8,63 +8,63 @@ from matplotlib import pyplot as plt
 from util import *
 import os
 from models import *
-def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, name="", bitstring=True):
-    dim_num = int(1/granuality) + 1
-    count = np.arange(0, 1 + granuality, granuality)
-    output = np.zeros((dim_num, dim_num))
-    input = np.zeros((dim_num*dim_num, 2))
-    line = 0
-    for i in range(count.shape[0]):
-        for j in range(count.shape[0]):
-            input[line, 0] = count[i]
-            input[line, 1] = count[j]
-            line = line + 1
-    channel_data = tf.constant(input)
-    channel_label = tf.math.argmax(channel_data, axis=1)
-    if bitstring:
-        channel_data = float_to_floatbits(channel_data)
-    ds = Dataset.from_tensor_slices((channel_data, channel_label)).batch(dim_num*dim_num)
-    for features, labels in ds:
-        # features_mod = tf.ones((1, 1))
-        # features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[1]))), axis=1)
-        features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
-        features_mod = tf.concat((features_mod, features), axis=2)
-        out = model(features_mod)
-        prediction = tf.argmax(out, axis=1)
-    line = 0
-    for i in range(count.shape[0]):
-        for j in range(count.shape[0]):
-            if prediction[line] == labels[line]:
-                output[i, j] = 1
-            line = line + 1
-    if saveImg == False:
-        plot_quantization_square(output, granuality)
-    else:
-        save_quantization_square(output, granuality, name)
-def save_quantization_square(output, granuality, name):
-    dim_num = int(1 / granuality) + 1
-    count = np.arange(0, 1 + granuality, granuality)
-    output = np.flip(output, axis=0)
-    plt.imshow(output, cmap="gray")
-    step_x = int(dim_num / (5 - 1))
-    x_positions = np.arange(0, dim_num, step_x)
-    x_labels = count[::step_x]
-    y_labels = np.array([1, 0.75, 0.5, 0.25, 0])
-    plt.xticks(x_positions, x_labels)
-    plt.yticks(x_positions, y_labels)
-    plt.savefig(name)
-def plot_quantization_square(output, granuality):
-    dim_num = int(1 / granuality) + 1
-    count = np.arange(0, 1 + granuality, granuality)
-    output = np.flip(output, axis=0)
-    plt.imshow(output, cmap="gray")
-    step_x = int(dim_num / (5 - 1))
-    x_positions = np.arange(0, dim_num, step_x)
-    x_labels = count[::step_x]
-    y_labels = np.array([1, 0.75, 0.5, 0.25, 0])
-    plt.xticks(x_positions, x_labels)
-    plt.yticks(x_positions, y_labels)
-    plt.show()
+# def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, name="", bitstring=True):
+#     dim_num = int(1/granuality) + 1
+#     count = np.arange(0, 1 + granuality, granuality)
+#     output = np.zeros((dim_num, dim_num))
+#     input = np.zeros((dim_num*dim_num, 2))
+#     line = 0
+#     for i in range(count.shape[0]):
+#         for j in range(count.shape[0]):
+#             input[line, 0] = count[i]
+#             input[line, 1] = count[j]
+#             line = line + 1
+#     channel_data = tf.constant(input)
+#     channel_label = tf.math.argmax(channel_data, axis=1)
+#     if bitstring:
+#         channel_data = float_to_floatbits(channel_data)
+#     ds = Dataset.from_tensor_slices((channel_data, channel_label)).batch(dim_num*dim_num)
+#     for features, labels in ds:
+#         # features_mod = tf.ones((1, 1))
+#         # features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[1]))), axis=1)
+#         features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
+#         features_mod = tf.concat((features_mod, features), axis=2)
+#         out = model(features_mod)
+#         prediction = tf.argmax(out, axis=1)
+#     line = 0
+#     for i in range(count.shape[0]):
+#         for j in range(count.shape[0]):
+#             if prediction[line] == labels[line]:
+#                 output[i, j] = 1
+#             line = line + 1
+#     if saveImg == False:
+#         plot_quantization_square(output, granuality)
+#     else:
+#         save_quantization_square(output, granuality, name)
+# def save_quantization_square(output, granuality, name):
+#     dim_num = int(1 / granuality) + 1
+#     count = np.arange(0, 1 + granuality, granuality)
+#     output = np.flip(output, axis=0)
+#     plt.imshow(output, cmap="gray")
+#     step_x = int(dim_num / (5 - 1))
+#     x_positions = np.arange(0, dim_num, step_x)
+#     x_labels = count[::step_x]
+#     y_labels = np.array([1, 0.75, 0.5, 0.25, 0])
+#     plt.xticks(x_positions, x_labels)
+#     plt.yticks(x_positions, y_labels)
+#     plt.savefig(name)
+# def plot_quantization_square(output, granuality):
+#     dim_num = int(1 / granuality) + 1
+#     count = np.arange(0, 1 + granuality, granuality)
+#     output = np.flip(output, axis=0)
+#     plt.imshow(output, cmap="gray")
+#     step_x = int(dim_num / (5 - 1))
+#     x_positions = np.arange(0, dim_num, step_x)
+#     x_labels = count[::step_x]
+#     y_labels = np.array([1, 0.75, 0.5, 0.25, 0])
+#     plt.xticks(x_positions, x_labels)
+#     plt.yticks(x_positions, y_labels)
+#     plt.show()
 def optimal_model(granuality=0.001):
     dim_num = int(1 / granuality) + 1
     count = np.arange(0, 1 + granuality, granuality)
@@ -113,9 +113,9 @@ def quantization_evaluation_regression(model, granuality = 0.0001):
     plt.xlabel("input")
     plt.ylabel("output")
     plt.show()
-def variance_graph(model, N = 1, k=2):
+def variance_graph(model, N = 1, k=2, bitstring=True):
     # tp_fn = ExpectedThroughput(name = "throughput")
-    tp_fn = TargetThroughput(name = "target throughput")
+    tp_fn = TargetThroughput(name = "target throughput", bit_string=bitstring)
     # tp_fn = ExpectedThroughput(name = "target throughput")
     a_fn = tf.keras.metrics.SparseCategoricalAccuracy(name='test_accuracy')
     # tp_fn = Regression_ExpectedThroughput()
@@ -127,13 +127,23 @@ def variance_graph(model, N = 1, k=2):
     for e in range(0, N):
         tp_fn.reset_states()
         a_fn.reset_states()
-        ds = gen_channel_quality_data_float_encoded(10000, k=k)
+        if bitstring:
+            ds = gen_channel_quality_data_float_encoded(10000, k=k)
+        else:
+            ds = gen_number_data(10000, k=k)
         for features, labels in ds:
             # prediction = tf.reshape(model(features), (1,))
-            features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
-            features_mod = tf.concat((features_mod, features), axis=2)
+            if bitstring:
+                features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
+                features_mod = tf.concat((features_mod, features), axis=2)
+            else:
+                print(features.shape)
+                features_mod = tf.ones((features.shape[0], features.shape[1], 1), dtype=tf.float32)
+                print(features_mod.shape)
+                features_mod = tf.concat(
+                    (features_mod, tf.reshape(features, (features.shape[0], features.shape[1], 1))), axis=2)
             prediction = model(features_mod)
-            tp_fn(labels, prediction, features)
+            # tp_fn(labels, prediction, features)
             a_fn(labels, prediction)
             # if a_fn.result() != 1:
             #     print(features, '\n', prediction)
@@ -251,7 +261,7 @@ def check_multiple_models(dir_name):
         if item[-3:] == ".h5":
             model = tf.keras.models.load_model(dir_name + item)
             print(model.summary())
-            res = variance_graph(model)
+            res = variance_graph(model, bitstring=False)
             acc_list.append(res[0])
             throughput.append(res[2])
             max_throughput.append(res[1])
@@ -271,10 +281,10 @@ def check_multiple_models(dir_name):
     print("the max throughput is", np.mean(throughput))
     print(dir_name + max_file_name)
     bestmodel = tf.keras.models.load_model(dir_name + max_file_name)
-    quantization_evaluation(bestmodel, granuality=0.01, saveImg=True, name="./om.png")
+    quantization_evaluation(bestmodel, granuality=0.01, bitstring=False)
     return
 if __name__ == "__main__":
-    check_multiple_models("./trained_models/Jul 6th/k=2 SGD/")
+    check_multiple_models("./trained_models/Jul 6th/k=2 no bitstring/")
     A[2]
     file = "trained_models/Jul 6th/bn for gif/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"

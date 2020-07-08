@@ -6,9 +6,9 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 import math
-# import cv2
+import cv2
 import os
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 # ============================  Data gen ============================
 
 def gen_data(N, k, low=0, high=1, batchsize=30):
@@ -359,6 +359,18 @@ def save_quantization_square(output, granuality, name):
     plt.xticks(x_positions, x_labels)
     plt.yticks(x_positions, y_labels)
     plt.savefig(name)
+def plot_quantization_square(output, granuality):
+    dim_num = int(1 / granuality) + 1
+    count = np.arange(0, 1 + granuality, granuality)
+    output = np.flip(output, axis=0)
+    plt.imshow(output, cmap="gray")
+    step_x = int(dim_num / (5 - 1))
+    x_positions = np.arange(0, dim_num, step_x)
+    x_labels = count[::step_x]
+    y_labels = np.array([1, 0.75, 0.5, 0.25, 0])
+    plt.xticks(x_positions, x_labels)
+    plt.yticks(x_positions, y_labels)
+    plt.show()
 def replace_tanh_with_sign(model, model_func, k):
     model.save_weights('weights.hdf5')
     new_model = model_func((k, ), k, saved=True)
@@ -367,19 +379,20 @@ def replace_tanh_with_sign(model, model_func, k):
 def make_video(path, training_data):
     images = []
     i = -1
-    file_name_temp = "2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
+    file_name_temp = "trained_models/Jul 6th/k=2 no bitstring/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0"
     for i in range(0, 1000):
         # if filename[-3:] == "png":
         i = i + 1
         filename = file_name_temp + str(i) + ".png"
+        print(filename)
         acc = np.round(training_data[i, 1]*100)/100
-        img = cv2.imread(path + filename)
+        img = cv2.imread(filename)
         cv2.putText(img, "epochs: " + str(i), org=(20, 80), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(0,0,255))
         cv2.putText(img, "accuracy: " + str(acc), org=(20, 120), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(0,255,0))
         height, width, layers = img.shape
         size = (width, height)
         images.append(img)
-    out = cv2.VideoWriter('DNN_bad_init.mp4', cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
+    out = cv2.VideoWriter('DNN_no_biststring.mpg', cv2.VideoWriter_fourcc(*'XVID'), 15, size)
 
     for i in range(len(images)):
         out.write(images[i])
@@ -411,5 +424,5 @@ def float_to_floatbits(value_arr):
         return tf.constant(out, dtype=tf.float32)
 
 if __name__ == "__main__":
-    loaded_numpy = np.load("trained_models/Jul 6th/k=2 DNN BN/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0.npy")
-    make_video("./trained_models/Jul 6th/k=2 DNN BN/", loaded_numpy)
+    loaded_numpy = np.load("trained_models/Jul 6th/k=2 no bitstring/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0.npy")
+    make_video("./trained_models/Jul 6th/k=2 no bitstring/", loaded_numpy)
