@@ -6,6 +6,10 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 import math
+import imageio
+import cv2
+import os
+from matplotlib import pyplot as plt
 # ============================  Data gen ============================
 
 def gen_data(N, k, low=0, high=1, batchsize=30):
@@ -309,12 +313,75 @@ class SubtractLayer_with_noise(tf.keras.layers.Layer):
     def call(self, inputs):
       return inputs - self.thre + tf.random.normal(shape=[2, 1], mean=0, stddev=self.noise)
 # ========================================== MISC ==========================================
-
+def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, name=""):
+    dim_num = int(1/granuality) + 1
+    count = np.arange(0, 1 + granuality, granuality)
+    output = np.zeros((dim_num, dim_num))
+    input = np.zeros((dim_num*dim_num, 2))
+    line = 0
+    for i in range(count.shape[0]):
+        for j in range(count.shape[0]):
+            input[line, 0] = count[i]
+            input[line, 1] = count[j]
+            line = line + 1
+    channel_data = tf.constant(input)
+    channel_label = tf.math.argmax(channel_data, axis=1)
+    channel_data = float_to_floatbits(channel_data)
+    ds = Dataset.from_tensor_slices((channel_data, channel_label)).batch(dim_num*dim_num)
+    for features, labels in ds:
+        # features_mod = tf.ones((1, 1))
+        # features_mod = tf.concat((features_mod, tf.reshape(features, (1, features.shape[1]))), axis=1)
+        features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
+        features_mod = tf.concat((features_mod, features), axis=2)
+        out = model(features_mod)
+        prediction = tf.argmax(out, axis=1)
+    line = 0
+    for i in range(count.shape[0]):
+        for j in range(count.shape[0]):
+            if prediction[line] == labels[line]:
+                output[i, j] = 1
+            line = line + 1
+    if saveImg == False:
+        plot_quantization_square(output, granuality)
+    else:
+        save_quantization_square(output, granuality, name)
+def save_quantization_square(output, granuality, name):
+    dim_num = int(1 / granuality) + 1
+    count = np.arange(0, 1 + granuality, granuality)
+    output = np.flip(output, axis=0)
+    plt.imshow(output, cmap="gray")
+    step_x = int(dim_num / (5 - 1))
+    x_positions = np.arange(0, dim_num, step_x)
+    x_labels = count[::step_x]
+    y_labels = np.array([1, 0.75, 0.5, 0.25, 0])
+    plt.xticks(x_positions, x_labels)
+    plt.yticks(x_positions, y_labels)
+    plt.savefig(name)
 def replace_tanh_with_sign(model, model_func, k):
     model.save_weights('weights.hdf5')
     new_model = model_func((k, ), k, saved=True)
     new_model.load_weights('weights.hdf5')
     return new_model
+def make_video(path, training_data):
+    images = []
+    i = -1
+    file_name_temp = "2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
+    for i in range(0, 1000):
+        # if filename[-3:] == "png":
+        i = i + 1
+        filename = file_name_temp + str(i) + ".png"
+        acc = np.round(training_data[i, 1]*100)/100
+        img = cv2.imread(path + filename)
+        cv2.putText(img, "epochs: " + str(i), org=(20, 80), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(0,0,255))
+        cv2.putText(img, "accuracy: " + str(acc), org=(20, 120), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(0,255,0))
+        height, width, layers = img.shape
+        size = (width, height)
+        images.append(img)
+    out = cv2.VideoWriter('DNN_bad_init.mp4', cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
+
+    for i in range(len(images)):
+        out.write(images[i])
+    out.release()
 def floatbits_to_float(value_arr):
     np_value_arr = value_arr.numpy()
     if len(value_arr.shape) == 3:
@@ -340,5 +407,7 @@ def float_to_floatbits(value_arr):
                 out[:, j, i] = np.where(cp_value_arr[:, j] >= 1, 1, 0)
                 cp_value_arr[:, j] = cp_value_arr[:, j]- out[:, j, i]
         return tf.constant(out, dtype=tf.float32)
+
 if __name__ == "__main__":
-    pass
+    loaded_numpy = np.load("trained_models/Jul 6th/k=2 DNN BN/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0.npy")
+    make_video("./trained_models/Jul 6th/k=2 DNN BN/", loaded_numpy)

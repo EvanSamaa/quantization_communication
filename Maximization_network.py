@@ -78,7 +78,7 @@ def swap_weights(model, k=2):
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
-        fname_template_template = "./trained_models/Jul 6th/k=2, DNN 101010/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
+        fname_template_template = "./trained_models/Jul 6th/k=2 SGD/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
         k = 2
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         # loss_object = tf.keras.losses.Hinge()
         # loss_object = ThroughputLoss()
-        optimizer = tf.keras.optimizers.Adam()
+        optimizer = tf.keras.optimizers.SGD()
         # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         train_throughput = ExpectedThroughput(name='train_throughput')
@@ -138,6 +138,8 @@ if __name__ == "__main__":
             graphing_data[epoch, 5] = test_accuracy.result()
             graphing_data[epoch, 6] = test_throughput.result()[0]
             graphing_data[epoch, 7] = test_throughput.result()[1]
+            # if i == 0:
+            #     quantization_evaluation(model, granuality=0.01, saveImg=True, name=fname_template.format(epoch) + ".png")
             if train_accuracy.result() > max_acc:
                 model.save(fname_template.format(".h5"))
                 max_acc = train_accuracy.result()
