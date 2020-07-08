@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from util import *
 import os
 from models import *
-def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, name=""):
+def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, name="", bitstring=True):
     dim_num = int(1/granuality) + 1
     count = np.arange(0, 1 + granuality, granuality)
     output = np.zeros((dim_num, dim_num))
@@ -21,7 +21,8 @@ def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, nam
             line = line + 1
     channel_data = tf.constant(input)
     channel_label = tf.math.argmax(channel_data, axis=1)
-    channel_data = float_to_floatbits(channel_data)
+    if bitstring:
+        channel_data = float_to_floatbits(channel_data)
     ds = Dataset.from_tensor_slices((channel_data, channel_label)).batch(dim_num*dim_num)
     for features, labels in ds:
         # features_mod = tf.ones((1, 1))
@@ -273,8 +274,8 @@ def check_multiple_models(dir_name):
     quantization_evaluation(bestmodel, granuality=0.01, saveImg=True, name="./om.png")
     return
 if __name__ == "__main__":
-    # check_multiple_models("./trained_models/Jul 6th/k=2 DNN BN/")
-    # A[2]
+    check_multiple_models("./trained_models/Jul 6th/k=2 SGD/")
+    A[2]
     file = "trained_models/Jul 6th/bn for gif/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     model_path = file + ".h5"
