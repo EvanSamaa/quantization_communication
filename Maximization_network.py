@@ -80,7 +80,7 @@ def swap_weights(model, k=2):
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
-        fname_template_template = "./trained_models/Jul 8th/k=2 adam-rmsprop/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
+        fname_template_template = "./trained_models/Jul 8th/k=2 rmsprop/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
         k = 2
@@ -97,7 +97,8 @@ if __name__ == "__main__":
         # loss_object = tf.keras.losses.Hinge()
         # loss_object = ThroughputLoss()
         # optimizer = tf.keras.optimizers.SGD(lr=0.001)
-        optimizer = tf.keras.optimizers.Adam()
+        # optimizer = tf.keras.optimizers.Adam()
+        optimizer = tf.keras.optimizers.RMSprop()
         # optimizer = AdaBound()
         # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
@@ -144,10 +145,10 @@ if __name__ == "__main__":
             graphing_data[epoch, 7] = test_throughput.result()[1]
             # if i == 0:
             #     quantization_evaluation(model, granuality=0.01, saveImg=True, name=fname_template.format(epoch) + ".png", bitstring=False)
-            if train_accuracy.result() >= 0.78 and swapped == False:
-                swapped = True
-                # optimizer = tf.keras.optimizers.SGD(lr=0.003)
-                optimizer = tf.keras.optimizers.RMSprop()
+            # if train_accuracy.result() >= 0.78 and swapped == False:
+            #     swapped = True
+            #     # optimizer = tf.keras.optimizers.SGD(lr=0.003)
+            #     optimizer = tf.keras.optimizers.RMSprop()
             if train_accuracy.result() > max_acc:
                 model.save(fname_template.format(".h5"))
                 max_acc = train_accuracy.result()

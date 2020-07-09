@@ -284,7 +284,7 @@ def check_multiple_models(dir_name):
     quantization_evaluation(bestmodel, granuality=0.01, bitstring=True)
     return
 if __name__ == "__main__":
-    check_multiple_models("./trained_models/Jul 8th/k=2 Adam-SGD/")
+    check_multiple_models("./trained_models/Jul 8th/k=2 adam-rmsprop/")
     A[2]
     file = "trained_models/Jul 6th/bn for gif/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
