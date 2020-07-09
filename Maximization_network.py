@@ -80,7 +80,7 @@ def swap_weights(model, k=2):
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
-        fname_template_template = "./trained_models/Jul 6th/k=2 no bitstring large/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
+        fname_template_template = "./trained_models/Jul 8th/k=2 adam-rmsprop/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
         k = 2
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         # model = tf.keras.models.load_model("trained_models/Sept 22_23/Data_gen_LSTM_10_cell.h5")
         # model = F_create_LSTM_encogding_model_with_annealing(k, L, (k, 24))
         # model = F_create_CNN_encoding_model_with_annealing(k, L, (k, 24))
-        model = F_create_encoding_model_with_annealing(k, L, (k, 2))
+        model = F_create_encoding_model_with_annealing(k, L, (k, 24))
         # model = Thresholdin_network((k, 2))
         loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         # loss_object = tf.keras.losses.Hinge()
@@ -106,16 +106,16 @@ if __name__ == "__main__":
         test_loss = tf.keras.metrics.Mean(name='test_loss')
         test_throughput = ExpectedThroughput(name='test_throughput')
         test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
-
+        swapped = False
         max_acc = -1
-        # test_ds = gen_channel_quality_data_float_encoded(100, k)
-        test_ds = gen_data(100, k)
+        test_ds = gen_channel_quality_data_float_encoded(100, k)
+        # test_ds = gen_data(100, k)
         current_acc = 0
         for epoch in range(EPOCHS):
             # model = swap_weights(model)
             # Reset the metrics at the start of the next epoch
-            train_ds = gen_data(N, k, 0, 1, N)
-            # train_ds = gen_channel_quality_data_float_encoded(N, k)
+            # train_ds = gen_data(N, k, 0, 1, N)
+            train_ds = gen_channel_quality_data_float_encoded(N, k)
             train_loss.reset_states()
             train_throughput.reset_states()
             train_accuracy.reset_states()
@@ -144,6 +144,10 @@ if __name__ == "__main__":
             graphing_data[epoch, 7] = test_throughput.result()[1]
             # if i == 0:
             #     quantization_evaluation(model, granuality=0.01, saveImg=True, name=fname_template.format(epoch) + ".png", bitstring=False)
+            if train_accuracy.result() >= 0.78 and swapped == False:
+                swapped = True
+                # optimizer = tf.keras.optimizers.SGD(lr=0.003)
+                optimizer = tf.keras.optimizers.RMSprop()
             if train_accuracy.result() > max_acc:
                 model.save(fname_template.format(".h5"))
                 max_acc = train_accuracy.result()

@@ -257,11 +257,11 @@ def check_multiple_models(dir_name):
     max_throughput = []
     max_file_name = 0
     max_acc = -1
-    for item in list:
+    for item in list[-9:]:
         if item[-3:] == ".h5":
             model = tf.keras.models.load_model(dir_name + item)
             print(model.summary())
-            res = variance_graph(model, bitstring=False)
+            res = variance_graph(model, bitstring=True)
             acc_list.append(res[0])
             throughput.append(res[2])
             max_throughput.append(res[1])
@@ -281,10 +281,10 @@ def check_multiple_models(dir_name):
     print("the max throughput is", np.mean(throughput))
     print(dir_name + max_file_name)
     bestmodel = tf.keras.models.load_model(dir_name + max_file_name)
-    quantization_evaluation(bestmodel, granuality=0.01, bitstring=False)
+    quantization_evaluation(bestmodel, granuality=0.01, bitstring=True)
     return
 if __name__ == "__main__":
-    check_multiple_models("./trained_models/Jul 6th/k=2 no bitstring/")
+    check_multiple_models("./trained_models/Jul 8th/k=2 Adam-SGD/")
     A[2]
     file = "trained_models/Jul 6th/bn for gif/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
