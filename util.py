@@ -5,10 +5,14 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, ThresholdedReLU, Flatten
 from tensorflow.keras.activations import sigmoid
 import random
-# ============================  Data gen ============================
+import math
+# import cv2
+import os
+# from matplotlib import pyplot as plt
+# ===========g=================  Data gen ============================
 
 def gen_data(N, k, low=0, high=1, batchsize=30):
-    channel_data = tf.random.uniform((N,k), low, high)
+    channel_data = tf.random.uniform((N,k,1), low, high)
     channel_label = tf.math.argmax(channel_data, axis=1)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(batchsize)
     return dataset
@@ -18,12 +22,12 @@ def gen_channel_quality_data_float_encoded(N, k, low=0, high=1):
     channel_data = float_to_floatbits(channel_data)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(N)
     return dataset
-def gen_number_data(N=10000, k = 31.5, batchsize=10000):
+def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_data_num = tf.random.uniform((N, 1), 0, k)
     channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
     # channel_data_num = tf.round(channel_data_num)
-    channel_data = tf.cast(tf.one_hot(channel_data_num, depth=32, on_value=1.0, off_value=0.0), tf.float32)
-    channel_data = tf.reshape(channel_data, (N, 32))
+    channel_data = tf.cast(tf.one_hot(channel_data_num, depth=math.ceil(k), on_value=1.0, off_value=0.0), tf.float32)
+    channel_data = tf.reshape(channel_data, (N, math.ceil(k)))
     channel_label = channel_data_num
     dataset = Dataset.from_tensor_slices((channel_data
                                           , channel_label)).batch(batchsize)
@@ -49,11 +53,17 @@ def gen_encoding_data(N=1000, Sequence_length=10000, k=16, batchsize = 100, bit 
     dataset = Dataset.from_tensor_slices((output, channel_label)).batch(batchsize)
     return dataset
 def gen_regression_data(N=10000, batchsize=10000, reduncancy=1):
+    ################
     data_set = tf.random.uniform((N, ), 0, 1)
+    label_set = data_set
     modified_dataset = float_to_floatbits(data_set)
+    ################
+    # ones = tf.ones((N, reduncancy))
+    # data_set = tf.random.uniform((N,1), 0, 1) # for redundancy
+    # label_set = data_set
+    # data_set = tf.concat((data_set, -data_set, tf.exp(data_set), tf.square(data_set)), axis=1)
     # data_set = tf.multiply(ones, data_set)
     # print(data_set)
-    label_set = data_set
     dataset = Dataset.from_tensor_slices((modified_dataset, label_set)).batch(batchsize)
     return dataset
 # ============================  Metrics  ============================
@@ -76,7 +86,6 @@ class ExpectedThroughput(tf.keras.metrics.Metric):
         self.count = self.add_weight(name='tp3', initializer='zeros')
         self.a = tf.math.log(tf.cast(2, dtype=tf.float32))
         self.logit = logit
-
     def update_state(self, y_true, y_pred, x):
         c_max = tf.gather(x, y_true, axis=1, batch_dims=1)
         i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
@@ -159,19 +168,24 @@ def Quantization_count(x):
 
     return (op.shape[0])
 class TargetThroughput(tf.keras.metrics.Metric):
-    def __init__(self, name='expected_throughput', logit=True, **kwargs):
+    def __init__(self, name='expected_throughput', logit=True, bit_string = True, **kwargs):
         super(TargetThroughput, self).__init__(name=name, **kwargs)
         self.max_throughput = self.add_weight(name='tp', initializer='zeros')
         self.expected_throughput = self.add_weight(name='tp2', initializer='zeros')
         self.count = self.add_weight(name='tp3', initializer='zeros')
         self.a = tf.math.log(tf.cast(2, dtype=tf.float32))
         self.logit = logit
+        self.bit_string = bit_string
 
     def update_state(self, y_true, y_pred, x):
-        c_max = tf.gather(x, y_true, axis=1, batch_dims=1)
+        if self.bit_string:
+            mod_x = floatbits_to_float(x)
+        else:
+            mod_x = x
+        c_max = tf.gather(mod_x, y_true, axis=1, batch_dims=1)
         i_max = tf.math.log(1 - 1.5*tf.math.log(1 - c_max))/self.a
         c_picked = tf.argmax(y_pred, axis=1)
-        c_picked = tf.gather(x, c_picked, axis=1, batch_dims=1)
+        c_picked = tf.gather(mod_x, c_picked, axis=1, batch_dims=1)
         i_expected = tf.math.log(1 - 1.5*tf.math.log(1 - c_picked))/self.a
         self.max_throughput.assign_add(tf.math.reduce_sum(i_max, axis=0))
         self.expected_throughput.assign_add(tf.math.reduce_sum(i_expected, axis=0))
@@ -263,7 +277,7 @@ def sign_relu_STE(x):
         return grad_val
     return rtv, grad
 def binary_activation(x):
-    out = tf.maximum(tf.minimum(x, 0) + 1, 0)
+    out = tf.maximum(tf.sign(x), 0)
     return out
 def hard_tanh(x):
     neg = tf.constant(-1, dtype=tf.float32)
@@ -283,23 +297,113 @@ def annealing_tanh(x, N, name):
     alpha = tf.minimum(5.0, 1.0 + 0.01*N)
     out = tf.tanh(alpha*x, name=name)
     return out
-
-# ========================================== misc ==========================================
+# ========================================== Layers ==========================================
+class SubtractLayer(tf.keras.layers.Layer):
+    def __init__(self, name):
+      super(SubtractLayer, self).__init__(name=name)
+      self.thre = tf.Variable(tf.constant([0.5,0.5], shape=[2,1]), trainable=True, name="threshold")
+    def call(self, inputs):
+      return inputs - self.thre
+class SubtractLayer_with_noise(tf.keras.layers.Layer):
+    def __init__(self, name):
+      super(SubtractLayer_with_noise, self).__init__(name=name)
+      self.noise = tf.constant(tf.random.uniform(shape=[2,1], minval=-0.01, maxval=0.011))
+      self.thre = tf.Variable(tf.constant([0.5,0.5], shape=[2,1]), trainable=True, name="threshold")
+    def call(self, inputs):
+      return inputs - self.thre + tf.random.normal(shape=[2, 1], mean=0, stddev=self.noise)
+# ========================================== MISC ==========================================
+def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, name="", bitstring=True):
+    dim_num = int(1/granuality) + 1
+    count = np.arange(0, 1 + granuality, granuality)
+    output = np.zeros((dim_num, dim_num))
+    input = np.zeros((dim_num*dim_num, 2))
+    line = 0
+    for i in range(count.shape[0]):
+        for j in range(count.shape[0]):
+            input[line, 0] = count[i]
+            input[line, 1] = count[j]
+            line = line + 1
+    channel_data = tf.constant(input)
+    channel_label = tf.math.argmax(channel_data, axis=1)
+    if bitstring:
+        channel_data = float_to_floatbits(channel_data)
+    ds = Dataset.from_tensor_slices((channel_data, channel_label)).batch(dim_num*dim_num)
+    for features, labels in ds:
+        if bitstring:
+            features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
+            features_mod = tf.concat((features_mod, features), axis=2)
+        else:
+            features_mod = tf.ones((features.shape[0], features.shape[1], 1), dtype=tf.float64)
+            features_mod = tf.concat((features_mod, tf.reshape(features, (features.shape[0], features.shape[1], 1))), axis=2)
+        out = model(features_mod)
+        prediction = tf.argmax(out, axis=1)
+    line = 0
+    for i in range(count.shape[0]):
+        for j in range(count.shape[0]):
+            if prediction[line] == labels[line]:
+                output[i, j] = 1
+            line = line + 1
+    if saveImg == False:
+        plot_quantization_square(output, granuality)
+    else:
+        save_quantization_square(output, granuality, name)
+def save_quantization_square(output, granuality, name):
+    dim_num = int(1 / granuality) + 1
+    count = np.arange(0, 1 + granuality, granuality)
+    output = np.flip(output, axis=0)
+    plt.imshow(output, cmap="gray")
+    step_x = int(dim_num / (5 - 1))
+    x_positions = np.arange(0, dim_num, step_x)
+    x_labels = count[::step_x]
+    y_labels = np.array([1, 0.75, 0.5, 0.25, 0])
+    plt.xticks(x_positions, x_labels)
+    plt.yticks(x_positions, y_labels)
+    plt.savefig(name)
+def plot_quantization_square(output, granuality):
+    dim_num = int(1 / granuality) + 1
+    count = np.arange(0, 1 + granuality, granuality)
+    output = np.flip(output, axis=0)
+    plt.imshow(output, cmap="gray")
+    step_x = int(dim_num / (5 - 1))
+    x_positions = np.arange(0, dim_num, step_x)
+    x_labels = count[::step_x]
+    y_labels = np.array([1, 0.75, 0.5, 0.25, 0])
+    plt.xticks(x_positions, x_labels)
+    plt.yticks(x_positions, y_labels)
+    plt.show()
 def replace_tanh_with_sign(model, model_func, k):
     model.save_weights('weights.hdf5')
     new_model = model_func((k, ), k, saved=True)
     new_model.load_weights('weights.hdf5')
     return new_model
-# def float_bits_to_float(bits_arr):
-#     cp_value_arr = bits_arr.numpy()
-#     out = np.zeros((bits_arr.shape[0], 1))
-#     for j in range(0, bits_arr.shape[1]):
-#         for i in range(0, 23):
-#             cp_value_arr[:, j] = cp_value_arr[:, j] * 2
-#             out[:, j, i] = np.where(cp_value_arr[:, j] >= 1, 1, 0)
-#             cp_value_arr[:, j] = cp_value_arr[:, j] - out[:, j, i]
-#     return tf.constant(out, dtype=tf.float32)
+def make_video(path, training_data):
+    images = []
+    i = -1
+    file_name_temp = "trained_models/Jul 6th/k=2 no bitstring/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0"
+    for i in range(0, 1000):
+        # if filename[-3:] == "png":
+        i = i + 1
+        filename = file_name_temp + str(i) + ".png"
+        print(filename)
+        acc = np.round(training_data[i, 1]*100)/100
+        img = cv2.imread(filename)
+        cv2.putText(img, "epochs: " + str(i), org=(20, 80), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(0,0,255))
+        cv2.putText(img, "accuracy: " + str(acc), org=(20, 120), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(0,255,0))
+        height, width, layers = img.shape
+        size = (width, height)
+        images.append(img)
+    out = cv2.VideoWriter('DNN_no_biststring.mpg', cv2.VideoWriter_fourcc(*'XVID'), 15, size)
 
+    for i in range(len(images)):
+        out.write(images[i])
+    out.release()
+def floatbits_to_float(value_arr):
+    np_value_arr = value_arr.numpy()
+    if len(value_arr.shape) == 3:
+        out = np.zeros((value_arr.shape[0], value_arr.shape[1]))
+        for i in range(0, 23):
+            out = out + np_value_arr[:, :, i] * np.float_power(2, -(i+1))
+        return tf.constant(out, dtype=tf.float32)
 def float_to_floatbits(value_arr):
     cp_value_arr = value_arr.numpy()
     # I'm not sure if the shape thing works well so might have to comeback and fix it
@@ -318,6 +422,7 @@ def float_to_floatbits(value_arr):
                 out[:, j, i] = np.where(cp_value_arr[:, j] >= 1, 1, 0)
                 cp_value_arr[:, j] = cp_value_arr[:, j]- out[:, j, i]
         return tf.constant(out, dtype=tf.float32)
-if __name__ == "__main__":
-    pass
 
+if __name__ == "__main__":
+    loaded_numpy = np.load("trained_models/Jul 6th/k=2 no bitstring/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0.npy")
+    make_video("./trained_models/Jul 6th/k=2 no bitstring/", loaded_numpy)

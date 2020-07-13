@@ -12,9 +12,7 @@ def Recover_uniform_quantization(input_shape=(5,), L=3):
     epochs = inputs[:, 1][0]
     inputs_mod = inputs[:, 1:]
     x = Encoder_module_annealing(L)(inputs_mod, epochs)
-    x = Dense(50)(x)
-    x = LeakyReLU()(x)
-    x = Dense(20)(x)
+    x = Dense(30)(x)
     x = LeakyReLU()(x)
     x = Dense(1)(x)
     model = Model(inputs, x, name="Recover uniform Quantization")
@@ -55,7 +53,7 @@ def binary_encoding_model(input_shape, k):
     epochs = inputs[:, 1][0]
     inputs_mod = inputs[:, 1:]
     # x_list = tf.split(inputs_mod, num_or_size_splits=k, axis=1)
-    x = Encoder_module_annealing(5)(inputs_mod, epochs)
+    x = Encoder_module_annealing(3)(inputs_mod, epochs)
     x = Dense(30, name="decoder_dense_1")(x)
     x = LeakyReLU()(x)
     x = Dense(20, name="decoder_dense_2")(x)
