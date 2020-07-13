@@ -337,6 +337,8 @@ def F_LSTM_Encoder_module_annealing(L, i=0):
         x = Dense(5, name="encoder_dense_2_{}".format(i), kernel_initializer=tf.keras.initializers.he_uniform())(x)
         x = LeakyReLU()(x)
         x = Dense(L, name="encoder_dense_3_{}".format(i), kernel_initializer=tf.keras.initializers.he_uniform())(x)
+        # x = leaky_hard_tanh(tf.keras.layers.ReLU()(x)) + tf.stop_gradient(
+        #     binary_activation(x) - leaky_hard_tanh(tf.keras.layers.ReLU()(x)))
         # x = annealing_tanh(x, N, name="tanh_pos_{}".format(i)) + \
         #     tf.stop_gradient(tf.math.sign(x, name="encoder_sign_{}".format(i)) - annealing_tanh(x, N, name="tanh_neg_{}".format(i)))
         x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos_{}".format(i)) + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
@@ -396,11 +398,46 @@ def Thresholdin_network(input_shape):
     print(model.summary())
     print(model.trainable_variables)
     return model
-
 def F_swapadoo_Encoder(k, l, input_shape):
     inputs = Input(shape=input_shape)
-
+############################## Encoding models with Prof Yu's proposal input ##############################
+def F_create_encoding_regression_module(input_shape, levels, j=0):
+    inputs = Input(shape=input_shape)
+    x = Dense(8, name = "encoding_dense_1_"+str(j))(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(5, name = "encoding_dense_2_"+str(j))(x)
+    x = LeakyReLU()(x)
+    x = Dense(5, name = "encoding_dense_3_"+str(j))(x)
+    x = LeakyReLU()(x)
+    x = Dense(1, name = "encoding_output_real_"+str(j))(x)
+    x = hard_sigmoid(x)
+    x = hard_sigmoid(x) + tf.stop_gradient(multi_level_thresholding(x, levels) - hard_sigmoid(x))
+    # x = annealing_tanh(x, epoch) + tf.stop_gradient(tf.math.sign(x) - annealing_tanh(x, epoch))
+    model = Model(inputs, x, name="encoder_unit_"+str(j))
+    return model
+def F_creating_common_encoding_regression(input_shape, levels=2, k=2):
+    inputs = Input(shape=input_shape)
+    epoch = inputs[0, 0, 0]
+    inputs_mod = inputs[:, :, 1:]
+    x_list = tf.split(inputs_mod, num_or_size_splits=k, axis=1)
+    encoding_model = F_create_encoding_regression_module((inputs_mod.shape[2]), levels)
+    encoding = encoding_model(x_list[0][:, 0, :])
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding, encoding_model(x_list[i][:, 0, :])), axis=1)
+    model = Model(inputs, encoding, name="encoder_network")
+    return model
+def F_creating_distinct_encoding_regression(input_shape, levels=2, k=2):
+    inputs = Input(shape=input_shape)
+    epoch = inputs[0, 0, 0]
+    inputs_mod = inputs[:, :, 1:]
+    x_list = tf.split(inputs_mod, num_or_size_splits=k, axis=1)
+    encoding = F_create_encoding_regression_module((inputs_mod.shape[2]), levels)(x_list[0][:, 0, :])
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding,  F_create_encoding_regression_module((inputs_mod.shape[2]), levels, j=i)(x_list[i][:, 0, :])), axis=1)
+    model = Model(inputs, encoding, name="encoder_network")
+    return model
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
-    print(Thresholdin_network((2, )).summary())
+    # print(Thresholdin_network((2, )).summary())
+    model = F_creating_encoding_regression((2, 24), 2)

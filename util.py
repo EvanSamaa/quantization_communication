@@ -6,9 +6,9 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 import math
-# import cv2
+import cv2
 import os
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 # ===========g=================  Data gen ============================
 
 def gen_data(N, k, low=0, high=1, batchsize=30):
@@ -284,6 +284,15 @@ def hard_tanh(x):
     pos = tf.constant(1, dtype=tf.float32)
     rtv = tf.maximum(tf.minimum(x, pos), neg)
     return rtv
+def hard_sigmoid(x):
+    zero = tf.constant(0, dtype=tf.float32)
+    pos = tf.constant(1, dtype=tf.float32)
+    rtv = tf.maximum(tf.minimum(x, pos), zero)
+    return rtv
+def multi_level_thresholding(x, l):
+    level = tf.constant(l-1, dtype=tf.float32)
+    rtv = tf.round(x*level)/level
+    return rtv
 def leaky_hard_tanh(x):
     rtv = tf.maximum(tf.minimum(x, 1.0 + 0.01 * x), -1.0 + 0.01 * x)
     return rtv
@@ -422,7 +431,16 @@ def float_to_floatbits(value_arr):
                 out[:, j, i] = np.where(cp_value_arr[:, j] >= 1, 1, 0)
                 cp_value_arr[:, j] = cp_value_arr[:, j]- out[:, j, i]
         return tf.constant(out, dtype=tf.float32)
-
+def freeze_decoder_layers(model):
+    for layer in model.layers:
+        if layer.name[0:7] == "decoder":
+            layer.trainable = False
+        elif layer.name[0:7] == "encoder":
+            layer.trainable = True
+    return model
 if __name__ == "__main__":
-    loaded_numpy = np.load("trained_models/Jul 6th/k=2 no bitstring/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0.npy")
-    make_video("./trained_models/Jul 6th/k=2 no bitstring/", loaded_numpy)
+    # loaded_numpy = np.load("trained_models/Jul 6th/k=2 no bitstring/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0.npy")
+    # make_video("./trained_models/Jul 6th/k=2 no bitstring/", loaded_numpy)
+    x = tf.random.uniform((50, 1), 0, 1.01)
+    print(x)
+    print(multi_level_thresholding(x, 2))

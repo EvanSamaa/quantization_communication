@@ -51,6 +51,7 @@ def test_step_with_annealing(features, labels, N):
     features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * N
     features_mod = tf.concat((features_mod, features), axis=2)
     predictions = model(features_mod)
+    # print(predictions)
     t_loss = loss_object(labels, predictions)
     test_loss(t_loss)
     test_accuracy(labels, predictions)
@@ -80,25 +81,24 @@ def swap_weights(model, k=2):
 if __name__ == "__main__":
     # test_model()
     for i in range(0, 10):
-        fname_template_template = "./trained_models/Jul 8th/k=2 rmsprop/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
+        fname_template_template = "./trained_models/Jul 8th/k=2 distinct regression network/2_user_1_qbit_threshold_encoder_tanh(relu)_seed={}"
         fname_template = fname_template_template.format(i) + "{}"
         N = 5000
         k = 2
-        L = 1
+        L = 2
         EPOCHS = 20000
         tf.random.set_seed(i)
         graphing_data = np.zeros((EPOCHS, 8))
         # model = tf.keras.models.load_model("trained_models/Sept 22_23/Data_gen_LSTM_10_cell.h5")
         # model = F_create_LSTM_encogding_model_with_annealing(k, L, (k, 24))
         # model = F_create_CNN_encoding_model_with_annealing(k, L, (k, 24))
-        model = F_create_encoding_model_with_annealing(k, L, (k, 24))
+        # model = F_create_encoding_model_with_annealing(k, L, (k, 24))
+        model = F_creating_distinct_encoding_regression((k, 24), levels=L, k=k)
         # model = Thresholdin_network((k, 2))
         loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         # loss_object = tf.keras.losses.Hinge()
         # loss_object = ThroughputLoss()
-        # optimizer = tf.keras.optimizers.SGD(lr=0.001)
-        # optimizer = tf.keras.optimizers.Adam()
-        optimizer = tf.keras.optimizers.RMSprop()
+        optimizer = tf.keras.optimizers.Adam()
         # optimizer = AdaBound()
         # submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_concat").output)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
@@ -143,20 +143,21 @@ if __name__ == "__main__":
             graphing_data[epoch, 5] = test_accuracy.result()
             graphing_data[epoch, 6] = test_throughput.result()[0]
             graphing_data[epoch, 7] = test_throughput.result()[1]
-            # if i == 0:
+            # if i == 5:
             #     quantization_evaluation(model, granuality=0.01, saveImg=True, name=fname_template.format(epoch) + ".png", bitstring=False)
-            # if train_accuracy.result() >= 0.78 and swapped == False:
-            #     swapped = True
-            #     # optimizer = tf.keras.optimizers.SGD(lr=0.003)
-            #     optimizer = tf.keras.optimizers.RMSprop()
+            if train_accuracy.result() >= 0.78 and swapped == False:
+                model = freeze_decoder_layers(model)
+                # optimizer = tf.keras.optimizers.SGD(lr=0.003)
+                # optimizer = tf.keras.optimizers.RMSprop()
+                # optimizer = tf.keras.optimizers.Adam(lr=0.0005)
             if train_accuracy.result() > max_acc:
                 model.save(fname_template.format(".h5"))
                 max_acc = train_accuracy.result()
             if train_accuracy.result() == 1 or train_accuracy.result() >=0.95:
                 break
-            if epoch%500 == 0:
-                if epoch >= 1000:
-                    improvement = graphing_data[epoch-1000: epoch-500, 0].mean() - graphing_data[epoch-500: epoch, 0].mean()
+            if epoch%100 == 0:
+                if epoch >= 200:
+                    improvement = graphing_data[epoch-200: epoch-100, 0].mean() - graphing_data[epoch-100: epoch, 0].mean()
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
                     if improvement <= 0.001:
                         break

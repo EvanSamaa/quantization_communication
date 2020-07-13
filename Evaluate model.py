@@ -257,7 +257,7 @@ def check_multiple_models(dir_name):
     max_throughput = []
     max_file_name = 0
     max_acc = -1
-    for item in list[-9:]:
+    for item in list:
         if item[-3:] == ".h5":
             model = tf.keras.models.load_model(dir_name + item)
             print(model.summary())
@@ -284,9 +284,9 @@ def check_multiple_models(dir_name):
     quantization_evaluation(bestmodel, granuality=0.01, bitstring=True)
     return
 if __name__ == "__main__":
-    check_multiple_models("./trained_models/Jul 8th/k=2 adam-rmsprop/")
+    check_multiple_models("./trained_models/Jul 8th/k=2 distinct regression network/")
     A[2]
-    file = "trained_models/Jul 6th/bn for gif/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0"
+    file = "trained_models/Jul 8th/k=2 regression network/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=5"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     model_path = file + ".h5"
     training_data_path = file + ".npy"
@@ -297,9 +297,10 @@ if __name__ == "__main__":
     model = tf.keras.models.load_model(model_path)
     # print(model.summary())
     # model = create_uniformed_quantization_model(k=2, bin_num=2)
-    # plot_data(training_data)
+    plot_data(training_data)
+    A[2]
     # optimal_model()
-    variance_graph(model, N=1, k=2)
+    variance_graph(model, N=1, k=30)
     # variance_graph_accuracy(model, N=1000)
     quantization_evaluation(model)
     # quantization_evaluation_regression(model)
