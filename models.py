@@ -448,7 +448,7 @@ def CommonFDD_Quantizer(M, B, K, i=0):
     x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos_{}".format(i)) + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
     model = Model(inputs, x, name="commonFDD_quantizer")
     return model
-def FDD_encoding_model(M, K, B):
+def FDD_encoding_model_constraint_13(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex128)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
     quantizer = CommonFDD_Quantizer(2*M, B ,K)
