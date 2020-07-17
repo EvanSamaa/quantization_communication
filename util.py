@@ -278,9 +278,12 @@ def Binarization_regularization(K, N, M):
         loss = -1/(K*N*M)*tf.reduce_sum(tf.square(2*y_pred - 1))
         return loss
     return regularization
-def Output_up_control(K, N):
+def Output_Per_Receiver_Control(K, N):
     def regularization(y_pred):
-        loss = tf.square(tf.reduce_sum(y_pred) - 3)
+        loss = 0
+        y_pred_list = tf.split(y_pred, num_or_size_splits=K, axis=1)
+        for per_device_y_pred in y_pred_list:
+            loss += tf.square(tf.reduce_sum(per_device_y_pred) - 1)
         return loss
     return regularization
 def Sum_rate_utility(K, M, sigma2):

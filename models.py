@@ -448,7 +448,7 @@ def CommonFDD_Quantizer(M, B, K, i=0):
     x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos_{}".format(i)) + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
     model = Model(inputs, x, name="commonFDD_quantizer")
     return model
-def FDD_encoding_model_constraint_13(M, K, B):
+def FDD_encoding_model_constraint_13_with_softmax(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex128)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
     quantizer = CommonFDD_Quantizer(2*M, B ,K)
@@ -468,6 +468,21 @@ def FDD_encoding_model_constraint_13(M, K, B):
     # yep
     # x = tf.sigmoid(x)
     model = Model(inputs, output)
+    return model
+def FDD_encoding_model_constraint_13_with_regularization(M, K, B):
+    inputs = Input(shape=(K, M), dtype=tf.complex128)
+    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    quantizer = CommonFDD_Quantizer(2*M, B ,K)
+    x_list = tf.split(x, num_or_size_splits=K, axis=1)
+    reshaper = tf.keras.layers.Reshape((2*M,))
+    encoding = quantizer(reshaper(x_list[0]))
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding, quantizer(reshaper(x_list[i]))), axis=1)
+    x = Dense(2*M*K)(encoding)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_output") + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_output"))
+    model = Model(inputs, x)
     return model
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
