@@ -89,7 +89,6 @@ def optimal_model(granuality=0.001):
             elif quant2 > quant1 and count[j] < count[i]:
                 output[i, j] = 0
     plot_quantization_square(output, granuality)
-
 def get_num_from_binary(binary):
     power = 0
     sum = 0

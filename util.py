@@ -6,11 +6,22 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 import math
-import cv2
+# import cv2
 import os
-from matplotlib import pyplot as plt
+import scipy as sp
+# from matplotlib import pyplot as plt
 # ===========g=================  Data gen ============================
-
+def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
+    H = random_complex((N, K, M), sigma2_h)
+    H = np.exp(H)
+    N = random_complex((N, K, M), sigma2_n)
+    # either way Y has the shape (N, K, M)
+    P = sp.linalg.dft(M)
+    Y = np.dot(H, P) + N
+    # Y = tf.concat((Y.real, Y.imag), axis=2)
+    # Y = tf.constant(np.absolute(Y), dtype=tf.float32)
+    Y = tf.constant(Y, dtype=tf.complex128)
+    return Y
 def gen_data(N, k, low=0, high=1, batchsize=30):
     channel_data = tf.random.uniform((N,k,1), low, high)
     channel_label = tf.math.argmax(channel_data, axis=1)
@@ -262,7 +273,48 @@ def Negative_shove():
         return -loss
     return negative_shove
 
-
+def Binarization_regularization(K, N, M):
+    def regularization(y_pred):
+        loss = -1/(K*N*M)*tf.reduce_sum(tf.square(2*y_pred - 1))
+        return 0
+        return loss
+    return regularization
+def Output_up_control(K, N):
+    def regularization(y_pred):
+        loss = tf.square(tf.reduce_sum(y_pred) - 3)
+        return loss
+    return regularization
+def Sum_rate_utility(K, M, sigma2):
+    # sigma2 here is the variance of the noise
+    def sum_rate_utility(y_pred, G):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, N)
+        g_flatten = tf.reshape(G, (G.shape[0], K*M))
+        g_flatten = tf.square(tf.abs(g_flatten))
+        sum_vector = tf.reduce_sum(tf.multiply(y_pred, g_flatten) + sigma2, axis=1)
+        numerator = tf.multiply(g_flatten, y_pred)
+        denominator = tf.subtract(tf.reshape(sum_vector, (sum_vector.shape[0], 1)), numerator) + tf.constant(sigma2)
+        utility = tf.math.log(numerator/denominator+0.00000001 + 1)/tf.math.log(10)
+        utility = tf.reduce_sum(utility, axis=1)
+        return -utility
+    return sum_rate_utility
+def Sum_rate_utility_WeiCui(K, M, sigma2):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float64))
+    def sum_rate_utility(y_pred, G):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, N)
+        g_flatten = tf.reshape(G, (G.shape[0], K*M))
+        g_flatten = tf.square(tf.abs(g_flatten))
+        sum_vector = tf.reduce_sum(tf.multiply(y_pred, g_flatten), axis=1)
+        numerator = tf.multiply(y_pred, g_flatten)
+        denominator = 6*(tf.subtract(tf.reshape(sum_vector, (sum_vector.shape[0], 1)), numerator))
+        # numerator = numerator + tf.stop_gradient(tf.round(numerator) - numerator)
+        # denominator = denominator + tf.stop_gradient(tf.round(denominator) - denominator)
+        utility = 5*tf.math.log(numerator/(denominator+0.00000001) + 1)/log_2
+        utility = tf.reduce_sum(utility, axis=1)
+        return -utility
+    return sum_rate_utility
 # =========================== Custom function for straight through estimation ============================
 
 @tf.custom_gradient
@@ -321,6 +373,12 @@ class SubtractLayer_with_noise(tf.keras.layers.Layer):
     def call(self, inputs):
       return inputs - self.thre + tf.random.normal(shape=[2, 1], mean=0, stddev=self.noise)
 # ========================================== MISC ==========================================
+def random_complex(shape, sigma2):
+    A_R = tf.random.normal(shape, 0, sigma2, dtype=tf.float64)
+    A_I = tf.random.normal(shape, 0, sigma2, dtype=tf.float64)
+    A = tf.complex(A_R, A_I)
+
+    return A
 def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, name="", bitstring=True):
     dim_num = int(1/granuality) + 1
     count = np.arange(0, 1 + granuality, granuality)
@@ -441,6 +499,13 @@ def freeze_decoder_layers(model):
 if __name__ == "__main__":
     # loaded_numpy = np.load("trained_models/Jul 6th/k=2 no bitstring/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0.npy")
     # make_video("./trained_models/Jul 6th/k=2 no bitstring/", loaded_numpy)
-    x = tf.random.uniform((50, 1), 0, 1.01)
-    print(x)
-    print(multi_level_thresholding(x, 2))
+    tf.keras.backend.set_floatx('float64')
+    N = 1
+    M = 2
+    K = 2
+    B = 2
+    sigma2 = 0
+    model = FDD_encoding_model(M, K, B)
+    features = generate_link_channel_data(N, K, M)
+    predictions = model(features)
+    loss_1 = Sum_rate_utility_WeiCui(K, M, sigma2)(predictions, features)

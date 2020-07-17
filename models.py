@@ -436,8 +436,42 @@ def F_creating_distinct_encoding_regression(input_shape, levels=2, k=2):
         encoding = tf.concat((encoding,  F_create_encoding_regression_module((inputs_mod.shape[2]), levels, j=i)(x_list[i][:, 0, :])), axis=1)
     model = Model(inputs, encoding, name="encoder_network")
     return model
+
+############################## FDD Scheduling Models ##############################
+def CommonFDD_Quantizer(M, B, K, i=0):
+    inputs = Input(shape=[M, ])
+    x = Dense(M)(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(B)(x)
+    x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos_{}".format(i)) + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
+    model = Model(inputs, x, name="commonFDD_quantizer")
+    return model
+def FDD_encoding_model(M, K, B):
+    inputs = Input(shape=(K, M), dtype=tf.complex128)
+    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    quantizer = CommonFDD_Quantizer(2*M, B ,K)
+    x_list = tf.split(x, num_or_size_splits=K, axis=1)
+    reshaper = tf.keras.layers.Reshape((2*M,))
+    encoding = quantizer(reshaper(x_list[0]))
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding, quantizer(reshaper(x_list[i]))), axis=1)
+    x = Dense(2*M*K)(encoding)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    # to be removed
+    x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
+    output = tf.keras.layers.Softmax()(x_list2[0])
+    for i in range(1, len(x_list2)):
+        output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
+    # yep
+    # x = tf.sigmoid(x)
+    model = Model(inputs, output)
+    return model
+
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
     # print(Thresholdin_network((2, )).summary())
-    model = F_creating_encoding_regression((2, 24), 2)
+    model = FDD_encoding_model(M, K, B)((2, 24), 2)
