@@ -469,7 +469,6 @@ def FDD_encoding_model_constraint_13(M, K, B):
     # x = tf.sigmoid(x)
     model = Model(inputs, output)
     return model
-
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))

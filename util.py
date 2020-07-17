@@ -276,7 +276,6 @@ def Negative_shove():
 def Binarization_regularization(K, N, M):
     def regularization(y_pred):
         loss = -1/(K*N*M)*tf.reduce_sum(tf.square(2*y_pred - 1))
-        return 0
         return loss
     return regularization
 def Output_up_control(K, N):
