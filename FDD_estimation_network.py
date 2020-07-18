@@ -57,7 +57,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 15th/Naive_model_with_per_user_softmax_and_learn_weights{}"
+    fname_template = "trained_models/Jul 18th/Naive_model_with_per_user_softmax_and_ranking_prob{}"
     tf.keras.backend.set_floatx('float64')
     # problem Definition
     N = 1000
@@ -70,10 +70,10 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 20000
     tf.random.set_seed(10)
-    loss_object_1 = Sum_rate_utility_top_k_with_mask_from_learned_weights(K, M, sigma2_n, N_rf)
+    loss_object_1 = Sum_rate_utility_top_k_with_mask_from_ranking_prob(K, M, sigma2_n, N_rf)
     loss_object_2 = Binarization_regularization(K, N, M)
     # loss_object_2 = Output_Per_Receiver_Control(K, M)
-    model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)
+    model = FDD_encoding_model_constraint_13_with_softmax(M, K, B)
     optimizer = tf.keras.optimizers.Adam()
 
 
@@ -109,9 +109,9 @@ if __name__ == "__main__":
         if train_loss.result() < max_acc:
             model.save(fname_template.format(".h5"))
             max_acc = train_loss.result()
-        if epoch % 500 == 0:
-            if epoch >= 1000:
-                improvement = graphing_data[epoch - 1000: epoch - 500, 0].mean() - graphing_data[epoch - 500: epoch, 0].mean()
+        if epoch % 100 == 0:
+            if epoch >= 200:
+                improvement = graphing_data[epoch - 200: epoch - 100, 0].mean() - graphing_data[epoch - 100: epoch, 0].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if tf.abs(improvement) <= 0.001:
                     break

@@ -274,10 +274,13 @@ def Negative_shove():
         return -loss
     return negative_shove
 
-def Binarization_regularization(K, N, M):
+def Binarization_regularization(K, N, M, ranking=False):
     def regularization(y_pred):
-        loss = -1/(K*N*M)*tf.reduce_sum(tf.square(2*y_pred - 1))
         return 0
+        y_pred_mod = y_pred
+        if ranking:
+            y_pred_mod = y_pred[:, :K*M]
+        loss = -1/(K*N*M)*tf.reduce_sum(tf.square(2*y_pred_mod - 1))
         return loss
     return regularization
 def Output_Per_Receiver_Control(K, M):
@@ -400,6 +403,8 @@ def Sum_rate_utility_top_k_with_mask_from_ranking_prob(K, M, sigma2, k=3):
         for i in range(0, y_pred_val.shape[0]):
             base_mask[i, index[i]] = 1
         y_pred_val = tf.multiply(y_pred_val, base_mask)
+        y_pred_no_ones = tf.where(y_pred_val == 0, 1, y_pred_val)
+        y_pred_val = tf.divide(y_pred_val, y_pred_no_ones)
         # print(tf.reduce_mean(tf.reduce_sum(y_pred_val, axis=1)))
         # generate mask to mask out points that are not in top k ^^^^
         g_flatten = tf.reshape(G, (G.shape[0], K*M))
