@@ -276,7 +276,6 @@ def Negative_shove():
 
 def Binarization_regularization(K, N, M, ranking=False):
     def regularization(y_pred):
-        return 0
         y_pred_mod = y_pred
         if ranking:
             y_pred_mod = y_pred[:, :K*M]
