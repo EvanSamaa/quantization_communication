@@ -57,21 +57,23 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 15th/naive_test_with_binarization_loss{}"
+    fname_template = "trained_models/Jul 15th/Naive_model_with_per_user_softmax_and_learn_weights{}"
     tf.keras.backend.set_floatx('float64')
     # problem Definition
     N = 1000
     M = 20
     K = 20
     B = 10
+    N_rf = 5
     sigma2_h = 6.3
     sigma2_n = 0.000001
     # hyperparameters
     EPOCHS = 20000
     tf.random.set_seed(10)
-    loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_object_1 = Sum_rate_utility_top_k_with_mask_from_learned_weights(K, M, sigma2_n, N_rf)
     loss_object_2 = Binarization_regularization(K, N, M)
-    model = FDD_encoding_model_constraint_13_with_softmax(M, K, B)
+    # loss_object_2 = Output_Per_Receiver_Control(K, M)
+    model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)
     optimizer = tf.keras.optimizers.Adam()
 
 

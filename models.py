@@ -469,6 +469,32 @@ def FDD_encoding_model_constraint_13_with_softmax(M, K, B):
     # x = tf.sigmoid(x)
     model = Model(inputs, output)
     return model
+def FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B):
+    inputs = Input(shape=(K, M), dtype=tf.complex128)
+    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    quantizer = CommonFDD_Quantizer(2*M, B ,K)
+    x_list = tf.split(x, num_or_size_splits=K, axis=1)
+    reshaper = tf.keras.layers.Reshape((2*M,))
+    encoding = quantizer(reshaper(x_list[0]))
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding, quantizer(reshaper(x_list[i]))), axis=1)
+    x = Dense(2*M*K)(encoding)
+    x = LeakyReLU()(x)
+    x = Dense(2*M*K)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    ranking_output = Dense(K)(x)
+    ranking_output = LeakyReLU()(ranking_output)
+    # perform softmax to all the results
+    x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
+    output = tf.keras.layers.Softmax()(x_list2[0])
+    for i in range(1, len(x_list2)):
+        output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
+    # yep
+    # x = tf.sigmoid(x)
+    output = tf.concat((output, ranking_output), axis=1)
+    model = Model(inputs, output)
+    return model
 def FDD_encoding_model_constraint_13_with_regularization(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex128)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -488,4 +514,7 @@ if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
     # print(Thresholdin_network((2, )).summary())
-    model = FDD_encoding_model(M, K, B)((2, 24), 2)
+    M = 20
+    K = 5
+    B = 5
+    model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)

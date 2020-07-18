@@ -8,8 +8,9 @@ import random
 import math
 # import cv2
 import os
+from soft_sort.tf_ops import soft_rank
 import scipy as sp
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 # ===========g=================  Data gen ============================
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
     H = random_complex((N, K, M), sigma2_h)
@@ -276,9 +277,10 @@ def Negative_shove():
 def Binarization_regularization(K, N, M):
     def regularization(y_pred):
         loss = -1/(K*N*M)*tf.reduce_sum(tf.square(2*y_pred - 1))
+        return 0
         return loss
     return regularization
-def Output_Per_Receiver_Control(K, N):
+def Output_Per_Receiver_Control(K, M):
     def regularization(y_pred):
         loss = 0
         y_pred_list = tf.split(y_pred, num_or_size_splits=K, axis=1)
@@ -310,6 +312,100 @@ def Sum_rate_utility_WeiCui(K, M, sigma2):
         g_flatten = tf.square(tf.abs(g_flatten))
         sum_vector = tf.reduce_sum(tf.multiply(y_pred, g_flatten), axis=1)
         numerator = tf.multiply(y_pred, g_flatten)
+        denominator = 6*(tf.subtract(tf.reshape(sum_vector, (sum_vector.shape[0], 1)), numerator))
+        # numerator = numerator + tf.stop_gradient(tf.round(numerator) - numerator)
+        # denominator = denominator + tf.stop_gradient(tf.round(denominator) - denominator)
+        utility = 5*tf.math.log(numerator/(denominator+0.00000001) + 1)/log_2
+        utility = tf.reduce_sum(utility, axis=1)
+        return -utility
+    return sum_rate_utility
+def Sum_rate_utility_top_k_with_mask_from_learned_weights(K, M, sigma2, k=3):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float64))
+    stretch_matrix = np.zeros((M*K, K))
+    for i in range(0, K):
+        for j in range(0, M):
+            stretch_matrix[i*M + j, i] = 1
+    stretch_matrix = tf.constant(stretch_matrix)
+    def sum_rate_utility(y_pred, G):
+        # assumes the input shape is (batch, k*M) for y_pred,
+        # and the shape for G is (batch, K, N)
+        y_pred_val = y_pred[:, 0:K*M]
+        y_pred_rank = y_pred[:, K*M:]
+        y_pred_rank = tf.reshape(y_pred_rank, (y_pred_rank.shape[0], y_pred_rank.shape[1], 1))
+        tiled_stretch_matrix = tf.tile(tf.expand_dims(stretch_matrix, 0), [y_pred_rank.shape[0], 1, 1])
+        stretched_rank_matrix = tf.matmul(tiled_stretch_matrix, y_pred_rank)
+        stretched_rank_matrix = tf.reshape(stretched_rank_matrix, (stretched_rank_matrix.shape[0], stretched_rank_matrix.shape[1]))
+        y_pred_val = tf.multiply(stretched_rank_matrix, y_pred_val)
+        # generate mask to mask out points that are not in top k vvvvv
+        values, index = tf.math.top_k(y_pred_val, k=k)
+        base_mask = np.zeros((y_pred_val.shape))
+        for i in range(0, y_pred_val.shape[0]):
+            base_mask[i, index[i]] = 1
+        y_pred_val = tf.multiply(y_pred_val, base_mask)
+        y_pred_no_ones = tf.where(y_pred_val == 0, 1, y_pred_val)
+        y_pred_val = tf.divide(y_pred_val, y_pred_no_ones)
+        # generate mask to mask out points that are not in top k ^^^^
+        g_flatten = tf.reshape(G, (G.shape[0], K*M))
+        g_flatten = tf.square(tf.abs(g_flatten))
+        sum_vector = tf.reduce_sum(tf.multiply(y_pred_val, g_flatten), axis=1)
+        numerator = tf.multiply(y_pred_val, g_flatten)
+        denominator = 6*(tf.subtract(tf.reshape(sum_vector, (sum_vector.shape[0], 1)), numerator))
+        # numerator = numerator + tf.stop_gradient(tf.round(numerator) - numerator)
+        # denominator = denominator + tf.stop_gradient(tf.round(denominator) - denominator)
+        utility = 5*tf.math.log(numerator/(denominator+0.00000001) + 1)/log_2
+        utility = tf.reduce_sum(utility, axis=1)
+        return -utility
+    return sum_rate_utility
+def Sum_rate_utility_top_k_with_mask_from_learned_ranking(K, M, sigma2, k=3):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float64))
+    def sum_rate_utility(y_pred, G):
+        # assumes the input shape is (batch, k*M) for y_pred,
+        # and the shape for G is (batch, K, N)
+        y_pred_val = y_pred[:, 0:K*M]
+        y_pred_rank = y_pred[:, K*M:]
+        # generate mask to mask out points that are not in top k vvvvv
+        values, base_index = tf.math.top_k(y_pred_rank, k=k)
+        base_mask = np.zeros((y_pred_val.shape))
+        index = np.array([], dtype=np.int64).reshape((y_pred_val.shape[0], 0))
+        for i in range(0, M):
+            index = np.concatenate((index, base_index*M+i), axis=1)
+        index = np.sort(index, axis=1)
+        for i in range(0, y_pred_val.shape[0]):
+            base_mask[i, index[i]] = 1
+        y_pred_val = tf.multiply(y_pred_val, base_mask)
+        # generate mask to mask out points that are not in top k ^^^^
+        g_flatten = tf.reshape(G, (G.shape[0], K*M))
+        g_flatten = tf.square(tf.abs(g_flatten))
+        sum_vector = tf.reduce_sum(tf.multiply(y_pred_val, g_flatten), axis=1)
+        numerator = tf.multiply(y_pred_val, g_flatten)
+        denominator = 6*(tf.subtract(tf.reshape(sum_vector, (sum_vector.shape[0], 1)), numerator))
+        # numerator = numerator + tf.stop_gradient(tf.round(numerator) - numerator)
+        # denominator = denominator + tf.stop_gradient(tf.round(denominator) - denominator)
+        utility = 5*tf.math.log(numerator/(denominator+0.00000001) + 1)/log_2
+        utility = tf.reduce_sum(utility, axis=1)
+        return -utility
+    return sum_rate_utility
+def Sum_rate_utility_top_k_with_mask_from_ranking_prob(K, M, sigma2, k=3):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float64))
+    def sum_rate_utility(y_pred, G):
+        # assumes the input shape is (batch, k*M) for y_pred,
+        # and the shape for G is (batch, K, N)
+        y_pred_val = y_pred
+        # generate mask to mask out points that are not in top k vvvvv
+        values, index = tf.math.top_k(y_pred_val, k=k)
+        base_mask = np.zeros((y_pred_val.shape))
+        for i in range(0, y_pred_val.shape[0]):
+            base_mask[i, index[i]] = 1
+        y_pred_val = tf.multiply(y_pred_val, base_mask)
+        # print(tf.reduce_mean(tf.reduce_sum(y_pred_val, axis=1)))
+        # generate mask to mask out points that are not in top k ^^^^
+        g_flatten = tf.reshape(G, (G.shape[0], K*M))
+        g_flatten = tf.square(tf.abs(g_flatten))
+        sum_vector = tf.reduce_sum(tf.multiply(y_pred_val, g_flatten), axis=1)
+        numerator = tf.multiply(y_pred_val, g_flatten)
         denominator = 6*(tf.subtract(tf.reshape(sum_vector, (sum_vector.shape[0], 1)), numerator))
         # numerator = numerator + tf.stop_gradient(tf.round(numerator) - numerator)
         # denominator = denominator + tf.stop_gradient(tf.round(denominator) - denominator)
@@ -501,13 +597,17 @@ def freeze_decoder_layers(model):
 if __name__ == "__main__":
     # loaded_numpy = np.load("trained_models/Jul 6th/k=2 no bitstring/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0.npy")
     # make_video("./trained_models/Jul 6th/k=2 no bitstring/", loaded_numpy)
+
+    # input = tf.constant([[0.5, -0.32, 0.9, 1.2, -2.39], [0.5, -0.32, 0.9, 1.2, -2.39], [0.5, -0.32, 0.9, 1.2, -2.9]])
+    # print(soft_rank(input, regularization_strength=0.1))
+
     tf.keras.backend.set_floatx('float64')
-    N = 1
-    M = 2
-    K = 2
+    N = 5
+    M = 20
+    K = 5
     B = 2
     sigma2 = 0
-    model = FDD_encoding_model(M, K, B)
+    model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)
     features = generate_link_channel_data(N, K, M)
     predictions = model(features)
-    loss_1 = Sum_rate_utility_WeiCui(K, M, sigma2)(predictions, features)
+    loss_1 = Sum_rate_utility_top_k_with_mask(K, M, sigma2)(predictions, features)
