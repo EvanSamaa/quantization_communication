@@ -10,7 +10,7 @@ import math
 import os
 from soft_sort.tf_ops import soft_rank
 import scipy as sp
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 # ===========g=================  Data gen ============================
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
     H = random_complex((N, K, M), sigma2_h)
