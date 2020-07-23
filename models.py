@@ -624,8 +624,8 @@ def FDD_model_no_constraint(M, K, B):
     x = LeakyReLU()(x)
     x = Dense(M * K)(x)
     # to be removed
-    output = tf.tanh(tf.keras.layers.ReLU()(x))
-    # output = sigmoid(x)
+    # output = tf.tanh(tf.keras.layers.ReLU()(x))
+    output = sigmoid(x)
     model = Model(inputs, output)
     return model
 def Floatbits_FDD_model_no_constraint(M, K, B):

@@ -391,12 +391,11 @@ def Sum_rate_utility(K, M, sigma2):
 def Sum_rate_utility_WeiCui(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
-    stretch_matrix = np.zeros((K, K*M))
-    for i in range(0, K):
-        for j in range(0, M):
-            stretch_matrix[i, i * M + j] = 1
-    stretch_matrix = tf.constant(stretch_matrix, tf.float32)
-
+    # stretch_matrix = np.zeros((K, K*M))
+    # for i in range(0, K):
+    #     for j in range(0, M):
+    #         stretch_matrix[i, i * M + j] = 1
+    # stretch_matrix = tf.constant(stretch_matrix, tf.float32)
     def sum_rate_utility(y_pred, G):
         # assumes the input shape is (batch, k*N) for y_pred,
         # and the shape for G is (batch, K, M)
