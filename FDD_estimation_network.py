@@ -62,14 +62,14 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 22nd/softmax_softmask_3_layers_noise=0_2_links{}"
+    fname_template = "trained_models/Jul 22nd/softmax_softmask_3_layers_noise=0_10_links{}"
     # problem Definition
     N = 1000
     M = 20
     K = 10
     B = 10
     seed = 200
-    N_rf = 2
+    N_rf = 10
     sigma2_h = 6.3
     sigma2_n = 0.0000001
     # hyperparameters
