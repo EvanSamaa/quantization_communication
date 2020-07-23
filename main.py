@@ -92,7 +92,6 @@ if __name__ == "__main__":
     # model = binary_encoding_model((9,), 8)
     model = Recover_uniform_quantization(input_shape = [24,], L=3)
     # model = Recover_uniform_quantization(input_shape=[10, ], L=3)
-
     # model = Convnet_loss_function(input_shape=[1000,4], combinations=16)
     # model = LSTM_loss_function(k=1, input_shape=[1000, 3])
     submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_tanh_pos").output)

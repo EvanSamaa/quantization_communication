@@ -10,19 +10,26 @@ import math
 import os
 from soft_sort.tf_ops import soft_rank
 import scipy as sp
-# from matplotlib import pyplot as plt
+from generate_batch_data import generate_batch_data
+from matplotlib import pyplot as plt
 # ===========g=================  Data gen ============================
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
-    H = random_complex((N, K, M), sigma2_h)
-    H = np.exp(H)
-    N = random_complex((N, K, M), sigma2_n)
-    # either way Y has the shape (N, K, M)
-    P = sp.linalg.dft(M)
-    Y = np.dot(H, P) + N
-    # Y = tf.concat((Y.real, Y.imag), axis=2)
-    # Y = tf.constant(np.absolute(Y), dtype=tf.float32)
-    Y = tf.constant(Y, dtype=tf.complex128)
-    return Y
+    Lp = 4  # Number of Paths
+    P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
+    P = tf.expand_dims(P, 0)
+    P = tf.tile(P, (N, 1, 1))
+
+    LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
+    Mainlobe_UE = np.array([0, 0], dtype=np.float32)  # Mean of the AoD range
+    HalfBW_UE = np.array([30.0, 30.0], dtype=np.float32)  # Half of the AoD range
+    h_act_batch = tf.constant(generate_batch_data(N, M, K, Lp, LSF_UE, Mainlobe_UE, HalfBW_UE), dtype=tf.complex64)
+    # taking hermecian
+    h_act_batch = tf.transpose(h_act_batch, perm=(0, 2, 1), conjugate=True)
+    G = tf.matmul(h_act_batch, P)
+    noise = tf.complex(tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32),
+                       tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32))
+    G_hat = G + noise
+    return G_hat
 def gen_data(N, k, low=0, high=1, batchsize=30):
     channel_data = tf.random.uniform((N,k,1), low, high)
     channel_label = tf.math.argmax(channel_data, axis=1)
@@ -78,6 +85,7 @@ def gen_regression_data(N=10000, batchsize=10000, reduncancy=1):
     # print(data_set)
     dataset = Dataset.from_tensor_slices((modified_dataset, label_set)).batch(batchsize)
     return dataset
+
 # ============================  Metrics  ============================
 def quantizaton_evaluation_numbers(model, granuality=0.0001, k=2):
     tsub_model = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_Sign").output)
@@ -282,14 +290,90 @@ def Binarization_regularization(K, N, M, ranking=False):
         loss = -1/(K*N*M)*tf.reduce_sum(tf.square(2*y_pred_mod - 1))
         return loss
     return regularization
-def Output_Per_Receiver_Control(K, M):
+def Output_Per_Receiver_Control(K, M, ranking=False):
     def regularization(y_pred):
         loss = 0
         y_pred_list = tf.split(y_pred, num_or_size_splits=K, axis=1)
         for per_device_y_pred in y_pred_list:
-            loss += tf.square(tf.reduce_sum(per_device_y_pred) - 1)
+            loss += tf.square(tf.reduce_sum(per_device_y_pred, axis=1) - 1)
         return loss
     return regularization
+def Total_activation_count(K, M, ranking=False):
+    def regularization(y_pred):
+        y_pred_mod = y_pred
+        if ranking:
+            y_pred_mod = y_pred[:K*M]
+        sum = tf.reduce_sum(y_pred_mod, axis=1)
+        mean = tf.reduce_mean(sum)
+        var = tf.reduce_sum(tf.square(sum-mean))/K*M
+        return mean, var
+    return regularization
+def Masking_with_learned_weights(K, M, sigma2, k=3):
+    stretch_matrix = np.zeros((M * K, K))
+    for i in range(0, K):
+        for j in range(0, M):
+            stretch_matrix[i * M + j, i] = 1
+    stretch_matrix = tf.constant(stretch_matrix, tf.float32)
+    def masking(y_pred):
+        # assumes the input shape is (batch, k*M) for y_pred,
+        # and the shape for G is (batch, K, N)
+        y_pred_val = y_pred[:, 0:K*M]
+        y_pred_rank = y_pred[:, K*M:]
+        y_pred_rank = tf.reshape(y_pred_rank, (y_pred_rank.shape[0], y_pred_rank.shape[1], 1))
+        tiled_stretch_matrix = tf.tile(tf.expand_dims(stretch_matrix, 0), [y_pred_rank.shape[0], 1, 1])
+        stretched_rank_matrix = tf.matmul(tiled_stretch_matrix, y_pred_rank)
+        stretched_rank_matrix = tf.reshape(stretched_rank_matrix, (stretched_rank_matrix.shape[0], stretched_rank_matrix.shape[1]))
+        y_pred_val = tf.multiply(stretched_rank_matrix, y_pred_val)
+        # generate mask to mask out points that are not in top k vvvvv
+        values, index = tf.math.top_k(y_pred_val, k=k)
+        base_mask = np.zeros((y_pred_val.shape))
+        for i in range(0, y_pred_val.shape[0]):
+            base_mask[i, index[i]] = 1
+        y_pred_val = tf.multiply(y_pred_val, base_mask)
+        normalization_mask = tf.where(y_pred_val==0, 1, y_pred_val)
+        y_pred_val = y_pred_val + tf.stop_gradient(y_pred_val/normalization_mask - y_pred_val)
+        return y_pred_val
+    return masking
+def Masking_with_learned_weights_soft(K, M, sigma2, k=3):
+    stretch_matrix = np.zeros((M * K, K))
+    for i in range(0, K):
+        for j in range(0, M):
+            stretch_matrix[i * M + j, i] = 1
+    stretch_matrix = tf.constant(stretch_matrix, tf.float32)
+    def masking(y_pred):
+        # assumes the input shape is (batch, k*M) for y_pred,
+        # and the shape for G is (batch, K, N)
+        y_pred_val = y_pred[:, 0:K*M]
+        y_pred_rank = y_pred[:, K*M:]
+        y_pred_rank = tf.reshape(y_pred_rank, (y_pred_rank.shape[0], y_pred_rank.shape[1], 1))
+        tiled_stretch_matrix = tf.tile(tf.expand_dims(stretch_matrix, 0), [y_pred_rank.shape[0], 1, 1])
+        stretched_rank_matrix = tf.matmul(tiled_stretch_matrix, y_pred_rank)
+        stretched_rank_matrix = tf.reshape(stretched_rank_matrix, (stretched_rank_matrix.shape[0], stretched_rank_matrix.shape[1]))
+        y_pred_val = tf.multiply(stretched_rank_matrix, y_pred_val)
+        # generate mask to mask out points that are not in top k vvvvv
+        return y_pred_val
+    return masking
+def Masking_with_ranking_prob(K, M, sigma2, k=3):
+    stretch_matrix = np.zeros((M * K, K))
+    for i in range(0, K):
+        for j in range(0, M):
+            stretch_matrix[i * M + j, i] = 1
+    stretch_matrix = tf.constant(stretch_matrix, tf.float32)
+    def masking(y_pred):
+        # assumes the input shape is (batch, k*M) for y_pred,
+        # and the shape for G is (batch, K, N)
+        y_pred_val = y_pred
+        # generate mask to mask out points that are not in top k vvvvv
+        values, index = tf.math.top_k(y_pred_val, k=k)
+        print(values)
+        base_mask = np.zeros((y_pred_val.shape))
+        for i in range(0, y_pred_val.shape[0]):
+            base_mask[i, index[i]] = 1
+        y_pred_val = tf.multiply(y_pred_val, base_mask)
+        normalization_mask = tf.where(y_pred_val == 0, 1, y_pred_val)
+        y_pred_val = y_pred_val + tf.stop_gradient(y_pred_val / normalization_mask - y_pred_val)
+        return y_pred_val
+    return masking
 def Sum_rate_utility(K, M, sigma2):
     # sigma2 here is the variance of the noise
     def sum_rate_utility(y_pred, G):
@@ -306,29 +390,43 @@ def Sum_rate_utility(K, M, sigma2):
     return sum_rate_utility
 def Sum_rate_utility_WeiCui(K, M, sigma2):
     # sigma2 here is the variance of the noise
-    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float64))
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
+    stretch_matrix = np.zeros((K, K*M))
+    for i in range(0, K):
+        for j in range(0, M):
+            stretch_matrix[i, i * M + j] = 1
+    stretch_matrix = tf.constant(stretch_matrix, tf.float32)
+
     def sum_rate_utility(y_pred, G):
         # assumes the input shape is (batch, k*N) for y_pred,
-        # and the shape for G is (batch, K, N)
-        g_flatten = tf.reshape(G, (G.shape[0], K*M))
-        g_flatten = tf.square(tf.abs(g_flatten))
-        sum_vector = tf.reduce_sum(tf.multiply(y_pred, g_flatten), axis=1)
-        numerator = tf.multiply(y_pred, g_flatten)
-        denominator = 6*(tf.subtract(tf.reshape(sum_vector, (sum_vector.shape[0], 1)), numerator))
-        # numerator = numerator + tf.stop_gradient(tf.round(numerator) - numerator)
-        # denominator = denominator + tf.stop_gradient(tf.round(denominator) - denominator)
-        utility = 5*tf.math.log(numerator/(denominator+0.00000001) + 1)/log_2
+        # and the shape for G is (batch, K, M)
+        G = tf.square(tf.abs(G))
+        # g_flatten = tf.reshape(G, (G.shape[0], K*M))
+        # g_diag = tf.linalg.diag(g_flatten)
+        # tiled_stretch_matrx = tf.expand_dims(stretch_matrix, 0)
+        # tiled_stretch_matrx = tf.tile(tiled_stretch_matrx, (y_pred.shape[0], 1, 1))
+        # numerator = tf.matmul(tiled_stretch_matrx, g_diag)
+        # numerator = tf.matmul(numerator, tf.expand_dims(y_pred, 2))
+        # numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
+        unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
+        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        denominator = tf.matmul(G, unflattened_X)
+        numerator = tf.multiply(denominator, tf.eye(K))
+        denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
+        numerator = tf.matmul(numerator, tf.ones((K, 1)))
+        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
+        utility = 5*tf.math.log(numerator/denominator + 1)/log_2
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
 def Sum_rate_utility_top_k_with_mask_from_learned_weights(K, M, sigma2, k=3):
     # sigma2 here is the variance of the noise
-    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float64))
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
     stretch_matrix = np.zeros((M*K, K))
     for i in range(0, K):
         for j in range(0, M):
             stretch_matrix[i*M + j, i] = 1
-    stretch_matrix = tf.constant(stretch_matrix)
+    stretch_matrix = tf.constant(stretch_matrix, tf.float32)
     def sum_rate_utility(y_pred, G):
         # assumes the input shape is (batch, k*M) for y_pred,
         # and the shape for G is (batch, K, N)
@@ -345,8 +443,8 @@ def Sum_rate_utility_top_k_with_mask_from_learned_weights(K, M, sigma2, k=3):
         for i in range(0, y_pred_val.shape[0]):
             base_mask[i, index[i]] = 1
         y_pred_val = tf.multiply(y_pred_val, base_mask)
-        y_pred_no_ones = tf.where(y_pred_val == 0, 1, y_pred_val)
-        y_pred_val = tf.divide(y_pred_val, y_pred_no_ones)
+        normalization_mask = tf.where(y_pred_val==0, 1, y_pred_val)
+        y_pred_val = y_pred_val + tf.stop_gradient(y_pred_val/normalization_mask - y_pred_val)
         # generate mask to mask out points that are not in top k ^^^^
         g_flatten = tf.reshape(G, (G.shape[0], K*M))
         g_flatten = tf.square(tf.abs(g_flatten))
@@ -361,7 +459,7 @@ def Sum_rate_utility_top_k_with_mask_from_learned_weights(K, M, sigma2, k=3):
     return sum_rate_utility
 def Sum_rate_utility_top_k_with_mask_from_learned_ranking(K, M, sigma2, k=3):
     # sigma2 here is the variance of the noise
-    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float64))
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
     def sum_rate_utility(y_pred, G):
         # assumes the input shape is (batch, k*M) for y_pred,
         # and the shape for G is (batch, K, N)
@@ -391,7 +489,7 @@ def Sum_rate_utility_top_k_with_mask_from_learned_ranking(K, M, sigma2, k=3):
     return sum_rate_utility
 def Sum_rate_utility_top_k_with_mask_from_ranking_prob(K, M, sigma2, k=3):
     # sigma2 here is the variance of the noise
-    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float64))
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
     def sum_rate_utility(y_pred, G):
         # assumes the input shape is (batch, k*M) for y_pred,
         # and the shape for G is (batch, K, N)
@@ -402,9 +500,6 @@ def Sum_rate_utility_top_k_with_mask_from_ranking_prob(K, M, sigma2, k=3):
         for i in range(0, y_pred_val.shape[0]):
             base_mask[i, index[i]] = 1
         y_pred_val = tf.multiply(y_pred_val, base_mask)
-        y_pred_no_ones = tf.where(y_pred_val == 0, 1, y_pred_val)
-        y_pred_val = tf.divide(y_pred_val, y_pred_no_ones)
-        # print(tf.reduce_mean(tf.reduce_sum(y_pred_val, axis=1)))
         # generate mask to mask out points that are not in top k ^^^^
         g_flatten = tf.reshape(G, (G.shape[0], K*M))
         g_flatten = tf.square(tf.abs(g_flatten))
@@ -476,8 +571,8 @@ class SubtractLayer_with_noise(tf.keras.layers.Layer):
       return inputs - self.thre + tf.random.normal(shape=[2, 1], mean=0, stddev=self.noise)
 # ========================================== MISC ==========================================
 def random_complex(shape, sigma2):
-    A_R = tf.random.normal(shape, 0, sigma2, dtype=tf.float64)
-    A_I = tf.random.normal(shape, 0, sigma2, dtype=tf.float64)
+    A_R = tf.random.normal(shape, 0, sigma2, dtype=tf.float32)
+    A_I = tf.random.normal(shape, 0, sigma2, dtype=tf.float32)
     A = tf.complex(A_R, A_I)
 
     return A
@@ -573,23 +668,37 @@ def floatbits_to_float(value_arr):
         for i in range(0, 23):
             out = out + np_value_arr[:, :, i] * np.float_power(2, -(i+1))
         return tf.constant(out, dtype=tf.float32)
-def float_to_floatbits(value_arr):
+def float_to_floatbits(value_arr, complex=False):
     cp_value_arr = value_arr.numpy()
     # I'm not sure if the shape thing works well so might have to comeback and fix it
-    if len(value_arr.shape) == 1:
+    if complex:
+        real = tf.math.real(value_arr)
+        imag = tf.math.imag(value_arr)
+        real_f = float_to_floatbits(real)
+        imag_f = float_to_floatbits(imag)
+        return tf.concat([imag_f, real_f], axis=2)
+    elif len(value_arr.shape) == 1:
         out = np.zeros((value_arr.shape[0], 23))
         for i in range(0, 23):
             cp_value_arr = cp_value_arr*2
             out[:, i] = np.where(cp_value_arr >= 1, 1, 0)
             cp_value_arr = cp_value_arr - out[:, i]
         return tf.constant(out, dtype=tf.float32)
-    else:
+    elif len(value_arr.shape) == 2:
         out = np.zeros((value_arr.shape[0], value_arr.shape[1], 23))
         for j in range(0, value_arr.shape[1]):
             for i in range(0, 23):
                 cp_value_arr[:, j] = cp_value_arr[:, j] * 2
                 out[:, j, i] = np.where(cp_value_arr[:, j] >= 1, 1, 0)
                 cp_value_arr[:, j] = cp_value_arr[:, j]- out[:, j, i]
+        return tf.constant(out, dtype=tf.float32)
+    elif len(value_arr.shape) == 3:
+        out = np.zeros((value_arr.shape[0], value_arr.shape[1], value_arr.shape[2], 23), dtype=np.float32)
+        for i in range(0, 23):
+            cp_value_arr[:, :, :] = cp_value_arr[:, :, :] * 2
+            out[:, :, :, i] = np.where(cp_value_arr[:, :, :] >= 1, 1.0, 0.0)
+            cp_value_arr[:, :, :] = cp_value_arr[:, :, :]- out[:, :, :, i]
+        out = tf.reshape(out, [value_arr.shape[0], value_arr.shape[1], value_arr.shape[2]*23])
         return tf.constant(out, dtype=tf.float32)
 def freeze_decoder_layers(model):
     for layer in model.layers:
@@ -599,19 +708,13 @@ def freeze_decoder_layers(model):
             layer.trainable = True
     return model
 if __name__ == "__main__":
-    # loaded_numpy = np.load("trained_models/Jul 6th/k=2 no bitstring/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=0.npy")
-    # make_video("./trained_models/Jul 6th/k=2 no bitstring/", loaded_numpy)
-
-    # input = tf.constant([[0.5, -0.32, 0.9, 1.2, -2.39], [0.5, -0.32, 0.9, 1.2, -2.39], [0.5, -0.32, 0.9, 1.2, -2.9]])
-    # print(soft_rank(input, regularization_strength=0.1))
-
-    tf.keras.backend.set_floatx('float64')
     N = 5
     M = 20
     K = 5
-    B = 2
+    B = 5
     sigma2 = 0
-    model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)
-    features = generate_link_channel_data(N, K, M)
-    predictions = model(features)
-    loss_1 = Sum_rate_utility_top_k_with_mask(K, M, sigma2)(predictions, features)
+    generate_link_channel_data(N, K, M)
+    # model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)
+    # features = generate_link_channel_data(N, K, M)
+    # predictions = model(features)
+    # loss_1 = Sum_rate_utility_top_k_with_mask(K, M, sigma2)(predictions, features)

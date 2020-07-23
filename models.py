@@ -440,16 +440,18 @@ def F_creating_distinct_encoding_regression(input_shape, levels=2, k=2):
 ############################## FDD Scheduling Models ##############################
 def CommonFDD_Quantizer(M, B, K, i=0):
     inputs = Input(shape=[M, ])
-    x = Dense(M)(inputs)
+    x = Dense(M*K)(inputs)
     x = LeakyReLU()(x)
-    x = Dense(M)(x)
+    x = Dense(M*K)(x)
+    x = LeakyReLU()(x)
+    x = Dense(K)(x)
     x = LeakyReLU()(x)
     x = Dense(B)(x)
     x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_pos_{}".format(i)) + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
     model = Model(inputs, x, name="commonFDD_quantizer")
     return model
-def FDD_encoding_model_constraint_13_with_softmax(M, K, B):
-    inputs = Input(shape=(K, M), dtype=tf.complex128)
+def FDD_encoding_model_no_constraint(M, K, B):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
     quantizer = CommonFDD_Quantizer(2*M, B ,K)
     x_list = tf.split(x, num_or_size_splits=K, axis=1)
@@ -461,6 +463,41 @@ def FDD_encoding_model_constraint_13_with_softmax(M, K, B):
     x = LeakyReLU()(x)
     x = Dense(M*K)(x)
     # to be removed
+    # output = tf.tanh(tf.keras.layers.ReLU()(x))
+    output = sigmoid(x)
+    model = Model(inputs, output)
+    return model
+def Floatbits_FDD_encoding_model_no_constraint(M, K, B):
+    inputs = Input(shape=(K, M*2*23), dtype=tf.float32)
+    quantizer = CommonFDD_Quantizer(M*2*23, B ,K)
+    x_list = tf.split(inputs, num_or_size_splits=K, axis=1)
+    reshaper = tf.keras.layers.Reshape((2*M*23,))
+    encoding = quantizer(reshaper(x_list[0]))
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding, quantizer(reshaper(x_list[i]))), axis=1)
+    x = Dense(2*M*K)(encoding)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    # to be removed
+    # output = tf.tanh(tf.keras.layers.ReLU()(x))
+    output = sigmoid(x)
+    model = Model(inputs, output)
+    return model
+def FDD_encoding_model_constraint_13_with_softmax(M, K, B):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    quantizer = CommonFDD_Quantizer(2*M, B ,K)
+    x_list = tf.split(x, num_or_size_splits=K, axis=1)
+    reshaper = tf.keras.layers.Reshape((2*M,))
+    encoding = quantizer(reshaper(x_list[0]))
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding, quantizer(reshaper(x_list[i]))), axis=1)
+    x = Dense(M**2)(encoding)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(encoding)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    # to be removed
     x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
     output = tf.keras.layers.Softmax()(x_list2[0])
     for i in range(1, len(x_list2)):
@@ -469,8 +506,40 @@ def FDD_encoding_model_constraint_13_with_softmax(M, K, B):
     # x = tf.sigmoid(x)
     model = Model(inputs, output)
     return model
-def FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B):
-    inputs = Input(shape=(K, M), dtype=tf.complex128)
+def Floatbits_FDD_encoding_model_constraint_13_with_softmax(M, K, B):
+    inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
+    quantizer = CommonFDD_Quantizer(M * 2 * 23, B, K)
+    x_list = tf.split(inputs, num_or_size_splits=K, axis=1)
+    reshaper = tf.keras.layers.Reshape((2 * M * 23,))
+    encoding = quantizer(reshaper(x_list[0]))
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding, quantizer(reshaper(x_list[i]))), axis=1)
+    x = Dense(M**2)(encoding)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(encoding)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    # to be removed
+    x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
+    output = tf.keras.layers.Softmax()(x_list2[0])
+    for i in range(1, len(x_list2)):
+        output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
+    # yep
+    # x = tf.sigmoid(x)
+    model = Model(inputs, output)
+    return model
+def LSTM_Ranking_model(M, K, k):
+    inputs = Input(shape=[M*K,], name="ranking_network_input")
+    x_reshape = tf.expand_dims(inputs, 1)
+    x = tf.tile(x_reshape, [1, k, 1])
+    lstm_ranker = tf.keras.layers.LSTM(K, return_sequences=True)
+    x = lstm_ranker(x)
+    x = tf.nn.softmax(x, axis=2)
+    x = tf.reduce_sum(x, axis=1)
+    model = Model(inputs, x)
+    return model
+def FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, k=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
     quantizer = CommonFDD_Quantizer(2*M, B ,K)
     x_list = tf.split(x, num_or_size_splits=K, axis=1)
@@ -478,13 +547,42 @@ def FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B):
     encoding = quantizer(reshaper(x_list[0]))
     for i in range(1, len(x_list)):
         encoding = tf.concat((encoding, quantizer(reshaper(x_list[i]))), axis=1)
-    x = Dense(2*M*K)(encoding)
+    x = Dense(2*M*K, name="start_of_decoding")(encoding)
     x = LeakyReLU()(x)
     x = Dense(2*M*K)(x)
     x = LeakyReLU()(x)
     x = Dense(M*K)(x)
-    ranking_output = Dense(K)(x)
-    ranking_output = LeakyReLU()(ranking_output)
+    ranking_output = LSTM_Ranking_model(M, K, k)(x)
+    # ranking_output = Dense(K*M)(x)
+    # ranking_output = Dense(K)(ranking_output)
+    # ranking_output = tf.tanh(LeakyReLU()(ranking_output))
+    # perform softmax to all the results
+    x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
+    output = tf.keras.layers.Softmax()(x_list2[0])
+    for i in range(1, len(x_list2)):
+        output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
+    # yep
+    # x = tf.sigmoid(x)
+    output = tf.concat((output, ranking_output), axis=1)
+    model = Model(inputs, output)
+    return model
+def Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, k=3):
+    inputs = Input(shape=(K, M*2*23), dtype=tf.float32)
+    quantizer = CommonFDD_Quantizer(M*2*23, B ,K)
+    x_list = tf.split(inputs, num_or_size_splits=K, axis=1)
+    reshaper = tf.keras.layers.Reshape((2*M*23,))
+    encoding = quantizer(reshaper(x_list[0]))
+    for i in range(1, len(x_list)):
+        encoding = tf.concat((encoding, quantizer(reshaper(x_list[i]))), axis=1)
+    x = Dense(2*M*K, name="start_of_decoding")(encoding)
+    x = LeakyReLU()(x)
+    x = Dense(2*M*K)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    ranking_output = LSTM_Ranking_model(M, K, k)(x)
+    # ranking_output = Dense(K*M)(x)
+    # ranking_output = Dense(K)(ranking_output)
+    # ranking_output = tf.tanh(LeakyReLU()(ranking_output))
     # perform softmax to all the results
     x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
     output = tf.keras.layers.Softmax()(x_list2[0])
@@ -510,6 +608,66 @@ def FDD_encoding_model_constraint_13_with_regularization(M, K, B):
     x = tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_output") + tf.stop_gradient(binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_output"))
     model = Model(inputs, x)
     return model
+
+############################## FDD Scheduling Models No quantizing ##############################
+def FDD_model_no_constraint(M, K, B):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    # create input vector
+    reshaper = tf.keras.layers.Reshape((2 * M * K,))
+    x = reshaper(x)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    # to be removed
+    output = tf.tanh(tf.keras.layers.ReLU()(x))
+    # output = sigmoid(x)
+    model = Model(inputs, output)
+    return model
+def Floatbits_FDD_model_no_constraint(M, K, B):
+    inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
+    # create input vector
+    reshaper = tf.keras.layers.Reshape((2 * M * K * 23,))
+    x = reshaper(inputs)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    # to be removed
+    output = tf.tanh(tf.keras.layers.ReLU()(x))
+    # output = sigmoid(x)
+    model = Model(inputs, output)
+    return model
+def FDD_model_softmax(M, K, B):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    # create input vector
+    reshaper = tf.keras.layers.Reshape((2 * M * K,))
+    x = reshaper(x)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    # to be removed
+    x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
+    output = tf.keras.layers.Softmax()(x_list2[0])
+    for i in range(1, len(x_list2)):
+        output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
+    # yep
+    # x = tf.sigmoid(x)
+    model = Model(inputs, output)
+    return model
+
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
