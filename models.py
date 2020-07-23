@@ -628,21 +628,24 @@ def FDD_model_no_constraint(M, K, B):
     output = sigmoid(x)
     model = Model(inputs, output)
     return model
+# def Fully_connected_Ranking_Model(M, K, k):
+#     inputs = Input(shape=(M*K), dtype=tf.float32)
+#     x = Dense(M*K)
+#     x = Dense(M*K)
+
 def Floatbits_FDD_model_no_constraint(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K * 23,))
     x = reshaper(inputs)
-    x = Dense(M * M)(x)
-    x = LeakyReLU()(x)
-    x = Dense(M * M)(x)
+    x = Dense(K * M)(x)
     x = LeakyReLU()(x)
     x = Dense(M * M)(x)
     x = LeakyReLU()(x)
     x = Dense(M * K)(x)
     # to be removed
-    # output = tf.tanh(tf.keras.layers.ReLU()(x))
-    output = sigmoid(x)
+    output = tf.tanh(tf.keras.layers.ReLU()(x))
+    # output = sigmoid(x)
     model = Model(inputs, output)
     return model
 def FDD_model_softmax(M, K, B):
@@ -665,6 +668,48 @@ def FDD_model_softmax(M, K, B):
         output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
     # yep
     # x = tf.sigmoid(x)
+    model = Model(inputs, output)
+    return model
+def FDD_softmax_with_soft_mask(M, K, B, k=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    # create input vector
+    reshaper = tf.keras.layers.Reshape((2 * M * K,))
+    x = reshaper(x)
+    x = Dense(M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    ranking_output = LSTM_Ranking_model(M, K, k)(x)
+    x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
+    output = tf.keras.layers.Softmax()(x_list2[0])
+    for i in range(1, len(x_list2)):
+        output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
+    # yep
+    # x = tf.sigmoid(x)
+    output = tf.concat((output, ranking_output), axis=1)
+    model = Model(inputs, output)
+    print(model.summary())
+    return model
+
+def Floatbits_FDD_model_softmax(M, K, B):
+    inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
+    # create input vector
+    reshaper = tf.keras.layers.Reshape((2 * M * K * 23,))
+    x = reshaper(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
+    output = tf.keras.layers.Softmax()(x_list2[0])
+    for i in range(1, len(x_list2)):
+        output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
     model = Model(inputs, output)
     return model
 
