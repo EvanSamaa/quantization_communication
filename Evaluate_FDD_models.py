@@ -16,15 +16,24 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds_load = float_to_floatbits(ds, complex=True)
         ds_load = ds
         prediction = model(ds_load)
+        prediction = tf.concat([prediction[:, :K * M], prediction[:, K * M:K * M + K] + prediction[:,
+                                                                                           K * M + K:K * M + 2 * K] + prediction[
+                                                                                                                      :,
+                                                                                                                      K * M + 2 * K:K * M + 3 * K]],
+                                axis=1)
+        print(prediction[0, 200:])
+        print(prediction[1, 200:])
+        print(prediction[14, 200:])
         # prediction = Masking_with_learned_weights(K, M, sigma2_n, N_rf)(prediction)
-        prediction = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(prediction)
+        # prediction = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(prediction)
+        prediction = Masking_with_learned_weights(K, M, sigma2_n, N_rf)(prediction)
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
         result[1] = loss_fn2(prediction)[0]
         result[2] = loss_fn2(prediction)[1]
         print(result)
-        submodel = Model(inputs=model.input, outputs=model.get_layer("start_of_decoding").input)
-        prediction2 = tf.reshape(submodel(ds_load), (1000*M, B))
-        print(Quantization_count(prediction2))
+        # submodel = Model(inputs=model.input, outputs=model.get_layer("model (Model)").output)
+        # prediction2 = tf.reshape(submodel(ds_load), (1000*M, B))
+        # print(prediction2)
 def plot_data(arr, col):
     cut = 0
     for i in range(20, arr.shape[0]):
@@ -37,11 +46,11 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Jul 20th/Regularization_tanh_learned_mask_noise_sigma=1"
+    file = "trained_models/Jul 22nd/softmax_softmask_3_layers_noise=0_max_pairwise_CE"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 20
-    K = 20
+    K = 10
     B = 10
     N_rf = 3
     sigma2_h = 6.3
@@ -49,7 +58,7 @@ if __name__ == "__main__":
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     training_data = np.load(training_data_path)
-    plot_data(training_data, 1)
+    # plot_data(training_data, 1)
     model = tf.keras.models.load_model(model_path)
     print(model.summary())
     test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)

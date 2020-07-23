@@ -528,14 +528,15 @@ def Floatbits_FDD_encoding_model_constraint_13_with_softmax(M, K, B):
     # x = tf.sigmoid(x)
     model = Model(inputs, output)
     return model
-def LSTM_Ranking_model(M, K, k):
+def LSTM_Ranking_model(M, K, k, sum_all=True):
     inputs = Input(shape=[M*K,], name="ranking_network_input")
     x_reshape = tf.expand_dims(inputs, 1)
     x = tf.tile(x_reshape, [1, k, 1])
     lstm_ranker = tf.keras.layers.LSTM(K, return_sequences=True)
     x = lstm_ranker(x)
     x = tf.nn.softmax(x, axis=2)
-    x = tf.reduce_sum(x, axis=1)
+    if sum_all:
+        x = tf.reduce_sum(x, axis=1)
     model = Model(inputs, x)
     return model
 def FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, k=3):
@@ -704,6 +705,34 @@ def FDD_softmax_with_soft_mask(M, K, B, k=3):
     model = Model(inputs, output)
     print(model.summary())
     return model
+def FDD_softmax_with_k_soft_masks(M, K, B, k=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    # create input vector
+    reshaper = tf.keras.layers.Reshape((2 * M * K,))
+    x = reshaper(x)
+    # normalize
+    mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
+    std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
+    x = (x - mean)/std
+    x = tf.keras.layers.Reshape((x.shape[1],))(x)
+    # model starts
+    x = Dense(M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    ranking_output = LSTM_Ranking_model(M, K, k, sum_all=False)(x)
+    x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
+    output = tf.keras.layers.Softmax()(x_list2[0])
+    for i in range(1, len(x_list2)):
+        output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
+    # yep
+    # x = tf.sigmoid(x)
+    ranking_output = tf.keras.layers.Reshape((k*K,))(ranking_output)
+    output = tf.concat((output, ranking_output), axis=1)
+    model = Model(inputs, output)
+    return model
 
 def Floatbits_FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
@@ -727,7 +756,10 @@ if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
     # print(Thresholdin_network((2, )).summary())
+    N = 1000
     M = 20
-    K = 5
-    B = 5
-    model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)
+    K = 10
+    B = 10
+    seed = 200
+    N_rf = 3
+    model = FDD_softmax_with_k_soft_masks(M, K, B, N_rf)

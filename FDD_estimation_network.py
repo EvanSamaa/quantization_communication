@@ -11,9 +11,10 @@ def train_step(features, labels, N=None):
         # predictions = model(f_features)
         predictions = model(features)
         loss_2 = loss_object_2(predictions)
+        predictions = tf.concat([predictions[:, :K*M], predictions[:, K*M:K*M+K] + predictions[:, K*M+K:K*M+2*K] + predictions[:, K*M+2*K:K*M+3*K]], axis=1)
         predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
         loss_1 = loss_object_1(predictions, features)
-        loss = loss_1
+        loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -24,9 +25,13 @@ def test_step(features, labels, N=None):
     # f_features = float_to_floatbits(features, complex=True)
     # predictions = model(f_features)
     predictions = model(features)
+    t_loss_2 = loss_object_2(predictions)
+    predictions = tf.concat([predictions[:, :K * M],
+                             predictions[:, K * M:K * M + K] + predictions[:, K * M + K:K * M + 2 * K] + predictions[:,
+                                                                                                         K * M + 2 * K:K * M + 3 * K]],
+                            axis=1)
     predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
     t_loss_1 = loss_object_1(predictions, features)
-    t_loss_2 = loss_object_2(predictions)
     test_loss(t_loss_1)
     test_binarization_loss(t_loss_2)
 def train_step_with_annealing(features, labels, N):
@@ -62,14 +67,14 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 22nd/softmax_softmask_3_layers_noise=0_10_links{}"
+    fname_template = "trained_models/Jul 22nd/softmax_softmask_3_layers_noise=0_max_pairwise_CE{}"
     # problem Definition
     N = 1000
     M = 20
     K = 10
     B = 10
     seed = 200
-    N_rf = 10
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.0000001
     # hyperparameters
@@ -78,6 +83,7 @@ if __name__ == "__main__":
     np.random.seed(seed)
     loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     loss_object_2 = Binarization_regularization(K, N, M, N_rf)
+    loss_object_2 = TEMP_Pairwise_Cross_Entropy_loss(K, M, N_rf)
     # loss_object_2 = Total_activation_count(K, M)
     # model = Floatbits_FDD_encoding_model_constraint_13_with_softmax(M, K, B)
     # model = Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B, N_rf)
@@ -86,7 +92,7 @@ if __name__ == "__main__":
     # model = FDD_model_softmax(M, K, B)
     # model = FDD_model_no_constraint(M, K, B)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    model = FDD_softmax_with_soft_mask(M, K, B, k=N_rf)
+    model = FDD_softmax_with_k_soft_masks(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam()
 
     # for data visualization

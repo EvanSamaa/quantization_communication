@@ -373,6 +373,18 @@ def Masking_with_ranking_prob(K, M, sigma2, k=3):
         y_pred_val = y_pred_val + tf.stop_gradient(y_pred_val / normalization_mask - y_pred_val)
         return y_pred_val
     return masking
+def TEMP_Pairwise_Cross_Entropy_loss(K, M, k):
+    def loss_fn(y_pred):
+        # assumes the input shape is (batch, k*M) for y_pred,
+        # and the shape for G is (batch, K, N)
+        y_pred_rank = y_pred[:, K * M:]
+        y_pred_rank = tf.reshape(y_pred_rank, (y_pred_rank.shape[0], k, K))
+        loss = tf.reduce_sum(y_pred_rank[:, 0] * tf.math.log(y_pred_rank[:, 1]))
+        loss += tf.reduce_sum(y_pred_rank[:, 1] * tf.math.log(y_pred_rank[:, 2]))
+        loss += tf.reduce_sum(y_pred_rank[:, 0] * tf.math.log(y_pred_rank[:, 2]))
+        loss = loss
+        return loss
+    return loss_fn
 def Sum_rate_utility(K, M, sigma2):
     # sigma2 here is the variance of the noise
     def sum_rate_utility(y_pred, G):
