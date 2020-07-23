@@ -62,7 +62,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 22nd/F_no_constraint_tanh(Relu)_noise=0{}"
+    fname_template = "trained_models/Jul 22nd/F_no_constraint_sigmoid_noise=0{}"
     # problem Definition
     N = 1000
     M = 20
