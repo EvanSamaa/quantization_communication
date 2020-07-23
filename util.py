@@ -18,7 +18,6 @@ def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
     P = tf.expand_dims(P, 0)
     P = tf.tile(P, (N, 1, 1))
-
     LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
     Mainlobe_UE = np.array([0, 0], dtype=np.float32)  # Mean of the AoD range
     HalfBW_UE = np.array([30.0, 30.0], dtype=np.float32)  # Half of the AoD range

@@ -616,6 +616,12 @@ def FDD_model_no_constraint(M, K, B):
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K,))
     x = reshaper(x)
+    # normalize
+    mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
+    std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
+    x = (x - mean)/std
+    x = tf.keras.layers.Reshape((x.shape[1],))(x)
+    # model starts
     x = Dense(M * M)(x)
     x = LeakyReLU()(x)
     x = Dense(M * M)(x)
@@ -624,8 +630,8 @@ def FDD_model_no_constraint(M, K, B):
     x = LeakyReLU()(x)
     x = Dense(M * K)(x)
     # to be removed
-    # output = tf.tanh(tf.keras.layers.ReLU()(x))
-    output = sigmoid(x)
+    output = tf.tanh(tf.keras.layers.ReLU()(x))
+    # output = sigmoid(x)
     model = Model(inputs, output)
     return model
 # def Fully_connected_Ranking_Model(M, K, k):
@@ -676,12 +682,15 @@ def FDD_softmax_with_soft_mask(M, K, B, k=3):
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K,))
     x = reshaper(x)
+    # normalize
+    mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
+    std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
+    x = (x - mean)/std
+    x = tf.keras.layers.Reshape((x.shape[1],))(x)
+    # model starts
     x = Dense(M)(x)
-    x = tf.keras.layers.Dropout(.1)(x)
     x = LeakyReLU()(x)
-    x = tf.keras.layers.Dropout(.2)(x)
     x = Dense(M)(x)
-    x = tf.keras.layers.Dropout(.1)(x)
     x = LeakyReLU()(x)
     x = Dense(M*K)(x)
     ranking_output = LSTM_Ranking_model(M, K, k)(x)
