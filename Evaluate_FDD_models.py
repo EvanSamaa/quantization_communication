@@ -15,7 +15,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = tf.reshape(model(features), (1,))
         # ds_load = float_to_floatbits(ds, complex=True)
         ds_load = ds
-        prediction = model(ds_load)
+        prediction = model(ds_load, training=False)
         prediction = tf.concat([prediction[:, :K * M], prediction[:, K * M:K * M + K] + prediction[:,
                                                                                            K * M + K:K * M + 2 * K] + prediction[
                                                                                                                       :,

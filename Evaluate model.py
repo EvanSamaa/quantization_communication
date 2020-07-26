@@ -102,11 +102,11 @@ def quantization_evaluation_regression(model, granuality = 0.0001):
     out = np.zeros(count.shape)
     j = 0
     for i in count:
-        data_set = tf.ones((1,)) * i
-        input = float_to_floatbits(data_set)
-        input = tf.concat((tf.reshape(data_set, (1,1)), input), axis=1)
-        tim = model(input)
-        out[j] = tim[0]
+        data_set = tf.ones((1,1)) * i
+        # input = float_to_floatbits(data_set)
+        # input = tf.concat((tf.reshape(data_set, (1,1)), input), axis=1)
+        tim = model(data_set)
+        out[j] = tim[0, 0]
         j += 1
     plt.plot(count, out)
     plt.xlabel("input")
@@ -283,6 +283,10 @@ def check_multiple_models(dir_name):
     quantization_evaluation(bestmodel, granuality=0.01, bitstring=True)
     return
 if __name__ == "__main__":
+    custome_obj = {'Closest_embedding_layer' : Closest_embedding_layer}
+    model = tf.keras.models.load_model("trained_models/Jul 22nd VAE/VAE quantization third attempt/model_seed=0.h5", custom_objects=custome_obj)
+    quantization_evaluation_regression(model)
+    A[2]
     check_multiple_models("./trained_models/Jul 8th/k=2 distinct regression network/")
     A[2]
     file = "trained_models/Jul 8th/k=2 regression network/2_user_1_qbit_threshold_encoder_tanh(relu)_seed=5"

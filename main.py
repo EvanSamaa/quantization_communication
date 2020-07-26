@@ -31,24 +31,28 @@ def train_step(features, labels, N=None, encode_only=False):
         return train_step_with_annealing(features, labels, N, encode_only)
     with tf.GradientTape() as tape:
         predictions = model(features)
-        # quantization = submodel(features)
-        # predictions = model(ranking_transform(features))
-        loss = loss_object(labels, predictions)
-        # loss_2 = encoding_loss(quantization)
-        # loss = loss
+        logits = predictions[:, :k]
+        vae_loss = vector_quantization_loss(predictions)
+        # ce_loss = classification_loss(labels, logits)
+        ce_loss = regression_loss(labels, logits)
+        loss = ce_loss + vae_loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(loss)
-    # train_throughput(labels, predictions, features)
-    train_accuracy(labels, predictions)
+    train_loss(ce_loss)
+    # train_accuracy(labels, logits)
+    train_accuracy(vae_loss)
 def test_step(features, labels, N=None):
     if N != None:
         return test_step_with_annealing(features, labels, N)
     predictions = model(features)
-    # predictions = model(ranking_transform(features))
-    t_loss = loss_object(labels, predictions)
+    logits = predictions[:, :k]
+    vae_loss = vector_quantization_loss(predictions)
+    # ce_loss = classification_loss(labels, logits)
+    ce_loss = regression_loss(labels, logits)
+    t_loss = ce_loss + vae_loss
     test_loss(t_loss)
-    test_accuracy(labels, predictions)
+    # test_accuracy(labels, logits)
+    test_accuracy(t_loss)
     # test_throughput(labels, predictions, features)
 def train_step_with_annealing(features, labels, N, encode_only=False):
     features_mod = tf.ones((features.shape[0], 1)) * N
@@ -81,90 +85,77 @@ def test_step_with_annealing(features, labels, N):
 if __name__ == "__main__":
     # test_model()
     # A[2]
-    fname_template = "./trained_models/Jul 1st/BE with Regression/3_bit_regression_bitstring_input{}"
+    fname_template_template = "./trained_models/Jul 22nd VAE/VAE quantization third attempt/model_seed={}"
     N = 10000
-    k = 2
-    L = 1
+    k = 1
+    L = 4
     switch = 20
-    EPOCHS = 10000
-    tf.random.set_seed(80)
-    graphing_data = np.zeros((EPOCHS, 8))
-    # model = binary_encoding_model((9,), 8)
-    model = Recover_uniform_quantization(input_shape = [24,], L=3)
-    # model = Recover_uniform_quantization(input_shape=[10, ], L=3)
-    # model = Convnet_loss_function(input_shape=[1000,4], combinations=16)
-    # model = LSTM_loss_function(k=1, input_shape=[1000, 3])
-    submodel = Model(inputs=model.input, outputs=model.get_layer("tf_op_layer_tanh_pos").output)
-    # loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    loss_object = tf.keras.losses.MeanSquaredError()
-    loss_model = Loss_NN_encoding_diversity()
-    regularizationloss = Regularization_loss()
-    optimizer = tf.keras.optimizers.Adam()
-    train_loss = tf.keras.metrics.Mean(name='train_loss')
-    # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
-    train_accuracy = Regression_Accuracy(name="train_acc")
-    test_loss = tf.keras.metrics.Mean(name='test_loss')
-    gradient_record = tf.keras.metrics.Mean(name='test_loss')
-    # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
-    test_accuracy = Regression_Accuracy(name="test_accuracy")
-    quantization_count = tf.keras.metrics.Mean(name='test_loss')
-    # train_ds = gen_data(N, k, 0, 1, N).shuffle(buffer_size=1000)
-    # print("start gen data")
-    # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
-    # print("finish gen data")
-    # test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
-    test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=9)
-    # test_ds = gen_number_data(N=100)
-    min_loss = 10000
+    EPOCHS = 20000
 
-    encode_onlyy = False
-    for epoch in range(EPOCHS):
-        # Reset the metrics at the start of the next epoch
-        # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
-        # train_ds = gen_number_data()
-        train_ds = gen_regression_data(reduncancy=9)
-        train_loss.reset_states()
-        quantization_count.reset_states()
-        gradient_record.reset_states()
-        train_accuracy.reset_states()
-        test_loss.reset_states()
-        test_accuracy.reset_states()
-        for features, labels in train_ds:
-            # train_step(features, labels)
-            train_step(features, labels, epoch, encode_onlyy)
-        for features, labels in test_ds:
-            # test_step(features, labels)
-            test_step(features, labels, epoch)
-        template = 'Epoch {}, Loss: {}, Accuracy:{}, gradient_magnitude: {}, quantization_count:{}, Test Loss: {}, Test Accuracy: {}'
-        print(template.format(epoch + 1,
-                              train_loss.result(),
-                              train_accuracy.result(),
-                              gradient_record.result(),
-                              quantization_count.result(),
-                              test_loss.result(),
-                              test_accuracy.result()))
-        graphing_data[epoch, 0] = train_loss.result()
-        graphing_data[epoch, 1] = train_accuracy.result()
-        graphing_data[epoch, 2] = gradient_record.result()
-        graphing_data[epoch, 3] = quantization_count.result()
-        graphing_data[epoch, 4] = test_loss.result()
-        graphing_data[epoch, 5] = test_accuracy.result()
-        # graphing_data[epoch, 6] = test_throughput.result()[0]
-        # graphing_data[epoch, 7] = test_throughput.result()[1]
-        if train_loss.result() < min_loss:
-            # model = replace_tanh_with_sign(model, binary_encoding_model_regularization, k=8)
-            model.save(fname_template.format(".h5"))
-            min_loss = train_loss.result()
-        if train_accuracy.result() == 1 or train_accuracy.result() >=0.95:
-            break
-        if epoch%100 == 0:
-            if epoch >= 200:
-                improvement = graphing_data[epoch-200: epoch-100, 0].mean() - graphing_data[epoch-100: epoch, 0].mean()
-                print("the accuracy improvement in the past 500 epochs is ", improvement)
-                if improvement <= 0.001:
-                    break
-    np.save(fname_template.format(".npy"), graphing_data)
-    # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
+    for seed in range(0, 1):
+        tf.keras.backend.clear_session()
+        fname_template = fname_template_template.format(seed) + "{}"
+        tf.random.set_seed(seed)
+        graphing_data = np.zeros((EPOCHS, 8))
+        # model = Recover_uniform_quantization(input_shape = [24,], L=3)
+        # model = DiscreteVAE(k, L, (k, ))
+        model = DiscreteVAE_regression(L, (1, ))
+        classification_loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        regression_loss = tf.keras.losses.MeanSquaredError()
+        vector_quantization_loss = VAE_encoding_loss(k, L)
+
+        optimizer = tf.keras.optimizers.Adam()
+        train_loss = tf.keras.metrics.Mean(name='train_loss')
+        # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
+        train_accuracy = tf.keras.metrics.Mean(name='train_loss')
+        test_loss = tf.keras.metrics.Mean(name='test_loss')
+        # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
+        test_accuracy = tf.keras.metrics.Mean(name='train_loss')
+        quantization_count = tf.keras.metrics.Mean(name='test_loss')
+        test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
+        test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=9)
+        # test_ds = gen_channel_quality_data_float_encoded(100, 2)
+        min_loss = 10000
+        # train_ds = gen_channel_quality_data_float_encoded(10000, 2)
+        encode_onlyy = False
+        for epoch in range(EPOCHS):
+            # Reset the metrics at the start of the next epoch
+            # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
+            train_ds = gen_regression_data(reduncancy=1)
+            train_loss.reset_states()
+            quantization_count.reset_states()
+            train_accuracy.reset_states()
+            test_loss.reset_states()
+            test_accuracy.reset_states()
+            for features, labels in train_ds:
+                train_step(features, labels)
+                # train_step(features, labels, epoch, encode_onlyy)
+            for features, labels in test_ds:
+                test_step(features, labels)
+                # test_step(features, labels, epoch)
+            template = 'Epoch {}, Loss: {}, Accuracy:{}, Test Loss: {}, Test Accuracy: {}'
+            print(template.format(epoch + 1,
+                                  train_loss.result(),
+                                  train_accuracy.result(),
+                                  test_loss.result(),
+                                  test_accuracy.result()))
+            graphing_data[epoch, 0] = train_loss.result()
+            graphing_data[epoch, 1] = train_accuracy.result()
+            graphing_data[epoch, 4] = test_loss.result()
+            graphing_data[epoch, 5] = test_accuracy.result()
+            if train_loss.result() < min_loss:
+                # model = replace_tanh_with_sign(model, binary_encoding_model_regularization, k=8)
+                model.save(fname_template.format(".h5"))
+                min_loss = train_loss.result()
+            if epoch%200 == 0:
+                print(model.get_layer("closest_embedding_layer").E)
+                if epoch >= 400:
+                    improvement = graphing_data[epoch-400: epoch-200, 0].mean() - graphing_data[epoch-200: epoch, 0].mean()
+                    print("the accuracy improvement in the past 500 epochs is ", improvement)
+                    if improvement <= 0.001:
+                        break
+        np.save(fname_template.format(".npy"), graphing_data)
+        # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
     print("Training data end ")
 
 

@@ -37,7 +37,7 @@ def gen_data(N, k, low=0, high=1, batchsize=30):
 def gen_channel_quality_data_float_encoded(N, k, low=0, high=1):
     channel_data = tf.random.uniform((N, k), low, high)
     channel_label = tf.math.argmax(channel_data, axis=1)
-    channel_data = float_to_floatbits(channel_data)
+    # channel_data = float_to_floatbits(channel_data)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(N)
     return dataset
 def gen_number_data(N=10000, k = 7.5, batchsize=10000):
@@ -74,7 +74,7 @@ def gen_regression_data(N=10000, batchsize=10000, reduncancy=1):
     ################
     data_set = tf.random.uniform((N, ), 0, 1)
     label_set = data_set
-    modified_dataset = float_to_floatbits(data_set)
+    # modified_dataset = float_to_floatbits(data_set)
     ################
     # ones = tf.ones((N, reduncancy))
     # data_set = tf.random.uniform((N,1), 0, 1) # for redundancy
@@ -82,7 +82,7 @@ def gen_regression_data(N=10000, batchsize=10000, reduncancy=1):
     # data_set = tf.concat((data_set, -data_set, tf.exp(data_set), tf.square(data_set)), axis=1)
     # data_set = tf.multiply(ones, data_set)
     # print(data_set)
-    dataset = Dataset.from_tensor_slices((modified_dataset, label_set)).batch(batchsize)
+    dataset = Dataset.from_tensor_slices((data_set, label_set)).batch(batchsize)
     return dataset
 
 # ============================  Metrics  ============================
@@ -522,6 +522,16 @@ def Sum_rate_utility_top_k_with_mask_from_ranking_prob(K, M, sigma2, k=3):
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
+
+def VAE_encoding_loss(k, l):
+    def loss_fn(y_pred):
+        y_pred_code = y_pred[:, k:]
+        y_pred_z_q = y_pred_code[:, :k*l]
+        y_pred_z_e = y_pred_code[:, k*l:]
+        quantization_loss_1 = tf.square(tf.norm(tf.stop_gradient(y_pred_z_e)- y_pred_z_q))/y_pred.shape[0]
+        quantization_loss_2 = 0.25*tf.square(tf.norm(tf.stop_gradient(y_pred_z_q) - y_pred_z_e))/y_pred.shape[0]
+        return quantization_loss_1 + quantization_loss_2
+    return loss_fn
 # =========================== Custom function for straight through estimation ============================
 
 @tf.custom_gradient
@@ -717,6 +727,13 @@ def freeze_decoder_layers(model):
         elif layer.name[0:7] == "encoder":
             layer.trainable = True
     return model
+def generate_binary_encoding(dim):
+    encoding_space = np.zeros((2**dim, dim))
+    num_range = np.arange(0, 2**dim)
+    for i in range(0, encoding_space.shape[1]):
+        encoding_space[:, dim-i-1] = num_range%2
+        num_range = np.floor(num_range/2)
+    return tf.constant(encoding_space, dtype=tf.float32)
 if __name__ == "__main__":
     N = 5
     M = 20
