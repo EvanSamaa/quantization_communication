@@ -152,7 +152,7 @@ if __name__ == "__main__":
                 if epoch >= 1000:
                     improvement = graphing_data[epoch-1000: epoch-500, 0].mean() - graphing_data[epoch-500: epoch, 0].mean()
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
-                    if improvement <= 0.0001:
+                    if improvement <= 0.000001:
                         break
         np.save(fname_template.format(".npy"), graphing_data)
         # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"

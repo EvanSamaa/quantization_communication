@@ -313,7 +313,7 @@ def Autoencoder_Encoding_module(k, l, input_shape, i=0, code_size=15):
     return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(k, l, input_shape):
     inputs = Input(input_shape)
-    x = Dense(64)(inputs)
+    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
     x = LeakyReLU()(x)
     x = Dense(k, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="decoder")
