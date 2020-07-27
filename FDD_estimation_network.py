@@ -70,8 +70,8 @@ if __name__ == "__main__":
     fname_template = "trained_models/Jul 22nd/softmax_softmask_3_layers_DNN_ranker{}"
     # problem Definition
     N = 1000
-    M = 20
-    K = 10
+    M = 128
+    K = 5
     B = 10
     seed = 200
     N_rf = 3

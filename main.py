@@ -85,13 +85,13 @@ def test_step_with_annealing(features, labels, N):
 if __name__ == "__main__":
     # test_model()
     # A[2]
-    fname_template_template = "./trained_models/Jul 23rd/VAE quantization scheduling high lr_{}"
+    fname_template_template = "./trained_models/Jul 23rd/VAE quantization scheduling k=30,L=4{}"
     N = 10000
-    k = 2
-    L = 1
+    k = 30
+    L = 4
     switch = 20
     EPOCHS = 20000
-    code_size = 2
+    code_size = 6
     for seed in range(0, 1):
         tf.keras.backend.clear_session()
         fname_template = fname_template_template.format(seed) + "{}"

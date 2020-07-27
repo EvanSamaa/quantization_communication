@@ -779,7 +779,7 @@ def DNN_Ranking_model(M, K, k, sum_all = False):
     model = Model(inputs, output, name="dnn_ranking_module")
     return model
 
-
+def FDD_baseline_model(M K, B):
 def Floatbits_FDD_model_no_constraint(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector
@@ -801,11 +801,11 @@ def FDD_model_softmax(M, K, B):
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K,))
     x = reshaper(x)
-    x = Dense(M * M)(x)
+    x = Dense(M)(x)
     x = LeakyReLU()(x)
-    x = Dense(M * M)(x)
+    x = Dense(M)(x)
     x = LeakyReLU()(x)
-    x = Dense(M * M)(x)
+    x = Dense(M)(x)
     x = LeakyReLU()(x)
     x = Dense(M * K)(x)
     # to be removed
