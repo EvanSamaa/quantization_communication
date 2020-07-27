@@ -68,23 +68,16 @@ def create_optimal_model_k_2(k, input):
     x = floatbits_to_float(input)
 ############################## Layers ##############################
 class Closest_embedding_layer(tf.keras.layers.Layer):
-    def __init__(self, user_count=2, bit_count=2, **kwargs):
+    def __init__(self, user_count=2, embedding_count=8, bit_count=15, **kwargs):
         super(Closest_embedding_layer, self).__init__()
-        e_init = generate_binary_encoding(bit_count)-0.5
         self.user_count = user_count
         self.bit_count = bit_count
-        # self.E = tf.Variable(
-        #     initial_value=e_init,
-        #     trainable=True,
-        # )
-        self.E = tf.Variable(
-            initial_value=tf.random.normal((2**bit_count, bit_count), 0, 0.01**2),
-            trainable=True,
-        )
+        self.embedding_count = embedding_count
+        initializer = tf.keras.initializers.he_normal()
+        self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
     def call(self, z, training=True):
-        z = tf.sqrt(z)
         if training:
-            z = z + tf.random.normal((z.shape[1], z.shape[2]), 0, 0.1**2)
+            z = z + tf.random.normal((z.shape[1], z.shape[2]), 0, 0.01)
         z = tf.expand_dims(z, 2)
         z = tf.tile(z, (1, 1, self.E.shape[0], 1))
         eu_distance = tf.reduce_sum(tf.square(z - self.E), axis=3) # calculate euclidience distance between
@@ -97,6 +90,7 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         config.update({
             'bit_count':self.bit_count,
             'user_count':self.user_count,
+            'embedding_count':self.embedding_count,
             'name':"Closest_embedding_layer"
         })
         return config
@@ -307,24 +301,19 @@ def perception_model(x, output, layer, logit=True):
     else:
         return Softmax(x)
 
-def Autoencoder_Encoding_module(k, l, input_shape, i=0):
+def Autoencoder_Encoding_module(k, l, input_shape, i=0, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
-    x = Dense(7)(inputs)
-    x = LeakyReLU()(x)
-    x = Dense(7)(x)
-    x = LeakyReLU()(x)
-    x = Dense(7)(x)
-    x = LeakyReLU()(x)
-    x = Dense(l)(x)
-    x = tf.tanh(x)
+    x = Dense(64)(inputs)
+    x = tf.keras.layers.ReLU()(x)
+    x = Dense(code_size)(x)
+    # x = tf.tanh(x)
+    # x = tf.keras.layers.ReLU()(x)
     # x = tf.tanh(LeakyReLU()(x))
-    x = tf.keras.layers.Reshape((1, l))(x)
+    x = tf.keras.layers.Reshape((1, code_size))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(k, l, input_shape):
     inputs = Input(input_shape)
-    x = Dense(20)(inputs)
-    x = LeakyReLU()(x)
-    x = Dense(20)(x)
+    x = Dense(64)(inputs)
     x = LeakyReLU()(x)
     x = Dense(k)(x)
     return Model(inputs, x, name="decoder")
@@ -352,19 +341,21 @@ def DiscreteVAE(k, l, input_shape):
     output_all = tf.keras.layers.concatenate((out, z_q_for_gradient, z_e), 1)
     model = Model(inputs, output_all, name="DiscreteVAE")
     return model
-def DiscreteVAE_regression(l, input_shape):
+def DiscreteVAE_regression(l, input_shape, code_size = 15):
+
     inputs = Input(input_shape, dtype=tf.float32)
-    encoder = Autoencoder_Encoding_module(3, l, (1,))
-    decoder = Autoencoder_Decoding_module(1, l, (l,))
-    find_nearest_e = Closest_embedding_layer(1, l)
-    encoding_reshaper = tf.keras.layers.Reshape((l,), name="encoding_reshaper")
+    encoder = Autoencoder_Encoding_module(3, l, (1,), code_size=code_size)
+    decoder = Autoencoder_Decoding_module(1, code_size, (code_size,))
+    find_nearest_e = Closest_embedding_layer(1, 2**l, code_size)
+    encoding_reshaper = tf.keras.layers.Reshape((code_size,), name="encoding_reshaper")
     z_e = encoder(inputs)
-    z_q = z_e + tf.stop_gradient(find_nearest_e(z_e) - z_e)
+    z_qq = find_nearest_e(z_e)
+    z_q = z_e + tf.stop_gradient(z_qq - z_e)
     z_q = encoding_reshaper(z_q)
     out = decoder(z_q)
-    z_q_for_gradient = encoding_reshaper(find_nearest_e(z_e))
     z_e = encoding_reshaper(z_e)
-    output_all = tf.keras.layers.concatenate((out, z_q_for_gradient, z_e), 1)
+    z_qq = encoding_reshaper(z_qq)
+    output_all = tf.keras.layers.concatenate((out, z_qq, z_e), 1)
     model = Model(inputs, output_all, name="DiscreteVAE")
     print(model.summary())
     return model
@@ -732,8 +723,31 @@ def FDD_model_no_constraint(M, K, B):
 #     inputs = Input(shape=(M*K), dtype=tf.float32)
 #     x = Dense(M*K)
 #     x = Dense(M*K)
+def DNN_Ranking_NN_submodule(M, K, k, inputshape):
+    inputs = Input(inputshape)
+    x = Dense(M*K)(inputs)
+    x = Dense(2*M*K)(x)
+    x = Dense(M*K)(x)
+    x = Dense(K)(x)
+    x = tf.keras.layers.Softmax()(x)
+    dnn_model = Model(inputs, x, name="dnn_softmax_network")
+    return dnn_model
 def DNN_Ranking_model(M, K, k, sum_all = False):
-    inputs = Input((M*K))
+    inputs = Input((M*K, ))
+    dnn = DNN_Ranking_NN_submodule(M, K, k, (M*K))
+    stretch_matrix = np.zeros((M * K, K))
+    for i in range(0, K):
+        for j in range(0, M):
+            stretch_matrix[i * M + j, i] = 1
+    stretch_matrix = tf.constant(stretch_matrix, tf.float32)
+    output = dnn(inputs)
+    for i in range(1, k):
+        # tiled_stretch_matrix = tf.tile(tf.expand_dims(stretch_matrix, 0), [1, 1, 1])
+        stretched_rank_matrix = tf.matmul(stretch_matrix, tf.keras.layers.Reshape((output.shape[1], 1))(output))
+        stretched_rank_matrix = tf.keras.layers.Reshape((stretched_rank_matrix.shape[1], ))(stretched_rank_matrix)
+        output = output + dnn(tf.multiply(1-stretched_rank_matrix, inputs))
+    model = Model(inputs, output, name="dnn_ranking_module")
+    return model
 
 
 def Floatbits_FDD_model_no_constraint(M, K, B):
@@ -818,14 +832,17 @@ def FDD_softmax_with_k_soft_masks(M, K, B, k=3):
     x = Dense(M)(x)
     x = LeakyReLU()(x)
     x = Dense(M*K)(x)
-    ranking_output = LSTM_Ranking_model(M, K, k, sum_all=True)(x)
+    ranking_output = DNN_Ranking_model(M, K, k, sum_all=True)(x)
+    ranking_output = Dense(50)(x)
+    ranking_output = Dense(20)(ranking_output)
+    ranking_output = Dense(k)(ranking_output)
     x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
     output = tf.keras.layers.Softmax()(x_list2[0])
     for i in range(1, len(x_list2)):
         output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
     # yep
     # x = tf.sigmoid(x)
-    ranking_output = tf.keras.layers.Reshape((k*K,))(ranking_output)
+    # ranking_output = tf.keras.layers.Reshape((k*K,))(ranking_output)
     output = tf.concat((output, ranking_output), axis=1)
     model = Model(inputs, output)
     return model

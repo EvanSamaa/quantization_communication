@@ -88,10 +88,10 @@ if __name__ == "__main__":
     fname_template_template = "./trained_models/Jul 22nd VAE/VAE quantization third attempt/model_seed={}"
     N = 10000
     k = 1
-    L = 4
+    L = 3
     switch = 20
     EPOCHS = 20000
-
+    code_size = 3
     for seed in range(0, 1):
         tf.keras.backend.clear_session()
         fname_template = fname_template_template.format(seed) + "{}"
@@ -99,12 +99,12 @@ if __name__ == "__main__":
         graphing_data = np.zeros((EPOCHS, 8))
         # model = Recover_uniform_quantization(input_shape = [24,], L=3)
         # model = DiscreteVAE(k, L, (k, ))
-        model = DiscreteVAE_regression(L, (1, ))
+        model = DiscreteVAE_regression(L, (1, ), code_size)
         classification_loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         regression_loss = tf.keras.losses.MeanSquaredError()
-        vector_quantization_loss = VAE_encoding_loss(k, L)
+        vector_quantization_loss = VAE_encoding_loss(k, code_size)
 
-        optimizer = tf.keras.optimizers.Adam()
+        optimizer = tf.keras.optimizers.Adam(lr=0.0001)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
         train_accuracy = tf.keras.metrics.Mean(name='train_loss')
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         test_accuracy = tf.keras.metrics.Mean(name='train_loss')
         quantization_count = tf.keras.metrics.Mean(name='test_loss')
         test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
-        test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=9)
+        test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=1)
         # test_ds = gen_channel_quality_data_float_encoded(100, 2)
         min_loss = 10000
         # train_ds = gen_channel_quality_data_float_encoded(10000, 2)
@@ -152,7 +152,7 @@ if __name__ == "__main__":
                 if epoch >= 400:
                     improvement = graphing_data[epoch-400: epoch-200, 0].mean() - graphing_data[epoch-200: epoch, 0].mean()
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
-                    if improvement <= 0.001:
+                    if improvement <= 0.0001:
                         break
         np.save(fname_template.format(".npy"), graphing_data)
         # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"

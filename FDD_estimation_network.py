@@ -12,7 +12,7 @@ def train_step(features, labels, N=None):
         predictions = model(features)
         loss_2 = loss_object_2(predictions)
         # predictions = tf.concat([predictions[:, :K*M], predictions[:, K*M:K*M+K] + predictions[:, K*M+K:K*M+2*K] + predictions[:, K*M+2*K:K*M+3*K]], axis=1)
-        predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+        # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
         loss_1 = loss_object_1(predictions, features)
         loss = loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -30,7 +30,7 @@ def test_step(features, labels, N=None):
     #                          predictions[:, K * M:K * M + K] + predictions[:, K * M + K:K * M + 2 * K] + predictions[:,
     #                                                                                                      K * M + 2 * K:K * M + 3 * K]],
     #                         axis=1)
-    predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+    # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
     t_loss_1 = loss_object_1(predictions, features)
     test_loss(t_loss_1)
     test_binarization_loss(t_loss_2)
@@ -67,16 +67,16 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 22nd/softmax_softmask_3_layers_noise=0_max_pairwise_CE{}"
+    fname_template = "trained_models/Jul 22nd/softmax_softmask_3_layers_DNN_ranker{}"
     # problem Definition
     N = 1000
     M = 20
     K = 10
     B = 10
     seed = 200
-    N_rf = 1
+    N_rf = 3
     sigma2_h = 6.3
-    sigma2_n = 0.0000001
+    sigma2_n = 0.5
     # hyperparameters
     EPOCHS = 20000
     tf.random.set_seed(seed)
@@ -89,10 +89,10 @@ if __name__ == "__main__":
     # model = Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B, N_rf)
     # model = Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, N_rf)
     # model = Floatbits_FDD_encoding_model_no_constraint(M, K, B)
-    # model = FDD_model_softmax(M, K, B)
+    model = FDD_model_softmax(M, K, B)
     # model = FDD_model_no_constraint(M, K, B)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    model = FDD_softmax_with_k_soft_masks(M, K, B, k=N_rf)
+    # model = FDD_softmax_with_k_soft_masks(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam()
 
     # for data visualization
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     test_ds = generate_link_channel_data(100, K, M)
     # training Loop
     for epoch in range(EPOCHS):
-        train_features = generate_link_channel_data(1000, K, M)
+        train_features = generate_link_channel_data(10000, K, M)
         # data recording features
         train_loss.reset_states()
         train_binarization_loss.reset_states()

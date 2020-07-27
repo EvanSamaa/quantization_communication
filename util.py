@@ -70,7 +70,7 @@ def gen_encoding_data(N=1000, Sequence_length=10000, k=16, batchsize = 100, bit 
     output = tf.cast(output, tf.float32)
     dataset = Dataset.from_tensor_slices((output, channel_label)).batch(batchsize)
     return dataset
-def gen_regression_data(N=10000, batchsize=10000, reduncancy=1):
+def gen_regression_data(N=10000, batchsize=500, reduncancy=1):
     ################
     data_set = tf.random.uniform((N, ), 0, 1)
     label_set = data_set
@@ -345,6 +345,7 @@ def Masking_with_learned_weights_soft(K, M, sigma2, k=3):
         y_pred_val = y_pred[:, 0:K*M]
         y_pred_rank = y_pred[:, K*M:]
         y_pred_rank = tf.reshape(y_pred_rank, (y_pred_rank.shape[0], y_pred_rank.shape[1], 1))
+        print(y_pred_rank[0])
         tiled_stretch_matrix = tf.tile(tf.expand_dims(stretch_matrix, 0), [y_pred_rank.shape[0], 1, 1])
         stretched_rank_matrix = tf.matmul(tiled_stretch_matrix, y_pred_rank)
         stretched_rank_matrix = tf.reshape(stretched_rank_matrix, (stretched_rank_matrix.shape[0], stretched_rank_matrix.shape[1]))
@@ -528,8 +529,10 @@ def VAE_encoding_loss(k, l):
         y_pred_code = y_pred[:, k:]
         y_pred_z_q = y_pred_code[:, :k*l]
         y_pred_z_e = y_pred_code[:, k*l:]
-        quantization_loss_1 = tf.square(tf.norm(tf.stop_gradient(y_pred_z_e)- y_pred_z_q))/y_pred.shape[0]
-        quantization_loss_2 = 0.25*tf.square(tf.norm(tf.stop_gradient(y_pred_z_q) - y_pred_z_e))/y_pred.shape[0]
+        # quantization_loss_1 = tf.square(tf.norm(tf.stop_gradient(y_pred_z_e)- y_pred_z_q))/y_pred.shape[0]]
+        quantization_loss_1 = tf.losses.mean_squared_error(y_pred_z_q, tf.stop_gradient(y_pred_z_e))
+        # quantization_loss_2 = 0.25*tf.square(tf.norm(tf.stop_gradient(y_pred_z_q) - y_pred_z_e))/y_pred.shape[0]
+        quantization_loss_2 = 0.25*tf.losses.mean_squared_error(y_pred_z_e, tf.stop_gradient(y_pred_z_q))
         return quantization_loss_1 + quantization_loss_2
     return loss_fn
 # =========================== Custom function for straight through estimation ============================
