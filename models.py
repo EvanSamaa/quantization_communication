@@ -76,11 +76,11 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         initializer = tf.keras.initializers.he_normal()
         self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
     def call(self, z, training=True):
-        if training:
-            z = z + tf.random.normal((z.shape[1], z.shape[2]), 0, 0.01)
+        # if training:
+        #     z = z + tf.random.normal((z.shape[1], z.shape[2]), 0, 0.01)
         z = tf.expand_dims(z, 2)
         z = tf.tile(z, (1, 1, self.E.shape[0], 1))
-        eu_distance = tf.reduce_sum(tf.square(z - self.E), axis=3) # calculate euclidience distance between
+        eu_distance = tf.reduce_sum(tf.square(tf.stop_gradient(z) - self.E), axis=3) # calculate euclidience distance between
         k = tf.argmin(eu_distance, axis=2)
         output = tf.gather(self.E, k)
         return output
@@ -303,9 +303,9 @@ def perception_model(x, output, layer, logit=True):
 
 def Autoencoder_Encoding_module(k, l, input_shape, i=0, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
-    x = Dense(64)(inputs)
+    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
     x = tf.keras.layers.ReLU()(x)
-    x = Dense(code_size)(x)
+    x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
     # x = tf.tanh(x)
     # x = tf.keras.layers.ReLU()(x)
     # x = tf.tanh(LeakyReLU()(x))
@@ -315,7 +315,7 @@ def Autoencoder_Decoding_module(k, l, input_shape):
     inputs = Input(input_shape)
     x = Dense(64)(inputs)
     x = LeakyReLU()(x)
-    x = Dense(k)(x)
+    x = Dense(k, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="decoder")
 def DiscreteVAE(k, l, input_shape):
     inputs = Input(input_shape, dtype=tf.float32)
@@ -350,11 +350,11 @@ def DiscreteVAE_regression(l, input_shape, code_size = 15):
     encoding_reshaper = tf.keras.layers.Reshape((code_size,), name="encoding_reshaper")
     z_e = encoder(inputs)
     z_qq = find_nearest_e(z_e)
-    z_q = z_e + tf.stop_gradient(z_qq - z_e)
-    z_q = encoding_reshaper(z_q)
-    out = decoder(z_q)
+    z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
+    z_fed_forward = encoding_reshaper(z_fed_forward)
     z_e = encoding_reshaper(z_e)
     z_qq = encoding_reshaper(z_qq)
+    out = decoder(z_fed_forward)
     output_all = tf.keras.layers.concatenate((out, z_qq, z_e), 1)
     model = Model(inputs, output_all, name="DiscreteVAE")
     print(model.summary())

@@ -99,7 +99,7 @@ if __name__ == "__main__":
         graphing_data = np.zeros((EPOCHS, 8))
         # model = Recover_uniform_quantization(input_shape = [24,], L=3)
         # model = DiscreteVAE(k, L, (k, ))
-        model = DiscreteVAE_regression(L, (1, ), code_size)
+        model = DiscreteVAE_regression(L, (k, ), code_size)
         classification_loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         regression_loss = tf.keras.losses.MeanSquaredError()
         vector_quantization_loss = VAE_encoding_loss(k, code_size)
@@ -147,10 +147,10 @@ if __name__ == "__main__":
                 # model = replace_tanh_with_sign(model, binary_encoding_model_regularization, k=8)
                 model.save(fname_template.format(".h5"))
                 min_loss = train_loss.result()
-            if epoch%200 == 0:
+            if epoch%500 == 0:
                 print(model.get_layer("closest_embedding_layer").E)
-                if epoch >= 400:
-                    improvement = graphing_data[epoch-400: epoch-200, 0].mean() - graphing_data[epoch-200: epoch, 0].mean()
+                if epoch >= 1000:
+                    improvement = graphing_data[epoch-1000: epoch-500, 0].mean() - graphing_data[epoch-500: epoch, 0].mean()
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
                     if improvement <= 0.0001:
                         break
