@@ -284,8 +284,10 @@ def check_multiple_models(dir_name):
     return
 if __name__ == "__main__":
     custome_obj = {'Closest_embedding_layer' : Closest_embedding_layer}
-    model = tf.keras.models.load_model("trained_models/Jul 22nd VAE/VAE quantization third attempt/model_seed=0.h5", custom_objects=custome_obj)
-    quantization_evaluation_regression(model)
+    model = tf.keras.models.load_model("trained_models/Jul 23rd/VAE quantization scheduling high lr_0.h5", custom_objects=custome_obj)
+    # quantization_evaluation_regression(model)
+    # variance_graph(model, N=1, k=2)
+    quantization_evaluation(model, granuality=0.01, bitstring=False)
     A[2]
     check_multiple_models("./trained_models/Jul 8th/k=2 distinct regression network/")
     A[2]

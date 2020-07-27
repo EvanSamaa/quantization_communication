@@ -11,7 +11,7 @@ import os
 from soft_sort.tf_ops import soft_rank
 import scipy as sp
 from generate_batch_data import generate_batch_data
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 # ===========g=================  Data gen ============================
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 4  # Number of Paths
@@ -38,7 +38,7 @@ def gen_channel_quality_data_float_encoded(N, k, low=0, high=1):
     channel_data = tf.random.uniform((N, k), low, high)
     channel_label = tf.math.argmax(channel_data, axis=1)
     # channel_data = float_to_floatbits(channel_data)
-    dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(N)
+    dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(500)
     return dataset
 def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_data_num = tf.random.uniform((N, 1), 0, k)
@@ -620,9 +620,10 @@ def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, nam
             features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * 1
             features_mod = tf.concat((features_mod, features), axis=2)
         else:
-            features_mod = tf.ones((features.shape[0], features.shape[1], 1), dtype=tf.float64)
-            features_mod = tf.concat((features_mod, tf.reshape(features, (features.shape[0], features.shape[1], 1))), axis=2)
-        out = model(features_mod)
+            # features_mod = tf.ones((features.shape[0], features.shape[1], 1), dtype=tf.float64)
+            # features_mod = tf.concat((features_mod, tf.reshape(features, (features.shape[0], features.shape[1], 1))), axis=2)
+            pass
+        out = model(features)
         prediction = tf.argmax(out, axis=1)
     line = 0
     for i in range(count.shape[0]):
