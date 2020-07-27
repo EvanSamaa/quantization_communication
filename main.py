@@ -33,22 +33,22 @@ def train_step(features, labels, N=None, encode_only=False):
         predictions = model(features)
         logits = predictions[:, :k]
         vae_loss = vector_quantization_loss(predictions)
-        # ce_loss = classification_loss(labels, logits)
-        ce_loss = regression_loss(labels, logits)
+        ce_loss = classification_loss(labels, logits)
+        # ce_loss = regression_loss(labels, logits)
         loss = ce_loss + vae_loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(ce_loss)
-    # train_accuracy(labels, logits)
-    train_accuracy(vae_loss)
+    train_accuracy(labels, logits)
+    # train_accuracy(vae_loss)
 def test_step(features, labels, N=None):
     if N != None:
         return test_step_with_annealing(features, labels, N)
     predictions = model(features)
     logits = predictions[:, :k]
     vae_loss = vector_quantization_loss(predictions)
-    # ce_loss = classification_loss(labels, logits)
-    ce_loss = regression_loss(labels, logits)
+    ce_loss = classification_loss(labels, logits)
+    # ce_loss = regression_loss(labels, logits)
     t_loss = ce_loss + vae_loss
     test_loss(t_loss)
     # test_accuracy(labels, logits)
@@ -85,43 +85,45 @@ def test_step_with_annealing(features, labels, N):
 if __name__ == "__main__":
     # test_model()
     # A[2]
-    fname_template_template = "./trained_models/Jul 22nd VAE/VAE quantization third attempt/model_seed={}"
+    fname_template_template = "./trained_models/Jul 23rd/VAE quantization scheduling high lr_{}"
     N = 10000
-    k = 1
-    L = 3
+    k = 2
+    L = 1
     switch = 20
     EPOCHS = 20000
-    code_size = 3
+    code_size = 2
     for seed in range(0, 1):
         tf.keras.backend.clear_session()
         fname_template = fname_template_template.format(seed) + "{}"
         tf.random.set_seed(seed)
         graphing_data = np.zeros((EPOCHS, 8))
         # model = Recover_uniform_quantization(input_shape = [24,], L=3)
-        # model = DiscreteVAE(k, L, (k, ))
-        model = DiscreteVAE_regression(L, (k, ), code_size)
+        model = DiscreteVAE(k, L, (k, ), code_size)
+        model = DiscreteVAE_diff_scheduler(k, L, (k, ), code_size)
+        # model = DiscreteVAE_regression(L, (k, ), code_size)
         classification_loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         regression_loss = tf.keras.losses.MeanSquaredError()
         vector_quantization_loss = VAE_encoding_loss(k, code_size)
 
-        optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+        optimizer = tf.keras.optimizers.Adam(lr=0.001)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
-        # train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
-        train_accuracy = tf.keras.metrics.Mean(name='train_loss')
+        train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
+        # train_accuracy = tf.keras.metrics.Mean(name='train_loss')
         test_loss = tf.keras.metrics.Mean(name='test_loss')
         # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
         test_accuracy = tf.keras.metrics.Mean(name='train_loss')
         quantization_count = tf.keras.metrics.Mean(name='test_loss')
-        test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
-        test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=1)
-        # test_ds = gen_channel_quality_data_float_encoded(100, 2)
+        # test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
+        # test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=1)
+        test_ds = gen_channel_quality_data_float_encoded(100, k)
         min_loss = 10000
-        # train_ds = gen_channel_quality_data_float_encoded(10000, 2)
+        train_ds = gen_channel_quality_data_float_encoded(10000, k)
         encode_onlyy = False
         for epoch in range(EPOCHS):
             # Reset the metrics at the start of the next epoch
             # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
-            train_ds = gen_regression_data(reduncancy=1)
+            # train_ds = gen_regression_data(reduncancy=1)
+            train_ds = gen_channel_quality_data_float_encoded(10000, k)
             train_loss.reset_states()
             quantization_count.reset_states()
             train_accuracy.reset_states()
@@ -143,16 +145,16 @@ if __name__ == "__main__":
             graphing_data[epoch, 1] = train_accuracy.result()
             graphing_data[epoch, 4] = test_loss.result()
             graphing_data[epoch, 5] = test_accuracy.result()
-            if train_loss.result() < min_loss:
+            if train_accuracy.result() > min_loss:
                 # model = replace_tanh_with_sign(model, binary_encoding_model_regularization, k=8)
                 model.save(fname_template.format(".h5"))
-                min_loss = train_loss.result()
+                min_loss = train_accuracy.result()
             if epoch%500 == 0:
-                print(model.get_layer("closest_embedding_layer").E)
+                # print(model.get_layer("closest_embedding_layer").E)
                 if epoch >= 1000:
                     improvement = graphing_data[epoch-1000: epoch-500, 0].mean() - graphing_data[epoch-500: epoch, 0].mean()
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
-                    if improvement <= 0.0001:
+                    if improvement <= 0.000001:
                         break
         np.save(fname_template.format(".npy"), graphing_data)
         # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"

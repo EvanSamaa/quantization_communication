@@ -68,13 +68,16 @@ def create_optimal_model_k_2(k, input):
     x = floatbits_to_float(input)
 ############################## Layers ##############################
 class Closest_embedding_layer(tf.keras.layers.Layer):
-    def __init__(self, user_count=2, embedding_count=8, bit_count=15, **kwargs):
+    def __init__(self, user_count=2, embedding_count=8, bit_count=15, i=0, **kwargs):
         super(Closest_embedding_layer, self).__init__()
         self.user_count = user_count
         self.bit_count = bit_count
         self.embedding_count = embedding_count
         initializer = tf.keras.initializers.he_normal()
-        self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+        self.E = tf.Variable(tf.random.normal(([self.embedding_count, self.bit_count]), 0, 0.01)
+        , trainable=True)
+        self.i = i
     def call(self, z, training=True):
         # if training:
         #     z = z + tf.random.normal((z.shape[1], z.shape[2]), 0, 0.01)
@@ -91,7 +94,8 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
             'bit_count':self.bit_count,
             'user_count':self.user_count,
             'embedding_count':self.embedding_count,
-            'name':"Closest_embedding_layer"
+            'i':self.i,
+            'name':"Closest_embedding_layer_{}".format(self.i)
         })
         return config
 ############################## MLP models ##############################
@@ -306,25 +310,22 @@ def Autoencoder_Encoding_module(k, l, input_shape, i=0, code_size=15):
     x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
     x = tf.keras.layers.ReLU()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
-    # x = tf.tanh(x)
-    # x = tf.keras.layers.ReLU()(x)
-    # x = tf.tanh(LeakyReLU()(x))
     x = tf.keras.layers.Reshape((1, code_size))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(k, l, input_shape):
     inputs = Input(input_shape)
-    x = Dense(64)(inputs)
+    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
     x = LeakyReLU()(x)
     x = Dense(k, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="decoder")
-def DiscreteVAE(k, l, input_shape):
+def DiscreteVAE(k, l, input_shape, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
     x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
     # list of modules
-    encoder = Autoencoder_Encoding_module(k, l, (1, ))
-    decoder = Autoencoder_Decoding_module(k, l, (k*l, ))
-    find_nearest_e = Closest_embedding_layer(user_count=k, bit_count=l)
-    encoding_reshaper = tf.keras.layers.Reshape((k*l, ), name="encoding_reshaper")
+    encoder = Autoencoder_Encoding_module(k, l, (1, ), code_size=code_size)
+    decoder = Autoencoder_Decoding_module(k, code_size, (k*code_size, ))
+    find_nearest_e = Closest_embedding_layer(user_count=k, embedding_count=2**l, bit_count=code_size, i=0)
+    encoding_reshaper = tf.keras.layers.Reshape((k*code_size, ), name="encoding_reshaper")
     # computation of encoding
     # z_e = Autoencoder_Encoding_module(k, l, (1, ))(x_list[0])
     z_e = encoder(x_list[0])
@@ -333,12 +334,41 @@ def DiscreteVAE(k, l, input_shape):
         # z_e = tf.concat((z_e, Autoencoder_Encoding_module(k, l, (1, ), i)(item)), axis=1)
         z_e = tf.concat((z_e, encoder(item)), axis=1)
         i = i + 1
-    z_q = z_e + tf.stop_gradient(find_nearest_e(z_e) - z_e)
-    z_q = encoding_reshaper(z_q)
-    out = decoder(z_q)
-    z_q_for_gradient = encoding_reshaper(find_nearest_e(z_e))
+    z_qq = find_nearest_e(z_e)
+    z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
+    z_fed_forward = encoding_reshaper(z_fed_forward)
     z_e = encoding_reshaper(z_e)
-    output_all = tf.keras.layers.concatenate((out, z_q_for_gradient, z_e), 1)
+    z_qq = encoding_reshaper(z_qq)
+    out = decoder(z_fed_forward)
+    output_all = tf.keras.layers.concatenate((out, z_qq, z_e), 1)
+    model = Model(inputs, output_all, name="DiscreteVAE")
+    return model
+def DiscreteVAE_diff_scheduler(k, l, input_shape, code_size=15):
+    inputs = Input(input_shape, dtype=tf.float32)
+    x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
+    # list of modules
+    decoder = Autoencoder_Decoding_module(k, code_size, (k*code_size, ))
+    encoding_reshaper = tf.keras.layers.Reshape((k*code_size, ), name="encoding_reshaper")
+    # computation of encoding
+    # z_e = Autoencoder_Encoding_module(k, l, (1, ))(x_list[0])
+    z_e = Autoencoder_Encoding_module(k, l, (1, ), code_size=code_size)(x_list[0])
+    z_q = Closest_embedding_layer(user_count=k, embedding_count=2**l, bit_count=code_size)(z_e)
+    z_fed_forward = z_e + tf.stop_gradient(z_q - z_e)
+    i = 1
+    for item in x_list[1:]:
+        # z_e = tf.concat((z_e, Autoencoder_Encoding_module(k, l, (1, ), i)(item)), axis=1)
+        z_e_temp = Autoencoder_Encoding_module(k, l, (1, ), i = i, code_size=code_size)(item)
+        z_q_temp = Closest_embedding_layer(user_count=k, embedding_count=2**l, bit_count=code_size)(z_e_temp)
+        z_fed_forward_temp = z_e_temp + tf.stop_gradient(z_q_temp - z_e_temp)
+        z_e = tf.concat((z_e, z_e_temp), axis=1)
+        z_q = tf.concat((z_q, z_q_temp), axis=1)
+        z_fed_forward = tf.concat((z_fed_forward, z_fed_forward_temp), axis=1)
+        i = i + 1
+    z_fed_forward = encoding_reshaper(z_fed_forward)
+    z_e = encoding_reshaper(z_e)
+    z_q = encoding_reshaper(z_q)
+    out = decoder(z_fed_forward)
+    output_all = tf.keras.layers.concatenate((out, z_q, z_e), 1)
     model = Model(inputs, output_all, name="DiscreteVAE")
     return model
 def DiscreteVAE_regression(l, input_shape, code_size = 15):
@@ -356,7 +386,7 @@ def DiscreteVAE_regression(l, input_shape, code_size = 15):
     z_qq = encoding_reshaper(z_qq)
     out = decoder(z_fed_forward)
     output_all = tf.keras.layers.concatenate((out, z_qq, z_e), 1)
-    model = Model(inputs, output_all, name="DiscreteVAE")
+    model = Model(inputs, output_all, name="DiscreteVAEregression")
     print(model.summary())
     return model
 
