@@ -116,7 +116,7 @@ if __name__ == "__main__":
         # test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
         # test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=1)
         test_ds = gen_channel_quality_data_float_encoded(100, k)
-        min_loss = 10000
+        min_loss = -100
         train_ds = gen_channel_quality_data_float_encoded(10000, k)
         encode_onlyy = False
         for epoch in range(EPOCHS):

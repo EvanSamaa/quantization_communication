@@ -779,7 +779,9 @@ def DNN_Ranking_model(M, K, k, sum_all = False):
     model = Model(inputs, output, name="dnn_ranking_module")
     return model
 
-# def FDD_baseline_model(M K, B):
+def FDD_baseline_model(M, K, B):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
 def Floatbits_FDD_model_no_constraint(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector
@@ -847,14 +849,14 @@ def FDD_softmax_with_soft_mask(M, K, B, k=3):
     return model
 def FDD_softmax_with_k_soft_masks(M, K, B, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
-    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    mod_input = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K,))
-    x = reshaper(x)
+    mod_input = reshaper(mod_input)
     # normalize
-    mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
-    std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
-    x = (x - mean)/std
+    mean = tf.expand_dims(tf.reduce_mean(mod_input, axis=1), 1)
+    std = tf.expand_dims(tf.math.reduce_std(mod_input, axis=1), 1)
+    x = (mod_input - mean)/std
     x = tf.keras.layers.Reshape((x.shape[1],))(x)
     # model starts
     x = Dense(M)(x)
@@ -862,10 +864,10 @@ def FDD_softmax_with_k_soft_masks(M, K, B, k=3):
     x = Dense(M)(x)
     x = LeakyReLU()(x)
     x = Dense(M*K)(x)
-    ranking_output = DNN_Ranking_model(M, K, k, sum_all=True)(x)
-    ranking_output = Dense(50)(x)
-    ranking_output = Dense(20)(ranking_output)
-    ranking_output = Dense(k)(ranking_output)
+    ranking_output = DNN_Ranking_model(2*M, K, k, sum_all=True)(mod_input)
+    # ranking_output = Dense(50)(x)
+    # ranking_output = Dense(20)(ranking_output)
+    # ranking_output = Dense(k)(ranking_output)
     x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
     output = tf.keras.layers.Softmax()(x_list2[0])
     for i in range(1, len(x_list2)):

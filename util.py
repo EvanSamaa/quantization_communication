@@ -11,7 +11,7 @@ import os
 from soft_sort.tf_ops import soft_rank
 import scipy as sp
 from generate_batch_data import generate_batch_data
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 # ===========g=================  Data gen ============================
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 4  # Number of Paths
@@ -345,7 +345,7 @@ def Masking_with_learned_weights_soft(K, M, sigma2, k=3):
         y_pred_val = y_pred[:, 0:K*M]
         y_pred_rank = y_pred[:, K*M:]
         y_pred_rank = tf.reshape(y_pred_rank, (y_pred_rank.shape[0], y_pred_rank.shape[1], 1))
-        print(y_pred_rank[0])
+        # print(y_pred_rank[0])
         tiled_stretch_matrix = tf.tile(tf.expand_dims(stretch_matrix, 0), [y_pred_rank.shape[0], 1, 1])
         stretched_rank_matrix = tf.matmul(tiled_stretch_matrix, y_pred_rank)
         stretched_rank_matrix = tf.reshape(stretched_rank_matrix, (stretched_rank_matrix.shape[0], stretched_rank_matrix.shape[1]))
@@ -624,6 +624,7 @@ def quantization_evaluation(model, granuality = 0.001, k=2, saveImg = False, nam
             # features_mod = tf.concat((features_mod, tf.reshape(features, (features.shape[0], features.shape[1], 1))), axis=2)
             pass
         out = model(features)
+        out = out[:, :2]
         prediction = tf.argmax(out, axis=1)
     line = 0
     for i in range(count.shape[0]):
