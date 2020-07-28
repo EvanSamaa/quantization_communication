@@ -6,15 +6,17 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 import math
+from itertools import combinations
 # import cv2
 import os
 from soft_sort.tf_ops import soft_rank
 import scipy as sp
 from generate_batch_data import generate_batch_data
-# from matplotlib import pyplot as plt
-# ===========g=================  Data gen ============================
+from matplotlib import pyplot as plt
+# ==
+# =========g=================  Data gen ============================
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
-    Lp = 4  # Number of Paths
+    Lp = 2  # Number of Paths
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
     P = tf.expand_dims(P, 0)
     P = tf.tile(P, (N, 1, 1))
@@ -84,6 +86,16 @@ def gen_regression_data(N=10000, batchsize=500, reduncancy=1):
     # print(data_set)
     dataset = Dataset.from_tensor_slices((data_set, label_set)).batch(batchsize)
     return dataset
+def nChoosek_bits(N, k):
+    # each row is a
+    count = sp.special.comb(N, k, exact=True)
+    results = np.zeros((count, N))
+    i = 0
+    for bits in combinations(range(N), k):
+        for bit in bits:
+            results[i, bit] = 1
+        i = i + 1
+    return count, tf.constant(results, dtype=tf.float32)
 
 # ============================  Metrics  ============================
 def quantizaton_evaluation_numbers(model, granuality=0.0001, k=2):
@@ -297,15 +309,23 @@ def Output_Per_Receiver_Control(K, M, ranking=False):
             loss += tf.square(tf.reduce_sum(per_device_y_pred, axis=1) - 1)
         return loss
     return regularization
-def Total_activation_count(K, M, ranking=False):
+def Total_activation_limit_soft(K, M, ranking=False, N_rf = 3):
     def regularization(y_pred):
         y_pred_mod = y_pred
         if ranking:
             y_pred_mod = y_pred[:K*M]
         sum = tf.reduce_sum(y_pred_mod, axis=1)
-        mean = tf.reduce_mean(sum)
-        var = tf.reduce_sum(tf.square(sum-mean))/K*M
-        return mean, var
+        # print(sum.shape)
+        return sum
+    return regularization
+def Total_activation_limit_hard(K, M, ranking=False, N_rf = 3):
+    def regularization(y_pred):
+        y_pred_mod = y_pred
+        if ranking:
+            y_pred_mod = y_pred[:K*M]
+        sum = tf.reduce_sum(y_pred_mod, axis=1)
+        loss = tf.square(sum - N_rf)
+        return loss
     return regularization
 def Masking_with_learned_weights(K, M, sigma2, k=3):
     stretch_matrix = np.zeros((M * K, K))
@@ -536,7 +556,6 @@ def VAE_encoding_loss(k, l):
         return quantization_loss_1 + quantization_loss_2
     return loss_fn
 # =========================== Custom function for straight through estimation ============================
-
 @tf.custom_gradient
 def sign_relu_STE(x):
     rtv = tf.sign(x)
@@ -746,6 +765,7 @@ if __name__ == "__main__":
     B = 5
     sigma2 = 0
     generate_link_channel_data(N, K, M)
+    nChoosek_bits(4, 2)
     # model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)
     # features = generate_link_channel_data(N, K, M)
     # predictions = model(features)

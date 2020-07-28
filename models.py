@@ -745,8 +745,8 @@ def FDD_model_no_constraint(M, K, B):
     x = LeakyReLU()(x)
     x = Dense(M * K)(x)
     # to be removed
-    output = tf.tanh(tf.keras.layers.ReLU()(x))
-    # output = sigmoid(x)
+    # output = tf.tanh(tf.keras.layers.ReLU()(x))
+    output = sigmoid(x)
     model = Model(inputs, output)
     return model
 # def Fully_connected_Ranking_Model(M, K, k):
@@ -778,10 +778,16 @@ def DNN_Ranking_model(M, K, k, sum_all = False):
         output = output + dnn(tf.multiply(1-stretched_rank_matrix, inputs))
     model = Model(inputs, output, name="dnn_ranking_module")
     return model
-
-def FDD_baseline_model(M, K, B):
+def FDD_exhaustive_search_model(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    x = Dense(3*M*K)(x)
+    x = LeakyReLU()(x)
+    x = Dense(2*M*K)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    x
+
 def Floatbits_FDD_model_no_constraint(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector

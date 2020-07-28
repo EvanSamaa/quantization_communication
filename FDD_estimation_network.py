@@ -12,9 +12,9 @@ def train_step(features, labels, N=None):
         predictions = model(features)
         loss_2 = loss_object_2(predictions)
         # predictions = tf.concat([predictions[:, :K*M], predictions[:, K*M:K*M+K] + predictions[:, K*M+K:K*M+2*K] + predictions[:, K*M+2*K:K*M+3*K]], axis=1)
-        predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+        # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
         loss_1 = loss_object_1(predictions, features)
-        loss = loss_1
+        loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -30,7 +30,7 @@ def test_step(features, labels, N=None):
     #                          predictions[:, K * M:K * M + K] + predictions[:, K * M + K:K * M + 2 * K] + predictions[:,
     #                                                                                                      K * M + 2 * K:K * M + 3 * K]],
     #                         axis=1)
-    predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+    # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
     t_loss_1 = loss_object_1(predictions, features)
     test_loss(t_loss_1)
     test_binarization_loss(t_loss_2)
@@ -67,32 +67,32 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 22nd/softmax_softmask_3_layers_DNN_ranker{}"
+    fname_template = "trained_models/Jul 23rd/sumrate_no_constraint_no_noise{}"
     # problem Definition
     N = 1000
     M = 40
-    K = 10s
+    K = 10
     B = 10
     seed = 200
     N_rf = 3
     sigma2_h = 6.3
-    sigma2_n = 0.5
+    sigma2_n = 0.0000001
     # hyperparameters
     EPOCHS = 20000
     tf.random.set_seed(seed)
     np.random.seed(seed)
     loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    loss_object_2 = Binarization_regularization(K, N, M, N_rf)
+    # loss_object_2 = Binarization_regularization(K, N, M, N_rf)
     # loss_object_2 = TEMP_Pairwise_Cross_Entropy_loss(K, M, N_rf)
-    # loss_object_2 = Total_activation_count(K, M)
+    loss_object_2 = Total_activation_limit_soft(K, M, N_rf=N_rf)
     # model = Floatbits_FDD_encoding_model_constraint_13_with_softmax(M, K, B)
     # model = Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B, N_rf)
     # model = Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, N_rf)
     # model = Floatbits_FDD_encoding_model_no_constraint(M, K, B)
     # model = FDD_model_softmax(M, K, B)
-    # model = FDD_model_no_constraint(M, K, B)
+    model = FDD_model_no_constraint(M, K, B)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    model = FDD_softmax_with_k_soft_masks(M, K, B, k=N_rf)
+    # model = FDD_softmax_with_k_soft_masks(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam()
 
     # for data visualization
@@ -104,9 +104,11 @@ if __name__ == "__main__":
     # begin setting up training loop
     max_acc = 10000
     test_ds = generate_link_channel_data(100, K, M)
+    train_features = generate_link_channel_data(10000, K, M)
+
     # training Loop
     for epoch in range(EPOCHS):
-        train_features = generate_link_channel_data(10000, K, M)
+
         # data recording features
         train_loss.reset_states()
         train_binarization_loss.reset_states()
@@ -127,9 +129,9 @@ if __name__ == "__main__":
         if train_loss.result() < max_acc:
             model.save(fname_template.format(".h5"))
             max_acc = train_loss.result()
-        if epoch % 100 == 0:
-            if epoch >= 200:
-                improvement = graphing_data[epoch - 200: epoch - 100, 0].mean() - graphing_data[epoch - 100: epoch, 0].mean()
+        if epoch % 40 == 0:
+            if epoch >= 80:
+                improvement = graphing_data[epoch - 80: epoch - 40, 0].mean() - graphing_data[epoch - 40: epoch, 0].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.001:
                     break
