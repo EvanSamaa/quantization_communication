@@ -142,7 +142,7 @@ def variance_graph(model, N = 1, k=2, bitstring=True):
                 # features_mod = tf.concat(
                 #     (features_mod, tf.reshape(features, (features.shape[0], features.shape[1], 1))), axis=2)
             prediction = model(features)
-            prediction = prediction[:, :2]
+            prediction = prediction[:, :k]
             # tp_fn(labels, prediction, features)
             a_fn(labels, prediction)
             # if a_fn.result() != 1:
@@ -285,9 +285,9 @@ def check_multiple_models(dir_name):
     return
 if __name__ == "__main__":
     custome_obj = {'Closest_embedding_layer' : Closest_embedding_layer}
-    model = tf.keras.models.load_model("trained_models/Jul 23rd/VAE quantization scheduling k=2,L=10.h5", custom_objects=custome_obj)
+    model = tf.keras.models.load_model("trained_models/Jul 23rd/VAE quantization scheduling k=30,L=20.h5", custom_objects=custome_obj)
     # quantization_evaluation_regression(model)
-    variance_graph(model, N=1, k=2, bitstring=False)
+    variance_graph(model, N=1, k=30, bitstring=False)
     quantization_evaluation(model, granuality=0.01, bitstring=False)
     A[2]
     check_multiple_models("./trained_models/Jul 8th/k=2 distinct regression network/")
