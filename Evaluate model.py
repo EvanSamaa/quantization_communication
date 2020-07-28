@@ -129,7 +129,7 @@ def variance_graph(model, N = 1, k=2, bitstring=True):
         if bitstring:
             ds = gen_channel_quality_data_float_encoded(10000, k=k)
         else:
-            ds = gen_number_data(10000, k=k)
+            ds = gen_channel_quality_data_float_encoded(10000, k=k)
         for features, labels in ds:
             # prediction = tf.reshape(model(features), (1,))
             if bitstring:
@@ -137,11 +137,12 @@ def variance_graph(model, N = 1, k=2, bitstring=True):
                 features_mod = tf.concat((features_mod, features), axis=2)
             else:
                 print(features.shape)
-                features_mod = tf.ones((features.shape[0], features.shape[1], 1), dtype=tf.float32)
-                print(features_mod.shape)
-                features_mod = tf.concat(
-                    (features_mod, tf.reshape(features, (features.shape[0], features.shape[1], 1))), axis=2)
-            prediction = model(features_mod)
+                # features_mod = tf.ones((features.shape[0], features.shape[1], 1), dtype=tf.float32)
+                # print(features_mod.shape)
+                # features_mod = tf.concat(
+                #     (features_mod, tf.reshape(features, (features.shape[0], features.shape[1], 1))), axis=2)
+            prediction = model(features)
+            prediction = prediction[:, :2]
             # tp_fn(labels, prediction, features)
             a_fn(labels, prediction)
             # if a_fn.result() != 1:
@@ -284,9 +285,9 @@ def check_multiple_models(dir_name):
     return
 if __name__ == "__main__":
     custome_obj = {'Closest_embedding_layer' : Closest_embedding_layer}
-    model = tf.keras.models.load_model("trained_models/Jul 23rd/VAE quantization scheduling=0.h5", custom_objects=custome_obj)
+    model = tf.keras.models.load_model("trained_models/Jul 23rd/VAE quantization scheduling k=2,L=10.h5", custom_objects=custome_obj)
     # quantization_evaluation_regression(model)
-    # variance_graph(model, N=1, k=2)
+    variance_graph(model, N=1, k=2, bitstring=False)
     quantization_evaluation(model, granuality=0.01, bitstring=False)
     A[2]
     check_multiple_models("./trained_models/Jul 8th/k=2 distinct regression network/")
