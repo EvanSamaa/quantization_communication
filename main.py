@@ -86,7 +86,7 @@ if __name__ == "__main__":
     # test_model()
     # A[2]
     fname_template_template = "./trained_models/Jul 23rd/VAE quantization scheduling k=30,L=3_{}"
-    N = 10000
+    N = 5000
     k = 30
     L = 3
     switch = 20
@@ -117,13 +117,12 @@ if __name__ == "__main__":
         # test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=1)
         test_ds = gen_channel_quality_data_float_encoded(100, k)
         min_loss = -100
-        train_ds = gen_channel_quality_data_float_encoded(10000, k)
         encode_onlyy = False
         for epoch in range(EPOCHS):
             # Reset the metrics at the start of the next epoch
             # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
             # train_ds = gen_regression_data(reduncancy=1)
-            train_ds = gen_channel_quality_data_float_encoded(10000, k)
+            train_ds = gen_channel_quality_data_float_encoded(N, k)
             train_loss.reset_states()
             quantization_count.reset_states()
             train_accuracy.reset_states()
