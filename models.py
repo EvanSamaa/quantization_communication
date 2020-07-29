@@ -732,21 +732,19 @@ def FDD_model_no_constraint(M, K, B):
     reshaper = tf.keras.layers.Reshape((2 * M * K,))
     x = reshaper(x)
     # normalize
-    mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
-    std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
-    x = (x - mean)/std
-    x = tf.keras.layers.Reshape((x.shape[1],))(x)
+    # mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
+    # std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
+    # x = (x - mean)/std
+    # x = tf.keras.layers.Reshape((x.shape[1],))(x)
     # model starts
-    x = Dense(M * M)(x)
+    x = Dense(M, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = LeakyReLU()(x)
-    x = Dense(M * M)(x)
+    x = Dense(M, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = LeakyReLU()(x)
-    x = Dense(M * M)(x)
-    x = LeakyReLU()(x)
-    x = Dense(M * K)(x)
+    x = Dense(M * K, kernel_initializer=tf.keras.initializers.he_normal())(x)
     # to be removed
     # output = tf.tanh(tf.keras.layers.ReLU()(x))
-    output = sigmoid(x)
+    output = tf.keras.layers.Softmax()(x )
     model = Model(inputs, output)
     return model
 # def Fully_connected_Ranking_Model(M, K, k):
@@ -778,31 +776,63 @@ def DNN_Ranking_model(M, K, k, sum_all = False):
         output = output + dnn(tf.multiply(1-stretched_rank_matrix, inputs))
     model = Model(inputs, output, name="dnn_ranking_module")
     return model
-def FDD_exhaustive_search_model(M, K, B):
+def FDD_with_CNN(M, K, N_rf):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
-    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    c = tf.keras.layers.Conv2D(M, (1, 3))(tf.keras.layers.Reshape((K, 2*M, 1))(input_mod))
+    c = tf.keras.layers.Reshape((c.shape[1]*c.shape[2]*c.shape[3], ))(c)
+    x = tf.keras.layers.Reshape((2*K*M, ))(input_mod)
+    x = tf.concat((c, x), axis=1)
     x = Dense(3*M*K)(x)
     x = LeakyReLU()(x)
     x = Dense(2*M*K)(x)
     x = LeakyReLU()(x)
     x = Dense(M*K)(x)
-    x
-
+    x = tf.keras.layers.Softmax()(x)
+    model = Model(inputs, x)
+    print(model.summary())
+    return model
 def Floatbits_FDD_model_no_constraint(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K * 23,))
     x = reshaper(inputs)
-    x = Dense(K * M)(x)
+    x = Dense(M * M)(x)
     x = LeakyReLU()(x)
     x = Dense(M * M)(x)
     x = LeakyReLU()(x)
     x = Dense(M * K)(x)
     # to be removed
     output = tf.tanh(tf.keras.layers.ReLU()(x))
+    # output = tf.keras.layers.Softmax()(x)
     # output = sigmoid(x)
     model = Model(inputs, output)
     return model
+def DNN_3_layer_model(input_shape, M, K, i=0):
+    inputs = Input(shape=input_shape, dtype=tf.float32)
+    x = Dense(3*M)(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    x = tf.keras.layers.Softmax()(x)
+    model = Model(inputs, x, name="pass_{}".format(i))
+    return model
+def FDD_softmax_k_times(M, K, k):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    input_mod = tf.keras.layers.Reshape((2 * K * M,))(input_mod)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M)), input_mod[:, :K*M]))
+    input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
+    # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
+    x = DNN_3_layer_model((3*K*M), M, K, 0)(input_pass_0)
+    for i in range(1, k):
+        decision_i = x + tf.stop_gradient(binary_activation(x) - x)
+        input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
+        x = x + DNN_3_layer_model((3*K*M), M, K, i)(input_pass_i)
+    model = Model(inputs, x)
+    return model
+
 def FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -907,12 +937,11 @@ if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
     # print(Thresholdin_network((2, )).summary())
-    DiscreteVAE(2, 4, (2,))
-    A[2]
+    # DiscreteVAE(2, 4, (2,))
     N = 1000
     M = 20
     K = 10
     B = 10
     seed = 200
     N_rf = 3
-    model = FDD_softmax_with_k_soft_masks(M, K, B, N_rf)
+    model = FDD_with_CNN(M, K, N_rf)
