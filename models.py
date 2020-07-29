@@ -851,8 +851,6 @@ def FDD_model_softmax(M, K, B):
     x = LeakyReLU()(x)
     x = Dense(M)(x)
     x = LeakyReLU()(x)
-    x = Dense(M)(x)
-    x = LeakyReLU()(x)
     x = Dense(M * K)(x)
     # to be removed
     x_list2 = tf.split(x, num_or_size_splits=K, axis=1)

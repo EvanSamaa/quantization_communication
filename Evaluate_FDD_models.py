@@ -48,7 +48,7 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Jul 23rd/sumrate_no_constraint_verti_sum_with_constant_noise=0.1.h5"
+    file = "trained_models/Jul 23rd/sumrate_no_constraint_verti_sum_with_constant_noise=0.1"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
