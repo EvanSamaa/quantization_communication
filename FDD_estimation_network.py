@@ -101,7 +101,7 @@ if __name__ == "__main__":
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     # model = FDD_softmax_with_k_soft_masks(M, K, B, k=N_rf)
-    optimizer = tf.keras.optimizers.Adam(0.01)
+    optimizer = tf.keras.optimizers.Adam()
 
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
@@ -113,7 +113,6 @@ if __name__ == "__main__":
     max_acc = 10000
     test_ds = generate_link_channel_data(100, K, M)
     # training Loop
-
     for epoch in range(EPOCHS):
         # train_features = generate_link_channel_data(500, K, M)
         train_features = generate_link_channel_data(5000, K, M)
