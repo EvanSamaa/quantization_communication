@@ -329,6 +329,22 @@ def Total_activation_limit_hard(K, M, ranking=False, N_rf = 3):
         loss = tf.square(sum - N_rf)
         return loss
     return regularization
+def Harden_scheduling(K, M, sigma2, k=3):
+    stretch_matrix = np.zeros((M * K, K))
+    for i in range(0, K):
+        for j in range(0, M):
+            stretch_matrix[i * M + j, i] = 1
+    stretch_matrix = tf.constant(stretch_matrix, tf.float32)
+    def masking(y_pred):
+        # assumes the input shape is (batch, k*M) for y_pred,
+        # and the shape for G is (batch, K, N)
+        # generate mask to mask out points that are not in top k vvvvv
+        base_mask = np.zeros((y_pred.shape))
+        values, index = tf.math.top_k(y_pred, k=k)
+        for i in range(0, y_pred.shape[0]):
+            base_mask[i, index[i]] = 1
+        return tf.constant(base_mask, dtype=tf.float32)
+    return masking
 def Masking_with_learned_weights(K, M, sigma2, k=3):
     stretch_matrix = np.zeros((M * K, K))
     for i in range(0, K):
