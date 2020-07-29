@@ -430,17 +430,18 @@ def Sum_rate_utility_WeiCui(K, M, sigma2):
     #     for j in range(0, M):
     #         stretch_matrix[i, i * M + j] = 1
     # stretch_matrix = tf.constant(stretch_matrix, tf.float32)
-    def sum_rate_utility(y_pred, G):
+    def sum_rate_utility(y_pred, G, display=False):
         # assumes the input shape is (batch, k*N) for y_pred,
         # and the shape for G is (batch, K, M)
         G = tf.square(tf.abs(G))
         unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
         unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
         denominator = tf.matmul(G, unflattened_X)
-        # plt.imshow(denominator[0])
-        # plt.show(block=False)
-        # plt.pause(0.002)
-        # plt.close()
+        if display:
+            plt.imshow(denominator[0])
+            plt.show(block=False)
+            plt.pause(0.0001)
+            plt.close()
         numerator = tf.multiply(denominator, tf.eye(K))
         denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
         numerator = tf.matmul(numerator, tf.ones((K, 1)))

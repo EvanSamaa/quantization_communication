@@ -16,8 +16,8 @@ def train_step(features, labels, N=None):
         loss_2 = loss_object_2(predictions, features)
         # predictions = tf.concat([predictions[:, :K*M], predictions[:, K*M:K*M+K] + predictions[:, K*M+K:K*M+2*K] + predictions[:, K*M+2*K:K*M+3*K]], axis=1)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
-        loss_1 = loss_object_1(predictions, features)
-        loss = loss_1 + 0.5*loss_2
+        loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
+        loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -70,15 +70,14 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 23rd/sumrate_all_softmax_multiple_pass_noise=0.1{}"
-
+    fname_template = "trained_models/Jul 23rd/sumrate_all_softmax_3_pass_2xverti_sum_noise=0.1{}"
+    check = 200
     # problem Definition
     N = 1000
     M = 40
     K = 10
     B = 10
     seed = 200
-    check = 100
     N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
