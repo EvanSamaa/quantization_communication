@@ -17,7 +17,7 @@ def train_step(features, labels, N=None):
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
         loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_2 = loss_object_2(predictions, features)
-        loss = loss_1 + loss_2
+        loss = loss_1 + 0*loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -70,7 +70,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 23rd/sumrate_no_constraint_verti_sum_with_constant_noise=0.1{}"
+    fname_template = "trained_models/Jul 23rd/sumrate_all_softmax_1_pass_noise=0.1{}"
     check = 200
     # problem Definition
     N = 1000
@@ -86,8 +86,8 @@ if __name__ == "__main__":
     tf.random.set_seed(seed)
     np.random.seed(seed)
     loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    # loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
-    loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis_with_constant(K, M, sigma2_n)
+    loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
+    # loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis_with_constant(K, M, sigma2_n)
     # loss_object_2 = Binarization_regularization(K, N, M, N_rf)
     # loss_object_2 = TEMP_Pairwise_Cross_Entropy_loss(K, M, N_rf)
     # loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, N_rf=N_rf)
@@ -96,8 +96,8 @@ if __name__ == "__main__":
     # model = Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, N_rf)
     # model = Floatbits_FDD_encoding_model_no_constraint(M, K, B)
     # model = FDD_model_softmax(M, K, B)
-    model = FDD_model_no_constraint(M, K, B)
-    # model = FDD_softmax_k_times(M, K, N_rf)
+    # model = FDD_model_no_constraint(M, K, B)
+    model = FDD_softmax_k_times(M, K, N_rf)
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     # model = FDD_softmax_with_k_soft_masks(M, K, B, k=N_rf)

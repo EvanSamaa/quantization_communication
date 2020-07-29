@@ -15,18 +15,22 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = tf.reshape(model(features), (1,))
         # ds_load = float_to_floatbits(ds, complex=True)
         ds_load = ds
+
         prediction = model(ds_load, training=False)
-        # prediction = tf.concat([prediction[:, :K * M], prediction[:, K * M:K * M + K] + prediction[:,
-        #                                                                                    K * M + K:K * M + 2 * K] + prediction[
-        #                                                                                                               :,
-        #                                                                                                               K * M + 2 * K:K * M + 3 * K]],
-        #                         axis=1)
-        # prediction = Masking_with_learned_weights(K, M, sigma2_n, N_rf)(prediction)
-        # prediction = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(prediction)
-        # prediction = Masking_with_learned_weights(K, M, sigma2_n, N_rf)(prediction)
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
         result[1] = loss_fn2(prediction)
         print(result)
+        # ========= ========= =========  plotting ========= ========= =========
+        ds = tf.square(tf.abs(ds))
+        unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
+        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        denominator = tf.matmul(ds, unflattened_X)
+        for i in range(0, 1000):
+            plt.imshow(denominator[i])
+            plt.show(block=False)
+            plt.pause(0.0001)
+            plt.close()
+        # ========= ========= =========  plotting ========= ========= =========
         # submodel = Model(inputs=model.input, outputs=model.get_layer("model (Model)").output)
         # prediction2 = tf.reshape(submodel(ds_load), (1000*M, B))
         # print(prediction2)
@@ -42,7 +46,7 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Jul 23rd/sumrate_all_softmax_3_pass_verti_sum_noise=0.1"
+    file = "trained_models/Jul 23rd/sumrate_all_softmax_2_pass_noise=0.1"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
