@@ -70,7 +70,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 23rd/sumrate_all_softmax_3_pass_2xverti_sum_noise=0.1{}"
+    fname_template = "trained_models/Jul 23rd/sumrate_no_constraint_2xverti_sum_with_constantnoise=0.1{}"
     check = 200
     # problem Definition
     N = 1000
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
-    EPOCHS = 20000
+    EPOCHS = 40000
     tf.random.set_seed(seed)
     np.random.seed(seed)
     loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -95,11 +95,12 @@ if __name__ == "__main__":
     # model = Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, N_rf)
     # model = Floatbits_FDD_encoding_model_no_constraint(M, K, B)
     # model = FDD_model_softmax(M, K, B)
-    # model = FDD_model_no_constraint(M, K, B)
-    model = FDD_softmax_k_times(M, K, N_rf)
+    model = FDD_model_no_constraint(M, K, B)
+    # model = FDD_softmax_k_times(M, K, N_rf)
+    # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     # model = FDD_softmax_with_k_soft_masks(M, K, B, k=N_rf)
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Adam(0.01)
 
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
@@ -114,7 +115,7 @@ if __name__ == "__main__":
 
     for epoch in range(EPOCHS):
         # train_features = generate_link_channel_data(500, K, M)
-        train_features = generate_link_channel_data(500, K, M)
+        train_features = generate_link_channel_data(5000, K, M)
         # data recording features
         train_loss.reset_states()
         train_binarization_loss.reset_states()

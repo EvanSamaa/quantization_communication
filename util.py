@@ -13,7 +13,7 @@ from soft_sort.tf_ops import soft_rank
 import scipy as sp
 from generate_batch_data import generate_batch_data
 # from matplotlib import pyplot as plt
-# ==
+# ==e
 # =========g=================  Data gen ============================
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 2  # Number of Paths
@@ -469,7 +469,30 @@ def Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2):
         denominator = tf.reduce_sum(denominator-numerator, axis=1) + sigma2
         numerator = tf.matmul(numerator, tf.ones((K, 1)))
         numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
-        utility = 5*tf.math.log(numerator/denominator + 1)/log_2
+        utility = 5*tf.math.log((numerator)/denominator + 1)/log_2
+        utility = tf.reduce_sum(utility, axis=1)
+        return -utility
+    return sum_rate_utility
+def Sum_rate_utility_WeiCui_wrong_axis_with_constant(K, M, sigma2):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
+    # stretch_matrix = np.zeros((K, K*M))
+    # for i in range(0, K):
+    #     for j in range(0, M):
+    #         stretch_matrix[i, i * M + j] = 1
+    # stretch_matrix = tf.constant(stretch_matrix, tf.float32)
+    def sum_rate_utility(y_pred, G):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, M)
+        G = tf.square(tf.abs(G))
+        unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
+        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        denominator = tf.matmul(G, unflattened_X)
+        numerator = tf.multiply(denominator, tf.eye(K))
+        denominator = tf.reduce_sum(denominator-numerator, axis=1) + sigma2
+        numerator = tf.matmul(numerator, tf.ones((K, 1)))
+        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
+        utility = 5*tf.math.log((numerator+0.1)/denominator + 1)/log_2
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility

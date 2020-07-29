@@ -731,20 +731,14 @@ def FDD_model_no_constraint(M, K, B):
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K,))
     x = reshaper(x)
-    # normalize
-    # mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
-    # std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
-    # x = (x - mean)/std
-    # x = tf.keras.layers.Reshape((x.shape[1],))(x)
-    # model starts
     x = Dense(M, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = LeakyReLU()(x)
     x = Dense(M, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = LeakyReLU()(x)
     x = Dense(M * K, kernel_initializer=tf.keras.initializers.he_normal())(x)
     # to be removed
-    # output = tf.tanh(tf.keras.layers.ReLU()(x))
-    output = tf.keras.layers.Softmax()(x )
+    output = tf.tanh(tf.keras.layers.ReLU()(x))
+    # output = tf.sigmoid(x)
     model = Model(inputs, output)
     return model
 # def Fully_connected_Ranking_Model(M, K, k):
@@ -830,6 +824,20 @@ def FDD_softmax_k_times(M, K, k):
         decision_i = x + tf.stop_gradient(binary_activation(x) - x)
         input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
         x = x + DNN_3_layer_model((3*K*M), M, K, i)(input_pass_i)
+    model = Model(inputs, x)
+    return model
+def FDD_softmax_k_times_common_dnn(M, K, k):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    input_mod = tf.keras.layers.Reshape((2 * K * M,))(input_mod)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M)), input_mod[:, :K*M]))
+    input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
+    dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
+    x = dnn_model(input_pass_0)
+    for i in range(1, k):
+        decision_i = x + tf.stop_gradient(binary_activation(x) - x)
+        input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
+        x = x + dnn_model(input_pass_i)
     model = Model(inputs, x)
     return model
 
