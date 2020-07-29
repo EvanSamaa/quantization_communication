@@ -463,11 +463,7 @@ def Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2):
         G = tf.square(tf.abs(G))
         unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
         unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
-        denominator = tf.matmul(G, unflattened_X)
-        plt.imshow(denominator[0])
-        plt.show(block=False)
-        plt.pause(0.002)
-        plt.close()
+        denominator = tf.matmul(G, unflattened_X)s
         numerator = tf.multiply(denominator, tf.eye(K))
         denominator = tf.reduce_sum(denominator-numerator, axis=1) + sigma2
         numerator = tf.matmul(numerator, tf.ones((K, 1)))
