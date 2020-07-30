@@ -65,7 +65,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 30th/sumrate_VS_softmax_10_times_noise=0.1_magnitude_input{}"
+    fname_template = "trained_models/Jul 30th/sumrate_VS_ranked_softmax_3_times_noise=0.1_magnitude_input{}"
     check = 400
     # problem Definition
     N = 1000
@@ -73,18 +73,21 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 200
-    N_rf = 10
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 60000
     tf.random.set_seed(seed)
     np.random.seed(seed)
-    loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
+    # loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
+    # loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
+    loss_object_2 = Verti_sum_utility_RANKING(K, M, sigma2_n, N_rf)
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = FDD_softmax_k_times_hard_output_with_magnitude(M, K, N_rf)
-    model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
+    # model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
+    model = FDD_ranked_softmax(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     # model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam(0.0001)

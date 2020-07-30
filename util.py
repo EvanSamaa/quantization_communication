@@ -461,6 +461,23 @@ def Sum_rate_utility_WeiCui(K, M, sigma2):
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
+def Sum_rate_utility_RANKING(K, M, k, sigma2):
+    sr = Sum_rate_utility_WeiCui(K, M, sigma2)
+    def cal_sum_rate(y_pred, G):
+        loss = 0
+        for i in range(0, k):
+            loss = loss + sr(y_pred[:, i], G)
+        return loss
+    return cal_sum_rate
+def Verti_sum_utility_RANKING(K, M, k, sigma2):
+    sr = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2)
+    def cal_sum_rate(y_pred, G):
+        loss = 0
+        for i in range(0, k):
+            loss = loss + sr(y_pred[:, i], G)
+        return loss
+    return cal_sum_rate
+
 def Sum_rate_utility_WeiCui_all_link_streaming(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))

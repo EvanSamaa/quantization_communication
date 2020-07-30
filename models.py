@@ -896,6 +896,21 @@ def FDD_softmax_k_times_common_dnn(M, K, k):
         x = x + dnn_model(input_pass_i)
     model = Model(inputs, x)
     return model
+def FDD_ranked_softmax(M, K, k):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.abs(inputs)
+    input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K * M)), input_mod[:, :K * M]))
+    input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
+    decision_1 = DNN_3_layer_Thicc_model((2*K*M), M, K, 0)(input_pass_0)
+    output = tf.keras.layers.Reshape((M*K, 1))(decision_1)
+    for i in range(1, k):
+        input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_1, input_mod))
+        output_i = DNN_3_layer_model((2 * K * M), M, K, i)(input_pass_i)
+        x = x + output_i
+        output = tf.concat((output, x), axis=2)
+    model = Model(inputs, output)
+    return model
 
 def FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
