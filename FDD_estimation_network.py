@@ -65,7 +65,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 30th/sumrate_VS_softmax_3_times_noise=0.1_magnitude_input{}"
+    fname_template = "trained_models/Jul 30th/sumrate_VS_softmax_3_times_noise=0.1_magnitude_input_2{}"
     check = 400
     # problem Definition
     N = 1000
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     # model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Adam(0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
