@@ -928,10 +928,14 @@ def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     # x = tf.sigmoid(x)
     # ranking_output = tf.keras.layers.Reshape((k*K,))(ranking_output)
     ranking_input = tf.concat((mod_input, output), axis=1)
-    ranking_output = Dense(3 * M)(ranking_input)
+    ranking_output = Dense(M * K)(ranking_input)
+    ranking_output = LeakyReLU()(ranking_output)
+    ranking_output = Dense(M * K)(ranking_output)
     ranking_output = LeakyReLU()(ranking_output)
     ranking_output = Dense(K)(ranking_output)
     ranking_output = sigmoid(ranking_output)
+    # ranking_output = tf.tanh(tf.keras.layers.ReLU()(ranking_output))
+
     output = tf.concat((output, ranking_output), axis=1)
     model = Model(inputs, output)
     return model
