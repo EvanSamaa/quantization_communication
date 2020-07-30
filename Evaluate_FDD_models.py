@@ -50,7 +50,7 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Jul 30th/sumrate_VS_softmax_3_times_noise=0.1"
+    file = "trained_models/Jul 30th/sumrate_VS_softmax_3_times_noise=0.1_magnitude_input"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 4
+    N_rf = 3
 
     sigma2_h = 6.3
     sigma2_n = 0.1
