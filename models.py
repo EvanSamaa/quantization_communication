@@ -87,7 +87,6 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         k = tf.argmin(eu_distance, axis=2)
         output = tf.gather(self.E, k)
         return output
-
     def get_config(self):
         config = super().get_config().copy()
         config.update({
@@ -96,6 +95,24 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
             'embedding_count':self.embedding_count,
             'i':self.i,
             'name':"Closest_embedding_layer_{}".format(self.i)
+        })
+        return config
+
+
+class Hard_max_Layer(tf.keras.layers.Layer):
+    def __init__(self, i=0, **kwargs):
+        super(Hard_max_Layer, self).__init__()
+        self.i = i
+    def call(self, z, k, training=True):
+        # if training:
+        #     z = z + tf.random.normal((z.shape[1], z.shape[2]), 0, 0.01)
+        output = Harden_scheduling(k=k)(z)
+        return output
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'i':self.i,
+            'name':"Hard_max_Layer{}".format(self.i)
         })
         return config
 ############################## MLP models ##############################
@@ -838,6 +855,8 @@ def FDD_softmax_k_times(M, K, k):
     model = Model(inputs, x)
     return model
 def FDD_softmax_k_times_hard_output(M, K, k):
+    hard_max = Hard_max_Layer()
+
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
     input_mod = tf.keras.layers.Reshape((2 * K * M,))(input_mod)
@@ -845,12 +864,12 @@ def FDD_softmax_k_times_hard_output(M, K, k):
     input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
     # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
     x = DNN_3_layer_Thicc_model((3*K*M), M, K, 0)(input_pass_0)
-    x = x + tf.stop_gradient(Harden_scheduling(k=1)(x) - x)
+    x = x + tf.stop_gradient(hard_max(x, k) - x)
     for i in range(1, k):
         decision_i = x
         input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
         x = x + DNN_3_layer_model((3*K*M), M, K, i)(input_pass_i)
-        x = x + tf.stop_gradient(Harden_scheduling(k=i+1)(x) - x)
+        x = x + tf.stop_gradient(hard_max(x, k) - x)
     model = Model(inputs, x)
     return model
 def FDD_softmax_k_times_common_dnn(M, K, k):

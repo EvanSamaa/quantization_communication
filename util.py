@@ -629,7 +629,6 @@ def Sum_rate_utility_top_k_with_mask_from_ranking_prob(K, M, sigma2, k=3):
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
-
 def VAE_encoding_loss(k, l):
     def loss_fn(y_pred):
         y_pred_code = y_pred[:, k:]
@@ -700,6 +699,7 @@ class SubtractLayer_with_noise(tf.keras.layers.Layer):
       self.thre = tf.Variable(tf.constant([0.5,0.5], shape=[2,1]), trainable=True, name="threshold")
     def call(self, inputs):
       return inputs - self.thre + tf.random.normal(shape=[2, 1], mean=0, stddev=self.noise)
+
 # ========================================== MISC ==========================================
 def random_complex(shape, sigma2):
     A_R = tf.random.normal(shape, 0, sigma2, dtype=tf.float32)
