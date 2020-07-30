@@ -87,7 +87,7 @@ if __name__ == "__main__":
     model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     # model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
-    optimizer = tf.keras.optimizers.Adam(0.01)
+    optimizer = tf.keras.optimizers.Adam()
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
