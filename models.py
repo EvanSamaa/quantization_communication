@@ -98,23 +98,6 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         })
         return config
 
-
-class Hard_max_Layer(tf.keras.layers.Layer):
-    def __init__(self, i=0, **kwargs):
-        super(Hard_max_Layer, self).__init__()
-        self.i = i
-    def call(self, z, k, training=True):
-        # if training:
-        #     z = z + tf.random.normal((z.shape[1], z.shape[2]), 0, 0.01)
-        output = Harden_scheduling(k=k)(z)
-        return output
-    def get_config(self):
-        config = super().get_config().copy()
-        config.update({
-            'i':self.i,
-            'name':"Hard_max_Layer{}".format(self.i)
-        })
-        return config
 ############################## MLP models ##############################
 def create_MLP_model(input_shape, k):
     # outputs logit
@@ -864,12 +847,12 @@ def FDD_softmax_k_times_hard_output(M, K, k):
     input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
     # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
     x = DNN_3_layer_Thicc_model((3*K*M), M, K, 0)(input_pass_0)
-    x = x + tf.stop_gradient(hard_max(x, k) - x)
+    x = x + tf.stop_gradient(binary_activation(x, 0.5) - x)
     for i in range(1, k):
         decision_i = x
         input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
         x = x + DNN_3_layer_model((3*K*M), M, K, i)(input_pass_i)
-        x = x + tf.stop_gradient(hard_max(x, k) - x)
+        x = x + tf.stop_gradient(binary_activation(x, 0.5) - x)
     model = Model(inputs, x)
     return model
 def FDD_softmax_k_times_common_dnn(M, K, k):

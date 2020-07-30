@@ -652,8 +652,8 @@ def sign_relu_STE(x):
         grad_val = dy * back
         return grad_val
     return rtv, grad
-def binary_activation(x):
-    out = tf.maximum(tf.sign(x), 0)
+def binary_activation(x, shift=0):
+    out = tf.maximum(tf.sign(x-shift), 0)
     return out
 def hard_tanh(x):
     neg = tf.constant(-1, dtype=tf.float32)
