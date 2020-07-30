@@ -17,8 +17,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         ds_load = ds
 
         prediction = model(ds_load, training=False)
-        print(prediction[:, K*M:])
-        prediction = Masking_with_learned_weights_soft(K, M, sigma2_n)(prediction)
+        # print(prediction[:, K*M:])
+        # prediction = Masking_with_learned_weights_soft(K, M, sigma2_n)(prediction)
         result[1] = loss_fn2(prediction)
         prediction = Harden_scheduling(k=N_rf)(prediction)
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
@@ -50,7 +50,7 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Jul 30th/sumrate_VS_softmasking_peruser_softmax_noise=0.1_with_magnitude"
+    file = "trained_models/Jul 30th/sumrate_VS_softmax_5_times_noise=0.1_magnitude_input_on_softmax"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 10
+    N_rf = 9
 
     sigma2_h = 6.3
     sigma2_n = 0.1
