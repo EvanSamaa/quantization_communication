@@ -849,7 +849,7 @@ def FDD_softmax_k_times_hard_output(M, K, k):
     for i in range(1, k):
         decision_i = x
         input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
-        x = x + DNN_3_layer_Thicc_model((3*K*M), M, K, i)(input_pass_i)
+        x = x + DNN_3_layer_model((3*K*M), M, K, i)(input_pass_i)
         x = x + tf.stop_gradient(Harden_scheduling(k=i+1)(x) - x)
     model = Model(inputs, x)
     return model
