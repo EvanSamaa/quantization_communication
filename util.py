@@ -466,7 +466,7 @@ def Sum_rate_utility_RANKING(K, M, sigma2, k):
     def cal_sum_rate(y_pred, G):
         loss = sr(y_pred[:, :, 0], G)
         for i in range(1, int(k)):
-            loss = loss + sr(y_pred[:, i], G)
+            loss = loss + sr(y_pred[:, :, i], G)
         return loss
     return cal_sum_rate
 def Verti_sum_utility_RANKING(K, M, sigma2, k):
@@ -474,7 +474,7 @@ def Verti_sum_utility_RANKING(K, M, sigma2, k):
     def cal_sum_rate(y_pred, G):
         loss = sr(y_pred[:, :, 0], G)
         for i in range(1, int(k)):
-            loss = loss + sr(y_pred[:, i], G)
+            loss = loss + sr(y_pred[:, :, i], G)
         return loss
     return cal_sum_rate
 
