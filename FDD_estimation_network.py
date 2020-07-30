@@ -14,10 +14,10 @@ def train_step(features, labels, N=None):
         # print(tf.argmax(predictions, axis=1))
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
         # predictions = tf.concat([predictions[:, :K*M], predictions[:, K*M:K*M+K] + predictions[:, K*M+K:K*M+2*K] + predictions[:, K*M+2*K:K*M+3*K]], axis=1)
-        predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+        # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
         loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_2 = loss_object_2(predictions, features)
-        loss = loss_1 + loss_2
+        loss = loss_1 + 1*loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -28,7 +28,7 @@ def test_step(features, labels, N=None):
     # f_features = float_to_floatbits(features, complex=True)
     # predictions = model(f_features)
     predictions = model(features)
-    predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+    # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
     t_loss_1 = loss_object_1(predictions, features)
     t_loss_2 = loss_object_1(predictions, features)
     test_loss(t_loss_1)
@@ -66,7 +66,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 30th/sumrate_VS_softmasking_peruser_softmax_noise=0.1_4{}"
+    fname_template = "trained_models/Jul 30th/sumrate_VS_hard_max_3_times_noise=0.1{}"
     check = 400
     # problem Definition
     N = 1000
@@ -83,10 +83,9 @@ if __name__ == "__main__":
     np.random.seed(seed)
     loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
-    model = FDD_model_softmax(M, K, B)
-    # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
+    model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
+    # model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam()
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))

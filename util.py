@@ -329,12 +329,7 @@ def Total_activation_limit_hard(K, M, ranking=False, N_rf = 3):
         loss = tf.square(sum - N_rf)
         return loss
     return regularization
-def Harden_scheduling(K, M, sigma2, k=3):
-    stretch_matrix = np.zeros((M * K, K))
-    for i in range(0, K):
-        for j in range(0, M):
-            stretch_matrix[i * M + j, i] = 1
-    stretch_matrix = tf.constant(stretch_matrix, tf.float32)
+def Harden_scheduling(k=3, K=0, M=0, sigma2=0):
     def masking(y_pred):
         # assumes the input shape is (batch, k*M) for y_pred,
         # and the shape for G is (batch, K, N)
@@ -514,6 +509,7 @@ def Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2):
         numerator = tf.matmul(numerator, tf.ones((K, 1)))
         numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
         utility = 5*tf.math.log((numerator)/denominator + 1)/log_2
+        # utility = numerator/denominator
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
