@@ -65,7 +65,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 30th/sumrate_VS_hard_max_3_times_noise=0.1_2{}"
+    fname_template = "trained_models/Jul 30th/sumrate_VS_hard_max_beforeloss_3_times_noise=0.1{}"
     check = 400
     # problem Definition
     N = 1000
