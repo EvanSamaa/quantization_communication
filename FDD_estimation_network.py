@@ -12,8 +12,8 @@ def train_step(features, labels, N=None):
         # predictions = model(f_features)
         predictions = model(features)
         # print(tf.argmax(predictions, axis=1))
-        predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+        # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_2 = loss_object_2(predictions, features)
         loss = loss_1 + 1*loss_2
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = FDD_softmax_k_times_hard_output_with_magnitude(M, K, N_rf)
-    model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
+    # model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam(0.0001)
