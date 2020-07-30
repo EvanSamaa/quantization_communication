@@ -83,7 +83,7 @@ if __name__ == "__main__":
     loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
-    model = FDD_softmax_k_times_hard_output(M, K, N_rf)
+    model = FDD_softmax_k_times_hard_output_with_magnitude(M, K, N_rf)
     # model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     # model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
