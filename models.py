@@ -823,6 +823,20 @@ def DNN_3_layer_Thicc_model(input_shape, M, K, i=0):
     x = tf.keras.layers.Softmax()(x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
+def FDD_softmax_k_times_with_magnitude(M, K, k):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.abs(inputs)
+    input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M)), input_mod[:, :K*M]))
+    input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
+    # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
+    x = DNN_3_layer_Thicc_model((2*K*M), M, K, 0)(input_pass_0)
+    for i in range(1, k):
+        decision_i = x
+        input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
+        x = x + DNN_3_layer_Thicc_model((2*K*M), M, K, i)(input_pass_i)
+    model = Model(inputs, x)
+    return model
 def FDD_softmax_k_times(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -845,15 +859,11 @@ def FDD_softmax_k_times_hard_output(M, K, k):
     input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
     # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
     x = DNN_3_layer_Thicc_model((3*K*M), M, K, 0)(input_pass_0)
-    out = x + tf.stop_gradient(binary_activation(x, 0.5) - x)
     for i in range(1, k):
-        decision_i = x
+        decision_i = x + tf.stop_gradient(binary_activation(x, 0.5) - x)
         input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
         output_i = DNN_3_layer_model((3*K*M), M, K, i)(input_pass_i)
         x = x + output_i
-        out = out + output_i
-        out = out + tf.stop_gradient(binary_activation(out, 0.5) - out)
-
     model = Model(inputs, x)
     return model
 def FDD_softmax_k_times_common_dnn(M, K, k):
