@@ -12,7 +12,7 @@ import os
 from soft_sort.tf_ops import soft_rank
 import scipy as sp
 from generate_batch_data import generate_batch_data
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 
 # ==========================  Data gen ============================
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):

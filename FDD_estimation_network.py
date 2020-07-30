@@ -15,7 +15,7 @@ def train_step(features, labels, N=None):
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
         # predictions = tf.concat([predictions[:, :K*M], predictions[:, K*M:K*M+K] + predictions[:, K*M+K:K*M+2*K] + predictions[:, K*M+2*K:K*M+3*K]], axis=1)
         predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
-        loss_1 = loss_object_1(predictions, features, display=np.random.choice([True, False], p=[0.1, 0.9]))
+        loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_2 = loss_object_2(predictions, features)
         loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
