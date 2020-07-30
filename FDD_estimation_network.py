@@ -13,7 +13,7 @@ def train_step(features, labels, N=None):
         predictions = model(features)
         # print(tf.argmax(predictions, axis=1))
         predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+        predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
         loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_2 = loss_object_2(predictions, features)
         loss = loss_1 + 1*loss_2
@@ -27,7 +27,7 @@ def test_step(features, labels, N=None):
     # f_features = float_to_floatbits(features, complex=True)
     # predictions = model(f_features)
     predictions = model(features)
-    # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+    predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
     t_loss_1 = loss_object_1(predictions, features)
     t_loss_2 = loss_object_1(predictions, features)
     test_loss(t_loss_1)
