@@ -14,10 +14,10 @@ def train_step(features, labels, N=None):
         # print(tf.argmax(predictions, axis=1))
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
         # predictions = tf.concat([predictions[:, :K*M], predictions[:, K*M:K*M+K] + predictions[:, K*M+K:K*M+2*K] + predictions[:, K*M+2*K:K*M+3*K]], axis=1)
-        # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
-        loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
+        predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+        loss_1 = loss_object_1(predictions, features, display=np.random.choice([True, False], p=[0.1, 0.9]))
         loss_2 = loss_object_2(predictions, features)
-        loss = loss_1 + 1*loss_2
+        loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -28,13 +28,9 @@ def test_step(features, labels, N=None):
     # f_features = float_to_floatbits(features, complex=True)
     # predictions = model(f_features)
     predictions = model(features)
-    t_loss_2 = loss_object_1(predictions, features)
-    # predictions = tf.concat([predictions[:, :K * M],
-    #                          predictions[:, K * M:K * M + K] + predictions[:, K * M + K:K * M + 2 * K] + predictions[:,
-    #                                                                                                      K * M + 2 * K:K * M + 3 * K]],
-    #                         axis=1)
-    # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
+    predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
     t_loss_1 = loss_object_1(predictions, features)
+    t_loss_2 = loss_object_1(predictions, features)
     test_loss(t_loss_1)
     test_binarization_loss(t_loss_2)
 def train_step_with_annealing(features, labels, N):
@@ -70,7 +66,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 23rd/sumrate_10_softmax_noise=0.1{}"
+    fname_template = "trained_models/Jul 30th/sumrate_VS_softmasking_peruser_softmax_noise=0.1_2{}"
     check = 200
     # problem Definition
     N = 1000
@@ -78,7 +74,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 200
-    N_rf = 1
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
@@ -87,22 +83,11 @@ if __name__ == "__main__":
     np.random.seed(seed)
     loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
-    # loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis_with_constant(K, M, sigma2_n)
-    # loss_object_2 = Binarization_regularization(K, N, M, N_rf)
-    # loss_object_2 = TEMP_Pairwise_Cross_Entropy_loss(K, M, N_rf)
-    # loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, N_rf=N_rf)
-    # model = Floatbits_FDD_encoding_model_constraint_13_with_softmax(M, K, B)
-    # model = Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B, N_rf)
-    # model = Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, N_rf)
-    # model = Floatbits_FDD_encoding_model_no_constraint(M, K, B)
     model = FDD_model_softmax(M, K, B)
-    # model = FDD_model_no_constraint(M, K, B)
-    # model = FDD_softmax_k_times(M, K, N_rf)
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    # model = FDD_softmax_with_k_soft_masks(M, K, B, k=N_rf)
+    model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam()
-
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
@@ -115,7 +100,7 @@ if __name__ == "__main__":
     # training Loop
     for epoch in range(EPOCHS):
         # train_features = generate_link_channel_data(500, K, M)
-        train_features = generate_link_channel_data(5000, K, M)
+        train_features = generate_link_channel_data(500, K, M)
         # data recording features
         train_loss.reset_states()
         train_binarization_loss.reset_states()

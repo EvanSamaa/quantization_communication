@@ -731,14 +731,15 @@ def FDD_model_no_constraint(M, K, B):
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K,))
     x = reshaper(x)
-    x = Dense(M, kernel_initializer=tf.keras.initializers.he_normal())(x)
+    x = Dense(3*M, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = LeakyReLU()(x)
     x = Dense(M, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = LeakyReLU()(x)
     x = Dense(M * K, kernel_initializer=tf.keras.initializers.he_normal())(x)
     # to be removed
-    output = tf.tanh(tf.keras.layers.ReLU()(x))
-    # output = tf.sigmoid(x)
+    # output = tf.tanh(tf.keras.layers.ReLU()(x))
+    # output = leaky_hard_sigmoid(x)
+    output = sigmoid(x)
     model = Model(inputs, output)
     return model
 # def Fully_connected_Ranking_Model(M, K, k):
@@ -812,6 +813,16 @@ def DNN_3_layer_model(input_shape, M, K, i=0):
     x = tf.keras.layers.Softmax()(x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
+def DNN_3_layer_Thicc_model(input_shape, M, K, i=0):
+    inputs = Input(shape=input_shape, dtype=tf.float32)
+    x = Dense(3*M*K)(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    x = tf.keras.layers.Softmax()(x)
+    model = Model(inputs, x, name="pass_{}".format(i))
+    return model
 def FDD_softmax_k_times(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -819,11 +830,11 @@ def FDD_softmax_k_times(M, K, k):
     decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M)), input_mod[:, :K*M]))
     input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
     # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
-    x = DNN_3_layer_model((3*K*M), M, K, 0)(input_pass_0)
+    x = DNN_3_layer_Thicc_model((3*K*M), M, K, 0)(input_pass_0)
     for i in range(1, k):
         decision_i = x + tf.stop_gradient(binary_activation(x) - x)
         input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
-        x = x + DNN_3_layer_model((3*K*M), M, K, i)(input_pass_i)
+        x = x + DNN_3_layer_Thicc_model((3*K*M), M, K, i)(input_pass_i)
     model = Model(inputs, x)
     return model
 def FDD_softmax_k_times_common_dnn(M, K, k):
@@ -847,11 +858,11 @@ def FDD_model_softmax(M, K, B):
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K,))
     x = reshaper(x)
-    x = Dense(M)(x)
+    x = Dense(3*M)(x)
     x = LeakyReLU()(x)
     x = Dense(M)(x)
     x = LeakyReLU()(x)
-    x = Dense(M * K)(x)
+    x = Dense(M*K)(x)
     # to be removed
     x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
     output = tf.keras.layers.Softmax()(x_list2[0])
@@ -889,24 +900,23 @@ def FDD_softmax_with_soft_mask(M, K, B, k=3):
     model = Model(inputs, output)
     print(model.summary())
     return model
-def FDD_softmax_with_k_soft_masks(M, K, B, k=3):
+def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     mod_input = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
     # create input vector
     reshaper = tf.keras.layers.Reshape((2 * M * K,))
     mod_input = reshaper(mod_input)
     # normalize
-    mean = tf.expand_dims(tf.reduce_mean(mod_input, axis=1), 1)
-    std = tf.expand_dims(tf.math.reduce_std(mod_input, axis=1), 1)
-    x = (mod_input - mean)/std
-    x = tf.keras.layers.Reshape((x.shape[1],))(x)
+    # mean = tf.expand_dims(tf.reduce_mean(mod_input, axis=1), 1)
+    # std = tf.expand_dims(tf.math.reduce_std(mod_input, axis=1), 1)
+    # x = (mod_input - mean)/std
+    # x = tf.keras.layers.Reshape((x.shape[1],))(x)
     # model starts
-    x = Dense(M)(x)
+    x = Dense(3*M)(mod_input)
     x = LeakyReLU()(x)
     x = Dense(M)(x)
     x = LeakyReLU()(x)
     x = Dense(M*K)(x)
-    ranking_output = DNN_Ranking_model(2*M, K, k, sum_all=True)(mod_input)
     # ranking_output = Dense(50)(x)
     # ranking_output = Dense(20)(ranking_output)
     # ranking_output = Dense(k)(ranking_output)
@@ -917,6 +927,11 @@ def FDD_softmax_with_k_soft_masks(M, K, B, k=3):
     # yep
     # x = tf.sigmoid(x)
     # ranking_output = tf.keras.layers.Reshape((k*K,))(ranking_output)
+    ranking_input = tf.concat((mod_input, output), axis=1)
+    ranking_output = Dense(3 * M)(ranking_input)
+    ranking_output = LeakyReLU()(ranking_output)
+    ranking_output = Dense(K)(ranking_output)
+    ranking_output = sigmoid(ranking_output)
     output = tf.concat((output, ranking_output), axis=1)
     model = Model(inputs, output)
     return model
