@@ -838,8 +838,6 @@ def FDD_softmax_k_times(M, K, k):
     model = Model(inputs, x)
     return model
 def FDD_softmax_k_times_hard_output(M, K, k):
-    hard_max = Hard_max_Layer()
-
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
     input_mod = tf.keras.layers.Reshape((2 * K * M,))(input_mod)
