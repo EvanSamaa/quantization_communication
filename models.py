@@ -947,9 +947,9 @@ def FDD_softmax_with_soft_mask(M, K, B, k=3):
     return model
 def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
-    mod_input = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    mod_input = tf.abs(inputs)
     # create input vector
-    reshaper = tf.keras.layers.Reshape((2 * M * K,))
+    reshaper = tf.keras.layers.Reshape((M * K,))
     mod_input = reshaper(mod_input)
     # normalize
     # mean = tf.expand_dims(tf.reduce_mean(mod_input, axis=1), 1)
@@ -974,6 +974,8 @@ def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     # ranking_output = tf.keras.layers.Reshape((k*K,))(ranking_output)
     ranking_input = tf.concat((mod_input, x), axis=1)
     ranking_output = Dense(M * K)(ranking_input)
+    ranking_output = LeakyReLU()(ranking_output)
+    ranking_output = Dense(M)(ranking_output)
     ranking_output = LeakyReLU()(ranking_output)
     ranking_output = Dense(K)(ranking_output)
     ranking_output = sigmoid(ranking_output)
