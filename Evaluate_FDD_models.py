@@ -18,9 +18,9 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
 
         prediction = model(ds_load, training=False)
         print(prediction[:, K*M:])
-        # prediction = Masking_with_learned_weights_soft(K, M, sigma2_n)(prediction)
+        prediction = Masking_with_learned_weights_soft(K, M, sigma2_n)(prediction)
         result[1] = loss_fn2(prediction)
-        # prediction = Harden_scheduling(k=N_rf)(prediction)
+        prediction = Harden_scheduling(k=N_rf)(prediction)
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
 
         print(result)
@@ -50,7 +50,7 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Jul 30th/sumrate_VS_softmax_5_times_noise=0.1_magnitude_input"
+    file = "trained_models/Jul 30th/sumrate_VS_softmasking_peruser_softmax_noise=0.1_with_magnitude"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
@@ -58,14 +58,14 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 5
+    N_rf = 10
 
     sigma2_h = 6.3
     sigma2_n = 0.1
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     training_data = np.load(training_data_path)
-    plot_data(training_data, 0)
+    # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path)
     print(model.summary())
     test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
