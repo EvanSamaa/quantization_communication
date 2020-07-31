@@ -103,7 +103,7 @@ if __name__ == "__main__":
     # training Loop
     for epoch in range(EPOCHS):
         # train_features = generate_link_channel_data(500, K, M)
-        train_features = generate_link_channel_data(500, K, M)
+        train_features = generate_link_channel_data(5000, K, M)
         # data recording features
         train_loss.reset_states()
         train_binarization_loss.reset_states()
