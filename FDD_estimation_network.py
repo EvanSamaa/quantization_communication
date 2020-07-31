@@ -64,7 +64,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 30th/sumrate_VS_ranked_softmax_5_times_noise=0.1_magnitude_input_with_reg{}"
+    fname_template = "trained_models/Jul 30th/sumrate_VS_ranked_LSTM_5_times_noise=0.1_magnitude_input{}"
     check = 400
     # problem Definition
     N = 1000
@@ -87,7 +87,8 @@ if __name__ == "__main__":
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = FDD_softmax_k_times_hard_output_with_magnitude(M, K, N_rf)
     # model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
-    model = FDD_ranked_softmax_common_DNN(M, K, N_rf)
+    # model = FDD_ranked_softmax_common_DNN(M, K, N_rf)
+    model = FDD_ranked_LSTM_softmax(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     # model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam(0.0001)
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     # training Loop
     for epoch in range(EPOCHS):
         # train_features = generate_link_channel_data(500, K, M)
-        train_features = generate_link_channel_data(5000, K, M)
+        train_features = generate_link_channel_data(500, K, M)
         # data recording features
         train_loss.reset_states()
         train_binarization_loss.reset_states()
