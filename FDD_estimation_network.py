@@ -14,7 +14,8 @@ def train_step(features, labels, N=None):
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
-        loss = loss_1 + 1*loss_2
+        loss_3 = loss_object_3(predictions)
+        loss = loss_1 + 1*loss_2 + loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -63,7 +64,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 30th/sumrate_VS_ranked_softmax_5_times_noise=0.1_magnitude_input{}"
+    fname_template = "trained_models/Jul 30th/sumrate_VS_ranked_softmax_5_times_noise=0.1_magnitude_input_with_reg{}"
     check = 400
     # problem Definition
     N = 1000
@@ -82,6 +83,7 @@ if __name__ == "__main__":
     loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     # loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     loss_object_2 = Verti_sum_utility_RANKING(K, M, sigma2_n, N_rf)
+    loss_object_3 = Binarization_regularization(K, N, M)
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = FDD_softmax_k_times_hard_output_with_magnitude(M, K, N_rf)
     # model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
