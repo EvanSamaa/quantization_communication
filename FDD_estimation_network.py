@@ -83,7 +83,7 @@ if __name__ == "__main__":
     loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     # loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     loss_object_2 = Verti_sum_utility_RANKING(K, M, sigma2_n, N_rf)
-    loss_object_3 = Binarization_regularization(K, N, M)
+    loss_object_3 = Binarization_regularization(K, N, M, N_rf)
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = FDD_softmax_k_times_hard_output_with_magnitude(M, K, N_rf)
     # model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)

@@ -293,12 +293,13 @@ def Negative_shove():
         return -loss
     return negative_shove
 
-def Binarization_regularization(K, N, M, ranking=False):
+def Binarization_regularization(K, N, M, k, ranking=False):
     def regularization(y_pred):
         y_pred_mod = y_pred
         if ranking:
             y_pred_mod = y_pred[:, :K*M]
-        loss = -1/(K*N*M)*tf.reduce_sum(tf.square(2*y_pred_mod - 1))
+        loss = tf.minimum(tf.square(y_pred_mod-1), tf.square(y_pred_mod))
+        loss = tf.reduce_mean(loss)
         return loss
     return regularization
 def Output_Per_Receiver_Control(K, M, ranking=False):
