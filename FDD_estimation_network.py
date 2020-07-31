@@ -110,7 +110,6 @@ if __name__ == "__main__":
         train_VS.reset_states()
         test_binarization_loss.reset_states()
         train_step(features=train_features, labels=None)
-        test_step(features=train_features, labels=None)
         template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Test binarization_lost: {}'
         print(template.format(epoch + 1,
                               train_loss.result(),
