@@ -461,7 +461,7 @@ def Sum_rate_utility_WeiCui(K, M, sigma2):
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
-def Sum_rate_utility_RANKING(K, M, sigma2, k, display_all=False):
+def Sum_rate_utility_RANKING_hard(K, M, sigma2, k, display_all=False):
     sr = Sum_rate_utility_WeiCui(K, M, sigma2)
     def cal_sum_rate(y_pred, G):
         loss = sr(Harden_scheduling(1)(y_pred[:, :, 0]), G)
@@ -472,7 +472,19 @@ def Sum_rate_utility_RANKING(K, M, sigma2, k, display_all=False):
             loss = loss + rate
             if display_all:
                 print(tf.reduce_mean(rate))
-
+        return loss
+    return cal_sum_rate
+def Sum_rate_utility_RANKING(K, M, sigma2, k, display_all=False):
+    sr = Sum_rate_utility_WeiCui(K, M, sigma2)
+    def cal_sum_rate(y_pred, G):
+        loss = sr(y_pred[:, :, 0], G)
+        if display_all:
+            print(tf.reduce_mean(loss))
+        for i in range(1, int(k)):
+            rate = sr(y_pred[:, :, i], G)
+            loss = loss + rate
+            if display_all:
+                print(tf.reduce_mean(rate))
         return loss
     return cal_sum_rate
 def Verti_sum_utility_RANKING(K, M, sigma2, k):
