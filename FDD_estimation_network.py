@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
     # model = FDD_softmax_k_times_hard_output_with_magnitude(M, K, N_rf)
     # model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
-    model = FDD_ranked_softmax(M, K, N_rf)
+    model = FDD_ranked_softmax_common_DNN(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     # model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam(0.0001)

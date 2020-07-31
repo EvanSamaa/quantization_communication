@@ -6,9 +6,9 @@ from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
     result = np.zeros((3, ))
-    # loss_fn1 = Sum_rate_utility_RANKING(K, M, sigma2_n)
-    loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
-    loss_fn2 = Binarization_regularization(K, 1000, M)
+    loss_fn1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf, True)
+    # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
+    loss_fn2 = Binarization_regularization(K, 1000, M, k=N_rf)
     tf.random.set_seed(80)
     print("Testing Starts")
     for e in range(0, 1):
@@ -52,7 +52,7 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Jul 30th/sumrate_VS_ranked_hardmax_5_times_noise=0.1_magnitude_input"
+    file = "trained_models/Jul 30th/sumrate_VS_ranked_softmax_5_times_noise=0.1_magnitude_input_with_reg"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
