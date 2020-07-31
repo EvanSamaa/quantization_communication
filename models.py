@@ -912,9 +912,43 @@ def FDD_ranked_softmax(M, K, k):
         output = tf.concat((output, tf.keras.layers.Reshape((decision_i.shape[1],1))(decision_i)), axis=2)
     model = Model(inputs, output)
     return model
+def FDD_ranked_softmax(M, K, k):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.abs(inputs)
+    input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K * M)), input_mod[:, :K * M]))
+    input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
+    decision_i = DNN_3_layer_model((2*K*M), M, K, 0)(input_pass_0)
+    output = tf.keras.layers.Reshape((M*K, 1))(decision_i)
+    for i in range(1, k):
+        input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
+        input_pass_i = input_pass_i + tf.stop_gradient(binary_activation(input_pass_i, 0.5) - input_pass_i)
+        output_i = DNN_3_layer_model((2 * K * M), M, K, i)(input_pass_i)
+        decision_i = decision_i + output_i
+        output = tf.concat((output, tf.keras.layers.Reshape((decision_i.shape[1],1))(decision_i)), axis=2)
+    model = Model(inputs, output)
+    return model
+def FDD_ranked_softmax_state_change(M, K, k):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.abs(inputs)
+    input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K * M)), input_mod[:, :K * M]))
+    input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
+    decision_i = DNN_3_layer_model((2*K*M), M, K, 0)(input_pass_0)
+    output = tf.keras.layers.Reshape((M*K, 1))(decision_i)
+    input_mod = input_mod * tf.subtract(tf.ones((M*K, )), decision_i)
+    for i in range(1, k):
+        input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
+        input_pass_i = input_pass_i + tf.stop_gradient(binary_activation(input_pass_i, 0.5) - input_pass_i)
+        output_i = DNN_3_layer_model((2 * K * M), M, K, i)(input_pass_i)
+        decision_i = decision_i + output_i
+        output = tf.concat((output, tf.keras.layers.Reshape((decision_i.shape[1],1))(decision_i)), axis=2)
+        input_mod = input_mod *  tf.subtract(tf.ones((M * K,)), decision_i)
+    model = Model(inputs, output)
+    return model
 def FDD_ranked_LSTM_softmax(M, K, k):
     lstm_model = tf.keras.layers.LSTMCell(M*K)
-    interpreter = DNN_3_layer_model((M,), M, K)
+    interpreter = DNN_3_layer_model((M*K,), M, K)
     # state_reshaper = tf.keras.layers.Reshape((1, M))
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
