@@ -813,6 +813,16 @@ def DNN_3_layer_model(input_shape, M, K, i=0):
     x = tf.keras.layers.Softmax()(x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
+def DNN_3_layer_model_harder_softmax(input_shape, M, K, i=0):
+    inputs = Input(shape=input_shape, dtype=tf.float32)
+    x = Dense(3*M)(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(M)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    x = tf.keras.layers.Softmax()(10*x)
+    model = Model(inputs, x, name="pass_{}".format(i))
+    return model
 def DNN_3_layer_Thicc_model(input_shape, M, K, i=0):
     inputs = Input(shape=input_shape, dtype=tf.float32)
     x = Dense(3*M*K)(inputs)
@@ -912,21 +922,19 @@ def FDD_ranked_softmax(M, K, k):
         output = tf.concat((output, tf.keras.layers.Reshape((decision_i.shape[1],1))(decision_i)), axis=2)
     model = Model(inputs, output)
     return model
-def FDD_ranked_softmax(M, K, k):
+def FDD_harder_softmax_k_times(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
     input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
-    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K * M)), input_mod[:, :K * M]))
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M)), input_mod[:, :K*M]))
     input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
-    decision_i = DNN_3_layer_model((2*K*M), M, K, 0)(input_pass_0)
-    output = tf.keras.layers.Reshape((M*K, 1))(decision_i)
+    # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
+    x = DNN_3_layer_model_harder_softmax((2*K*M), M, K, 0)(input_pass_0)
     for i in range(1, k):
+        decision_i = x
         input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
-        input_pass_i = input_pass_i + tf.stop_gradient(binary_activation(input_pass_i, 0.5) - input_pass_i)
-        output_i = DNN_3_layer_model((2 * K * M), M, K, i)(input_pass_i)
-        decision_i = decision_i + output_i
-        output = tf.concat((output, tf.keras.layers.Reshape((decision_i.shape[1],1))(decision_i)), axis=2)
-    model = Model(inputs, output)
+        x = x + DNN_3_layer_model_harder_softmax((2*K*M), M, K, i)(input_pass_i)
+    model = Model(inputs, x)
     return model
 def FDD_ranked_softmax_state_change(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
