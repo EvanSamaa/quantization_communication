@@ -19,7 +19,8 @@ def train_step(features, labels, N=None):
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
-    train_binarization_loss(loss_2)
+    train_binarization_loss(loss_3)
+    train_VS(loss_2)
 def test_step(features, labels, N=None):
     if N != None:
         return test_step_with_annealing(features, labels, N)
@@ -29,7 +30,6 @@ def test_step(features, labels, N=None):
     # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
     t_loss_1 = loss_object_1(predictions, features)
     t_loss_2 = loss_object_1(predictions, features)
-    test_loss(t_loss_1)
     test_binarization_loss(t_loss_2)
 def train_step_with_annealing(features, labels, N):
     # features_mod = tf.ones((features.shape[0], 1)) * N
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_binarization_loss = tf.keras.metrics.Mean(name='train_loss')
-    test_loss = tf.keras.metrics.Mean(name='test_loss')
+    train_VS = tf.keras.metrics.Mean(name='test_loss')
     test_binarization_loss = tf.keras.metrics.Mean(name='train_loss')
     # begin setting up training loop
     max_acc = 10000
@@ -107,19 +107,19 @@ if __name__ == "__main__":
         # data recording features
         train_loss.reset_states()
         train_binarization_loss.reset_states()
-        test_loss.reset_states()
+        train_VS.reset_states()
         test_binarization_loss.reset_states()
         train_step(features=train_features, labels=None)
         test_step(features=train_features, labels=None)
-        template = 'Epoch {}, Loss: {}, binarization_lost:{}, Test Loss: {}, Test binarization_lost: {}'
+        template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Test binarization_lost: {}'
         print(template.format(epoch + 1,
                               train_loss.result(),
                               train_binarization_loss.result(),
-                              test_loss.result(),
+                              train_VS.result(),
                               test_binarization_loss.result()))
         graphing_data[epoch, 0] = train_loss.result()
         graphing_data[epoch, 1] = train_binarization_loss.result()
-        graphing_data[epoch, 2] = test_loss.result()
+        graphing_data[epoch, 2] = train_VS.result()
         graphing_data[epoch, 3] = test_binarization_loss.result()
         if train_loss.result() < max_acc:
             model.save(fname_template.format(".h5"))
