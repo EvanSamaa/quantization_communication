@@ -119,7 +119,7 @@ if __name__ == "__main__":
         train_VS.reset_states()
         test_binarization_loss.reset_states()
         # ======== ======== training step ======== ========
-        if epoch <= 3000:
+        if epoch <= 1000:
             train_ds = generate_supervised_link_channel_data(500, K, M, N_rf)
             for features, labels in train_ds:
                 train_step(features, labels, 0)
