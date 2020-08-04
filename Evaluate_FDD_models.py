@@ -6,7 +6,8 @@ from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
     result = np.zeros((3, ))
-    loss_fn1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf, True)
+    # loss_fn1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf, True)
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     loss_fn2 = Binarization_regularization(K, 1000, M, k=N_rf)
     tf.random.set_seed(80)
@@ -17,17 +18,17 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds_load = float_to_floatbits(ds, complex=True)
         ds_load = ds
 
-        prediction = model(ds_load, training=False)
-        print(prediction.shape)
+        prediction = model(ds_load)
         # print(prediction[:, K*M:])
         # prediction = Masking_with_learned_weights_soft(K, M, sigma2_n)(prediction)
-        # prediction = Harden_scheduling(k=N_rf)(prediction)
+        prediction = prediction[:, :, N_rf-1]
+        prediction = Harden_scheduling(k=N_rf)(prediction)
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
         result[1] = loss_fn2(prediction)
         print(result)
         # ========= ========= =========  plotting ========= ========= =========
         ds = tf.square(tf.abs(ds))
-        prediction = prediction[:, :, 2]
+        # prediction = prediction[:, :, 2]
         unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
         unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
         denominator = tf.matmul(ds, unflattened_X)
@@ -52,7 +53,7 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Jul 30th/sumrate_VS_ranked_softmax_3_times_noise=0.1_magnitude_input"
+    file = "trained_models/Jul 30th/sumrate_VS_ranked_hardmax_5_times_noise=0.1_magnitude_input"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
@@ -60,14 +61,15 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 5
+    N_rf = 2
 
     sigma2_h = 6.3
     sigma2_n = 0.1
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    training_data = np.load(training_data_path)
+    # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path)
-    print(model.summary())
+    # model = top_N_rf_user_model(M, K, N_rf)
+    # print(model.summary())
     test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)

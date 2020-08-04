@@ -6,11 +6,20 @@ import scipy as sp
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None):
     if N != None:
-        return train_step_with_annealing(features, labels, N)
+        with tf.GradientTape() as tape:
+            predictions = model(features)
+            predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
+            loss = supervised_loss(predictions, labels)
+        gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        train_loss(loss_object_1(predictions, features))
+        # train_binarization_loss(loss_3)
+        return
     with tf.GradientTape() as tape:
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
         predictions = model(features)
+        predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
@@ -63,7 +72,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Jul 30th/sumrate_VS_harder_softmax_1_times_noise=0.1{}"
+    fname_template = "trained_models/Aug 3rd/supervised_first{}"
     check = 400
     # problem Definition
     N = 1000
@@ -78,6 +87,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     tf.random.set_seed(seed)
     np.random.seed(seed)
+    supervised_loss = tf.keras.losses.CategoricalCrossentropy()
     loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
@@ -89,9 +99,9 @@ if __name__ == "__main__":
     # model = FDD_ranked_softmax_common_DNN(M, K, N_rf)
     # model = FDD_ranked_LSTM_softmax(M, K, N_rf)
     # model = FDD_ranked_softmax_state_change(M, K, N_rf)
-    model = FDD_harder_softmax_k_times(M, K, N_rf)
+    # model = FDD_harder_softmax_k_times(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    # model = FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=N_rf)
+    model = FDD_softmax_with_soft_mask(M, K, B, k=N_rf)
     optimizer = tf.keras.optimizers.Adam(0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
@@ -101,17 +111,22 @@ if __name__ == "__main__":
     test_binarization_loss = tf.keras.metrics.Mean(name='train_loss')
     # begin setting up training loop
     max_acc = 10000
-    test_ds = generate_link_channel_data(100, K, M)
     # training Loop
     for epoch in range(EPOCHS):
-        # train_features = generate_link_channel_data(500, K, M)
-        train_features = generate_link_channel_data(500, K, M)
-        # data recording features
+        # ======== ======== data recording features ======== ========
         train_loss.reset_states()
         train_binarization_loss.reset_states()
         train_VS.reset_states()
         test_binarization_loss.reset_states()
-        train_step(features=train_features, labels=None)
+        # ======== ======== training step ======== ========
+        if epoch <= 3000:
+            train_ds = generate_supervised_link_channel_data(500, K, M, N_rf)
+            for features, labels in train_ds:
+                train_step(features, labels, 0)
+        else:
+            train_features = generate_link_channel_data(500, K, M)
+            train_step(features, None)
+        # train_step(features=train_features, labels=None)
         template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Test binarization_lost: {}'
         print(template.format(epoch + 1,
                               train_loss.result(),

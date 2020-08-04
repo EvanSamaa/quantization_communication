@@ -14,7 +14,7 @@ import scipy as sp
 from generate_batch_data import generate_batch_data
 # from matplotlib import pyplot as plt
 
-# ==========================  Data gen ============================
+# ==========================  Data gen ============================s
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 2  # Number of Paths
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
@@ -31,6 +31,11 @@ def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
                        tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32))
     G_hat = G + noise
     return G_hat
+def generate_supervised_link_channel_data(N, K, M, N_rf, sigma2_h=0.1, sigma2_n=0.1):
+    G_hat = generate_link_channel_data(N, K, M, sigma2_h, sigma2_n)
+    exstimated_result = top_N_rf_user_model(M, K, N_rf)(G_hat)
+    dataset = Dataset.from_tensor_slices((G_hat, exstimated_result)).batch(N)
+    return dataset
 def gen_data(N, k, low=0, high=1, batchsize=30):
     channel_data = tf.random.uniform((N,k,1), low, high)
     channel_label = tf.math.argmax(channel_data, axis=1)
@@ -292,6 +297,10 @@ def Negative_shove():
         loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(values[:,1], y_pred)
         return -loss
     return negative_shove
+def CE_with_distribution():
+    loss_fn = tf.keras.losses.CategoricalCrossentropy
+    def loss(prediction, label):
+        return loss_fn(prediction, label)
 
 def Binarization_regularization(K, N, M, k, ranking=False):
     def regularization(y_pred):
@@ -883,12 +892,28 @@ def generate_binary_encoding(dim):
         encoding_space[:, dim-i-1] = num_range%2
         num_range = np.floor(num_range/2)
     return tf.constant(encoding_space, dtype=tf.float32)
+def top_N_rf_user_model(M, K, N_rf):
+    def model(G):
+        G = tf.reshape(G, (G.shape[0], M*K))
+        G_flat = tf.square(tf.abs(G)).numpy()
+        out = np.zeros(G_flat.shape)
+        for i in range(0, K):
+            max = np.argmax(G_flat[:, M*i:M*(i+1)], axis=1)
+            out[:, M*i+max] = 1
+        G_with_precoder = out * G_flat
+        out_2 = np.zeros(out.shape)
+        values, index = tf.math.top_k(G_with_precoder, k=N_rf)
+        for i in range(0, G_with_precoder.shape[0]):
+            out_2[i, index[i]] = 1
+        return tf.constant(out_2, dtype=tf.float32)
+    return model
 if __name__ == "__main__":
-    N = 5
+    N = 500
     M = 20
     K = 5
     B = 5
     sigma2 = 0
+    generate_supervised_link_channel_data(N, K, M, 3)
     generate_link_channel_data(N, K, M)
     nChoosek_bits(4, 2)
     # model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)

@@ -748,16 +748,16 @@ def FDD_model_no_constraint(M, K, B):
 #     x = Dense(M*K)
 def DNN_Ranking_NN_submodule(M, K, k, inputshape):
     inputs = Input(inputshape)
-    x = Dense(M*K)(inputs)
+    x = Dense(M*K*K)(inputs)
     x = Dense(2*M*K)(x)
     x = Dense(M*K)(x)
     x = Dense(K)(x)
     x = tf.keras.layers.Softmax()(x)
     dnn_model = Model(inputs, x, name="dnn_softmax_network")
     return dnn_model
-def DNN_Ranking_model(M, K, k, sum_all = False):
-    inputs = Input((M*K, ))
-    dnn = DNN_Ranking_NN_submodule(M, K, k, (M*K))
+def DNN_Ranking_model(input_shape, M, K, k, sum_all = False):
+    inputs = Input(input_shape)
+    dnn = DNN_Ranking_NN_submodule(M, K, k, input_shape)
     stretch_matrix = np.zeros((M * K, K))
     for i in range(0, K):
         for j in range(0, M):
@@ -995,7 +995,6 @@ def FDD_ranked_softmax_common_DNN(M, K, k):
         output = tf.concat((output, tf.keras.layers.Reshape((decision_i.shape[1],1))(decision_i)), axis=2)
     model = Model(inputs, output)
     return model
-
 def FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1018,22 +1017,24 @@ def FDD_model_softmax(M, K, B):
     return model
 def FDD_softmax_with_soft_mask(M, K, B, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
-    x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    # input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
+    input_mod = tf.abs(inputs)
     # create input vector
-    reshaper = tf.keras.layers.Reshape((2 * M * K,))
-    x = reshaper(x)
+    reshaper = tf.keras.layers.Reshape((M * K,))
+    input_mod = reshaper(input_mod)
     # normalize
-    mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
-    std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
-    x = (x - mean)/std
-    x = tf.keras.layers.Reshape((x.shape[1],))(x)
+    # mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
+    # std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
+    # x = (input_mod - mean)/std
+    # x = tf.keras.layers.Reshape((x.shape[1],))(x)
     # model starts
-    x = Dense(M)(x)
-    x = LeakyReLU()(x)
-    x = Dense(M)(x)
+    x = Dense(M*K*K)(input_mod)
     x = LeakyReLU()(x)
     x = Dense(M*K)(x)
-    ranking_output = LSTM_Ranking_model(M, K, k)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M*K)(x)
+    # ranking_output = LSTM_Ranking_model(M, K, k)(x)
+    ranking_output = DNN_Ranking_model((M*K*2, ), M, K, k, True)(tf.concat((x, input_mod), axis = 1))
     x_list2 = tf.split(x, num_or_size_splits=K, axis=1)
     output = tf.keras.layers.Softmax()(x_list2[0])
     for i in range(1, len(x_list2)):
@@ -1107,10 +1108,13 @@ if __name__ == "__main__":
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
     # print(Thresholdin_network((2, )).summary())
     # DiscreteVAE(2, 4, (2,))
+
     N = 1000
-    M = 20
-    K = 10
+    M = 6
+    K = 4
     B = 10
     seed = 200
     N_rf = 3
-    model = FDD_with_CNN(M, K, N_rf)
+    G = np.random.normal(0, 1, (1, K, M))
+    top_N_rf_user_model(M, K, N_rf)(G)
+    # model = FDD_with_CNN(M, K, N_rf)
