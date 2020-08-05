@@ -85,7 +85,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug 3rd/supervised_first_then_rounding{}"
+    fname_template = "trained_models/Aug 3rd/supervised_first_then_rounding_N_rf=4{}"
     check = 500
     SUPERVISE_TIME = 1500
     training_mode = 2
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     # model = FDD_ranked_softmax_state_change(M, K, N_rf)
     # model = FDD_harder_softmax_k_times(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    model = FDD_softmax_k_times_with_magnitude(M, K, k=N_rf)
+    model = FDD_softmax_k_times_with_magnitude_rounded(M, K, k=N_rf)
     optimizer = tf.keras.optimizers.Adam(0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))

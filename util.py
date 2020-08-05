@@ -16,7 +16,7 @@ from generate_batch_data import generate_batch_data
 
 # ==========================  Data gen ============================s
 def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
-    Lp = 1  # Number of Paths
+    Lp = 2  # Number of Paths
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
     P = tf.expand_dims(P, 0)
     P = tf.tile(P, (N, 1, 1))
