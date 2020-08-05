@@ -768,7 +768,7 @@ def DNN_Ranking_model(input_shape, M, K, k, sum_all = False):
         # tiled_stretch_matrix = tf.tile(tf.expand_dims(stretch_matrix, 0), [1, 1, 1])
         stretched_rank_matrix = tf.matmul(stretch_matrix, tf.keras.layers.Reshape((output.shape[1], 1))(output))
         stretched_rank_matrix = tf.keras.layers.Reshape((stretched_rank_matrix.shape[1], ))(stretched_rank_matrix)
-        output = output + dnn(tf.multiply(1-stretched_rank_matrix, inputs))
+        output = output + dnn(tf.multiply(stretched_rank_matrix, inputs))
     model = Model(inputs, output, name="dnn_ranking_module")
     return model
 def FDD_with_CNN(M, K, N_rf):

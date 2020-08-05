@@ -5,21 +5,33 @@ import numpy as np
 import scipy as sp
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None):
-    if N != None:
+    if N == 0:
         with tf.GradientTape() as tape:
             predictions = model(features)
-            predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
+            # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
             loss = supervised_loss(predictions, labels)
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         train_loss(loss_object_1(predictions, features))
         # train_binarization_loss(loss_3)
         return
+    elif N == 1:
+        with tf.GradientTape() as tape:
+            predictions = model(features)
+            # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
+            loss_1 = supervised_loss(predictions, Harden_scheduling(k=N_rf)(predictions))
+            loss_2 = loss_object_1(predictions + tf.stop_gradient(
+                Harden_scheduling(k=N_rf)(predictions) - predictions) , features)
+            loss = loss_1 + loss_2
+        gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        train_loss(loss_object_1(predictions, features))
+        return
     with tf.GradientTape() as tape:
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
         predictions = model(features)
-        predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
+        # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
@@ -29,6 +41,7 @@ def train_step(features, labels, N=None):
     train_loss(loss_1)
     # train_binarization_loss(loss_3)
     train_VS(loss_2)
+    train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
 def test_step(features, labels, N=None):
     if N != None:
         return test_step_with_annealing(features, labels, N)
@@ -72,15 +85,18 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug 3rd/supervised_first{}"
+    fname_template = "trained_models/Aug 3rd/supervised_first_min_hard_val{}"
     check = 400
+    SUPERVISE_TIME = 500
+    training_mode = 2
+    swap_delay = check/2
     # problem Definition
     N = 1000
     M = 40
     K = 10
     B = 10
     seed = 200
-    N_rf = 1
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
@@ -101,14 +117,14 @@ if __name__ == "__main__":
     # model = FDD_ranked_softmax_state_change(M, K, N_rf)
     # model = FDD_harder_softmax_k_times(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    model = FDD_softmax_with_soft_mask(M, K, B, k=N_rf)
+    model = FDD_softmax_k_times(M, K, k=N_rf)
     optimizer = tf.keras.optimizers.Adam(0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_binarization_loss = tf.keras.metrics.Mean(name='train_loss')
     train_VS = tf.keras.metrics.Mean(name='test_loss')
-    test_binarization_loss = tf.keras.metrics.Mean(name='train_loss')
+    train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
     # begin setting up training loop
     max_acc = 10000
     # training Loop
@@ -117,26 +133,30 @@ if __name__ == "__main__":
         train_loss.reset_states()
         train_binarization_loss.reset_states()
         train_VS.reset_states()
-        test_binarization_loss.reset_states()
+        train_hard_loss.reset_states()
         # ======== ======== training step ======== ========
-        if epoch <= 1000:
+        if epoch <= SUPERVISE_TIME:
             train_ds = generate_supervised_link_channel_data(500, K, M, N_rf)
             for features, labels in train_ds:
                 train_step(features, labels, 0)
         else:
+            if epoch % swap_delay == 0 and epoch % swap_delay*2 != 0 and training_mode == 1:
+                training_mode = 2
+            elif epoch % swap_delay*2 == 0 and training_mode == 2:
+                training_mode = 1
             train_features = generate_link_channel_data(500, K, M)
-            train_step(features, None)
+            train_step(features, None, training_mode)
         # train_step(features=train_features, labels=None)
-        template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Test binarization_lost: {}'
+        template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
         print(template.format(epoch + 1,
                               train_loss.result(),
                               train_binarization_loss.result(),
                               train_VS.result(),
-                              test_binarization_loss.result()))
+                              train_hard_loss.result()))
         graphing_data[epoch, 0] = train_loss.result()
         graphing_data[epoch, 1] = train_binarization_loss.result()
         graphing_data[epoch, 2] = train_VS.result()
-        graphing_data[epoch, 3] = test_binarization_loss.result()
+        graphing_data[epoch, 3] = train_hard_loss.result()
         if train_loss.result() < max_acc:
             model.save(fname_template.format(".h5"))
             max_acc = train_loss.result()
