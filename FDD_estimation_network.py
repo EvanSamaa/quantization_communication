@@ -144,7 +144,7 @@ if __name__ == "__main__":
         else:
             if epoch % swap_delay == 0 and epoch % (swap_delay*2) != 0 and training_mode == 1:
                 training_mode = 2
-            elif epoch % (swap_delay*2)s == 0 and training_mode == 2:
+            elif epoch % (swap_delay*2) == 0 and training_mode == 2:
                 training_mode = 1
             train_features = generate_link_channel_data(500, K, M)
             train_step(features, None, training_mode)
