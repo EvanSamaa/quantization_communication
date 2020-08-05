@@ -85,9 +85,9 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug 3rd/supervised_first_min_hard_val_N_rf=4{}"
+    fname_template = "trained_models/Aug 3rd/supervised_first_then_with_rounding{}"
     check = 500
-    SUPERVISE_TIME = 1000
+    SUPERVISE_TIME = 2000
     training_mode = 2
     swap_delay = check/2
     # problem Definition
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 200
-    N_rf = 4
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     # model = FDD_ranked_softmax_state_change(M, K, N_rf)
     # model = FDD_harder_softmax_k_times(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    model = FDD_softmax_k_times(M, K, k=N_rf)
+    model = FDD_softmax_k_times_with_magnitude_rounded(M, K, k=N_rf)
     optimizer = tf.keras.optimizers.Adam(0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
@@ -136,7 +136,7 @@ if __name__ == "__main__":
         train_hard_loss.reset_states()
         # ======== ======== training step ======== ========
         if epoch <= SUPERVISE_TIME:
-            train_ds = generate_supervised_link_channel_data(500, K, M, N_rf)
+            train_ds = generate_supervised_link_channel_data(N, K, M, N_rf)
             for features, labels in train_ds:
                 train_step(features, labels, 0)
         else:
@@ -144,7 +144,7 @@ if __name__ == "__main__":
                 training_mode = 2
             elif epoch % (swap_delay*2) == 0 and training_mode == 2:
                 training_mode = 1
-            train_features = generate_link_channel_data(500, K, M)
+            train_features = generate_link_channel_data(N, K, M)
             train_step(train_features, None, training_mode)
         # train_step(features=train_features, labels=None)
         template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
