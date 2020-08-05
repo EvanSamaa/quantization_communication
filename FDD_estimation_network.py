@@ -140,10 +140,10 @@ if __name__ == "__main__":
             for features, labels in train_ds:
                 train_step(features, labels, 0)
         else:
-            if epoch % swap_delay == 0 and epoch % (swap_delay*2) != 0 and training_mode == 1:
-                training_mode = 2
-            elif epoch % (swap_delay*2) == 0 and training_mode == 2:
-                training_mode = 1
+            # if epoch % swap_delay == 0 and epoch % (swap_delay*2) != 0 and training_mode == 1:
+            #     training_mode = 2
+            # elif epoch % (swap_delay*2) == 0 and training_mode == 2:
+            #     training_mode = 1
             train_features = generate_link_channel_data(N, K, M)
             train_step(train_features, None, training_mode)
         # train_step(features=train_features, labels=None)
