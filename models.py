@@ -836,7 +836,29 @@ def DNN_3_layer_Thicc_model(input_shape, M, K, i=0):
 def FDD_softmax_k_times_with_magnitude(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
+    input_mod = input_mod * 10.0
     input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M)), input_mod[:, :K*M]))
+    input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
+    # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
+    x = DNN_3_layer_Thicc_model((2*K*M), M, K, 0)(input_pass_0)
+    for i in range(1, k):
+        decision_i = x
+        input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
+        x = x + DNN_3_layer_Thicc_model((2*K*M), M, K, i)(input_pass_i)
+    model = Model(inputs, x)
+    return model
+def FDD_softmax_k_times_with_magnitude_rounded(M, K, k):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.abs(inputs)
+    input_mod = input_mod * 10.0
+    input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
+    # normalize
+    mean = tf.expand_dims(tf.reduce_mean(input_mod, axis=1), 1)
+    std = tf.expand_dims(tf.math.reduce_std(input_mod, axis=1), 1)
+    input_mod = (input_mod - mean)/std
+    input_mod = tf.keras.layers.Reshape((input_mod.shape[1],))(input_mod)
+    input_mod = input_mod + tf.stop_gradient(tf.round(input_mod * 10)/10 - input_mod)
     decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M)), input_mod[:, :K*M]))
     input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
     # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
