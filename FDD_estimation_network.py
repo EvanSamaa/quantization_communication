@@ -19,13 +19,15 @@ def train_step(features, labels, N=None):
         with tf.GradientTape() as tape:
             predictions = model(features)
             # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
-            loss_1 = supervised_loss(predictions, Harden_scheduling(k=N_rf)(predictions))
-            loss_2 = loss_object_1(predictions + tf.stop_gradient(
-                Harden_scheduling(k=N_rf)(predictions) - predictions) , features)
-            loss = loss_1 + loss_2
+            loss_CE = supervised_loss(predictions, Harden_scheduling(k=N_rf)(predictions))
+            loss_1 = loss_object_1(predictions, features)
+            loss = loss_CE + loss_1
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-        train_loss(loss_object_1(predictions, features))
+        train_loss(loss_1)
+        # train_binarization_loss(loss_3)
+        train_VS(loss_object_2(predictions, features))
+        train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
         return
     with tf.GradientTape() as tape:
         # f_features = float_to_floatbits(features, complex=True)
@@ -140,9 +142,9 @@ if __name__ == "__main__":
             for features, labels in train_ds:
                 train_step(features, labels, 0)
         else:
-            if epoch % swap_delay == 0 and epoch % swap_delay*2 != 0 and training_mode == 1:
+            if epoch % swap_delay == 0 and epoch % (swap_delay*2) != 0 and training_mode == 1:
                 training_mode = 2
-            elif epoch % swap_delay*2 == 0 and training_mode == 2:
+            elif epoch % (swap_delay*2)s == 0 and training_mode == 2:
                 training_mode = 1
             train_features = generate_link_channel_data(500, K, M)
             train_step(features, None, training_mode)
