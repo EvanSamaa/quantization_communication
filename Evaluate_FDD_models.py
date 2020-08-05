@@ -53,7 +53,7 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug 3rd/supervised_first_min_hard_val"
+    file = "/Users/evansamaa/Desktop/quantization_communication/trained_models/Aug 3rd/supervised_only"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
