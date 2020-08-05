@@ -87,7 +87,7 @@ def random_complex(shape, sigma2):
 if __name__ == "__main__":
     fname_template = "trained_models/Aug 3rd/supervised_first_then_rounding{}"
     check = 500
-    SUPERVISE_TIME = 1000
+    SUPERVISE_TIME = 1500
     training_mode = 2
     swap_delay = check/2
     # problem Definition
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 200
-    N_rf = 3
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
@@ -161,7 +161,7 @@ if __name__ == "__main__":
             model.save(fname_template.format(".h5"))
             max_acc = train_loss.result()
         if epoch % check == 0:
-            if epoch >= (check*2):
+            if epoch >= (SUPERVISE_TIME):
                 improvement = graphing_data[epoch - (check*2): epoch - check, 0].mean() - graphing_data[epoch - check: epoch, 0].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.001:
