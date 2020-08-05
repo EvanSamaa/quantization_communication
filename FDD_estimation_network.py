@@ -86,8 +86,8 @@ def random_complex(shape, sigma2):
     return A_R
 if __name__ == "__main__":
     fname_template = "trained_models/Aug 3rd/supervised_first_min_hard_val_N_rf=4{}"
-    check = 1000
-    SUPERVISE_TIME = 500
+    check = 500
+    SUPERVISE_TIME = 1000
     training_mode = 2
     swap_delay = check/2
     # problem Definition
