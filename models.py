@@ -748,8 +748,8 @@ def FDD_model_no_constraint(M, K, B):
 #     x = Dense(M*K)
 def DNN_Ranking_NN_submodule(M, K, k, inputshape):
     inputs = Input(inputshape)
-    x = Dense(M*K*K)(inputs)
-    x = Dense(2*M*K)(x)
+    x = Dense(M*K)(inputs)
+    x = Dense(2*M)(x)
     x = Dense(M*K)(x)
     x = Dense(K)(x)
     x = tf.keras.layers.Softmax()(x)
@@ -768,7 +768,7 @@ def DNN_Ranking_model(input_shape, M, K, k, sum_all = False):
         # tiled_stretch_matrix = tf.tile(tf.expand_dims(stretch_matrix, 0), [1, 1, 1])
         stretched_rank_matrix = tf.matmul(stretch_matrix, tf.keras.layers.Reshape((output.shape[1], 1))(output))
         stretched_rank_matrix = tf.keras.layers.Reshape((stretched_rank_matrix.shape[1], ))(stretched_rank_matrix)
-        output = output + dnn(tf.multiply(1-stretched_rank_matrix, inputs))
+        output = output + dnn(tf.multiply(stretched_rank_matrix, inputs))
     model = Model(inputs, output, name="dnn_ranking_module")
     return model
 def FDD_with_CNN(M, K, N_rf):
@@ -1023,12 +1023,13 @@ def FDD_softmax_with_soft_mask(M, K, B, k=3):
     reshaper = tf.keras.layers.Reshape((M * K,))
     input_mod = reshaper(input_mod)
     # normalize
-    # mean = tf.expand_dims(tf.reduce_mean(x, axis=1), 1)
-    # std = tf.expand_dims(tf.math.reduce_std(x, axis=1), 1)
+    # mean = tf.expand_dims(tf.reduce_mean(input_mod, axis=1), 1)
+    # std = tf.expand_dims(tf.math.reduce_std(input_mod, axis=1), 1)
     # x = (input_mod - mean)/std
     # x = tf.keras.layers.Reshape((x.shape[1],))(x)
+    # x = x + tf.stop_gradient(tf.round(x * 10)/10 - x)
     # model starts
-    x = Dense(M*K*K)(input_mod)
+    x = Dense(M*K)(input_mod)
     x = LeakyReLU()(x)
     x = Dense(M*K)(x)
     x = LeakyReLU()(x)
