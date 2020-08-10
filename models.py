@@ -1264,7 +1264,7 @@ class NN_Clustering():
         # normalize all the G values
         for n in range(0, G.shape[0]):
             for k in range(0, G.shape[1]):
-                G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min(s))
+                G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min())
         # somehow flatten G
         data = tf.reshape(G, (G.shape[0]*K, M))
         # init K mean algo for assignments
