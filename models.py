@@ -1229,7 +1229,7 @@ class NN_Clustering():
         self.cluster_count = cluster_count
         self.original_dim = original_dim
         self.reduced_dim = reduced_dim
-        self.cluster_mean = np.random.normal(0.5, 0.5**2, (reduced_dim, cluster_count)).astype(np.float32)
+        self.cluster_mean = None
         self.assignment = np.zeros((cluster_count, ))
         self.decoder = self.decoder_network((reduced_dim, ))
         self.encoder = self.encoder_network((original_dim, ))
@@ -1271,6 +1271,7 @@ class NN_Clustering():
         self.assignment = np.zeros((self.cluster_count, G.shape[0]*K)).astype(np.float32)
         clustering_param = self.encoder(data)
         self.cluster_mean = tf.Variable(tf.slice(clustering_param, [0, 0], [self.cluster_count, -1]))
+        print(self.cluster_mean.shape)
         for i in range(0, G.shape[0]):
             self.assignment[np.random.randint(0, self.cluster_count-1), i] = 1
         N = 10000
