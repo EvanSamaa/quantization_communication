@@ -37,7 +37,7 @@ def train_step(features, labels, N=None):
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
         loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
-        loss_3 = tf.minimum(loss_3, 5*(loss_3 - N_rf))
+        loss_3 = tf.minimum(loss_3, 10*(loss_3 - N_rf))
         print(tf.reduce_mean(loss_3))
         loss = loss_1 + 0*loss_2 + loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -122,9 +122,9 @@ if __name__ == "__main__":
     # model = FDD_ranked_softmax_state_change(M, K, N_rf)
     # model = FDD_harder_softmax_k_times(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
-    model = FDD_softmax_k_times_with_magnitude_rounded(M, K, k=N_rf)
+    # model = FDD_softmax_k_times_with_magnitude_rounded(M, K, k=N_rf)
     model = FDD_k_times_with_sigmoid_and_penalty(M, K, N_rf)
-    optimizer = tf.keras.optimizers.Adam(0.0001)
+    optimizer = tf.keras.optimizers.Adam()
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')

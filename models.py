@@ -1278,7 +1278,7 @@ class NN_Clustering():
                 recovered_param = self.decoder(clustering_param)
                 loss1 = tf.keras.losses.MeanSquaredError()(tf.abs(data), recovered_param)
                 loss2 = tf.keras.losses.MeanSquaredError()(clustering_param, (self.cluster_mean @ self.assignment).T)
-                loss = loss1 + loss2
+                loss = loss1 + tf.constant(loss2, dtype=tf.float32)
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss, variables)
             self.optimizer.apply_gradients(zip(gradients, variables))
