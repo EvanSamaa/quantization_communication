@@ -11,6 +11,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     loss_fn2 = Binarization_regularization(K, num_data, M, k=N_rf)
+    loss_fn2 = Total_activation_limit_soft(K, M, N_rf = 0)
     tf.random.set_seed(80)
     print("Testing Starts")
     for e in range(0, 1):
@@ -26,7 +27,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = prediction[:, :, N_rf-1]
         # prediction = Harden_scheduling(k=N_rf)(prediction)
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
-        result[1] = loss_fn2(prediction)
+        result[1] = tf.sqrt(tf.reduce_mean(loss_fn2(prediction)))
         print(result)
         # ========= ========= =========  plotting ========= ========= =========
         ds = tf.square(tf.abs(ds))
@@ -55,7 +56,7 @@ def plot_data(arr, col):
     plt.title("Regularization Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug8th/Foad_proposal_1_soft"
+    file = "trained_models/Aug8th/Foad_proposal_1"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40

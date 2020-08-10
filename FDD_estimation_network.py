@@ -37,14 +37,13 @@ def train_step(features, labels, N=None):
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
         loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
-        loss_3 = tf.minimum(loss_3, 10*(loss_3 - N_rf))
-        print(tf.reduce_mean(loss_3))
-        loss = loss_1 + 1*loss_2 + loss_3
+        loss_3 = tf.maximum(0, 10*(loss_3 - N_rf))
+        loss = loss_1 + 0*loss_2 + loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
     # train_binarization_loss(loss_3)
-    train_VS(loss_2)
+    train_VS(loss_3)
 
     train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
 def test_step(features, labels, N=None):
@@ -90,7 +89,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug8th/Foad_proposal_1_soft_with_2_loss{}"
+    fname_template = "trained_models/Aug8th/Foad_proposal_1{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2

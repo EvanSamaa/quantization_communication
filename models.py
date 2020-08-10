@@ -1212,7 +1212,6 @@ def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
 def FDD_k_times_with_sigmoid_and_penalty(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
-    input_mod = input_mod * 10.0
     input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
     decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M)), input_mod[:, :K*M]))
     input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
@@ -1221,7 +1220,7 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k):
     for i in range(1, k):
         decision_i = x
         input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
-        x = dnn_model(input_pass_i)
+        x = x + dnn_model(input_pass_i)
     model = Model(inputs, x)
     return model
 class NN_Clustering():
@@ -1233,7 +1232,7 @@ class NN_Clustering():
         self.assignment = np.zeros((cluster_count, ))
         self.decoder = self.decoder_network((reduced_dim, ))
         self.encoder = self.encoder_network((original_dim, ))
-        self.optimizer = tf.optimizers.Adam(lr=0.1)
+        self.optimizer = tf.optimizers.Adam()
     def encoder_network(self, input_shape):
         # instead of feeding in (epochs, K, M), feed in (epochs*K, M) instead
         inputs = Input(shape=input_shape)
@@ -1244,6 +1243,7 @@ class NN_Clustering():
         x = LeakyReLU(self.original_dim * self.reduced_dim)(x)
         x = LeakyReLU()(x)
         x = Dense(self.reduced_dim)(x)
+        # x = sigmoid(x)
         model = Model(inputs, x, name="K_mean_encoder")
         return model
     def decoder_network(self, input_shape):
@@ -1256,6 +1256,7 @@ class NN_Clustering():
         x = LeakyReLU(self.original_dim * self.reduced_dim)(x)
         x = LeakyReLU()(x)
         x = Dense(self.original_dim)(x)
+        # x = sigmoid(x)
         model = Model(inputs, x, name="K_mean_decoder")
         return model
     def train_network(self, G):
@@ -1270,8 +1271,7 @@ class NN_Clustering():
         # init K mean algo for assignments and cluster mean
         self.assignment = np.zeros((self.cluster_count, G.shape[0]*K)).astype(np.float32)
         clustering_param = self.encoder(data)
-        self.cluster_mean = tf.Variable(tf.slice(clustering_param, [0, 0], [self.cluster_count, -1]))
-        print(self.cluster_mean.shape)
+        self.cluster_mean = clustering_param[0:self.cluster_count].numpy().T
         for i in range(0, G.shape[0]):
             self.assignment[np.random.randint(0, self.cluster_count-1), i] = 1
         N = 10000
@@ -1287,7 +1287,6 @@ class NN_Clustering():
             self.optimizer.apply_gradients(zip(gradients, variables))
             print(loss1, loss2)
             self.train_k_means_step(clustering_param)
-
     def train_k_means_step(self, clustering_param):
         # update assignments
         points_expanded = tf.expand_dims(clustering_param, 0)
@@ -1310,6 +1309,8 @@ class NN_Clustering():
                           ), axis=1))
         new_centroids = tf.concat(means, 0)
         self.cluster_mean = new_centroids.numpy().T.astype(np.float32)
+    def save_model(self, dir):
+        pass
 
 
 
@@ -1344,5 +1345,5 @@ if __name__ == "__main__":
     seed = 200
     N_rf = 5
     G = generate_link_channel_data(N, K, M)
-    nn = NN_Clustering(N_rf, M)
+    nn = NN_Clustering(N_rf, M, reduced_dim=8)
     nn.train_network(G)
