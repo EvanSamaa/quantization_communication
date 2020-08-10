@@ -31,16 +31,21 @@ def train_step(features, labels, N=None):
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
         predictions = model(features)
+        # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
-        loss = loss_1 + 1*loss_2
+        loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
+        loss_3 = tf.minimum(loss_3, 5*(loss_3 - N_rf))
+        print(tf.reduce_mean(loss_3))
+        loss = loss_1 + 1*loss_2 + loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
     # train_binarization_loss(loss_3)
     train_VS(loss_2)
+
     train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
 def test_step(features, labels, N=None):
     if N != None:
@@ -85,9 +90,9 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug 3rd/supervised_first_then_rounding_N_rf=4{}"
+    fname_template = "trained_models/Aug8th/Foad_proposal_1_soft{}"
     check = 500
-    SUPERVISE_TIME = 1500
+    SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check/2
     # problem Definition
@@ -96,7 +101,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 200
-    N_rf = 4
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
@@ -118,6 +123,7 @@ if __name__ == "__main__":
     # model = FDD_harder_softmax_k_times(M, K, N_rf)
     # model = Floatbits_FDD_model_softmax(M, K, B)
     model = FDD_softmax_k_times_with_magnitude_rounded(M, K, k=N_rf)
+    model = FDD_k_times_with_sigmoid_and_penalty(M, K, N_rf)
     optimizer = tf.keras.optimizers.Adam(0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
@@ -140,10 +146,6 @@ if __name__ == "__main__":
             for features, labels in train_ds:
                 train_step(features, labels, 0)
         else:
-            # if epoch % swap_delay == 0 and epoch % (swap_delay*2) != 0 and training_mode == 1:
-            #     training_mode = 2
-            # elif epoch % (swap_delay*2) == 0 and training_mode == 2:
-            #     training_mode = 1
             train_features = generate_link_channel_data(N, K, M)
             train_step(train_features, None, training_mode)
         # train_step(features=train_features, labels=None)
