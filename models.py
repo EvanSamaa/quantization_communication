@@ -1229,7 +1229,7 @@ class NN_Clustering():
         self.cluster_count = cluster_count
         self.original_dim = original_dim
         self.reduced_dim = reduced_dim
-        self.cluster_mean = np.random.normal(0.5, 0.5**2, (reduced_dim, cluster_count))
+        self.cluster_mean = np.random.normal(0.5, 0.5**2, (reduced_dim, cluster_count)).astype(np.float32)
         self.assignment = np.zeros((cluster_count, ))
         self.decoder = self.decoder_network((reduced_dim, ))
         self.encoder = self.encoder_network((original_dim, ))
@@ -1267,8 +1267,10 @@ class NN_Clustering():
                 G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min())
         # somehow flatten G
         data = tf.reshape(G, (G.shape[0]*K, M))
-        # init K mean algo for assignments
-        self.assignment = np.zeros((self.cluster_count, G.shape[0]*K))
+        # init K mean algo for assignments and cluster mean
+        self.assignment = np.zeros((self.cluster_count, G.shape[0]*K)).astype(np.float32)
+        clustering_param = self.encoder(data)
+        self.cluster_mean = tf.Variable(tf.slice(clustering_param, [0, 0], [self.cluster_count, -1]))
         for i in range(0, G.shape[0]):
             self.assignment[np.random.randint(0, self.cluster_count-1), i] = 1
         N = 10000
@@ -1278,19 +1280,22 @@ class NN_Clustering():
                 recovered_param = self.decoder(clustering_param)
                 loss1 = tf.keras.losses.MeanSquaredError()(tf.abs(data), recovered_param)
                 loss2 = tf.keras.losses.MeanSquaredError()(clustering_param, (self.cluster_mean @ self.assignment).T)
-                loss = loss1 + tf.constant(loss2, dtype=tf.float32)
+                loss = loss1 + loss2
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss, variables)
             self.optimizer.apply_gradients(zip(gradients, variables))
+            print(loss1, loss2)
             self.train_k_means_step(clustering_param)
-            print(loss)
+
     def train_k_means_step(self, clustering_param):
         # update assignments
         points_expanded = tf.expand_dims(clustering_param, 0)
-        centroids_expanded = tf.expand_dims(self.cluster_mean, 1)
+        points_expanded = tf.tile(points_expanded, [self.cluster_count, 1, 1])
+        centroids_expanded = tf.expand_dims(self.cluster_mean.T, 1)
+        centroids_expanded = tf.tile(centroids_expanded, [1, clustering_param.shape[0], 1])
         distances = tf.reduce_sum(tf.square(tf.subtract(points_expanded, centroids_expanded)), 2)
         assignments = tf.argmin(distances, axis = 0)
-        self.assignment = np.zeros((self.cluster_count, clustering_param.shape[0]))
+        self.assignment = np.zeros((self.cluster_count, clustering_param.shape[0])).astype(np.float32)
         for i in range(clustering_param.shape[0]):
             self.assignment[assignments[i], i] = 1
         means = []
@@ -1301,11 +1306,9 @@ class NN_Clustering():
                               tf.where(
                                   tf.equal(assignments, c)
                               ), [1, -1])
-                          ), reduction_indices=[1]))
-
+                          ), axis=1))
         new_centroids = tf.concat(means, 0)
-        print(new_centroids.shape)
-        A[2]
+        self.cluster_mean = new_centroids.numpy().T.astype(np.float32)
 
 
 
