@@ -1229,7 +1229,7 @@ class NN_Clustering():
         self.cluster_count = cluster_count
         self.original_dim = original_dim
         self.reduced_dim = reduced_dim
-        self.cluster_mean = np.random.normal(0.5, 0.5**2, (cluster_count, reduced_dim))
+        self.cluster_mean = np.random.normal(0.5, 0.5**2, (reduced_dim, cluster_count))
         self.assignment = np.zeros((cluster_count, ))
         self.decoder = self.decoder_network((reduced_dim, ))
         self.encoder = self.encoder_network((original_dim, ))
@@ -1259,30 +1259,53 @@ class NN_Clustering():
         model = Model(inputs, x, name="K_mean_decoder")
         return model
     def train_network(self, G):
-        # process G to to normalzie
+        # only care about the absolute value
         G = tf.abs(G)
+        # normalize all the G values
         for n in range(0, G.shape[0]):
             for k in range(0, G.shape[1]):
                 G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min())
+        # somehow flatten G
         data = tf.reshape(G, (G.shape[0]*K, M))
-        # init K mean algo
+        # init K mean algo for assignments
         self.assignment = np.zeros((self.cluster_count, G.shape[0]))
-
+        for i in range(0, G.shape[0]):
+            self.assignment[np.random.randint(0, self.cluster_count-1), i] = 1
         N = 10000
         for i in range(N):
             with tf.GradientTape() as tape:
                 clustering_param = self.encoder(data)
                 recovered_param = self.decoder(clustering_param)
                 loss1 = tf.keras.losses.MeanSquaredError()(tf.abs(data), recovered_param)
-                loss2 = tf.keras.losses.MeanSquaredError()(clustering_param, )
+                loss2 = tf.keras.losses.MeanSquaredError()(clustering_param, self.cluster_mean @ self.assignment)
+                loss = loss1 + loss2
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss, variables)
             self.optimizer.apply_gradients(zip(gradients, variables))
+            self.train_k_means_step(clustering_param)
             print(loss)
     def train_k_means_step(self, clustering_param):
-        pass
+        # update assignments
+        points_expanded = tf.expand_dims(clustering_param, 0)
+        centroids_expanded = tf.expand_dims(self.cluster_mean, 1)
+        distances = tf.reduce_sum(tf.square(tf.subtract(points_expanded, centroids_expanded)), 2)
+        assignments = tf.argmin(distances, axis = 0)
+        self.assignment = np.zeros((self.cluster_count, clustering_param.shape[0]))
+        for i in range(clustering_param.shape[0]):
+            self.assignment[assignments[i], i] = 1
+        means = []
+        for c in range(self.cluster_count):
+            means.append(tf.reduce_mean(
+                tf.gather(clustering_param,
+                          tf.reshape(
+                              tf.where(
+                                  tf.equal(assignments, c)
+                              ), [1, -1])
+                          ), reduction_indices=[1]))
 
-
+        new_centroids = tf.concat(means, 0)
+        print(new_centroids.shape)
+        A[2]
 
 
 

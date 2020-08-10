@@ -39,7 +39,7 @@ def train_step(features, labels, N=None):
         loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
         loss_3 = tf.minimum(loss_3, 5*(loss_3 - N_rf))
         print(tf.reduce_mean(loss_3))
-        loss = loss_1 + 1*loss_2 + loss_3
+        loss = loss_1 + 0*loss_2 + loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
