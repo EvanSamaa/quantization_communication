@@ -1237,7 +1237,7 @@ class NN_Clustering():
     def encoder_network(self, input_shape):
         # instead of feeding in (epochs, K, M), feed in (epochs*K, M) instead
         inputs = Input(shape=input_shape)
-        x = Dense(self.original_dim*self.reduced_dim)(x)
+        x = Dense(self.original_dim*self.reduced_dim)(inputs)
         x = LeakyReLU()(x)
         x = LeakyReLU(self.original_dim*self.reduced_dim)(x)
         x = LeakyReLU()(x)
