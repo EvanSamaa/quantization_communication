@@ -1268,7 +1268,7 @@ class NN_Clustering():
         # somehow flatten G
         data = tf.reshape(G, (G.shape[0]*K, M))
         # init K mean algo for assignments
-        self.assignment = np.zeros((self.cluster_count, G.shape[0]))
+        self.assignment = np.zeros((self.cluster_count, G.shape[0]*K))
         for i in range(0, G.shape[0]):
             self.assignment[np.random.randint(0, self.cluster_count-1), i] = 1
         N = 10000
@@ -1277,7 +1277,7 @@ class NN_Clustering():
                 clustering_param = self.encoder(data)
                 recovered_param = self.decoder(clustering_param)
                 loss1 = tf.keras.losses.MeanSquaredError()(tf.abs(data), recovered_param)
-                loss2 = tf.keras.losses.MeanSquaredError()(clustering_param, self.cluster_mean @ self.assignment)
+                loss2 = tf.keras.losses.MeanSquaredError()(clustering_param, (self.cluster_mean @ self.assignment).T)
                 loss = loss1 + loss2
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss, variables)
