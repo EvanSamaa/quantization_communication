@@ -1260,11 +1260,11 @@ class NN_Clustering():
         return model
     def train_network(self, G):
         # only care about the absolute value
-        G = tf.abs(G)
+        G = np.abs(G)
         # normalize all the G values
         for n in range(0, G.shape[0]):
             for k in range(0, G.shape[1]):
-                G[n, k] = (G[n, k] - tf.reduce_min(G[n, k])) / (tf.reduce_max(G[n, k]) - tf.reduce_min(G[n, k]))
+                G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min(s))
         # somehow flatten G
         data = tf.reshape(G, (G.shape[0]*K, M))
         # init K mean algo for assignments
