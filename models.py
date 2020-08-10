@@ -1310,7 +1310,41 @@ class NN_Clustering():
         new_centroids = tf.concat(means, 0)
         self.cluster_mean = new_centroids.numpy().T.astype(np.float32)
     def save_model(self, dir):
-        pass
+        try:
+            os.mkdir(dir)
+        except:
+            print("already_exist")
+        encoder_template = dir + "encoder.h5"
+        decoder_template = dir + "decoder.h5"
+        means_template = dir + "centroid.npy"
+        self.encoder.save(encoder_template)
+        self.decoder.save(decoder_template)
+        np.save(means_template, self.cluster_mean)
+    def load_model(self, dir):
+        encoder_template = dir + "encoder.h5"
+        decoder_template = dir + "decoder.h5"
+        means_template = dir + "centroid.npy"
+        self.encoder = tf.keras.models.load_model(encoder_template)
+        self.decoder = tf.keras.models.load_model(decoder_template)
+        self.cluster_mean = np.load(means_template)
+    def evaluate(self, G):
+        G = np.abs(G)
+        # normalize all the G values
+        for n in range(0, G.shape[0]):
+            for k in range(0, G.shape[1]):
+                G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min())
+        # somehow flatten G
+        data = tf.reshape(G, (G.shape[0] * K, M))
+        clustering_param = self.encoder(data)
+        points_expanded = tf.expand_dims(clustering_param, 0)
+        points_expanded = tf.tile(points_expanded, [self.cluster_count, 1, 1])
+        centroids_expanded = tf.expand_dims(self.cluster_mean.T, 1)
+        centroids_expanded = tf.tile(centroids_expanded, [1, clustering_param.shape[0], 1])
+        distances = tf.reduce_sum(tf.square(tf.subtract(points_expanded, centroids_expanded)), 2)
+        assignments = tf.argmin(distances, axis=0)
+        self.assignment = np.zeros((self.cluster_count, clustering_param.shape[0])).astype(np.float32)
+
+
 
 
 
