@@ -6,7 +6,8 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 from util import *
-
+from sklearn.cluster import KMeans
+from matplotlib import pyplot as plt
 ############################## Trained Loss Functions ##############################
 def MLP_loss_function(inputshape=[1000, 3]):
     inputs = Input(shape=inputshape)
@@ -66,6 +67,98 @@ def create_uniformed_quantization_model(k, bin_num=10, prob=True):
         return uniformed_quantization_reg
 def create_optimal_model_k_2(k, input):
     x = floatbits_to_float(input)
+def k_clustering_hieristic(N_rf):
+    def model(G, angle=-1):
+        G = tf.abs(G).numpy()
+        G_original = G.copy()
+        for n in range(0, G.shape[0]):
+            for k in range(0, G.shape[1]):
+                G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min())
+        output = np.zeros((G.shape[0], G.shape[1] * G.shape[2]))
+        kmeans_tot = KMeans(n_clusters=N_rf, random_state=0).fit(G[0:500].reshape(500*G.shape[1], G.shape[2]))
+        for n in range(0, G.shape[0]):
+            kmeans = kmeans_tot.predict(G[n])
+            # kmeans = KMeans(n_clusters=N_rf, random_state=0).fit_predict(G[n])
+            clusters = []
+            for i in range(0, N_rf):
+                clusters.append(np.zeros(G[0].shape))
+            for i in range(G.shape[1]):
+                clusters[kmeans[i]][i] = (G_original[n, i])
+            for i in range(0, N_rf):
+                max = int(np.argmax(clusters[i]))
+                if np.sum(clusters[i]) != 0:
+                    output[n, max] = 1
+                    G_original[n, int(max/G.shape[2]), max%G.shape[2]] = 0
+            for i in range(0, N_rf):
+                if np.sum(clusters[i]) == 0:
+                    max = int(np.argmax(G_original[n]))
+                    output[n, max] = 1
+                    G_original[n, int(max / G.shape[2]), max % G.shape[2]] = 0
+            # visualize
+            visualize = False
+            visualize_angle = False
+            if visualize:
+                img = np.zeros((G.shape[1], G.shape[2], 3))
+                colors = {0: np.array([1, 0, 0]), 1: np.array([0, 1, 0]), 2:np.array([0, 0, 1]), 3:np.array([1, 0, 1]), 4:np.array([0, 1, 1])}
+                for i in range(0, G.shape[1]):
+                    img[i, :] = colors[kmeans[i]]
+                G[n] = (G[n] - G[n].min())/(G[n].max() - G[n].min())
+                for i in range(0, 3):
+                    img[:, :, i] = img[:, :, i] * G[n]
+                plt.imshow(img)
+                plt.show()
+            if visualize_angle:
+                colors = {0: np.array([1, 0, 0]), 1: np.array([0, 1, 0]), 2: np.array([0, 0, 1]),
+                          3: np.array([1, 0, 1]), 4: np.array([0, 1, 1])}
+                colorss = []
+                for i in range(0, len(angle[n])):
+                    print(angle)
+                    colorss.append(colors[kmeans[i]])
+                plt.scatter(np.sin(angle[n]), np.ones(angle[n].shape), c=colorss)
+                plt.show()
+        return output
+    return model
+def greedy_hieristic(N_rf, sigma2):
+    combinations = []
+    def model(G):
+        loss = Sum_rate_utility_WeiCui(G.shape[1], G.shape[2], sigma2)
+        for i_1 in range(0, G.shape[1] * G.shape[2]):
+            for i_2 in range(0, G.shape[1] * G.shape[2]):
+                if i_1 != i_2:
+                    temp = np.zeros((G.shape[1] * G.shape[2],))
+                    temp[i_1] = 1
+                    temp[i_2] = 1
+                    combinations.append(temp)
+        val_G = tf.abs(G)
+        output = np.zeros((val_G.shape[0], val_G.shape[1] * val_G.shape[2]))
+        for n in range(G.shape[0]):
+            print("number", n)
+            min = 100
+            best_pair = None
+            for com in combinations:
+                current_min = loss(tf.expand_dims(tf.constant(com, tf.float32), 0), val_G[n:n+1])
+                if current_min < min:
+                    min = current_min
+                    best_pair = com
+            output[n] = best_pair
+            if N_rf > 2:
+                for n_rf in range(2, N_rf):
+                    new_comb = []
+                    for additional_i in range(G.shape[1] * G.shape[2]):
+                        if output[n, additional_i] != 1:
+                            temp = output[n].copy()
+                            temp[additional_i] = 1
+                            new_comb.append(temp)
+                    min = 100
+                    best_comb = None
+                    for com in new_comb:
+                        current_min = loss(tf.expand_dims(tf.constant(com, tf.float32), 0), val_G[n:n+1])
+                        if current_min < min:
+                            min = current_min
+                            best_comb = com
+                    output[n] = best_comb
+        return output
+    return model
 ############################## Layers ##############################
 class Closest_embedding_layer(tf.keras.layers.Layer):
     def __init__(self, user_count=2, embedding_count=8, bit_count=15, i=0, **kwargs):
@@ -813,6 +906,16 @@ def DNN_3_layer_model(input_shape, M, K, i=0):
     x = tf.keras.layers.Softmax()(x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
+def DNN_3_layer_model_sigmoid(input_shape, M, K, i=0):
+    inputs = Input(shape=input_shape, dtype=tf.float32)
+    x = Dense(3*M*K)(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * K)(x)
+    x = tf.sigmoid(x)
+    model = Model(inputs, x, name="pass_{}".format(i))
+    return model
 def DNN_3_layer_model_harder_softmax(input_shape, M, K, i=0):
     inputs = Input(shape=input_shape, dtype=tf.float32)
     x = Dense(3*M)(inputs)
@@ -1103,10 +1206,85 @@ def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     ranking_output = Dense(K)(ranking_output)
     ranking_output = sigmoid(ranking_output)
     # ranking_output = tf.tanh(tf.keras.layers.ReLU()(ranking_output))
-
     output = tf.concat((output, ranking_output), axis=1)
     model = Model(inputs, output)
     return model
+def FDD_k_times_with_sigmoid_and_penalty(M, K, k):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.abs(inputs)
+    input_mod = input_mod * 10.0
+    input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M)), input_mod[:, :K*M]))
+    input_pass_0 = tf.keras.layers.Concatenate(axis=1)((decision_0, input_mod))
+    dnn_model = DNN_3_layer_model_sigmoid((2*K*M), M, K, 0)
+    x = dnn_model(input_pass_0)
+    for i in range(1, k):
+        decision_i = x
+        input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
+        x = dnn_model(input_pass_i)
+    model = Model(inputs, x)
+    return model
+class NN_Clustering():
+    def __init__(self, cluster_count, original_dim, reduced_dim=10):
+        self.cluster_count = cluster_count
+        self.original_dim = original_dim
+        self.reduced_dim = reduced_dim
+        self.cluster_mean = np.random.normal(0.5, 0.5**2, (cluster_count, reduced_dim))
+        self.assignment = np.zeros((cluster_count, ))
+        self.decoder = self.decoder_network((reduced_dim, ))
+        self.encoder = self.encoder_network((original_dim, ))
+        self.optimizer = tf.optimizers.Adam(lr=0.1)
+    def encoder_network(self, input_shape):
+        # instead of feeding in (epochs, K, M), feed in (epochs*K, M) instead
+        inputs = Input(shape=input_shape)
+        x = Dense(self.original_dim*self.reduced_dim)(x)
+        x = LeakyReLU()(x)
+        x = LeakyReLU(self.original_dim*self.reduced_dim)(x)
+        x = LeakyReLU()(x)
+        x = LeakyReLU(self.original_dim * self.reduced_dim)(x)
+        x = LeakyReLU()(x)
+        x = Dense(self.reduced_dim)(x)
+        model = Model(inputs, x, name="K_mean_encoder")
+        return model
+    def decoder_network(self, input_shape):
+        # instead of feeding in (epochs, K, M), feed in (epochs*K, M) instead
+        inputs = Input(shape=input_shape)
+        x = Dense(self.original_dim)(inputs)
+        x = LeakyReLU()(x)
+        x = LeakyReLU(self.original_dim*self.reduced_dim)(x)
+        x = LeakyReLU()(x)
+        x = LeakyReLU(self.original_dim * self.reduced_dim)(x)
+        x = LeakyReLU()(x)
+        x = Dense(self.original_dim)(x)
+        model = Model(inputs, x, name="K_mean_decoder")
+        return model
+    def train_network(self, G):
+        # process G to to normalzie
+        G = tf.abs(G)
+        for n in range(0, G.shape[0]):
+            for k in range(0, G.shape[1]):
+                G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min())
+        data = tf.reshape(G, (G.shape[0]*K, M))
+        # init K mean algo
+        self.assignment = np.zeros((self.cluster_count, G.shape[0]))
+
+        N = 10000
+        for i in range(N):
+            with tf.GradientTape() as tape:
+                clustering_param = self.encoder(data)
+                recovered_param = self.decoder(clustering_param)
+                loss1 = tf.keras.losses.MeanSquaredError()(tf.abs(data), recovered_param)
+                loss2 = tf.keras.losses.MeanSquaredError()(clustering_param, )
+            variables = self.encoder.trainable_variables + self.decoder.trainable_variables
+            gradients = tape.gradient(loss, variables)
+            self.optimizer.apply_gradients(zip(gradients, variables))
+            print(loss)
+    def train_k_means_step(self, clustering_param):
+        pass
+
+
+
+
 
 def Floatbits_FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
@@ -1133,11 +1311,11 @@ if __name__ == "__main__":
     # DiscreteVAE(2, 4, (2,))
 
     N = 1000
-    M = 6
-    K = 4
-    B = 10
+    M = 40
+    K = 10
+    # B = 10
     seed = 200
-    N_rf = 3
-    G = np.random.normal(0, 1, (1, K, M))
-    top_N_rf_user_model(M, K, N_rf)(G)
-    # model = FDD_with_CNN(M, K, N_rf)
+    N_rf = 5
+    G = generate_link_channel_data(N, K, M)
+    nn = NN_Clustering(N_rf, M)
+    nn.train_network(G)

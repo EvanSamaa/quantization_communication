@@ -11,7 +11,7 @@ from itertools import combinations
 import os
 from soft_sort.tf_ops import soft_rank
 import scipy as sp
-from generate_batch_data import generate_batch_data
+from generate_batch_data import generate_batch_data, generate_batch_data_with_angle
 # from matplotlib import pyplot as plt
 
 # ==========================  Data gen ============================s
@@ -31,6 +31,23 @@ def generate_link_channel_data(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
                        tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32))
     G_hat = G + noise
     return G_hat
+def generate_link_channel_data_with_angle(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
+    Lp = 1  # Number of Paths
+    P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
+    P = tf.expand_dims(P, 0)
+    P = tf.tile(P, (N, 1, 1))
+    LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
+    Mainlobe_UE = np.array([0, 0], dtype=np.float32)  # Mean of the AoD range
+    HalfBW_UE = np.array([180.0, 180.0], dtype=np.float32)  # Half of the AoD range
+    data, angle = generate_batch_data_with_angle(N, M, K, Lp, LSF_UE, Mainlobe_UE, HalfBW_UE)
+    h_act_batch = tf.constant(data, dtype=tf.complex64)
+    # taking hermecian
+    h_act_batch = tf.transpose(h_act_batch, perm=(0, 2, 1), conjugate=True)
+    G = tf.matmul(h_act_batch, P)
+    noise = tf.complex(tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32),
+                       tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32))
+    G_hat = G + noise
+    return G_hat, angle
 def generate_supervised_link_channel_data(N, K, M, N_rf, sigma2_h=0.1, sigma2_n=0.1):
     G_hat = generate_link_channel_data(N, K, M, sigma2_h, sigma2_n)
     exstimated_result = top_N_rf_user_model(M, K, N_rf)(G_hat)
@@ -467,7 +484,7 @@ def Sum_rate_utility_WeiCui(K, M, sigma2):
         denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
         numerator = tf.matmul(numerator, tf.ones((K, 1)))
         numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
-        utility = 5*tf.math.log(numerator/denominator + 1)/log_2
+        utility = tf.math.log(numerator/denominator + 1)/log_2
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
@@ -553,7 +570,7 @@ def Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2):
         denominator = tf.reduce_sum(denominator-numerator, axis=1) + sigma2
         numerator = tf.matmul(numerator, tf.ones((K, 1)))
         numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
-        utility = 5*tf.math.log((numerator)/denominator + 1)/log_2
+        utility = tf.math.log((numerator)/denominator + 1)/log_2
         # utility = numerator/denominator
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
