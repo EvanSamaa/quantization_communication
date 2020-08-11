@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 from util import *
-from sklearn.cluster import KMeans
+# from sklearn.cluster import KMeans
 # from matplotlib import pyplot as plt
 ############################## Trained Loss Functions ##############################
 def MLP_loss_function(inputshape=[1000, 3]):
