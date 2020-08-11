@@ -8,7 +8,7 @@ def train_step(features, labels, N=None, epoch=0):
     if N == 0:
         with tf.GradientTape() as tape:
             predictions = model(features)
-            print(tf.reduce_max(predictions[0]))
+            print(tf.argmax(predictions[0]))
             # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
             loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
             loss = supervised_loss(predictions, labels) + tf.square(loss_3)
