@@ -10,7 +10,8 @@ def train_step(features, labels, N=None, epoch=0):
             predictions = model(features)
             print(predictions)
             # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
-            loss = supervised_loss(predictions, labels)
+            loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
+            loss = supervised_loss(predictions, labels) + tf.square(loss_3)
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         train_loss(loss_object_1(predictions, features))
