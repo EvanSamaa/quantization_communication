@@ -92,7 +92,7 @@ def random_complex(shape, sigma2):
 if __name__ == "__main__":
     fname_template = "trained_models/Aug8th/Foad_proposal_1_scaling_test{}"
     check = 200
-    SUPERVISE_TIME = 1000
+    SUPERVISE_TIME = 10
     training_mode = 2
     swap_delay = check/2
     # problem Definition
