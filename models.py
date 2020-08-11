@@ -1236,14 +1236,14 @@ def dnn_per_link(input_shape):
     x = sigmoid(x)
     model = Model(inputs, x)
     return model
-def FDD_per_link_archetecture(M, K, k=3):
+def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
     input_reshaper = tf.keras.layers.Reshape((M*K, 1))
     input_concatnator = tf.keras.layers.Concatenate(axis = 2)
     dnns = dnn_per_link((M*K, 3+M*K))
     # compute interference from k,i
-    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M*K)
     power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, K, 1)) - input_mod
     interference_f = tf.multiply(power, output_0)
     # compute interference to k, i
@@ -1257,6 +1257,7 @@ def FDD_per_link_archetecture(M, K, k=3):
     output_0 = tf.tile(interference_f, (1, 1, K*M))
     input_i = input_concatnator([input_reshaper(input_mod), interference_t, interference_f, output_0])
     out_put_i = dnns(input_i)[:, :, 0]
+    out_put_i = tf.keras.layers.Softmax()(0.1*out_put_i) * N_rf
     # begin the second - kth iteration
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
@@ -1271,6 +1272,7 @@ def FDD_per_link_archetecture(M, K, k=3):
         input_i = input_concatnator(
             [input_reshaper(input_mod), interference_t, interference_f, output_0])
         out_put_i = dnns(input_i)[:, :, 0]
+        out_put_i = tf.keras.layers.Softmax()(0.1 * out_put_i) * N_rf
     model = Model(inputs, out_put_i)
     print(model.summary())
     return model
