@@ -1234,6 +1234,7 @@ def dnn_per_link(input_shape):
     x = LeakyReLU()(x)
     x = Dense(1)(x)
     x = sigmoid(x)
+    x = x + tf.stop_gradient(binary_activation(x) - x)
     model = Model(inputs, x)
     return model
 def FDD_per_link_archetecture(M, K, k=3):
