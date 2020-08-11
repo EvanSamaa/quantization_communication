@@ -1224,15 +1224,13 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
         x = dnn_model(input_pass_i)
     model = Model(inputs, x)
     return model
-def dnn_per_link(input_shape):
+def dnn_per_link(input_shape, N_rf):
     inputs = Input(shape=input_shape)
     x = Dense(180)(inputs)
     x = LeakyReLU()(x)
     x = Dense(180)(x)
     x = LeakyReLU()(x)
-    # x = Dense(128)(x)
-    # x = LeakyReLU()(x)
-    x = Dense(1)(x)
+    x = Dense(3)(x)
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
@@ -1241,7 +1239,7 @@ def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
     input_mod = tf.square(tf.abs(inputs))
     input_reshaper = tf.keras.layers.Reshape((M*K, 1))
     input_concatnator = tf.keras.layers.Concatenate(axis = 2)
-    dnns = dnn_per_link((M*K, 3+M*K))
+    dnns = dnn_per_link((M*K, 3+M*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M*K)
     power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, K, 1)) - input_mod
@@ -1256,8 +1254,9 @@ def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
     output_0 = input_reshaper(output_0)
     output_0 = tf.tile(interference_f, (1, 1, K*M))
     input_i = input_concatnator([input_reshaper(input_mod), interference_t, interference_f, output_0])
-    out_put_i = dnns(input_i)[:, :, 0]
-    out_put_i = tf.keras.layers.Softmax()(0.1*out_put_i) * N_rf
+    out_put_i = dnns(input_i)
+    out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
+    out_put_i = tf.reduce_sum(out_put_i, axis=2)
     # begin the second - kth iteration
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
@@ -1271,8 +1270,9 @@ def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
         out_put_i = tf.tile(interference_f, (1, 1, K * M))
         input_i = input_concatnator(
             [input_reshaper(input_mod), interference_t, interference_f, output_0])
-        out_put_i = dnns(input_i)[:, :, 0]
-        out_put_i = tf.keras.layers.Softmax()(0.1 * out_put_i) * N_rf
+        out_put_i = dnns(input_i)
+        out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
+        out_put_i = tf.reduce_sum(out_put_i, axis=2)
     model = Model(inputs, out_put_i)
     print(model.summary())
     return model
