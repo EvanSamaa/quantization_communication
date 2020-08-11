@@ -4,7 +4,6 @@ from models import *
 import numpy as np
 import scipy as sp
 # from matplotlib import pyplot as plt
-from Evaluate_FDD_models import test_performance
 def train_step(features, labels, N=None, epoch=0):
     if N == 0:
         with tf.GradientTape() as tape:
@@ -162,10 +161,6 @@ if __name__ == "__main__":
                 if improvement <= 0.01:
                     break
     np.save(fname_template.format(".npy"), graphing_data)
-    custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
-                   'Interference_Input_modification': Interference_Input_modification}
-    model = tf.keras.models.load_model(fname_template.format(".h5"), custom_objects=custome_obj)
-    test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     tf.keras.backend.clear_session()
     print("Training end")
 
