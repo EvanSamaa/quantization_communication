@@ -28,7 +28,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # print(prediction[:, K*M:])
         # prediction = Masking_with_learned_weights_soft(K, M, sigma2_n)(prediction)
         # prediction = prediction[:, :, N_rf-1]
-        prediction = Harden_scheduling(k=N_rf)(prediction)
+        # prediction = Harden_scheduling(k=N_rf)(prediction)
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
         result[1] = tf.sqrt(tf.reduce_mean(loss_fn2(prediction)))
         print(result)
@@ -59,7 +59,7 @@ def plot_data(arr, col):
     plt.title("Penalty")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug8th/Foad_proposal_1_soft"
+    file = "trained_models/Aug8th/Foad_proposal_1_scaling_test"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
@@ -67,18 +67,17 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 5
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 2)
-    # training_data = np.load(training_data_path)
-    # plot_data(training_data, 2)
+    training_data = np.load(training_data_path)
+    plot_data(training_data, 2)
     model = tf.keras.models.load_model(model_path)
-    model = NN_Clustering(N_rf, M, reduced_dim=8)
-    model.load_model("trained_models/Aug8th/nn_k_mean/")
+    # model = NN_Clustering(N_rf, M, reduced_dim=8)
     # model = k_clustering_hieristic(N_rf)
     # model = greedy_hieristic(N_rf, sigma2_n)
     # model = top_N_rf_user_model(M, K, N_rf)
