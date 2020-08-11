@@ -33,6 +33,7 @@ def train_step(features, labels, N=None, epoch=0):
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
         predictions = model(features)
+        print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
@@ -92,7 +93,7 @@ def random_complex(shape, sigma2):
 if __name__ == "__main__":
     fname_template = "trained_models/Aug8th/Foad_proposal_1_scaling_test{}"
     check = 200
-    SUPERVISE_TIME = 10
+    SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check/2
     # problem Definition
