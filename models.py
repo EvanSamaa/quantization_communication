@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 from util import *
-# from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans
 # from matplotlib import pyplot as plt
 ############################## Trained Loss Functions ##############################
 def MLP_loss_function(inputshape=[1000, 3]):
@@ -75,10 +75,10 @@ def k_clustering_hieristic(N_rf):
             for k in range(0, G.shape[1]):
                 G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min())
         output = np.zeros((G.shape[0], G.shape[1] * G.shape[2]))
-        kmeans_tot = KMeans(n_clusters=N_rf, random_state=0).fit(G[0:500].reshape(500*G.shape[1], G.shape[2]))
+        # kmeans_tot = KMeans(n_clusters=N_rf, random_state=0).fit(G[0:500].reshape(500*G.shape[1], G.shape[2]))
         for n in range(0, G.shape[0]):
-            kmeans = kmeans_tot.predict(G[n])
-            # kmeans = KMeans(n_clusters=N_rf, random_state=0).fit_predict(G[n])
+            # kmeans = kmeans_tot.predict(G[n])
+            kmeans = KMeans(n_clusters=N_rf, random_state=0).fit_predict(G[n])
             clusters = []
             for i in range(0, N_rf):
                 clusters.append(np.zeros(G[0].shape))
@@ -908,9 +908,10 @@ def DNN_3_layer_model(input_shape, M, K, i=0):
     return model
 def DNN_3_layer_model_sigmoid(input_shape, M, K, i=0):
     inputs = Input(shape=input_shape, dtype=tf.float32)
-    x = Dense(3*M*K)(inputs)
+    size = 32
+    x = Dense(size)(inputs)
     x = LeakyReLU()(x)
-    x = Dense(M * K)(x)
+    x = Dense(size)(inputs)
     x = LeakyReLU()(x)
     x = Dense(M * K)(x)
     x = tf.sigmoid(x)
@@ -1209,7 +1210,7 @@ def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     output = tf.concat((output, ranking_output), axis=1)
     model = Model(inputs, output)
     return model
-def FDD_k_times_with_sigmoid_and_penalty(M, K, k):
+def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
     input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
@@ -1220,8 +1221,61 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k):
     for i in range(1, k):
         decision_i = x
         input_pass_i = tf.keras.layers.Concatenate(axis=1)((decision_i, input_mod))
-        x = x + dnn_model(input_pass_i)
+        x = dnn_model(input_pass_i)
     model = Model(inputs, x)
+    return model
+def dnn_per_link(input_shape):
+    inputs = Input(shape=input_shape)
+    x = Dense(256)(inputs)
+    x = LeakyReLU()(x)
+    x = Dense(128)(x)
+    x = LeakyReLU()(x)
+    x = Dense(1)(x)
+    x = sigmoid(x)
+    model = Model(inputs, x)
+    return model
+def FDD_per_link_archetecture(M, K, k=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    input_reshaper = tf.keras.layers.Reshape((M*K, 1))
+    input_concatnator = tf.keras.layers.Concatenate(axis = 2)
+    output_concatnator = tf.keras.layers.Concatenate(axis = 1)
+    # initialize a DNN for each link
+    # dnns = [0]*M*K
+    # for i in range(0, K*M):
+    #     dnns[i] = dnn_per_link((3+M*K))
+    dnns = dnn_per_link((M*K, 3+M*K))
+    # compute interference from k,i
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
+    power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, K, 1)) - input_mod
+    interference_f = tf.multiply(power, output_0)
+    # compute interference to k, i
+    unflattened_output_0 = tf.transpose(output_0, perm=[0, 2, 1])
+    interference_t = tf.matmul(input_mod, unflattened_output_0)
+    interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(K)), axis=2)
+    interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, M))
+    interference_t = input_reshaper(interference_t)
+    interference_f = input_reshaper(interference_f)
+    output_0 = input_reshaper(output_0)
+    output_0 = tf.tile(interference_f, (1, 1, K*M))
+    input_i = input_concatnator([input_reshaper(input_mod), interference_t, interference_f, output_0])
+    out_put_i = dnns(input_i)[:, :, 0]
+    # begin the second - kth iteration
+    for times in range(1, k):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        interference_f = tf.multiply(power, out_put_i)
+        interference_t = tf.matmul(input_mod, tf.transpose(out_put_i, perm=[0, 2, 1]))
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, M))
+        interference_t = input_reshaper(interference_t)
+        interference_f = input_reshaper(interference_f)
+        out_put_i = input_reshaper(out_put_i)
+        out_put_i = tf.tile(interference_f, (1, 1, K * M))
+        input_i = input_concatnator(
+            [input_reshaper(input_mod), interference_t, interference_f, output_0])
+        out_put_i = dnns(input_i)[:, :, 0]
+    model = Model(inputs, out_put_i)
+    print(model.summary())
     return model
 class NN_Clustering():
     def __init__(self, cluster_count, original_dim, reduced_dim=10):
@@ -1260,6 +1314,8 @@ class NN_Clustering():
         model = Model(inputs, x, name="K_mean_decoder")
         return model
     def train_network(self, G):
+        N = 10000
+        train_history = np.zeros((N, 2))
         # only care about the absolute value
         G = np.abs(G)
         # normalize all the G values
@@ -1274,7 +1330,6 @@ class NN_Clustering():
         self.cluster_mean = clustering_param[0:self.cluster_count].numpy().T
         for i in range(0, G.shape[0]):
             self.assignment[np.random.randint(0, self.cluster_count-1), i] = 1
-        N = 10000
         for i in range(N):
             with tf.GradientTape() as tape:
                 clustering_param = self.encoder(data)
@@ -1285,7 +1340,16 @@ class NN_Clustering():
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss, variables)
             self.optimizer.apply_gradients(zip(gradients, variables))
+            train_history[i, 0] = loss1
+            train_history[i, 1] = loss2
             print(loss1, loss2)
+            if i%100 == 0 and i >= 200:
+                improvement = train_history[i - (100 * 2): i - 100, 0].mean() - train_history[
+                                                                                            i - 100: i,
+                                                                                            0].mean()
+                if improvement <= 0.01:
+                    break
+
             self.train_k_means_step(clustering_param)
     def train_k_means_step(self, clustering_param):
         # update assignments
@@ -1328,21 +1392,32 @@ class NN_Clustering():
         self.decoder = tf.keras.models.load_model(decoder_template)
         self.cluster_mean = np.load(means_template)
     def evaluate(self, G):
-        G = np.abs(G)
-        # normalize all the G values
+        G = tf.abs(G).numpy()
+        G_original = G.copy()
         for n in range(0, G.shape[0]):
             for k in range(0, G.shape[1]):
                 G[n, k] = (G[n, k] - G[n, k].min()) / (G[n, k].max() - G[n, k].min())
+        output = np.zeros((G.shape[0], G.shape[1] * G.shape[2]))
+        # kmeans_tot = KMeans(n_clusters=N_rf, random_state=0).fit(G[0:500].reshape(500*G.shape[1], G.shape[2]))
+        for n in range(0, G.shape[0]):
         # somehow flatten G
-        data = tf.reshape(G, (G.shape[0] * K, M))
-        clustering_param = self.encoder(data)
-        points_expanded = tf.expand_dims(clustering_param, 0)
-        points_expanded = tf.tile(points_expanded, [self.cluster_count, 1, 1])
-        centroids_expanded = tf.expand_dims(self.cluster_mean.T, 1)
-        centroids_expanded = tf.tile(centroids_expanded, [1, clustering_param.shape[0], 1])
-        distances = tf.reduce_sum(tf.square(tf.subtract(points_expanded, centroids_expanded)), 2)
-        assignments = tf.argmin(distances, axis=0)
-        self.assignment = np.zeros((self.cluster_count, clustering_param.shape[0])).astype(np.float32)
+            clustering_param = self.encoder(G[n])
+            points_expanded = tf.expand_dims(clustering_param, 0)
+            points_expanded = tf.tile(points_expanded, [self.cluster_count, 1, 1])
+            centroids_expanded = tf.expand_dims(self.cluster_mean.T, 1)
+            centroids_expanded = tf.tile(centroids_expanded, [1, clustering_param.shape[0], 1])
+            distances = tf.reduce_sum(tf.square(tf.subtract(points_expanded, centroids_expanded)), 2)
+            assignments = tf.argmin(distances, axis=0)
+            clusters = []
+            for i in range(0, self.cluster_count):
+                clusters.append(np.zeros(G[0].shape))
+            for i in range(G.shape[1]):
+                clusters[assignments[i]][i] = (G_original[n, i])
+            for i in range(0, self.cluster_count):
+                max = int(np.argmax(clusters[i]))
+                if np.sum(clusters[i]) != 0:
+                    output[n, max] = 1
+        return output
 
 
 
@@ -1379,5 +1454,7 @@ if __name__ == "__main__":
     seed = 200
     N_rf = 5
     G = generate_link_channel_data(N, K, M)
-    nn = NN_Clustering(N_rf, M, reduced_dim=8)
-    nn.train_network(G)
+    FDD_per_link_archetecture(M, K)
+    # nn = NN_Clustering(N_rf, M, reduced_dim=15)
+    # nn.train_network(G)
+    # nn.save_model("trained_models/Aug8th/nn_k_mean_dim_15/")

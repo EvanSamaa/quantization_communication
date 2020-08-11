@@ -4,7 +4,7 @@ from models import *
 import numpy as np
 import scipy as sp
 # from matplotlib import pyplot as plt
-def train_step(features, labels, N=None):
+def train_step(features, labels, N=None, epoch=0):
     if N == 0:
         with tf.GradientTape() as tape:
             predictions = model(features)
@@ -31,7 +31,7 @@ def train_step(features, labels, N=None):
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
         predictions = model(features)
-        # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
+        predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = loss_object_1(predictions, features)
@@ -44,7 +44,6 @@ def train_step(features, labels, N=None):
     train_loss(loss_1)
     # train_binarization_loss(loss_3)
     train_VS(loss_3)
-
     train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
 def test_step(features, labels, N=None):
     if N != None:
@@ -89,9 +88,9 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug8th/Foad_proposal_1_soft_VS{}"
+    fname_template = "trained_models/Aug8th/Foad_proposal_1_scaling_test{}"
     check = 200
-    SUPERVISE_TIME = 0
+    SUPERVISE_TIME = 1000
     training_mode = 2
     swap_delay = check/2
     # problem Definition
@@ -111,18 +110,8 @@ if __name__ == "__main__":
     loss_object_1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
-    # loss_object_2 = Verti_sum_utility_RANKING(K, M, sigma2_n, N_rf)
-    # loss_object_3 = Binarization_regularization(K, N, M, N_rf)
-    # model = FDD_softmax_k_times_common_dnn(M, K, N_rf)
-    # model = FDD_softmax_k_times_hard_output_with_magnitude(M, K, N_rf)
-    # model = FDD_softmax_k_times_with_magnitude(M, K, N_rf)
-    # model = FDD_ranked_softmax_common_DNN(M, K, N_rf)
-    # model = FDD_ranked_LSTM_softmax(M, K, N_rf)
-    # model = FDD_ranked_softmax_state_change(M, K, N_rf)
-    # model = FDD_harder_softmax_k_times(M, K, N_rf)
-    # model = Floatbits_FDD_model_softmax(M, K, B)
-    # model = FDD_softmax_k_times_with_magnitude_rounded(M, K, k=N_rf)
-    model = FDD_k_times_with_sigmoid_and_penalty(M, K, N_rf)
+    # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
+    model = FDD_per_link_archetecture(M, K)
     optimizer = tf.keras.optimizers.Adam()
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
@@ -146,7 +135,7 @@ if __name__ == "__main__":
                 train_step(features, labels, 0)
         else:
             train_features = generate_link_channel_data(N, K, M)
-            train_step(train_features, None, training_mode)
+            train_step(train_features, None, training_mode, epoch = epoch)
         # train_step(features=train_features, labels=None)
         template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
         print(template.format(epoch + 1,
@@ -165,7 +154,7 @@ if __name__ == "__main__":
             if epoch >= (SUPERVISE_TIME) and epoch >= (check*2):
                 improvement = graphing_data[epoch - (check*2): epoch - check, 0].mean() - graphing_data[epoch - check: epoch, 0].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
-                if improvement <= 0.001:
+                if improvement <= 0.01:
                     break
     np.save(fname_template.format(".npy"), graphing_data)
     tf.keras.backend.clear_session()

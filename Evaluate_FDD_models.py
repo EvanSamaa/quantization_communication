@@ -22,24 +22,27 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds_load = float_to_floatbits(ds, complex=True)
         ds_load = ds
         prediction = model(ds_load)
+        # prediction = model.evaluate(ds_load)
+        # prediction = binary_activation(prediction)
+        # print(prediction)
         # print(prediction[:, K*M:])
         # prediction = Masking_with_learned_weights_soft(K, M, sigma2_n)(prediction)
         # prediction = prediction[:, :, N_rf-1]
-        # prediction = Harden_scheduling(k=N_rf)(prediction)
+        prediction = Harden_scheduling(k=N_rf)(prediction)
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
         result[1] = tf.sqrt(tf.reduce_mean(loss_fn2(prediction)))
         print(result)
         # ========= ========= =========  plotting ========= ========= =========
-        ds = tf.square(tf.abs(ds))
-        # prediction = prediction[:, :, 2]
-        unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
-        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
-        denominator = tf.matmul(ds, unflattened_X)
-        for i in range(0, num_data):
-            plt.imshow(denominator[i], cmap="gray")
-            plt.show(block=False)
-            plt.pause(0.0001)
-            plt.close()
+        # ds = tf.square(tf.abs(ds))
+        # # prediction = prediction[:, :, 2]
+        # unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
+        # unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        # denominator = tf.matmul(ds, unflattened_X)
+        # for i in range(0, num_data):
+        #     plt.imshow(denominator[i], cmap="gray")
+        #     plt.show(block=False)
+        #     plt.pause(0.0001)
+        #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
         # submodel = Model(inputs=model.input, outputs=model.get_layer("model (Model)").output)
         # prediction2 = tf.reshape(submodel(ds_load), (1000*M, B))
@@ -53,10 +56,10 @@ def plot_data(arr, col):
     arr = arr[:i, :]
     x = np.arange(0, arr.shape[0])
     plt.plot(x, arr[:, col])
-    plt.title("Regularization Loss")
+    plt.title("Penalty")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug8th/Foad_proposal_1"
+    file = "trained_models/Aug8th/Foad_proposal_1_soft"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
@@ -64,14 +67,18 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 2
+    N_rf = 5
     sigma2_h = 6.3
     sigma2_n = 0.1
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
-    # plot_data(training_data, 0)
+    # plot_data(training_data, 2)
+    # training_data = np.load(training_data_path)
+    # plot_data(training_data, 2)
     model = tf.keras.models.load_model(model_path)
+    model = NN_Clustering(N_rf, M, reduced_dim=8)
+    model.load_model("trained_models/Aug8th/nn_k_mean/")
     # model = k_clustering_hieristic(N_rf)
     # model = greedy_hieristic(N_rf, sigma2_n)
     # model = top_N_rf_user_model(M, K, N_rf)

@@ -12,6 +12,7 @@ import os
 from soft_sort.tf_ops import soft_rank
 import scipy as sp
 from generate_batch_data import generate_batch_data, generate_batch_data_with_angle
+from models import k_clustering_hieristic
 # from matplotlib import pyplot as plt
 
 # ==========================  Data gen ============================s
@@ -51,6 +52,7 @@ def generate_link_channel_data_with_angle(N, K, M, sigma2_h=0.1, sigma2_n=0.1):
 def generate_supervised_link_channel_data(N, K, M, N_rf, sigma2_h=0.1, sigma2_n=0.1):
     G_hat = generate_link_channel_data(N, K, M, sigma2_h, sigma2_n)
     exstimated_result = top_N_rf_user_model(M, K, N_rf)(G_hat)
+    # exstimated_result = k_clustering_hieristic(N_rf)(G_hat)
     dataset = Dataset.from_tensor_slices((G_hat, exstimated_result)).batch(N)
     return dataset
 def gen_data(N, k, low=0, high=1, batchsize=30):
@@ -714,7 +716,7 @@ def sign_relu_STE(x):
         grad_val = dy * back
         return grad_val
     return rtv, grad
-def binary_activation(x, shift=0):
+def binary_activation(x, shift=0.5):
     out = tf.maximum(tf.sign(x-shift), 0)
     return out
 def hard_tanh(x):

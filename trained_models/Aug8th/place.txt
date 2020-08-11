@@ -1,0 +1,5 @@
+trained_models/Aug8th/Foad_proposal_1_soft_VS.h5
+This model uses  x = x + dnn_model(input_pass_i) instead of just x =  dnn_model(input_pass_i)
+
+trained_models/Aug8th/Foad_proposal_1_soft_with_2_loss.h5
+this model uses x =  dnn_model(input_pass_i), and also trained on vertical sum
