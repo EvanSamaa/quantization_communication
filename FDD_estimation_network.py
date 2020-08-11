@@ -8,12 +8,12 @@ def train_step(features, labels, N=None, epoch=0):
     if N == 0:
         with tf.GradientTape() as tape:
             predictions = model(features)
+            print(predictions)
             # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
             loss = supervised_loss(predictions, labels)
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         train_loss(loss_object_1(predictions, features))
-        print(loss)
         # train_binarization_loss(loss_3)
         return
     elif N == 1:
