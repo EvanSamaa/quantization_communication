@@ -39,9 +39,9 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
-        loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
-        loss_3 = tf.maximum(0, 10*(loss_3 - N_rf))
-        loss = loss_1 + 1*loss_2 + loss_3
+        # loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
+        # loss_3 = tf.maximum(0, 10*(loss_3 - N_rf))
+        loss = loss_1 + 1*loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
