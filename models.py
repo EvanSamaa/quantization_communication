@@ -1233,7 +1233,7 @@ def dnn_per_link(input_shape):
     # x = Dense(128)(x)
     # x = LeakyReLU()(x)
     x = Dense(1)(x)
-    x = sigmoid(x)
+    # x = sigmoid(x)
     model = Model(inputs, x)
     return model
 def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
