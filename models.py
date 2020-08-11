@@ -190,7 +190,41 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
             'name':"Closest_embedding_layer_{}".format(self.i)
         })
         return config
-
+class Interference_Input_modification(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Interference_Input_modification, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x, input_mod, step):
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        interference_f = tf.multiply(power, x)
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
+        interference_t = input_reshaper(interference_t)
+        interference_f = input_reshaper(interference_f)
+        x = input_reshaper(x)
+        x = tf.tile(x, (1, 1, self.K * self.M))
+        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), interference_t) + tf.constant(step))
+        input_i = input_concatnator(
+            [input_reshaper(input_mod), interference_t, interference_f, x, iteration_num])
+        return input_i
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K':self.K,
+            'M':self.M,
+            'N_rf':self.N_rf,
+            'k':self.k,
+            'name':"Interference_Input_modification"
+        })
+        return config
 ############################## MLP models ##############################
 def create_MLP_model(input_shape, k):
     # outputs logit
@@ -1241,44 +1275,22 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
     input_mod = tf.square(tf.abs(inputs))
     input_reshaper = tf.keras.layers.Reshape((M*K, 1))
     input_concatnator = tf.keras.layers.Concatenate(axis = 2)
+    input_modder = Interference_Input_modification(K, M, N_rf, k)
     dnns = dnn_per_link((M*K, 4+M*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M*K)
-    power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, K, 1)) - input_mod
-    interference_f = tf.multiply(power, output_0)
-    # compute interference to k, i
-    unflattened_output_0 = tf.transpose(output_0, perm=[0, 2, 1])
-    interference_t = tf.matmul(input_mod, unflattened_output_0)
-    interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(K)), axis=2)
-    interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, M))
-    interference_t = input_reshaper(interference_t)
-    interference_f = input_reshaper(interference_f)
-    output_0 = input_reshaper(output_0)
-    output_0 = tf.tile(output_0, (1, 1, K*M))
-    iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), interference_t) + tf.constant(k-1.0))
-    input_i = input_concatnator([input_reshaper(input_mod), interference_t, interference_f, output_0, iteration_num])
+    input_i = input_modder(output_0, input_mod, k-1.0)
     out_put_i = dnns(input_i)
     out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
     out_put_i = tf.reduce_sum(out_put_i, axis=2)
     # begin the second - kth iteration
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
-        interference_f = tf.multiply(power, out_put_i)
-        interference_t = tf.matmul(input_mod, tf.transpose(out_put_i, perm=[0, 2, 1]))
-        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(K)), axis=2)
-        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, M))
-        interference_t = input_reshaper(interference_t)
-        interference_f = input_reshaper(interference_f)
-        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), interference_t) + tf.constant(k-times-1.0))
-        out_put_i = input_reshaper(out_put_i)
-        out_put_i = tf.tile(out_put_i, (1, 1, K * M))
-        input_i = input_concatnator(
-            [input_reshaper(input_mod), interference_t, interference_f, out_put_i, iteration_num])
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         out_put_i = dnns(input_i)
         out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(out_put_i, axis=2)
     model = Model(inputs, out_put_i)
-    print(model.summary())
     return model
 class NN_Clustering():
     def __init__(self, cluster_count, original_dim, reduced_dim=10):

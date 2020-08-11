@@ -21,14 +21,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds_load = float_to_floatbits(ds, complex=True)
         ds_load = ds
         prediction = model(ds_load)
-        # prediction = model.evaluate(ds_load)
-        # prediction = binary_activation(prediction)
-        # print(prediction)
-        # print(prediction[:, K*M:])
-        # prediction = Masking_with_learned_weights_soft(K, M, sigma2_n)(prediction)
-        # prediction = prediction[:, :, N_rf-1]
         prediction = Harden_scheduling(k=N_rf)(prediction)
-        print(loss_fn1(prediction, ds))
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
         result[1] = tf.sqrt(tf.reduce_mean(loss_fn2(prediction)))
         print(result)
@@ -44,9 +37,6 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         #     plt.pause(0.0001)
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
-        # submodel = Model(inputs=model.input, outputs=model.get_layer("model (Model)").output)
-        # prediction2 = tf.reshape(submodel(ds_load), (1000*M, B))
-        # print(prediction2)
 def plot_data(arr, col):
     cut = 0
     for i in range(20, arr.shape[0]):
@@ -59,8 +49,8 @@ def plot_data(arr, col):
     plt.title("Penalty")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug9th/Wei_cui_like_model_with_softmax"
-    # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
+    file = "trained_models/Aug9th/saving_test"
+    custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification}
     N = 1000
     M = 40
     K = 10
@@ -75,8 +65,9 @@ if __name__ == "__main__":
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 2)
     # training_data = np.load(training_data_path)
-    # plot_data(training_data, 3)
-    model = tf.keras.models.load_model(model_path)
+    # plot_data(training_data, 0)
+    model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    print(model.summary())
     # model = NN_Clustering(N_rf, M, reduced_dim=8)
     # model = k_clustering_hieristic(N_rf)
     # model = greedy_hieristic(N_rf, sigma2_n)
