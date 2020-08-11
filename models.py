@@ -1236,7 +1236,7 @@ def dnn_per_link(input_shape, N_rf):
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
-def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
+def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
     input_reshaper = tf.keras.layers.Reshape((M*K, 1))
