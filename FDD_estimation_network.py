@@ -93,7 +93,7 @@ def random_complex(shape, sigma2):
 if __name__ == "__main__":
     fname_template = "trained_models/Aug8th/Foad_proposal_1_scaling_test{}"
     check = 500
-    SUPERVISE_TIME = 100
+    SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check/2
     # problem Definition
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
     model = FDD_per_link_archetecture(M, K, k=4, N_rf=N_rf)
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
