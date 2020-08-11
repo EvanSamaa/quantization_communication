@@ -1255,7 +1255,7 @@ def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
     interference_f = input_reshaper(interference_f)
     output_0 = input_reshaper(output_0)
     output_0 = tf.tile(output_0, (1, 1, K*M))
-    iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0), interference_t) + k-1.0)
+    iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0), interference_t) + tf.constant(k-1.0))
     input_i = input_concatnator([input_reshaper(input_mod), interference_t, interference_f, output_0, iteration_num])
     out_put_i = dnns(input_i)
     out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
@@ -1269,7 +1269,7 @@ def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
         interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, M))
         interference_t = input_reshaper(interference_t)
         interference_f = input_reshaper(interference_f)
-        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0), interference_t) + k-times-1.0)
+        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0), interference_t) + tf.constant(k-times-1.0))
         out_put_i = input_reshaper(out_put_i)
         out_put_i = tf.tile(out_put_i, (1, 1, K * M))
         input_i = input_concatnator(
