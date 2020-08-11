@@ -1226,9 +1226,11 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
     return model
 def dnn_per_link(input_shape, N_rf):
     inputs = Input(shape=input_shape)
-    x = Dense(180)(inputs)
+    x = Dense(256)(inputs)
     x = LeakyReLU()(x)
-    x = Dense(180)(x)
+    x = Dense(256)(x)
+    x = LeakyReLU()(x)
+    x = Dense(256)(x)
     x = LeakyReLU()(x)
     x = Dense(3)(x)
     # x = sigmoid(x)
