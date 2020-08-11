@@ -7,7 +7,6 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     # tp_fn = ExpectedThroughput(name = "throughput")
     num_data = 1000
     result = np.zeros((3, ))
-    # loss_fn1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf, True)
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     loss_fn2 = Binarization_regularization(K, num_data, M, k=N_rf)
@@ -28,7 +27,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # print(prediction[:, K*M:])
         # prediction = Masking_with_learned_weights_soft(K, M, sigma2_n)(prediction)
         # prediction = prediction[:, :, N_rf-1]
-        # prediction = Harden_scheduling(k=N_rf)(prediction)
+        prediction = Harden_scheduling(k=N_rf)(prediction)
+        print(loss_fn1(prediction, ds))
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
         result[1] = tf.sqrt(tf.reduce_mean(loss_fn2(prediction)))
         print(result)
@@ -59,7 +59,7 @@ def plot_data(arr, col):
     plt.title("Penalty")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug8th/Foad_proposal_1_scaling_test"
+    file = "trained_models/Aug9th/Wei_cui_like_model_with_softmax"
     # file = "trained_models/Sept 25/k=2, L=2/Data_gen_encoder_L=1_k=2_tanh_annealing"
     N = 1000
     M = 40
@@ -74,8 +74,8 @@ if __name__ == "__main__":
     training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 2)
-    training_data = np.load(training_data_path)
-    plot_data(training_data, 2)
+    # training_data = np.load(training_data_path)
+    # plot_data(training_data, 3)
     model = tf.keras.models.load_model(model_path)
     # model = NN_Clustering(N_rf, M, reduced_dim=8)
     # model = k_clustering_hieristic(N_rf)
