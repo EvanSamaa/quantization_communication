@@ -1234,7 +1234,7 @@ def dnn_per_link(input_shape):
     x = LeakyReLU()(x)
     x = Dense(1)(x)
     x = sigmoid(x)
-    x = x + tf.stop_gradient(binary_activation(x) - x)
+    x = x + tf.stop_gradient(tf.maximum(tf.sign(x-0.5), 0) - x)
     model = Model(inputs, x)
     return model
 def FDD_per_link_archetecture(M, K, k=3):
@@ -1242,11 +1242,6 @@ def FDD_per_link_archetecture(M, K, k=3):
     input_mod = tf.square(tf.abs(inputs))
     input_reshaper = tf.keras.layers.Reshape((M*K, 1))
     input_concatnator = tf.keras.layers.Concatenate(axis = 2)
-    output_concatnator = tf.keras.layers.Concatenate(axis = 1)
-    # initialize a DNN for each link
-    # dnns = [0]*M*K
-    # for i in range(0, K*M):
-    #     dnns[i] = dnn_per_link((3+M*K))
     dnns = dnn_per_link((M*K, 3+M*K))
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
