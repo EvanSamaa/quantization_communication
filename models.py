@@ -1230,8 +1230,6 @@ def dnn_per_link(input_shape, N_rf):
     x = LeakyReLU()(x)
     x = Dense(256)(x)
     x = LeakyReLU()(x)
-    x = Dense(256)(x)
-    x = LeakyReLU()(x)
     x = Dense(3)(x)
     # x = sigmoid(x)
     model = Model(inputs, x)
