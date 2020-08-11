@@ -8,6 +8,7 @@ def train_step(features, labels, N=None, epoch=0):
     if N == 0:
         with tf.GradientTape() as tape:
             predictions = model(features)
+            print(predictions[0])
             # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
             loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
             loss = supervised_loss(predictions, labels) + tf.square(loss_3)
@@ -112,8 +113,8 @@ if __name__ == "__main__":
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
-    model = FDD_per_link_archetecture(M, K)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    model = FDD_per_link_archetecture(M, K, k=5, N_rf=N_rf)
+    optimizer = tf.keras.optimizers.Adam()
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
