@@ -1241,7 +1241,7 @@ def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
     input_mod = tf.square(tf.abs(inputs))
     input_reshaper = tf.keras.layers.Reshape((M*K, 1))
     input_concatnator = tf.keras.layers.Concatenate(axis = 2)
-    dnns = dnn_per_link((M*K, 3+M*K), N_rf)
+    dnns = dnn_per_link((M*K, 4+M*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M*K)
     power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, K, 1)) - input_mod
@@ -1255,7 +1255,8 @@ def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
     interference_f = input_reshaper(interference_f)
     output_0 = input_reshaper(output_0)
     output_0 = tf.tile(output_0, (1, 1, K*M))
-    input_i = input_concatnator([input_reshaper(input_mod), interference_t, interference_f, output_0])
+    iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0), interference_t) + k-1.0)
+    input_i = input_concatnator([input_reshaper(input_mod), interference_t, interference_f, output_0, iteration_num])
     out_put_i = dnns(input_i)
     out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
     out_put_i = tf.reduce_sum(out_put_i, axis=2)
@@ -1268,10 +1269,11 @@ def FDD_per_link_archetecture(M, K, k=3, N_rf=3):
         interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, M))
         interference_t = input_reshaper(interference_t)
         interference_f = input_reshaper(interference_f)
+        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0), interference_t) + k-times-1.0)
         out_put_i = input_reshaper(out_put_i)
         out_put_i = tf.tile(out_put_i, (1, 1, K * M))
         input_i = input_concatnator(
-            [input_reshaper(input_mod), interference_t, interference_f, out_put_i])
+            [input_reshaper(input_mod), interference_t, interference_f, out_put_i, iteration_num])
         out_put_i = dnns(input_i)
         out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(out_put_i, axis=2)
