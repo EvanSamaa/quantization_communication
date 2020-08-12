@@ -116,7 +116,7 @@ if __name__ == "__main__":
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
     model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    optimizer = tf.keras.optimizers.Adam()
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
