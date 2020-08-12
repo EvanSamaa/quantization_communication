@@ -41,7 +41,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_2 = loss_object_2(predictions, features)
         loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
         loss_3 = tf.maximum(0, 10*(loss_3 - N_rf))
-        loss = loss_1 + 0*loss_2
+        loss = loss_1 + 1*loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -91,7 +91,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_sigmoid_no_VE{}"
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_sigmoid{}"
     check = 200
     SUPERVISE_TIME = 1000
     training_mode = 2
