@@ -225,6 +225,38 @@ class Interference_Input_modification(tf.keras.layers.Layer):
             'name':"Interference_Input_modification"
         })
         return config
+class Interference_Input_modification_no_loop(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Interference_Input_modification_no_loop, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x, input_mod):
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        interference_f = tf.multiply(power, x)
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
+        interference_t = input_reshaper(interference_t)
+        interference_f = input_reshaper(interference_f)
+        input_i = input_concatnator(
+            [input_reshaper(input_mod), interference_t, interference_f])
+        return input_i
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K':self.K,
+            'M':self.M,
+            'N_rf':self.N_rf,
+            'k':self.k,
+            'name':"Interference_Input_modification"
+        })
+        return config
 ############################## MLP models ##############################
 def create_MLP_model(input_shape, k):
     # outputs logit
@@ -1293,11 +1325,11 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
 def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    input_modder = Interference_Input_modification(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K, 4 + M * K), 1)
+    input_modder = Interference_Input_modification_no_loop(K, M, N_rf, k)
+    dnns = dnn_per_link((M * K, 3), 1)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M * K)
-    input_i = input_modder(output_0, input_mod, k - 1.0)
+    input_i = input_modder(output_0, input_mod)
     out_put_i = sigmoid(dnns(input_i))[:, :, 0]
     input_mod = tf.keras.layers.Reshape((M*K,))(input_mod)
     input_i = tf.multiply(input_mod, out_put_i)
