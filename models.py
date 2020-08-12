@@ -1001,7 +1001,7 @@ def DNN_3_layer_Thicc_model(input_shape, M, K, Nrf = 3, i=0):
     x = LeakyReLU()(x)
     x = Dense(128)(x)
     x = LeakyReLU()(x)
-    x = Dense(M * K * N_rf)(x)
+    x = Dense(M * K * Nrf)(x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
 def FDD_softmax_k_times_with_magnitude(M, K, k):
