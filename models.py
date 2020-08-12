@@ -1292,6 +1292,26 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
         out_put_i = tf.reduce_sum(out_put_i, axis=2)
     model = Model(inputs, out_put_i)
     return model
+def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    input_reshaper = tf.keras.layers.Reshape((M*K, 1))
+    input_concatnator = tf.keras.layers.Concatenate(axis = 2)
+    input_modder = Interference_Input_modification(K, M, N_rf, k)
+    dnns = dnn_per_link((M*K, 4+M*K), N_rf)
+    # compute interference from k,i
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M*K)
+    input_i = input_modder(output_0, input_mod, k-1.0)
+    out_put_i = dnns(input_i)
+    out_put_i = sigmoid(tf.reduce_sum(out_put_i, axis=2))
+    # begin the second - kth iteration
+    for times in range(1, k):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        out_put_i = dnns(input_i)
+        out_put_i = sigmoid(tf.reduce_sum(out_put_i, axis=2))
+    model = Model(inputs, out_put_i)
+    return model
 class NN_Clustering():
     def __init__(self, cluster_count, original_dim, reduced_dim=10):
         self.cluster_count = cluster_count
