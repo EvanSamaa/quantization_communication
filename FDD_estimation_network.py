@@ -41,7 +41,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_2 = loss_object_2(predictions, features)
         loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
         loss_3 = tf.maximum(0, 10*(loss_3 - N_rf))
-        loss = loss_1 + 1*loss_2
+        loss = loss_1 + 0*loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -91,7 +91,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_softmax_k=8{}"
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_softmax_no_VE{}"
     check = 200
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
-    model = FDD_per_link_archetecture(M, K, k=8, N_rf=N_rf)
+    model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture_sigmoid(M, K, k=8, N_rf=N_rf)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
