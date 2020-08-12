@@ -993,14 +993,15 @@ def DNN_3_layer_model_harder_softmax(input_shape, M, K, i=0):
     x = tf.keras.layers.Softmax()(10*x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
-def DNN_3_layer_Thicc_model(input_shape, M, K, i=0):
+def DNN_3_layer_Thicc_model(input_shape, M, K, Nrf = 3, i=0):
     inputs = Input(shape=input_shape, dtype=tf.float32)
-    x = Dense(3*M*K)(inputs)
+    x = Dense(128)(inputs)
     x = LeakyReLU()(x)
-    x = Dense(M*K)(x)
+    x = Dense(128)(x)
     x = LeakyReLU()(x)
-    x = Dense(M * K)(x)
-    x = tf.keras.layers.Softmax()(x)
+    x = Dense(128)(x)
+    x = LeakyReLU()(x)
+    x = Dense(M * K * N_rf)(x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
 def FDD_softmax_k_times_with_magnitude(M, K, k):
@@ -1365,6 +1366,22 @@ def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3):
         out_put_i = dnns(input_i)
         out_put_i = sigmoid(tf.reduce_sum(out_put_i, axis=2))
     model = Model(inputs, out_put_i)
+    return model
+def FDD_Dumb_model(M, K, k=2, N_rf=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M*K)
+    input_pass_0 = tf.keras.layers.Concatenate(axis=1)((output_0, input_mod))
+    # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
+    dnn_model = DNN_3_layer_Thicc_model((2 * K * M), M, K, Nrf=N_rf)
+    output_i = tf.keras.layers.Reshape((N_rf, K*M))(dnn_model(input_pass_0))
+    output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(output_i), axis=1)
+    for i in range(1, k):
+        input_pass_i = tf.keras.layers.Concatenate(axis=1)((output_i, input_mod))
+        output_i = tf.keras.layers.Reshape((N_rf, K * M))(dnn_model(input_pass_i))
+        output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(output_i), axis=1)
+    model = Model(inputs, output_i)
     return model
 class NN_Clustering():
     def __init__(self, cluster_count, original_dim, reduced_dim=10):
