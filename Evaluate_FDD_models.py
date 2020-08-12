@@ -21,7 +21,10 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds_load = float_to_floatbits(ds, complex=True)
         ds_load = ds
         prediction = model(ds_load)
+        tim = tf.reduce_sum(prediction, axis=1)
+        print(tf.reduce_mean(tim))
         prediction = Harden_scheduling(k=N_rf)(prediction)
+
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
         result[1] = tf.sqrt(tf.reduce_mean(loss_fn2(prediction)))
         print(result)
@@ -49,7 +52,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug9th/Wei_cui_like_model_with_softmax"
+    file = "trained_models/Aug9th/Wei_cui_like_model_with_softmax_Nrf=4"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop}
     N = 1000
@@ -58,7 +61,7 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 3
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     model_path = file + ".h5"
