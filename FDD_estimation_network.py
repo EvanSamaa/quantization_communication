@@ -93,7 +93,7 @@ def random_complex(shape, sigma2):
 if __name__ == "__main__":
     fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_softmax_Nrf=4{}"
     check = 200
-    SUPERVISE_TIME = 1000
+    SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check/2
     # problem Definition
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     model = FDD_per_link_archetecture(M, K, k=4, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
     # model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf)
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
