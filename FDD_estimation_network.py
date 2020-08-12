@@ -95,7 +95,7 @@ def random_complex(shape, sigma2):
 if __name__ == "__main__":
     fname_template = "trained_models/Aug9th/Wei_cui_like_model{}"
     check = 500
-    SUPERVISE_TIME = 200
+    SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check/2
     # problem Definition
