@@ -1260,11 +1260,11 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
     return model
 def dnn_per_link(input_shape, N_rf):
     inputs = Input(shape=input_shape)
-    x = Dense(512)(inputs)
+    x = Dense(128)(inputs)
     x = LeakyReLU()(x)
-    x = Dense(512)(x)
+    x = Dense(128)(x)
     x = LeakyReLU()(x)
-    x = Dense(512)(x)
+    x = Dense(128)(x)
     x = LeakyReLU()(x)
     x = Dense(N_rf)(x)
     # x = sigmoid(x)
@@ -1301,14 +1301,17 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     out_put_i = sigmoid(dnns(input_i))[:, :, 0]
     input_mod = tf.keras.layers.Reshape((M*K,))(input_mod)
     input_i = tf.multiply(input_mod, out_put_i)
-    x = Dense(128)(input_i)
+    x = Dense(512)(input_i)
     x = LeakyReLU()(x)
-    x = Dense(128)(x)
+    x = Dense(512)(x)
     x = LeakyReLU()(x)
-    x = Dense(3)(x)
-    x = tf.keras.layers.Softmax(axis=1)(x)
-    x = tf.reduce_sum(x, axis=2)
-    model = Model(inputs, x)
+    x = Dense(N_rf*M*K)(x)
+    x_list = tf.split(x, num_or_size_splits=N_rf, axis=1)
+    output = tf.keras.layers.Reshape((M*K, 1))(tf.keras.layers.Softmax()(x_list[0]))
+    for i in range(1, len(x_list)):
+        output = tf.concat((output, tf.keras.layers.Reshape((M*K, 1))(tf.keras.layers.Softmax()(x_list[i]))), axis=2)
+    output = tf.reduce_sum(output, axis=2)
+    model = Model(inputs, output)
     return model
 
 def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3):
