@@ -1333,9 +1333,11 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     out_put_i = sigmoid(dnns(input_i))[:, :, 0]
     input_mod = tf.keras.layers.Reshape((M*K,))(input_mod)
     input_i = tf.multiply(input_mod, out_put_i)
-    x = Dense(512)(input_i)
+    x = Dense(128)(input_i)
     x = LeakyReLU()(x)
-    x = Dense(512)(x)
+    x = Dense(128)(x)
+    x = LeakyReLU()(x)
+    x = Dense(128)(x)
     x = LeakyReLU()(x)
     x = Dense(N_rf*M*K)(x)
     x_list = tf.split(x, num_or_size_splits=N_rf, axis=1)
