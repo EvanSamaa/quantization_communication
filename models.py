@@ -254,7 +254,7 @@ class Interference_Input_modification_no_loop(tf.keras.layers.Layer):
             'M':self.M,
             'N_rf':self.N_rf,
             'k':self.k,
-            'name':"Interference_Input_modification"
+            'name':"Interference_Input_modification_no_loop"
         })
         return config
 ############################## MLP models ##############################
