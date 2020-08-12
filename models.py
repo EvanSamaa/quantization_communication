@@ -6,6 +6,7 @@ from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, Thresholde
 from tensorflow.keras.activations import sigmoid
 import random
 from util import *
+# import tensorflow_addons as tfa
 # from sklearn.cluster import KMeans
 # from matplotlib import pyplot as plt
 ############################## Trained Loss Functions ##############################
@@ -1311,6 +1312,7 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
     input_i = input_modder(output_0, input_mod, k-1.0)
     out_put_i = dnns(input_i)
     out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
+    # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
     out_put_i = tf.reduce_sum(out_put_i, axis=2)
     # begin the second - kth iteration
     for times in range(1, k):
@@ -1318,6 +1320,7 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         out_put_i = dnns(input_i)
         out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(out_put_i, axis=2)
     model = Model(inputs, out_put_i)
     return model
@@ -1346,7 +1349,6 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     output = tf.reduce_sum(output, axis=2)
     model = Model(inputs, output)
     return model
-
 def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))

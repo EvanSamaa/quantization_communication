@@ -3,6 +3,7 @@ from models import *
 import numpy as np
 import tensorflow as tf
 from matplotlib import pyplot as plt
+
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
     num_data = 1000
@@ -52,7 +53,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug9th/Wei_cui_like_model_with_softmax_Nrf=4"
+    file = "trained_models/Aug9th/Wei_cui_like_model_with_softmax_k=8"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop}
     N = 1000
@@ -61,15 +62,15 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 4
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 2)
-    # training_data = np.load(training_data_path)
-    # plot_data(training_data, 0)
+    training_data = np.load(training_data_path)
+    plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     print(model.summary())
     # model = NN_Clustering(N_rf, M, reduced_dim=8)

@@ -35,20 +35,20 @@ def train_step(features, labels, N=None, epoch=0):
         predictions = model(features)
         print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
-        predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
+        # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
         # loss_3 = tf.maximum(predictions, axis=1) - N_rf
         # loss_3 = tf.maximum(0, 10*(loss_3 - N_rf))
-        loss_3 = tf.square(tf.reduce_max(predictions,axis=1) - 1.0)
-        loss = loss_1 + 0.5*loss_2 + loss_3
+        # loss_3 = tf.square(tf.reduce_max(predictions,axis=1) - 1.0)
+        loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
     # train_binarization_loss(loss_3)
-    train_VS(loss_3)
+    # train_VS(loss_3)
     train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
 def test_step(features, labels, N=None):
     if N != None:
@@ -93,18 +93,18 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_softmax_Nrf=4{}"
-    check = 200
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model{}"
+    check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check/2
     # problem Definition
-    N = 200
+    N = 500
     M = 40
     K = 10
     B = 10
     seed = 200
-    N_rf = 4
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
@@ -117,9 +117,9 @@ if __name__ == "__main__":
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
-    model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
+    # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
-    # model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
