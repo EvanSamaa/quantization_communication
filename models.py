@@ -1299,7 +1299,7 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M * K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
     out_put_i = sigmoid(dnns(input_i))
-    input_mod = tf.keras.layer.Reshape((M*K,))(input_mod)
+    input_mod = tf.keras.layers.Reshape((M*K,))(input_mod)
     input_i = tf.multiply(input_mod, out_put_i)
     x = Dense(128)(input_i)
     x = LeakyReLU()(x)
