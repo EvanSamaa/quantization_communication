@@ -1295,8 +1295,6 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
 def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    input_reshaper = tf.keras.layers.Reshape((M*K, 1))
-    input_concatnator = tf.keras.layers.Concatenate(axis = 2)
     input_modder = Interference_Input_modification(K, M, N_rf, k)
     dnns = dnn_per_link((M*K, 4+M*K), N_rf)
     # compute interference from k,i
