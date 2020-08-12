@@ -1371,7 +1371,7 @@ def FDD_Dumb_model(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
     input_mod = tf.keras.layers.Reshape((K * M,))(input_mod)
-    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M*K)
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K * M,)), input_mod[:, :]) + 1.0*N_rf/M*K)
     input_pass_0 = tf.keras.layers.Concatenate(axis=1)((output_0, input_mod))
     # dnn_model = DNN_3_layer_model((3*K*M), M, K, 0)
     dnn_model = DNN_3_layer_Thicc_model((2 * K * M), M, K, Nrf=N_rf)
