@@ -92,7 +92,7 @@ def random_complex(shape, sigma2):
     return A_R
 if __name__ == "__main__":
     fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_sigmoid{}"
-    check = 500
+    check = 200
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check/2
@@ -152,9 +152,9 @@ if __name__ == "__main__":
         graphing_data[epoch, 1] = train_binarization_loss.result()
         graphing_data[epoch, 2] = train_VS.result()
         graphing_data[epoch, 3] = train_hard_loss.result()
-        if train_hard_loss.result() < max_acc:
+        if train_loss.result() < max_acc:
             model.save(fname_template.format(".h5"))
-            max_acc = train_hard_loss.result()
+            max_acc = train_loss.result()
         if epoch % check == 0:
             if epoch >= (SUPERVISE_TIME) and epoch >= (check*2):
                 improvement = graphing_data[epoch - (check*2): epoch - check, 0].mean() - graphing_data[epoch - check: epoch, 0].mean()
