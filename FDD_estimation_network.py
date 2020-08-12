@@ -40,14 +40,12 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
-        # loss_3 = tf.maximum(predictions, axis=1) - N_rf
-        # loss_3 = tf.maximum(0, 10*(loss_3 - N_rf))
-        # loss_3 = tf.square(tf.reduce_max(predictions,axis=1) - 1.0)
+        loss_3 = tf.reduce_mean(tf.reduce_sum(binary_activation(predictions), axis=1))
         loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
-    # train_binarization_loss(loss_3)
+    train_binarization_loss(loss_3)
     # train_VS(loss_3)
     train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
 def test_step(features, labels, N=None):
