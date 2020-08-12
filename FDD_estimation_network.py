@@ -138,7 +138,7 @@ if __name__ == "__main__":
         train_VS.reset_states()
         train_hard_loss.reset_states()
         # ======== ======== training step ======== ========
-        if epoch <= SUPERVISE_TIME:
+        if epoch < SUPERVISE_TIME:
             train_ds = generate_supervised_link_channel_data(N, K, M, N_rf)
             for features, labels in train_ds:
                 train_step(features, labels, 0)
