@@ -1294,7 +1294,7 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
     input_modder = Interference_Input_modification(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K, 4 + M * K), N_rf)
+    dnns = dnn_per_link((M * K, 4 + M * K), 1)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M * K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
