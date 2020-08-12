@@ -46,10 +46,10 @@ def plot_data(arr, col):
     arr = arr[:i, :]
     x = np.arange(0, arr.shape[0])
     plt.plot(x, arr[:, col])
-    plt.title("Penalty")
+    plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug9th/Wei_cui_like_model"
+    file = "trained_models/Aug9th/Wei_cui_like_model_with_softmax"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop}
     N = 1000

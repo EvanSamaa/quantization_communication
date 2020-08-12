@@ -995,9 +995,7 @@ def DNN_3_layer_model_harder_softmax(input_shape, M, K, i=0):
     return model
 def DNN_3_layer_Thicc_model(input_shape, M, K, Nrf = 3, i=0):
     inputs = Input(shape=input_shape, dtype=tf.float32)
-    x = Dense(128)(inputs)
-    x = LeakyReLU()(x)
-    x = Dense(128)(x)
+    x = Dense(256)(inputs)
     x = LeakyReLU()(x)
     x = Dense(128)(x)
     x = LeakyReLU()(x)
