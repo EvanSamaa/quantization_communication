@@ -509,7 +509,7 @@ def Sum_rate_utility_bad_Talor(K, M, sigma2):
         denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
         numerator = tf.matmul(numerator, tf.ones((K, 1)))
         numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
-        utility = tf.math.log(numerator+1.0) - denominator + 1 - tf.square(denominator - 1.0)
+        utility = tf.math.log(numerator+1.0) - denominator + 1 + tf.square(denominator - 1.0)
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
