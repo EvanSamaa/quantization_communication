@@ -1305,7 +1305,7 @@ def dnn_per_link(input_shape, N_rf):
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
-def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
+def FDD_per_link_archetecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
     input_modder = Interference_Input_modification(K, M, N_rf, k)
@@ -1317,6 +1317,8 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
     out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
     out_put_i = tf.reduce_sum(out_put_i, axis=2)
+    if output_all:
+        output_0 = tf.keras.layers.Reshape((1, M*K))(out_put_i)
     # begin the second - kth iteration
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
@@ -1325,7 +1327,11 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3):
         out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(out_put_i, axis=2)
+        if output_all:
+            output_0 = tf.concat((output_0, tf.keras.layers.Reshape((1, M*K))(out_put_i)), axis=1)
     model = Model(inputs, out_put_i)
+    if output_all:
+        model = Model(inputs, output_0)
     return model
 def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
@@ -1353,7 +1359,7 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     output = tf.reduce_sum(output, axis=2)
     model = Model(inputs, output)
     return model
-def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3):
+def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
     input_modder = Interference_Input_modification(K, M, N_rf, k)
@@ -1364,12 +1370,18 @@ def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3):
     out_put_i = dnns(input_i)
     out_put_i = sigmoid(tf.reduce_sum(out_put_i, axis=2))
     # begin the second - kth iteration
+    if output_all:
+        output_0 = tf.keras.layers.Reshape((1, M*K))(out_put_i)
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         out_put_i = dnns(input_i)
         out_put_i = sigmoid(tf.reduce_sum(out_put_i, axis=2))
+        if output_all:
+            output_0 = tf.concat((output_0, tf.keras.layers.Reshape((1, M * K))(out_put_i)), axis=1)
     model = Model(inputs, out_put_i)
+    if output_all:
+        model = Model(inputs, output_0)
     return model
 def FDD_Dumb_model(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)

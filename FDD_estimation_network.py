@@ -39,13 +39,13 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = sum_rate(predictions, features)
-        # loss_2 = loss_object_2(predictions, features)
-        loss_3 = sum_difference(predictions, features)
+        # loss_2 = vertical_sum(predictions, features)
         loss_3 = tf.square(tf.reduce_mean(tf.reduce_sum(binary_activation(predictions), axis=1)) - N_rf)
-        loss = loss_1 + 0.1*loss_3
+        # loss = loss_1 + loss_2
+        loss = bad_talor_sum_rate(predictions, features)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(sum_rate(predictions, features))
+    train_loss(loss_1)
     train_binarization_loss(loss_3)
     # train_VS(loss_3)
     # train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
@@ -94,7 +94,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model_sigmoid_batch_norm_sum_difference{}"
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model_sigmoid{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -115,7 +115,8 @@ if __name__ == "__main__":
     supervised_loss = tf.keras.losses.CategoricalCrossentropy()
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
-    loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
+    vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
+    bad_talor_sum_rate = Sum_rate_utility_bad_Talor(K, M, sigma2_n)
     sum_difference = Sum_rate_difference(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
