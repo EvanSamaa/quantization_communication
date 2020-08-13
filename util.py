@@ -326,8 +326,8 @@ def Binarization_regularization(K, N, M, k, ranking=False):
         y_pred_mod = y_pred
         if ranking:
             y_pred_mod = y_pred[:, :K*M]
-        loss = tf.minimum(tf.square(y_pred_mod-1), tf.square(y_pred_mod))
-        loss = tf.reduce_mean(loss)
+        loss = - tf.square(2 * (y_pred_mod - 0.5))
+        loss = tf.reduce_mean(loss, axis = 1)
         return loss
     return regularization
 def Output_Per_Receiver_Control(K, M, ranking=False):

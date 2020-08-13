@@ -48,9 +48,9 @@ def train_step(features, labels, N=None, epoch=0):
             loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+i, dtype=tf.float32)) * vs
         print("==============================")
         # loss_2 = vertical_sum(predictions, features)
-        loss_3 = tf.square(tf.reduce_mean(tf.reduce_sum(binary_activation(predictions), axis=1)) - N_rf)
+        loss_3 = Binarization_regularization()(predictions[:, predictions.shape[1]-1])
         # loss = loss_1 + loss_2
-        loss = loss_1 + loss_2
+        loss = loss_1 + loss_2 + loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(sum_rate(predictions[:, predictions.shape[1]-1], features))
