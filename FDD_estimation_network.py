@@ -44,8 +44,8 @@ def train_step(features, labels, N=None, epoch=0):
             sr = sum_rate(predictions[:, i], features)
             vs = sum_rate(predictions[:, i], features)
             print(sr[0])
-            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+i)) * sr
-            loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+i)) * vs
+            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+i, dtype=tf.float32)) * sr
+            loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+i, dtype=tf.float32)) * vs
         print("==============================")
         # loss_2 = vertical_sum(predictions, features)
         loss_3 = tf.square(tf.reduce_mean(tf.reduce_sum(binary_activation(predictions), axis=1)) - N_rf)
