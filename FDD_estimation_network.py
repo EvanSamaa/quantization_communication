@@ -93,7 +93,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model_batch_norm{}"
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model_sigmoid_batch_norm{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -117,9 +117,9 @@ if __name__ == "__main__":
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
-    model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
+    # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
-    # model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # for data visualization
