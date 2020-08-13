@@ -1298,7 +1298,7 @@ def dnn_per_link(input_shape, N_rf):
     x = Dense(512)(x)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = Dense(128)(x)
+    x = Dense(512)(x)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(N_rf, bias_initializer="ones")(x)
