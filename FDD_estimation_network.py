@@ -38,18 +38,22 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
-        loss_1 = sum_rate(predictions, features)
+        loss_1 = 0
+        loss_2 = 0
+        for i in range(0, N_rf):
+            loss_1 = loss_1 + sum_rate(predictions[:, i], features)
+            loss_2 = loss_2 + vertical_sum(predictions[:, i], features)
         # loss_2 = vertical_sum(predictions, features)
         loss_3 = tf.square(tf.reduce_mean(tf.reduce_sum(binary_activation(predictions), axis=1)) - N_rf)
         # loss = loss_1 + loss_2
-        loss = bad_talor_sum_rate(predictions, features)
+        loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(loss_1)
+    train_loss(sum_rate(predictions[:, N_rf-1], features))
     train_binarization_loss(loss_3)
     # train_VS(loss_3)
     # train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
-    train_hard_loss(sum_rate(binary_activation(predictions), features))
+    train_hard_loss(sum_rate(binary_activation(predictions[:, N_rf-1]), features))
 
 def test_step(features, labels, N=None):
     if N != None:
@@ -94,7 +98,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model{}"
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model_all_outputs{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -122,7 +126,7 @@ if __name__ == "__main__":
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
-    model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf, output_all=True)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # for data visualization
