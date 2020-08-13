@@ -33,7 +33,7 @@ def train_step(features, labels, N=None, epoch=0):
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
         predictions = model(features)
-        print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
+        # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
         # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
