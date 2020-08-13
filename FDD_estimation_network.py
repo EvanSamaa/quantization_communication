@@ -40,7 +40,7 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = 0
         loss_2 = 0
-        for i in range(0, N_rf):
+        for i in range(0, 6):
             sr = sum_rate(predictions[:, i], features)
             vs = sum_rate(predictions[:, i], features)
             print(sr[0])
