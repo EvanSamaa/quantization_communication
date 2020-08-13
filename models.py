@@ -1334,8 +1334,8 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     input_i = input_modder(output_0, input_mod)
     out_put_i = sigmoid(dnns(input_i))[:, :, 0]
     input_mod = tf.keras.layers.Reshape((M*K,))(input_mod)
-    # input_i = tf.concat((input_mod, out_put_i), axis=1)
-    input_i = tf.multiply(input_mod, out_put_i)
+    input_i = tf.concat((input_mod, out_put_i), axis=1)
+    # input_i = tf.multiply(input_mod, out_put_i)
     x = Dense(512)(input_i)
     x = sigmoid(x)
     x = Dense(512)(x)
