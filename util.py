@@ -327,6 +327,12 @@ def Binarization_regularization(ranking=False):
         loss = tf.reduce_mean(loss, axis = 1)
         return loss
     return regularization
+def OutPut_Limit(N_rf):
+    def regularization(y_pred):
+        loss = tf.reduce_sum(y_pred, axis=1) - N_rf
+        loss = tf.minimum(loss, 10(loss-N_rf))
+        return loss
+    return regularization
 def Output_Per_Receiver_Control(K, M, ranking=False):
     def regularization(y_pred):
         loss = 0
