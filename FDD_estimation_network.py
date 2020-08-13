@@ -102,7 +102,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model_all_outputs_k=3{}"
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model_all_outputs_k=6{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
-    model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf, output_all=True)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # for data visualization
