@@ -41,7 +41,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_1 = loss_object_1(predictions, features)
         loss_2 = loss_object_2(predictions, features)
         loss_3 = tf.reduce_mean(tf.reduce_sum(binary_activation(predictions), axis=1))
-        loss = loss_1 + 0*loss_2
+        loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(loss_1)
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
     model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf)
     # optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-    optimizer = tf.keras.optimizers.SGD(lr=0.001)
+    optimizer = tf.keras.optimizers.SGD(lr=0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
