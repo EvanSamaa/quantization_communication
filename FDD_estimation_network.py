@@ -38,10 +38,11 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
-        loss_1 = loss_object_1(predictions, features)
-        loss_2 = loss_object_2(predictions, features)
+        loss_1 = sum_rate(predictions, features)
+        # loss_2 = loss_object_2(predictions, features)
+        loss_3 = sum_difference(predictions, features)
         loss_3 = tf.square(tf.reduce_mean(tf.reduce_sum(binary_activation(predictions), axis=1)) - N_rf)
-        loss = loss_1
+        loss = loss_1 + 0.1*loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(sum_rate(predictions, features))
@@ -115,7 +116,7 @@ if __name__ == "__main__":
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     loss_object_2 = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
-    loss_object_1 = Sum_rate_difference(K, M, sigma2_n)
+    sum_difference = Sum_rate_difference(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
