@@ -10,7 +10,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
-    loss_fn2 = Binarization_regularization(K, num_data, M, k=N_rf)
+    # loss_fn2 = Binarization_regularization(K, num_data, M, k=N_rf)
     loss_fn2 = Total_activation_limit_soft(K, M, N_rf = 0)
     tf.random.set_seed(80)
     print("Testing Starts")
@@ -21,7 +21,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = tf.reshape(model(features), (1,))
         # ds_load = float_to_floatbits(ds, complex=True)
         ds_load = ds
-        prediction = model(ds_load)
+        prediction = model.predict(ds_load)
+        prediction = prediction[:, -1]
         tim = tf.reduce_sum(prediction, axis=1)
         print(tf.reduce_mean(tim))
         prediction = Harden_scheduling(k=N_rf)(prediction)
@@ -55,7 +56,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug9th/Wei_cui_like_model"
+    file = "trained_models/Aug9th/Wei_cui_like_model_with_regularization"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop}
     N = 1000
@@ -71,8 +72,8 @@ if __name__ == "__main__":
     training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 2)
-    training_data = np.load(training_data_path)
-    plot_data(training_data, 0)
+    # training_data = np.load(training_data_path)
+    # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     print(model.summary())
     # model = NN_Clustering(N_rf, M, reduced_dim=8)
