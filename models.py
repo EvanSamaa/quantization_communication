@@ -1342,8 +1342,6 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     x = sigmoid(x)
     x = Dense(512)(x)
     x = sigmoid(x)
-    x = Dense(512)(x)
-    x = sigmoid(x)
     x = Dense(N_rf*M*K)(x)
     x_list = tf.split(x, num_or_size_splits=N_rf, axis=1)
     output = tf.keras.layers.Reshape((M*K, 1))(tf.keras.layers.Softmax()(x_list[0]))
