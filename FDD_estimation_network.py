@@ -120,7 +120,7 @@ if __name__ == "__main__":
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
     model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf)
-    model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
+    # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     optimizer = tf.keras.optimizers.Adam()
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
