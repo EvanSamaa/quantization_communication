@@ -41,8 +41,12 @@ def train_step(features, labels, N=None, epoch=0):
         loss_1 = 0
         loss_2 = 0
         for i in range(0, N_rf):
-            loss_1 = loss_1 + sum_rate(predictions[:, i], features)
-            loss_2 = loss_2 + vertical_sum(predictions[:, i], features)
+            sr = sum_rate(predictions[:, i], features)
+            vs = sum_rate(predictions[:, i], features)
+            print(sr[0])
+            loss_1 = loss_1 + sr
+            loss_2 = loss_2 + vs
+        print("==============================")
         # loss_2 = vertical_sum(predictions, features)
         loss_3 = tf.square(tf.reduce_mean(tf.reduce_sum(binary_activation(predictions), axis=1)) - N_rf)
         # loss = loss_1 + loss_2
@@ -126,7 +130,7 @@ if __name__ == "__main__":
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
-    model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf, output_all=True)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # for data visualization
