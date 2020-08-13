@@ -49,7 +49,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_binarization_loss(loss_3)
     # train_VS(loss_3)
     # train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
-    train_hard_loss(loss_object_1(binary_activation(predictions), features))
+    train_hard_loss(sum_rate(binary_activation(predictions), features))
 
 def test_step(features, labels, N=None):
     if N != None:
