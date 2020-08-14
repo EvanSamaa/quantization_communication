@@ -33,7 +33,7 @@ def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape() as tape:
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
-        features, garb = tf.nn.top_k(features, k=M)
+        features = tf.constant(np.sort(features, axis=-1), dtype=tf.float32)
         predictions = model(features)
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
