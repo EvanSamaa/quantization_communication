@@ -357,7 +357,7 @@ def Total_activation_limit_hard(K, M, ranking=False, N_rf = 3):
         if ranking:
             y_pred_mod = y_pred[:K*M]
         sum = tf.reduce_sum(y_pred_mod, axis=1)
-        loss = tf.square(sum - N_rf)
+        loss = tf.reduce_mean(sum)
         return loss
     return regularization
 def Harden_scheduling(k=3, K=0, M=0, sigma2=0):
@@ -590,6 +590,24 @@ def Verti_sum_utility_RANKING(K, M, sigma2, k):
             loss = loss + sr(y_pred[:, :, i], G)
         return loss
     return cal_sum_rate
+def ensumble_output(G, model, k, loss_fn):
+    output = tf.keras.layers.Reshape((G.shape[1]*G.shape[2], 1))(model.predict(G)[:, -1, :])
+    sr = np.zeros((G.shape[0], k))
+    for i in range(1, k):
+        inputs = tf.random.shuffle(G)
+        output_i = tf.keras.layers.Reshape((G.shape[1] * G.shape[2], 1))(model.predict(inputs)[:, -1, :])
+        output = tf.concat((output, output_i), axis=2)
+        sr[:, i] = loss_fn(output_i[:, :, 0], inputs)
+        print("round ",str(i), "done!")
+    sr_final = tf.reduce_min(sr, axis=1)
+    print(tf.reduce_mean(sr_final))
+    max_indices = tf.argmax(sr, axis=1)
+    print(max_indices.shape)
+    output = tf.gather(output, max_indices, axis=2, batch_dims=1)
+    print(output.shape)
+    return output
+
+
 
 def Sum_rate_utility_WeiCui_all_link_streaming(K, M, sigma2):
     # sigma2 here is the variance of the noise

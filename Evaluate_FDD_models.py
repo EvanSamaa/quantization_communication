@@ -14,21 +14,15 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     loss_fn2 = Total_activation_limit_soft(K, M, N_rf = 0)
     tf.random.set_seed(80)
     print("Testing Starts")
+    k = 5
     for e in range(0, 1):
         ds = generate_link_channel_data(num_data, K, M)
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
-        # angle = tf.reshape(angle, (1000, K))
-        # prediction = tf.reshape(model(features), (1,))
-        # ds_load = float_to_floatbits(ds, complex=True)
         ds_load = ds
-        prediction = model.predict(ds_load)
-        prediction = prediction[:, -1]
-        tim = tf.reduce_sum(prediction, axis=1)
-        print(tf.reduce_mean(tim))
-        prediction = Harden_scheduling(k=N_rf)(prediction)
-
-        result[0] = tf.reduce_mean(loss_fn1(prediction, ds))
-        result[1] = tf.sqrt(tf.reduce_mean(loss_fn2(prediction)))
+        prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
+        # prediction = prediction[:, -1]
+        result[0] = tf.reduce_mean(loss_fn1(prediction, ds_load))
+        result[1] = loss_fn2(prediction)
         print(result)
         # ========= ========= =========  plotting ========= ========= =========
         # ds = tf.square(tf.abs(ds))

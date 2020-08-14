@@ -42,19 +42,19 @@ def train_step(features, labels, N=None, epoch=0):
         loss_1 = 0
         loss_2 = 0
         for i in range(0, predictions.shape[1]):
-            ce = matrix_CE(predictions[:, i], features)
+            # ce = matrix_CE(predictions[:, i], features)
             sr = sum_rate(predictions[:, i], features)
-            # vs = vertical_sum(predictions[:, i], features)
-            print(ce)
-            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * ce
-            # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * sr
-            loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * sr
+            vs = vertical_sum(predictions[:, i], features)
+            print(sr)
+            # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * ce
+            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * sr
+            loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * vs
         print("==============================")
         # loss_2 = vertical_sum(predictions, features)
         loss_3 = Binarization_regularization()(predictions[:, predictions.shape[1]-1])
         loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
         # loss = loss_1 + loss_2
-        loss = loss_1 + loss_3 + loss_4
+        loss = loss_1 + loss_3 + loss_4 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
@@ -64,50 +64,13 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(predictions[:, predictions.shape[1]-1]), features))
     # train_hard_loss(sum_rate(binary_activation(predictions[:, predictions.shape[1]-1]), features))
 
-def test_step(features, labels, N=None):
-    if N != None:
-        return test_step_with_annealing(features, labels, N)
-    # f_features = float_to_floatbits(features, complex=True)
-    # predictions = model(f_features)
-    predictions = model(features)
-    # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, N_rf)(predictions)
-    t_loss_1 = loss_object_1(predictions, features)
-    t_loss_2 = loss_object_1(predictions, features)
-    test_binarization_loss(t_loss_2)
-def train_step_with_annealing(features, labels, N):
-    # features_mod = tf.ones((features.shape[0], 1)) * N
-    # features_mod = tf.concat((features_mod, features), axis=1)
-    features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * N
-    features_mod = tf.concat((features_mod, features), axis=2)
-    with tf.GradientTape() as tape:
-        predictions = model(features_mod)
-        # predictions = model(ranking_transform(features))
-        loss = loss_object(labels, predictions)
-    gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    # optimizer.apply_gradients(gradients, model.trainable_variables)
-    train_loss(loss)
-    # train_throughput(labels, predictions, features)
-    train_accuracy(labels, predictions)
-def test_step_with_annealing(features, labels, N):
-    # features_mod = tf.ones((features.shape[0], 1)) * N
-    # features_mod = tf.concat((features_mod, features), axis=1)
-    features_mod = tf.ones((features.shape[0], features.shape[1], 1)) * N
-    features_mod = tf.concat((features_mod, features), axis=2)
-    predictions = model(features_mod)
-    # print(predictions)
-    t_loss = loss_object(labels, predictions)
-    test_loss(t_loss)
-    test_accuracy(labels, predictions)
-    # test_throughput(labels, predictions, features)
-
 def random_complex(shape, sigma2):
     A_R = np.random.normal(0, sigma2, shape)
     A_R = np.array(A_R, dtype=complex)
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_regularization_and_st_CE{}"
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_regularization_sorted_input{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -134,7 +97,7 @@ if __name__ == "__main__":
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
-    model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf, output_all=True)
     # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = AdaBound(lr=0.0001)
