@@ -328,7 +328,7 @@ def Binarization_regularization(ranking=False):
     return regularization
 def OutPut_Limit(N_rf):
     def regularization(y_pred):
-        loss = tf.reduce_sum(y_pred, axis=1)
+        loss = tf.reduce_sum(binary_activation(y_pred), axis=1)
         loss = tf.minimum(-(loss-tf.constant(N_rf, dtype=tf.float32)), (loss-tf.constant(N_rf, dtype=tf.float32)))
         return loss
     return regularization
