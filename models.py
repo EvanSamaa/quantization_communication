@@ -1380,7 +1380,6 @@ def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3, output_all=False):
     if output_all:
         output_0 = tf.keras.layers.Reshape((1, M*K))(out_put_i)
     for times in range(1, k):
-        out_put_i = out_put_i + tf.stop_gradient(tf.maximum(tf.sign(out_put_i-0.5), 0) - out_put_i)
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         out_put_i = dnns(input_i)
