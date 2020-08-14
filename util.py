@@ -501,6 +501,7 @@ def Sum_rate_matrix_CE(K, M, sigma2):
         unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
         unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
         matrix = tf.matmul(G, unflattened_X)
+        matrix = tf.keras.layers.Softmax(axis=1)(matrix)
         matrix = tf.keras.layers.Reshape((K*K,))(matrix)
         # matrix_goal_current = tf.reduce_max(matrix, axis=1)
         matrix_goal_template_tiled = tf.tile(tf.expand_dims(matrix_goal_template, 0), (y_pred.shape[0], 1))
