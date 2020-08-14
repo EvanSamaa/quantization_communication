@@ -35,13 +35,15 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions = model(f_features)
         predictions = model(features)
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
-        predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
+        # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
         # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = 0
         loss_2 = 0
         for i in range(0, predictions.shape[1]):
+            # loss = matrix_CE(predictions[:, i], features)
+            # A[2]
             sr = sum_rate(predictions[:, i], features)
             vs = vertical_sum(predictions[:, i], features)
             print(sr[0])
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     np.random.seed(seed)
     supervised_loss = tf.keras.losses.CategoricalCrossentropy()
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    # matrix_CE = Sum_rate_matrix_CE(K, M, sigma2_n)
+    matrix_CE = Sum_rate_matrix_CE(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
