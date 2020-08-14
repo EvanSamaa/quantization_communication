@@ -35,20 +35,20 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions = model(f_features)
         predictions = model(features)
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
-        # predictions = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.7) - predictions)
-        predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
+        predictions = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.7) - predictions)
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = 0
         loss_2 = 0
         for i in range(0, predictions.shape[1]):
+            # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
             # ce = matrix_CE(predictions[:, i], features)
             sr = sum_rate(predictions[:, i], features)
             vs = vertical_sum(predictions[:, i], features)
             print(sr[0])
             # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * ce
-            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * sr
-            loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * vs
+            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * sr
+            loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
         loss_3 = Binarization_regularization()(predictions[:, predictions.shape[1]-1])
         loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
