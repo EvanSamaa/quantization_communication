@@ -1372,7 +1372,7 @@ def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3, output_all=False):
     input_modder = Interference_Input_modification(K, M, N_rf, k)
     dnns = dnn_per_link((M*K, 4+M*K), N_rf)
     # compute interference from k,i
-    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M*K)
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]))
     input_i = input_modder(output_0, input_mod, k-1.0)
     out_put_i = dnns(input_i)
     out_put_i = sigmoid(tf.reduce_sum(out_put_i, axis=2))
