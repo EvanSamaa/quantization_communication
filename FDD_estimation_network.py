@@ -97,7 +97,7 @@ if __name__ == "__main__":
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
-    model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf, output_all=True)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
     # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = AdaBound(lr=0.0001)
