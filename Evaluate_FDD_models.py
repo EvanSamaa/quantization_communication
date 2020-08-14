@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
@@ -11,7 +11,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     # loss_fn2 = Binarization_regularization(K, num_data, M, k=N_rf)
-    loss_fn2 = Total_activation_limit_soft(K, M, N_rf = 0)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
     tf.random.set_seed(80)
     print("Testing Starts")
     k = 5
@@ -21,7 +21,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         ds_load = ds
         prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         # prediction = prediction[:, -1]
-        result[0] = tf.reduce_mean(loss_fn1(prediction, ds_load))
+        # result[0] = tf.reduce_mean(loss_fn1(prediction, ds_load))
         result[1] = loss_fn2(prediction)
         print(result)
         # ========= ========= =========  plotting ========= ========= =========

@@ -1363,7 +1363,6 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
 def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    # input_mod, garb = tf.nn.top_k(input_mod, k=M)
     input_modder = Interference_Input_modification(K, M, N_rf, k)
     dnns = dnn_per_link((M*K, 4+M*K), N_rf)
     # compute interference from k,i
