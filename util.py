@@ -322,7 +322,7 @@ def CE_with_distribution():
         return loss_fn(prediction, label)
 def Binarization_regularization(ranking=False):
     def regularization(y_pred):
-        loss = - tf.square(2 * (y_pred - 0.5))
+        loss = -tf.square(2 * (y_pred - 0.5))
         loss = tf.reduce_mean(loss, axis = 1)
         return loss
     return regularization

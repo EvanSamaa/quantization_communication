@@ -43,7 +43,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_2 = 0
         for i in range(0, predictions.shape[1]):
             # ce = matrix_CE(predictions[:, i], features)
-            sr = -sum_rate(predictions[:, i], features)
+            sr = sum_rate(predictions[:, i], features)
             vs = vertical_sum(predictions[:, i], features)
             print(sr[0])
             # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * ce
