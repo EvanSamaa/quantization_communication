@@ -43,12 +43,12 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_2 = 0
         for i in range(0, predictions.shape[1]):
             ce = matrix_CE(predictions[:, i], features)
-            # sr = sum_rate(predictions[:, i], features)
+            sr = sum_rate(predictions[:, i], features)
             # vs = vertical_sum(predictions[:, i], features)
             print(ce)
             loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * ce
             # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * sr
-            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * vs
+            loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * sr
         print("==============================")
         # loss_2 = vertical_sum(predictions, features)
         loss_3 = Binarization_regularization()(predictions[:, predictions.shape[1]-1])
