@@ -45,7 +45,7 @@ def train_step(features, labels, N=None, epoch=0):
             sr = sum_rate(predictions[:, i], features)
             vs = sum_rate(predictions[:, i], features)
             print(sr[0])
-            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+i, dtype=tf.float32)) * sr
+            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * sr
             loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+i, dtype=tf.float32)) * vs
         print("==============================")
         # loss_2 = vertical_sum(predictions, features)
@@ -105,7 +105,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_regularization_and_st_and_lots_of_BM_small{}"
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_regularization_and_st_and_lots_of_BM{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
