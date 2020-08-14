@@ -54,7 +54,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_3 = Binarization_regularization()(predictions[:, predictions.shape[1]-1])
         loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
         # loss = loss_1 + loss_2
-        loss = loss_1 + loss_3 + loss_4
+        loss = loss_1 + loss_3 + loss_4 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
     model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf, output_all=True)
     # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    optimizer = tf.keras.optimizers.Adam(lr=0.001)
     # optimizer = AdaBound(lr=0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
