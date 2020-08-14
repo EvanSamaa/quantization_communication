@@ -43,7 +43,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_2 = 0
         for i in range(0, predictions.shape[1]):
             # ce = matrix_CE(predictions[:, i], features)
-            sr = sum_rate(predictions[:, i], features)
+            sr = -sum_rate(predictions[:, i], features)
             vs = vertical_sum(predictions[:, i], features)
             print(sr[0])
             # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * ce
@@ -90,14 +90,13 @@ if __name__ == "__main__":
     np.random.seed(seed)
     supervised_loss = tf.keras.losses.CategoricalCrossentropy()
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    matrix_CE = Sum_rate_matrix_CE(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
     # model = FDD_distributed_then_general_architecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_per_link_archetecture(M, K, k=3, N_rf=N_rf)
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
-    model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf, output_all=True)
     # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = AdaBound(lr=0.0001)
