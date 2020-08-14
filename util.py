@@ -495,7 +495,7 @@ def Sum_rate_utility(K, M, sigma2):
 def Sum_rate_matrix_CE(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
-    matrix_goal_template = tf.reshape(tf.eye(K), (K*K, )) * 10.0
+    matrix_goal_template = tf.reshape(tf.eye(K), (K*K, ))
     def sum_rate_utility(y_pred, G, display=False):
         G = tf.square(tf.abs(G))
         unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
