@@ -54,7 +54,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_3 = Binarization_regularization()(predictions[:, predictions.shape[1]-1])
         loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
         # loss = loss_1 + loss_2
-        loss = loss_1 + 0*loss_3 + 0*loss_4 + loss_2
+        loss = loss_1 + loss_3 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
