@@ -40,7 +40,7 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = 0
-        # loss_2 = 0
+        loss_2 = 0
         for i in range(0, predictions.shape[1]):
             ce = matrix_CE(predictions[:, i], features)
             sr = sum_rate(predictions[:, i], features)
@@ -54,7 +54,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_3 = Binarization_regularization()(predictions[:, predictions.shape[1]-1])
         loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
         # loss = loss_1 + loss_2
-        loss = loss_1 + loss_3 + loss_4
+        loss = loss_1 + loss_3 + loss_4 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
