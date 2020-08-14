@@ -322,14 +322,14 @@ def CE_with_distribution():
         return loss_fn(prediction, label)
 def Binarization_regularization(ranking=False):
     def regularization(y_pred):
-        loss = - tf.square(2 * (y_pred - 0.5))
+        loss = -tf.square(2 * (y_pred - 0.5))
         loss = tf.reduce_mean(loss, axis = 1)
         return loss
     return regularization
 def OutPut_Limit(N_rf):
     def regularization(y_pred):
         loss = tf.reduce_sum(y_pred, axis=1) - N_rf
-        loss = tf.minimum(loss, 20*(loss-tf.constant(N_rf, dtype=tf.float32)))
+        loss = tf.minimum(loss, 10*(loss-tf.constant(N_rf, dtype=tf.float32)))
         return loss
     return regularization
 def Output_Per_Receiver_Control(K, M, ranking=False):

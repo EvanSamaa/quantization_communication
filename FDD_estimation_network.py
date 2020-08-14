@@ -90,7 +90,6 @@ if __name__ == "__main__":
     np.random.seed(seed)
     supervised_loss = tf.keras.losses.CategoricalCrossentropy()
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    matrix_CE = Sum_rate_matrix_CE(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_k_times_with_sigmoid_and_penalty(M, K, k=1)
@@ -99,7 +98,7 @@ if __name__ == "__main__":
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
     model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf, output_all=True)
     # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    optimizer = tf.keras.optimizers.Adam(lr=0.001)
     # optimizer = AdaBound(lr=0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
