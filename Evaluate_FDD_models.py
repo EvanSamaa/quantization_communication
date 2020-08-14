@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
@@ -39,8 +39,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ========= ========= =========  plotting ========= ========= =========
 def plot_data(arr, col):
     cut = 0
-    for i in range(20, arr.shape[0]):
-        if arr[i, 0] == 0:
+    for i in range(arr.shape[0]-1, 0, -1):
+        if arr[i, 0] != 0:
             cut = i
             break
     arr = arr[:i, :]
@@ -51,7 +51,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug9th/Wei_cui_like_model_with_regularization"
+    file = "trained_models/Aug9th/Wei_cui_like_model_with_regularization_and_st_and_lots_of_BM"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop}
     N = 1000
@@ -65,8 +65,8 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    # training_data = np.load(training_data_path)
-    # plot_data(training_data, 2)
+    training_data = np.load(training_data_path)
+    plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
