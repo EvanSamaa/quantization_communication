@@ -320,7 +320,6 @@ def CE_with_distribution():
     loss_fn = tf.keras.losses.CategoricalCrossentropy
     def loss(prediction, label):
         return loss_fn(prediction, label)
-
 def Binarization_regularization(ranking=False):
     def regularization(y_pred):
         loss = - tf.square(2 * (y_pred - 0.5))
@@ -451,20 +450,6 @@ def TEMP_Pairwise_Cross_Entropy_loss(K, M, k):
         loss = loss
         return loss
     return loss_fn
-def Sum_rate_utility(K, M, sigma2):
-    # sigma2 here is the variance of the noise
-    def sum_rate_utility(y_pred, G):
-        # assumes the input shape is (batch, k*N) for y_pred,
-        # and the shape for G is (batch, K, N)
-        g_flatten = tf.reshape(G, (G.shape[0], K*M))
-        g_flatten = tf.square(tf.abs(g_flatten))
-        sum_vector = tf.reduce_sum(tf.multiply(y_pred, g_flatten) + sigma2, axis=1)
-        numerator = tf.multiply(g_flatten, y_pred)
-        denominator = tf.subtract(tf.reshape(sum_vector, (sum_vector.shape[0], 1)), numerator) + tf.constant(sigma2)
-        utility = tf.math.log(numerator/denominator+0.00000001 + 1)/tf.math.log(10)
-        utility = tf.reduce_sum(utility, axis=1)
-        return -utility
-    return sum_rate_utility
 def Sum_rate_utility_WeiCui(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
@@ -492,6 +477,41 @@ def Sum_rate_utility_WeiCui(K, M, sigma2):
         utility = tf.math.log(numerator/denominator + 1)/log_2
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
+    return sum_rate_utility
+def Sum_rate_utility(K, M, sigma2):
+    # sigma2 here is the variance of the noise
+    def sum_rate_utility(y_pred, G):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, N)
+        g_flatten = tf.reshape(G, (G.shape[0], K*M))
+        g_flatten = tf.square(tf.abs(g_flatten))
+        sum_vector = tf.reduce_sum(tf.multiply(y_pred, g_flatten) + sigma2, axis=1)
+        numerator = tf.multiply(g_flatten, y_pred)
+        denominator = tf.subtract(tf.reshape(sum_vector, (sum_vector.shape[0], 1)), numerator) + tf.constant(sigma2)
+        utility = tf.math.log(numerator/denominator+0.00000001 + 1)/tf.math.log(10)
+        utility = tf.reduce_sum(utility, axis=1)
+        return -utility
+    return sum_rate_utility
+def Sum_rate_matrix_CE(K, M, sigma2):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
+    # stretch_matrix = np.zeros((K, K*M))
+    # for i in range(0, K):
+    #     for j in range(0, M):
+    #         stretch_matrix[i, i * M + j] = 1
+    # stretch_matrix = tf.constant(stretch_matrix, tf.float32)
+    matrix_goal = tf.eye(K)
+
+    def sum_rate_utility(y_pred, G, display=False):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, M)
+        G = tf.square(tf.abs(G))
+        unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
+        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        matrix = tf.matmul(G, unflattened_X)
+        matrix_goal_current = 0
+        # utility = tf.reduce_sum(utility, axis=1)q
+        return -matrix_goal_current
     return sum_rate_utility
 def Sum_rate_utility_bad_Talor(K, M, sigma2):
     # sigma2 here is the variance of the noise
