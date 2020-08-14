@@ -54,8 +54,8 @@ def train_step(features, labels, N=None, epoch=0):
         # loss = loss_1 + loss_2
         loss = loss_1 + loss_2 + loss_3 + 3*loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
-    # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    optimizer.apply_gradients(gradients, model.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    # optimizer.apply_gradients(gradients, model.trainable_variables)
     train_loss(sum_rate(predictions[:, predictions.shape[1]-1], features))
     train_binarization_loss(loss_3)
     # train_VS(loss_3)
