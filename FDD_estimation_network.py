@@ -33,7 +33,6 @@ def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape() as tape:
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
-        features = tf.constant(np.sort(features, axis=-1), dtype=tf.float32)
         predictions = model(features)
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
@@ -69,7 +68,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_regularization_sorted_input{}"
+    fname_template = "trained_models/Aug9th/Wei_cui_like_model_with_regularization_2_sides{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
