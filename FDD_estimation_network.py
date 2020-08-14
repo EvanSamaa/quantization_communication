@@ -33,6 +33,7 @@ def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape() as tape:
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
+        features, garb = tf.nn.top_k(features, k=M)
         predictions = model(features)
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions) - predictions)
@@ -50,10 +51,8 @@ def train_step(features, labels, N=None, epoch=0):
             loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * sr
             loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * vs
         print("==============================")
-        # loss_2 = vertical_sum(predictions, features)
         loss_3 = Binarization_regularization()(predictions[:, predictions.shape[1]-1])
         loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
-        # loss = loss_1 + loss_2
         loss = loss_1 + loss_3 + loss_4 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -98,7 +97,7 @@ if __name__ == "__main__":
     # model = FDD_Dumb_model(M, K, k=1, N_rf=N_rf)
     model = FDD_per_link_archetecture_sigmoid(M, K, k=3, N_rf=N_rf, output_all=True)
     # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
-    optimizer = tf.keras.optimizers.Adam(lr=0.001)
+    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = AdaBound(lr=0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
