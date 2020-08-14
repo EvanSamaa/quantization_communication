@@ -90,8 +90,8 @@ if __name__ == "__main__":
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
-    # model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
-    model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
+    # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
