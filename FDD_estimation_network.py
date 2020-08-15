@@ -34,6 +34,7 @@ def train_step(features, labels, N=None, epoch=0):
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
         predictions = model(features)
+        predictions = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
@@ -51,7 +52,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_3 = Binarization_regularization()(predictions)
         # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         loss_4 = OutPut_Limit(N_rf)(predictions)
-        loss = loss_1 + loss_2 + loss_4
+        loss = loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
@@ -67,7 +68,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Feedback_model_baseline+soft_N_RF_constraint{}"
+    fname_template = "trained_models/Aug_15th/Feedback_model_hard_baseline{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
