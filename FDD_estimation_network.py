@@ -37,7 +37,7 @@ def train_step(features, labels, N=None, epoch=0):
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
-        loss_1 = sum_rate(predictions, G)
+        loss_1 = sum_rate(predictions, features)
         loss_2 = 0
         # for i in range(0, predictions.shape[1]):
         #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
