@@ -20,11 +20,19 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model.predict(ds_load)[:, -1]
+        prediction = model.predict(ds_load)
         print(tf.reduce_sum(prediction[0]))
-        # result[0] = tf.reduce_mean(loss_fn1(prediction, ds_load))
+        result[0] = tf.reduce_mean(loss_fn1(prediction, ds_load))
         result[1] = loss_fn2(prediction)
-        print(result)
+        print("the soft result is ", result)
+        prediction_binary = binary_activation(prediction)
+        result[0] = tf.reduce_mean(loss_fn1(prediction_binary, ds_load))
+        result[1] = loss_fn2(prediction_binary)
+        print("the hard result is ", result)
+        prediction_hard = Harden_scheduling(k=N_rf)(prediction)
+        result[0] = tf.reduce_mean(loss_fn1(prediction_hard, ds_load))
+        result[1] = loss_fn2(prediction_hard)
+        print("the top Nrf result is ", result)
         # ========= ========= =========  plotting ========= ========= =========
         # ds = tf.square(tf.abs(ds))
         # # prediction = prediction[:, :, 2]
@@ -51,7 +59,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug9th/Wei_cui_like_model_with_regularization_and_st_and_lots_of_BM"
+    file = "trained_models/Aug_15th/Feedback_model_baseline+VS"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop}
     N = 1000
@@ -65,8 +73,8 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    training_data = np.load(training_data_path)
-    plot_data(training_data, 0)
+    # training_data = np.load(training_data_path)
+    # plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
