@@ -50,8 +50,8 @@ def train_step(features, labels, N=None, epoch=0):
         print("==============================")
         loss_3 = Binarization_regularization()(predictions)
         predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
-        loss_4 = OutPut_Limit(N_rf)(predictions_hard[:, predictions.shape[1]-1])
-        loss = loss_1 + loss_2 + loss_3
+        loss_4 = OutPut_Limit(N_rf)(predictions_hard)
+        loss = loss_1 + loss_2 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
