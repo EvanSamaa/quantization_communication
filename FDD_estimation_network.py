@@ -51,16 +51,16 @@ def train_step(features, labels, N=None, epoch=0):
         #     loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * sr
         #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
-        # loss_3 = Binarization_regularization()(predictions)
+        loss_3 = Binarization_regularization()(predictions)
         # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         # loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
         loss_4 = OutPut_Limit(N_rf)(predictions)
-        loss = loss_1
+        loss = loss_1 + 100*loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
     train_loss(sum_rate(predictions, features))
-    train_binarization_loss(loss_4)
+    train_binarization_loss(loss_3)
     # train_VS(loss_3)
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(predictions), features))
     # train_hard_loss(sum_rate(binary_activation(predictions[:, predictions.shape[1]-1]), features))
@@ -71,7 +71,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Feedback_model_softmax+top_K_ST{}"
+    fname_template = "trained_models/Aug_15th/Feedback_model_softmax+top_K_ST+100xbinary_reg{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
