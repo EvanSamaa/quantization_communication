@@ -52,7 +52,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_3 = Binarization_regularization()(predictions)
         # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         loss_4 = OutPut_Limit(N_rf)(predictions)
-        loss = loss_1 + loss_2
+        loss = loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
@@ -68,7 +68,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Feedback_model_hard_baseline+VS{}"
+    fname_template = "trained_models/Aug_15th/Feedback_model_softmax{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -91,6 +91,7 @@ if __name__ == "__main__":
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=False)
+    model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=False)
     # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # for data visualization
