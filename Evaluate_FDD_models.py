@@ -54,12 +54,12 @@ def plot_data(arr, col):
     arr = arr[:i, :]
     x = np.arange(0, arr.shape[0])
     plt.plot(x, arr[:, col])
-    # plt.plot(x, arr[:, 3])
+    plt.plot(x, arr[:, 3])
     # plt.plot(x, arr[:, 3])
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug_15th/Feedback_model_baseline+soft_N_RF_constraint"
+    file = "trained_models/Aug_15th/Feedback_model_hard_baseline+1000x_N_RF_constraint"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop}
     N = 1000
