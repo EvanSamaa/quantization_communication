@@ -35,34 +35,35 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions = model(f_features)
         predictions = model(features)
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
+        predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
-        # loss_1 = sum_rate(predictions, features)
+        loss_1 = sum_rate(predictions, features)
         # loss_2 = vertical_sum(predictions, features)
-        loss_1 = 0
         # loss_2 = vertical_sum(predictions, features)
-        for i in range(0, predictions.shape[1]):
-            # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-            # ce = matrix_CE(predictions[:, i], features)
-            sr = sum_rate(predictions[:, i], features)
-            # vs = vertical_sum(predictions[:, i], features)
-            # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * ce
-            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * sr
-            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
-        print("========s======================")
+        # for i in range(0, predictions.shape[1]):
+        #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
+        #     # ce = matrix_CE(predictions[:, i], features)
+        #     sr = sum_rate(predictions[:, i], features)
+        #     # vs = vertical_sum(predictions[:, i], features)
+        #     # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * ce
+        #     loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * sr
+        #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
+        print("==============================")
         # loss_3 = Binarization_regularization()(predictions)
         # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
-        loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
+        # loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
+        loss_4 = OutPut_Limit(N_rf)(predictions)
         loss = loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
-    train_loss(sum_rate(predictions[:, predictions.shape[1]-1], features))
+    train_loss(sum_rate(predictions, features))
     train_binarization_loss(loss_4)
     # train_VS(loss_3)
-    # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(predictions[:, predictions.shape[1]-1]), features))
-    train_hard_loss(sum_rate(binary_activation(predictions[:, predictions.shape[1]-1]), features))
+    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(predictions, features))
+    # train_hard_loss(sum_rate(binary_activation(predictions[:, predictions.shape[1]-1]), features))
 
 def random_complex(shape, sigma2):
     A_R = np.random.normal(0, sigma2, shape)
@@ -70,7 +71,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Feedback_model_MP+SM{}"
+    fname_template = "trained_models/Aug_15th/Feedback_model_softmax+top_K_ST{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
-    model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
+    model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=False)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
