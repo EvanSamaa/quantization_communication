@@ -62,7 +62,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_loss(sum_rate(predictions, features))
     train_binarization_loss(loss_4)
     # train_VS(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(predictions, features)))
+    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(predictions), features))
     # train_hard_loss(sum_rate(binary_activation(predictions[:, predictions.shape[1]-1]), features))
 
 def random_complex(shape, sigma2):
