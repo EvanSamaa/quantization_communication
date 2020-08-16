@@ -36,7 +36,7 @@ def train_step(features, labels, N=None, epoch=0):
         predictions = model(features)
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        mask = tf.stop_gradient(binary_activation(predictions, shift=0.5))
+        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions))
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
@@ -56,7 +56,7 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
         loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions, mask)
         loss_3 = Binarization_regularization()(predictions)
-        loss = loss_1 + loss_4
+        loss = loss_1 + 10*loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
