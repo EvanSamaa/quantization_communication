@@ -57,7 +57,7 @@ def train_step(features, labels, N=None, epoch=0):
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
     train_loss(sum_rate(predictions, features))
-    train_binarization_loss(loss_3)
+    train_binarization_loss(loss_4)
     # train_VS(loss_3)
     # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(predictions[:, predictions.shape[1]-1]), features))
     train_hard_loss(sum_rate(binary_activation(predictions), features))
