@@ -36,7 +36,7 @@ def train_step(features, labels, N=None, epoch=0):
         predictions = model(features)
         # predictions = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions))
+        mask = tf.stop_gradient(binary_activation(predictions, shift=0.5))
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
@@ -72,7 +72,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Feedback_model_softmax+commitment_loss{}"
+    fname_template = "trained_models/Aug_15th/Feedback_model_softmax+commitment_loss_binary{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
