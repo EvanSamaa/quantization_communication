@@ -332,6 +332,12 @@ def OutPut_Limit(N_rf):
         loss = tf.maximum(-(loss-tf.constant(N_rf, dtype=tf.float32)), (loss-tf.constant(N_rf, dtype=tf.float32)))
         return loss
     return regularization
+def OutPut_Limit_onesided(N_rf):
+    def regularization(y_pred):
+        loss = tf.reduce_sum(y_pred, axis=1)
+        loss = tf.maximum(0, (loss-tf.constant(N_rf, dtype=tf.float32)))
+        return loss
+    return regularization
 def Output_Per_Receiver_Control(K, M, ranking=False):
     def regularization(y_pred):
         loss = 0
