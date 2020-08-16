@@ -52,7 +52,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_3 = Binarization_regularization()(predictions)
         # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         loss_4 = OutPut_Limit(N_rf)(predictions)
-        loss = loss_1
+        loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
@@ -68,7 +68,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Feedback_model_softmax{}"
+    fname_template = "trained_models/Aug_15th/Feedback_model_softmax+VS{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
