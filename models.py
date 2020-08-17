@@ -258,6 +258,40 @@ class Interference_Input_modification_no_loop(tf.keras.layers.Layer):
             'name':"Interference_Input_modification_no_loop"
         })
         return config
+class Interference_Input_modification_per_user(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Interference_Input_modification_per_user, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x, input_mod, step):
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.K, self.M))
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        interference_f = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=1)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, 1))
+        interference_f = tf.tile(tf.expand_dims(interference_f, 2), (1, 1, 1))
+        x = tf.keras.layers.Reshape((self.K * self.M, ))(x)
+        x = tf.expand_dims(x, axis=1)
+        x = tf.tile(x, (1, self.K, 1))
+        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), interference_t) + tf.constant(step))
+        input_i = input_concatnator(
+            [input_reshaper(input_mod), interference_t, interference_f, x, iteration_num])
+        return input_i
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K':self.K,
+            'M':self.M,
+            'N_rf':self.N_rf,
+            'k':self.k,
+            'name':"Interference_Input_modification_per_user"
+        })
+        return config
 ############################## MLP models ##############################
 def create_MLP_model(input_shape, k):
     # outputs logit
@@ -1397,6 +1431,38 @@ def FDD_Dumb_model(M, K, k=2, N_rf=3):
         output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(output_i), axis=1)
     model = Model(inputs, output_i)
     return model
+def per_user_DNN(input_shape, M):
+    inputs = Input(shape=input_shape)
+    x = Dense(512)(inputs)
+    x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(512)(inputs)
+    x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(M+1, bias_initializer="ones")(x)
+    model = Model(inputs, x, name="per_user_DNN")
+    return model
+
+def FDD_per_user_architecture(M, K, k=2, N_rf=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs)) #(None, K, M)
+    input_modder = Interference_Input_modification_per_user(K, M, N_rf, k)
+    sm = tf.keras.layers.Softmax()
+    dnn = per_user_DNN((K, M*K + M + 3), M)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M/K)
+    input_pass_0 = input_modder(decision_0, input_mod, k - 1.0)
+    output_i = dnn(input_pass_0)
+    print(output_i[:, :, :-1].shape)
+    output_i = tf.multiply(sm(output_i[:, :, :-1]), sigmoid(output_i[:, :,-1]))
+    for times in range(1, k):
+        output_i = tf.keras.layers.Reshape((K, M))(output_i)
+        input_i = input_modder(output_i, input_mod, k - times - 1.0)
+        output_i = dnn(input_i)
+        output_i = tf.multiply(sm(output_i[:, :, :-1]), sigmoid(output_i[:, :,-1]))
+    output_i = tf.keras.layers.Reshape((K*M))(output_i)
+    model = Model(inputs, output_i)
+    return model
+
 class NN_Clustering():
     def __init__(self, cluster_count, original_dim, reduced_dim=10):
         self.cluster_count = cluster_count
@@ -1574,7 +1640,7 @@ if __name__ == "__main__":
     seed = 200
     N_rf = 5
     G = generate_link_channel_data(N, K, M)
-    FDD_per_link_archetecture(M, K)
+    FDD_per_user_architecture(M, K, k=2, N_rf=3)
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)
     # nn.train_network(G)
     # nn.save_model("trained_models/Aug8th/nn_k_mean_dim_15/")
