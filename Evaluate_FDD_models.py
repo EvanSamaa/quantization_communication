@@ -69,7 +69,7 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 3
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     model_path = file + ".h5"
