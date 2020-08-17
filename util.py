@@ -12,7 +12,7 @@ import os
 from soft_sort.tf_ops import soft_rank
 import scipy as sp
 from generate_batch_data import generate_batch_data, generate_batch_data_with_angle
-from models import k_clustering_hieristic
+# from models import k_clustering_hieristic
 # from matplotlib import pyplot as plt
 
 # ==========================  Data gen ============================s

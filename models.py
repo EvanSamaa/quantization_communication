@@ -123,9 +123,10 @@ def greedy_hieristic(N_rf, sigma2):
     combinations = []
     def model(G):
         loss = Sum_rate_utility_WeiCui(G.shape[1], G.shape[2], sigma2)
+        G_copy = G.numpy()
         for i_1 in range(0, G.shape[1] * G.shape[2]):
             for i_2 in range(0, G.shape[1] * G.shape[2]):
-                if i_1 != i_2:
+                if i_1 != i_2 and i_1%G.shape[2] != i_2%G.shape[2]:
                     temp = np.zeros((G.shape[1] * G.shape[2],))
                     temp[i_1] = 1
                     temp[i_2] = 1
@@ -142,6 +143,9 @@ def greedy_hieristic(N_rf, sigma2):
                     min = current_min
                     best_pair = com
             output[n] = best_pair
+            selected = set(np.nonzero(best_pair))
+            print(selected)
+            A[2]
             if N_rf > 2:
                 for n_rf in range(2, N_rf):
                     new_comb = []
