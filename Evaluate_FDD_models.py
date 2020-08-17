@@ -59,7 +59,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug_15th/Thinner_longer_Feedback_model_softmax+commitment_loss"
+    file = "trained_models/Aug_15th/N_rf=5_Feedback_model_softmax+commitment_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop}
     N = 1000
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 3
+    N_rf = 5
     sigma2_h = 6.3
     sigma2_n = 0.1
     model_path = file + ".h5"

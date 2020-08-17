@@ -72,7 +72,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/N_rf=5_Feedback_model_softmax+commitment_loss{}"
+    fname_template = "trained_models/Aug_15th/Feedback_model_softmax+commitment_loss+SGD{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 100
-    N_rf = 5
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
@@ -96,7 +96,8 @@ if __name__ == "__main__":
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
     model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=False)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    # optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    optimizer = tf.keras.optimizers.SGD(lr=0.0001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
