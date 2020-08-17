@@ -56,7 +56,7 @@ def train_step(features, labels, N=None, epoch=0):
         loss_4 = OutPut_Limit(N_rf)(predictions)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions, mask)
         loss_3 = Binarization_regularization()(predictions)
-        loss = loss_1
+        loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
