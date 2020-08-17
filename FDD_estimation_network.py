@@ -97,7 +97,7 @@ if __name__ == "__main__":
     # model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
     model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=False)
     # optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-    optimizer = tf.keras.optimizers.SGD(lr=0.0001)
+    optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
