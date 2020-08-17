@@ -143,14 +143,15 @@ def greedy_hieristic(N_rf, sigma2):
                     min = current_min
                     best_pair = com
             output[n] = best_pair
-            selected = set(np.nonzero(best_pair))
-            print(selected)
-            A[2]
+            selected = set()
+            pair_index = np.nonzero(best_pair)
+            selected.add(pair_index[0][0]%G.shape[2])
+            selected.add(pair_index[0][1]%G.shape[2])
             if N_rf > 2:
                 for n_rf in range(2, N_rf):
                     new_comb = []
                     for additional_i in range(G.shape[1] * G.shape[2]):
-                        if output[n, additional_i] != 1:
+                        if output[n, additional_i] != 1 and not additional_i % G.shape[2] in selected:
                             temp = output[n].copy()
                             temp[additional_i] = 1
                             new_comb.append(temp)
