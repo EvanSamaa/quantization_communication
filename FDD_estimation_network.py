@@ -96,7 +96,7 @@ if __name__ == "__main__":
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=False)
     # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=True)
-    model = FDD_per_user_architecture_double_softmax(M, K, k=4, N_rf=N_rf)
+    model = FDD_per_user_architecture_double_softmax(M, K, k=4, N_rf=N_rf, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
