@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
