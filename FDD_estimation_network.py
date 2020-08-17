@@ -36,26 +36,27 @@ def train_step(features, labels, N=None, epoch=0):
         predictions = model(features)
         predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions[:, -1]))
+        # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions[:, -1]))
         # mask = tf.stop_gradient(binary_activation(predictions, shift=0.5))
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
-        # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = 0
+        loss_4 = 0
         # loss_2 = vertical_sum(predictions, features)
         # loss_2 = vertical_sum(predictions, features)
         for i in range(0, predictions.shape[1]):
             # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-            # ce = matrix_CE(predictions[:, i], features)
-            sr = sum_rate(predictions[:, i], features)
-            # vs = vertical_sum(predictions[:, i], features)
-            # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]-1+i, dtype=tf.float32)) * ce
-            loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * sr
+            # sr = sum_rate(predictions[:, i], features)
+            mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions[:, i]))
+            ce = tf.keras.losses.CategoricalCrossentropy()(predictions[:, i], mask)
+            # loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * sr
+            loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
         # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         # loss_4 = OutPut_Limit(N_rf)(predictions_hard)
-        loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions[:, -1], mask)
+        # loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions[:, -1], mask)
+        loss_1 = sum_rate(predictions[:, -1], features)
         loss_3 = Binarization_regularization()(predictions)
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -73,7 +74,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Longer_Feedback_model_softmax+commitment_loss(only_last_iter)+MP{}"
+    fname_template = "trained_models/Aug_15th/Longer_Feedback_model_softmax_sr_only_last_iter+commitment_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
