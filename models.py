@@ -1467,7 +1467,7 @@ def FDD_per_user_architecture(M, K, k=2, N_rf=3):
     output_i = tf.keras.layers.Reshape((K*M, ))(output_i)
     model = Model(inputs, output_i)
     return model
-def FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3):
+def FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs)) #(None, K, M)
     input_modder = Interference_Input_modification_per_user(K, M, N_rf, k)
@@ -1478,14 +1478,20 @@ def FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3):
     output_i = dnn(input_pass_0)
     selection_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(output_i[:, :,-N_rf:]), axis=2)
     output_i = tf.multiply(sm(output_i[:, :, :-N_rf]), tf.expand_dims(selection_i, axis=2))
+    if output_all:
+        output_0 = tf.keras.layers.Reshape((1, M*K))(output_i)
     for times in range(1, k):
         output_i = tf.keras.layers.Reshape((K, M))(output_i)
         input_i = input_modder(output_i, input_mod, k - times - 1.0)
         output_i = dnn(input_i)
         selection_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(output_i[:, :, -N_rf:]), axis=2)
         output_i = tf.multiply(sm(output_i[:, :, :-N_rf]), tf.expand_dims(selection_i, axis=2))
+        if output_all:
+            output_0 = tf.concat((output_0, tf.keras.layers.Reshape((1, M*K))(output_i)), axis=1)
     output_i = tf.keras.layers.Reshape((K*M, ))(output_i)
     model = Model(inputs, output_i)
+    if output_all:
+        model = Model(inputs, output_0)
     return model
 
 class NN_Clustering():
