@@ -55,7 +55,7 @@ def train_step(features, labels, N=None, epoch=0):
         print("==============================")
         # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         # loss_4 = OutPut_Limit(N_rf)(predictions)
-        loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions, mask)
+        # loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions, mask)
         loss_3 = Binarization_regularization()(predictions)
         loss = loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
-    model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=False)
     # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=False)
     # model = FDD_per_user_architecture(M, K, k=6, N_rf=N_rf)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
