@@ -1437,7 +1437,7 @@ def FDD_Dumb_model(M, K, k=2, N_rf=3):
         output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(output_i), axis=1)
     model = Model(inputs, output_i)
     return model
-def per_user_DNN(input_shape, M):
+def per_user_DNN(input_shape, M, N_rf=1):
     inputs = Input(shape=input_shape)
     x = Dense(512)(inputs)
     x = sigmoid(x)
@@ -1445,7 +1445,7 @@ def per_user_DNN(input_shape, M):
     x = Dense(512)(x)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = Dense(M+1, bias_initializer="ones")(x)
+    x = Dense(M+N_rf, bias_initializer="ones")(x)
     model = Model(inputs, x, name="per_user_DNN")
     return model
 
@@ -1464,6 +1464,26 @@ def FDD_per_user_architecture(M, K, k=2, N_rf=3):
         input_i = input_modder(output_i, input_mod, k - times - 1.0)
         output_i = dnn(input_i)
         output_i = tf.multiply(sm(output_i[:, :, :-1]), tf.expand_dims(sigmoid(output_i[:, :,-1]), axis=2))
+    output_i = tf.keras.layers.Reshape((K*M, ))(output_i)
+    model = Model(inputs, output_i)
+    return model
+def FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs)) #(None, K, M)
+    input_modder = Interference_Input_modification_per_user(K, M, N_rf, k)
+    sm = tf.keras.layers.Softmax()
+    dnn = per_user_DNN((K, M*K + M + 3), M, N_rf)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M/K)
+    input_pass_0 = input_modder(decision_0, input_mod, k - 1.0)
+    output_i = dnn(input_pass_0)
+    selection_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(output_i[:, :,-N_rf:]), axis=2)
+    output_i = tf.multiply(sm(output_i[:, :, :-N_rf]), tf.expand_dims(selection_i, axis=2))
+    for times in range(1, k):
+        output_i = tf.keras.layers.Reshape((K, M))(output_i)
+        input_i = input_modder(output_i, input_mod, k - times - 1.0)
+        output_i = dnn(input_i)
+        selection_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(output_i[:, :, -N_rf:]), axis=2)
+        output_i = tf.multiply(sm(output_i[:, :, :-N_rf]), tf.expand_dims(selection_i, axis=2))
     output_i = tf.keras.layers.Reshape((K*M, ))(output_i)
     model = Model(inputs, output_i)
     return model
@@ -1645,7 +1665,7 @@ if __name__ == "__main__":
     seed = 200
     N_rf = 5
     G = generate_link_channel_data(N, K, M)
-    FDD_per_user_architecture(M, K, k=2, N_rf=3)
+    FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3)
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)
     # nn.train_network(G)
     # nn.save_model("trained_models/Aug8th/nn_k_mean_dim_15/")

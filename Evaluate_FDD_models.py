@@ -69,7 +69,7 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 4
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     model_path = file + ".h5"
@@ -78,11 +78,11 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
-    # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-    # print(model.summary())
+    model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    print(model.summary())
     # model = NN_Clustering(N_rf, M, reduced_dim=8)
     # model = k_clustering_hieristic(N_rf)
-    model = greedy_hieristic(N_rf, sigma2_n)
+    # model = greedy_hieristic(N_rf, sigma2_n)
     # model = top_N_rf_user_model(M, K, N_rf)
     # print(model.summary())
     test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
