@@ -53,7 +53,7 @@ def train_step(features, labels, N=None, epoch=0):
         #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
         # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
-        loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
+        loss_4 = OutPut_Limit(N_rf)(predictions)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions, mask)
         loss_3 = Binarization_regularization()(predictions)
         loss = loss_1

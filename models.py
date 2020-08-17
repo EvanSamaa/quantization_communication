@@ -1453,13 +1453,13 @@ def FDD_per_user_architecture(M, K, k=2, N_rf=3):
     input_pass_0 = input_modder(decision_0, input_mod, k - 1.0)
     output_i = dnn(input_pass_0)
     print(output_i[:, :, :-1].shape)
-    output_i = tf.multiply(sm(output_i[:, :, :-1]), sigmoid(output_i[:, :,-1]))
+    output_i = tf.multiply(sm(output_i[:, :, :-1]), tf.expand_dims(sigmoid(output_i[:, :,-1]), axis=2))
     for times in range(1, k):
         output_i = tf.keras.layers.Reshape((K, M))(output_i)
         input_i = input_modder(output_i, input_mod, k - times - 1.0)
         output_i = dnn(input_i)
-        output_i = tf.multiply(sm(output_i[:, :, :-1]), sigmoid(output_i[:, :,-1]))
-    output_i = tf.keras.layers.Reshape((K*M))(output_i)
+        output_i = tf.multiply(sm(output_i[:, :, :-1]), tf.expand_dims(sigmoid(output_i[:, :,-1]), axis=2))
+    output_i = tf.keras.layers.Reshape((K*M, ))(output_i)
     model = Model(inputs, output_i)
     return model
 
