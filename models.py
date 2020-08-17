@@ -1436,7 +1436,7 @@ def per_user_DNN(input_shape, M):
     x = Dense(512)(inputs)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = Dense(512)(inputs)
+    x = Dense(512)(x)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(M+1, bias_initializer="ones")(x)
@@ -1452,7 +1452,6 @@ def FDD_per_user_architecture(M, K, k=2, N_rf=3):
     decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0*N_rf/M/K)
     input_pass_0 = input_modder(decision_0, input_mod, k - 1.0)
     output_i = dnn(input_pass_0)
-    print(output_i[:, :, :-1].shape)
     output_i = tf.multiply(sm(output_i[:, :, :-1]), tf.expand_dims(sigmoid(output_i[:, :,-1]), axis=2))
     for times in range(1, k):
         output_i = tf.keras.layers.Reshape((K, M))(output_i)
