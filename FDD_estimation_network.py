@@ -34,10 +34,10 @@ def train_step(features, labels, N=None, epoch=0):
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
         predictions = model(features)
-        predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
-        # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
+        # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
+        predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions))
-        mask = tf.stop_gradient(binary_activation(predictions, shift=0.5))
+        # mask = tf.stop_gradient(binary_activation(predictions, shift=0.5))
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
@@ -57,7 +57,7 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_4 = OutPut_Limit(N_rf)(predictions)
         loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions, mask)
         loss_3 = Binarization_regularization()(predictions)
-        loss = loss_1 + loss_4
+        loss = loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
@@ -73,7 +73,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Per_user_Feedback_model_binary_hard+commitment_loss{}"
+    fname_template = "trained_models/Aug_15th/Feedback_model_top_Nrf_hard_baseline{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -95,9 +95,9 @@ if __name__ == "__main__":
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
-    # model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
-    model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=False)
-    model = FDD_per_user_architecture(M, K, k=6, N_rf=N_rf)
+    model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
+    # model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=False)
+    # model = FDD_per_user_architecture(M, K, k=6, N_rf=N_rf)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
