@@ -34,13 +34,14 @@ def train_step(features, labels, N=None, epoch=0):
         # f_features = float_to_floatbits(features, complex=True)
         # predictions = model(f_features)
         predictions = model(features)
-        # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
+        predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions))
+        # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions))
+        mask = tf.stop_gradient(binary_activation(predictions, shift=0.5))
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
-        loss_1 = sum_rate(predictions, features)
+        loss_1 = sum_rate(predictions_hard, features)
         # loss_2 = vertical_sum(predictions, features)
         # loss_2 = vertical_sum(predictions, features)
         # for i in range(0, predictions.shape[1]):
@@ -72,7 +73,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/N_RF=5_Per_user_Feedback_model+commitment_loss{}"
+    fname_template = "trained_models/Aug_15th/Per_user_Feedback_model_binary_hard+commitment_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 100
-    N_rf = 5
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
