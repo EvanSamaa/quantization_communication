@@ -41,7 +41,7 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
         # loss_1 = loss_object_1(predictions, features, display=np.random.choice([False, False], p=[0.1, 0.9]))
         loss_1 = sum_rate(predictions, features)
-        # loss_2 = vertical_sum(predictions, features)
+        loss_2 = vertical_sum(predictions, features)
         # loss_2 = vertical_sum(predictions, features)
         # for i in range(0, predictions.shape[1]):
         #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
@@ -56,7 +56,7 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_4 = OutPut_Limit(N_rf)(predictions[:, predictions.shape[1]-1])
         loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions, mask)
         loss_3 = Binarization_regularization()(predictions)
-        loss = loss_1 + loss_4
+        loss = loss_1 + loss_4 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # optimizer.apply_gradients(gradients, model.trainable_variables)
@@ -72,7 +72,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Feedback_model_softmax+commitment_loss+SGD{}"
+    fname_template = "trained_models/Aug_15th/Feedback_model_softmax+commitment_loss+VSs{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -96,8 +96,8 @@ if __name__ == "__main__":
     vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
     # model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=True)
     model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=False)
-    # optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-    optimizer = tf.keras.optimizers.SGD(lr=0.001)
+    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
     train_loss = tf.keras.metrics.Mean(name='train_loss')
