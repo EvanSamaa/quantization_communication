@@ -72,7 +72,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/Thinner_longer_Feedback_model_softmax+commitment_loss{}"
+    fname_template = "trained_models/Aug_15th/One_layer_Feedback_model_softmax+commitment_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
