@@ -163,6 +163,7 @@ def greedy_hieristic(N_rf, sigma2):
                             min = current_min
                             best_comb = com
                     output[n] = best_comb
+        output = tf.constant(output, dtype=tf.float32)
         return output
     return model
 ############################## Layers ##############################
