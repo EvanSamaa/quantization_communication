@@ -1451,7 +1451,7 @@ def per_user_DNN(input_shape, M, N_rf=1):
 
 def tiny_DNN(input_shape, N_rf):
     inputs = Input(shape=input_shape, dtype=tf.float32)
-    x = Dense(512)(inputs)
+    x = Dense(128)(inputs)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(N_rf, bias_initializer="ones")(x)
