@@ -71,7 +71,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/N_rf=5_LSTM_perlink_model{}"
+    fname_template = "trained_models/Aug_15th/N_rf=10_LSTM_perlink_model{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 100
-    N_rf = 5
+    N_rf = 10
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
