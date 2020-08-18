@@ -35,7 +35,7 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions = model(f_features)
         predictions = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions))
+        # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions))
         # mask = tf.stop_gradient(binary_activation(predictions, shift=0.5))
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
@@ -71,7 +71,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/LSTM_perlink_model{}"
+    fname_template = "trained_models/Aug_15th/N_rf=5_LSTM_perlink_model{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 100
-    N_rf = 3
+    N_rf = 5
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
