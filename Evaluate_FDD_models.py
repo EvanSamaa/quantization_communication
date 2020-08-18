@@ -59,7 +59,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug_15th/Thinner_longer_Feedback_model_softmax+commitment_loss"
+    file = "trained_models/Aug_15th/LSTM_perlink_model+0.25x_commitment_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-    print(model.get_layer("model").summary())
+    # print(model.get_layer("model").summary())
     print(model.summary())
     # model = NN_Clustering(N_rf, M, reduced_dim=8)
     # model = k_clustering_hieristic(N_rf)
