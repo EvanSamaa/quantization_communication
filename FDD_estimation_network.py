@@ -39,7 +39,7 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(binary_activation(predictions, shift=0.5))
         # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
         # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
-        loss_1 = sum_rate(predictions)
+        loss_1 = sum_rate(predictions, features)
         # loss_2 = vertical_sum(predictions, features)
         # loss_2 = vertical_sum(predictions, features)
         # for i in range(0, predictions.shape[1]):
