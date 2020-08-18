@@ -20,7 +20,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model(ds_load)[:, -1]
+        prediction = model(ds_load)
         print(tf.reduce_sum(prediction[0]))
         result[0] = tf.reduce_mean(loss_fn1(prediction, ds_load))
         result[1] = loss_fn2(prediction)
