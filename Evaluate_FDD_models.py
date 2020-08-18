@@ -6,7 +6,7 @@ import tensorflow as tf
 
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 10
+    num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
@@ -59,7 +59,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug_15th/N_rf=5_LSTM_perlink_model"
+    file = "trained_models/Aug_15th/LSTM_perlink_model+commitment_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
