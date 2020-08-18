@@ -1463,18 +1463,21 @@ def LSTM_like_model_for_FDD(M, K, N_rf, k):
     dnn1 = tiny_DNN((M*K, 4 + M*K), N_rf)
     dnn2 = tiny_DNN((M*K, 4 + M*K), N_rf)
     dnn3 = tiny_DNN((M*K, 4 + M*K), N_rf)
+    dnn4 = tiny_DNN((M*K, 4 + M*K), N_rf)
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), inputs[:, :, :]) + 1.0*N_rf/M/K)
     input_i = input_modder(output_0, inputs, k - 1.0)
     state_0 = tf.tile(tf.keras.layers.Reshape((K*M, 1))(output_0), (1, 1, N_rf))
     x = tf.multiply(sigmoid(dnn1(input_i)), state_0) # forget gate
     state_i = x + tf.multiply(sigmoid(dnn2(input_i)), tf.tanh(dnn3(input_i)))
-    output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(state_i), axis=2)
+    output_i = tf.multiply(sigmoid(dnn4(input_i)), state_i)
+    output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(output_i), axis=2)
     output = [tf.expand_dims(output_i, axis = 1)]
     for i in range(1, k):
         input_i = input_modder(tf.keras.layers.Reshape((K, M))(output_i), inputs, k - 1.0 - i)
         x = tf.multiply(sigmoid(dnn1(input_i)), state_i)  # forget gate
         state_i = x + tf.multiply(sigmoid(dnn2(input_i)), tf.tanh(dnn3(input_i)))
-        output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(state_i), axis=2)
+        output_i = tf.multiply(sigmoid(dnn4(input_i)), state_i)
+        output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(output_i), axis=2)
         output.append(tf.expand_dims(output_i, axis = 1))
     output = tf.concat(output, axis=1)
     model = Model(inputs, output)
