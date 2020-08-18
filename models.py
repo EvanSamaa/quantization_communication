@@ -1529,7 +1529,7 @@ def FDD_per_link_LSTM(M, K, k=2, N_rf=3, output_all = False):
     input_mod = tf.square(tf.abs(inputs))
     input_mod = tf.keras.layers.BatchNormalization()(input_mod)
     lstm_module = LSTM_like_model_for_FDD(M, K, N_rf, k)
-    out = lstm_module(inputs)
+    out = lstm_module(input_mod)
     # compute interference from k,i
     model = Model(inputs, out[:, -1])
     if output_all:
