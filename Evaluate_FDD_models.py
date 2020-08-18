@@ -59,7 +59,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug_15th/Longer_Feedback_model_softmax+commitment_loss+MP"
+    file = "trained_models/Aug_15th/Per_user_Feedback_model_softmax+commitment_loss+MP"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
