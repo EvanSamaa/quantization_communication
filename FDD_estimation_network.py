@@ -83,7 +83,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 100
-    N_rf = 3
+    N_rf = 5
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
