@@ -48,7 +48,7 @@ def train_step(features, labels, N=None, epoch=0):
             ce = tf.keras.losses.CategoricalCrossentropy()(predictions[:, i], mask)
             loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * sr
             loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
-            loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
+            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
         # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
         # loss_4 = OutPut_Limit(N_rf)(predictions_hard)
@@ -70,7 +70,7 @@ def random_complex(shape, sigma2):
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/N_rf=5_Feedback_model_softmax+commitment_loss+MP{}"
+    fname_template = "trained_models/Aug_15th/N_rf=4_Feedback_2layer_model_softmax+commitment_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     K = 10
     B = 10
     seed = 100
-    N_rf = 5
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
