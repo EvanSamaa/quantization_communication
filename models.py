@@ -1449,6 +1449,37 @@ def per_user_DNN(input_shape, M, N_rf=1):
     model = Model(inputs, x, name="per_user_DNN")
     return model
 
+def tiny_DNN(input_shape, N_rf):
+    inputs = Input(shape=input_shape, dtype=tf.float32)
+    x = Dense(512)(inputs)
+    x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(N_rf, bias_initializer="ones")(x)
+    model = Model(inputs, x)
+    return model
+def LSTM_like_model_for_FDD(M, K, N_rf, k):
+    inputs = Input(shape=(K, M), dtype=tf.float32)
+    input_modder = Interference_Input_modification(K, M, N_rf, k)
+    dnn1 = tiny_DNN((M*K, 4 + M*K), N_rf)
+    dnn2 = tiny_DNN((M*K, 4 + M*K), N_rf)
+    dnn3 = tiny_DNN((M*K, 4 + M*K), N_rf)
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), inputs[:, :, :]) + 1.0*N_rf/M/K)
+    input_i = input_modder(output_0, inputs, k - 1.0)
+    state_0 = tf.tile(tf.keras.layers.Reshape((K*M, 1))(output_0), (1, 1, N_rf))
+    x = tf.multiply(sigmoid(dnn1(input_i)), state_0) # forget gate
+    state_i = x + tf.multiply(sigmoid(dnn2(input_i)), tf.tanh(dnn3(input_i)))
+    output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(state_i), axis=2)
+    output = [tf.expand_dims(output_i, axis = 1)]
+    for i in range(1, k):
+        input_i = input_modder(tf.keras.layers.Reshape((K, M))(output_i), inputs, k - 1.0 - i)
+        x = tf.multiply(sigmoid(dnn1(input_i)), state_i)  # forget gate
+        state_i = x + tf.multiply(sigmoid(dnn2(input_i)), tf.tanh(dnn3(input_i)))
+        output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(state_i), axis=2)
+        output.append(tf.expand_dims(output_i, axis = 1))
+    output = tf.concat(output, axis=1)
+    model = Model(inputs, output)
+    return model
+
 def FDD_per_user_architecture(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs)) #(None, K, M)
@@ -1493,7 +1524,17 @@ def FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3, output_all=False
     if output_all:
         model = Model(inputs, output_0)
     return model
-
+def FDD_per_link_LSTM(M, K, k=2, N_rf=3, output_all = False):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    lstm_module = LSTM_like_model_for_FDD(M, K, N_rf, k)
+    out = lstm_module(inputs)
+    # compute interference from k,i
+    model = Model(inputs, out[:, -1])
+    if output_all:
+        model = Model(inputs, out)
+    return model
 class NN_Clustering():
     def __init__(self, cluster_count, original_dim, reduced_dim=10):
         self.cluster_count = cluster_count
@@ -1671,7 +1712,8 @@ if __name__ == "__main__":
     seed = 200
     N_rf = 5
     G = generate_link_channel_data(N, K, M)
-    FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3)
+    # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
+    LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)
     # nn.train_network(G)
     # nn.save_model("trained_models/Aug8th/nn_k_mean_dim_15/")
