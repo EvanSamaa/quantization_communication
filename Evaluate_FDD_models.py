@@ -6,7 +6,7 @@ import tensorflow as tf
 
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 1000
+    num_data = 10
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
@@ -22,17 +22,25 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         prediction = model(ds_load)
         print(tf.reduce_sum(prediction[0]))
-        result[0] = tf.reduce_mean(loss_fn1(prediction, ds_load))
+        out = loss_fn1(prediction, ds_load)
+        result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
         print("the soft result is ", result)
+        print("the variance is ", tf.math.reduce_std(out))
+
         prediction_binary = binary_activation(prediction)
-        result[0] = tf.reduce_mean(loss_fn1(prediction_binary, ds_load))
+        out_binary = loss_fn1(prediction_binary, ds_load)
+        result[0] = tf.reduce_mean(out_binary)
         result[1] = loss_fn2(prediction_binary)
         print("the hard result is ", result)
+        print("the variance for binary result is ", tf.math.reduce_std(out_binary))
+
         prediction_hard = Harden_scheduling(k=N_rf)(prediction)
-        result[0] = tf.reduce_mean(loss_fn1(prediction_hard, ds_load))
+        out_hard = loss_fn1(prediction_hard, ds_load)
+        result[0] = tf.reduce_mean(out_hard)
         result[1] = loss_fn2(prediction_hard)
         print("the top Nrf result is ", result)
+        print("the variance for hard result is ", tf.math.reduce_std(out_hard))
         # ========= ========= =========  plotting ========= ========= =========
         # ds = tf.square(tf.abs(ds))
         # # prediction = prediction[:, :, 2]
@@ -69,21 +77,28 @@ if __name__ == "__main__":
     B = 10
     seed = 200
     check = 100
-    N_rf = 10
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
+    tf.random.set_seed(seed)
+    np.random.seed(seed)
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
-    model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-    # print(model.get_layer("model").summary())
-    print(model.summary())
-    # model = NN_Clustering(N_rf, M, reduced_dim=8)
-    # model = k_clustering_hieristic(N_rf)
-    # model = greedy_hieristic(N_rf, sigma2_n)
-    # model = top_N_rf_user_model(M, K, N_rf)
-    # print(model.summary())
-    test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+    # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    for i in range(2, 6):
+        N_rf = i
+        print("========================================== B =", i)
+        # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
+        # print(model.get_layer("model").summary())
+        # print(model.summary())
+        # model = NN_Clustering(N_rf, M, reduced_dim=8)
+        # model = k_clustering_hieristic(N_rf)
+        model = greedy_hieristic(N_rf, sigma2_n)
+        # model = top_N_rf_user_model(M, K, N_rf)
+        # model = partial_feedback_semi_exhaustive_model(N_rf, B, M, M, K, sigma2_n)
+        # print(model.summary())
+        test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)

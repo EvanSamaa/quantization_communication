@@ -459,11 +459,6 @@ def TEMP_Pairwise_Cross_Entropy_loss(K, M, k):
 def Sum_rate_utility_WeiCui(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
-    # stretch_matrix = np.zeros((K, K*M))
-    # for i in range(0, K):
-    #     for j in range(0, M):
-    #         stretch_matrix[i, i * M + j] = 1
-    # stretch_matrix = tf.constant(stretch_matrix, tf.float32)
     def sum_rate_utility(y_pred, G, display=False):
         # assumes the input shape is (batch, k*N) for y_pred,
         # and the shape for G is (batch, K, M)
@@ -1001,21 +996,6 @@ def generate_binary_encoding(dim):
         encoding_space[:, dim-i-1] = num_range%2
         num_range = np.floor(num_range/2)
     return tf.constant(encoding_space, dtype=tf.float32)
-def top_N_rf_user_model(M, K, N_rf):
-    def model(G):
-        G = tf.reshape(G, (G.shape[0], M*K))
-        G_flat = tf.square(tf.abs(G)).numpy()
-        out = np.zeros(G_flat.shape)
-        for i in range(0, K):
-            max = np.argmax(G_flat[:, M*i:M*(i+1)], axis=1)
-            out[:, M*i+max] = 1
-        G_with_precoder = out * G_flat
-        out_2 = np.zeros(out.shape)
-        values, index = tf.math.top_k(G_with_precoder, k=N_rf)
-        for i in range(0, G_with_precoder.shape[0]):
-            out_2[i, index[i]] = 1
-        return tf.constant(out_2, dtype=tf.float32)
-    return model
 if __name__ == "__main__":
     N = 500
     M = 20

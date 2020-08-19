@@ -119,14 +119,28 @@ def k_clustering_hieristic(N_rf):
                 plt.show()
         return output
     return model
+def top_N_rf_user_model(M, K, N_rf):
+    def model(G):
+        G = tf.reshape(G, (G.shape[0], M*K))
+        G_flat = tf.square(tf.abs(G)).numpy()
+        out = np.zeros(G_flat.shape)
+        for i in range(0, K):
+            max = np.argmax(G_flat[:, M*i:M*(i+1)], axis=1)
+            out[:, M*i+max] = 1
+        G_with_precoder = out * G_flat
+        out_2 = np.zeros(out.shape)
+        values, index = tf.math.top_k(G_with_precoder, k=N_rf)
+        for i in range(0, G_with_precoder.shape[0]):
+            out_2[i, index[i]] = 1
+        return tf.constant(out_2, dtype=tf.float32)
+    return model
 def greedy_hieristic(N_rf, sigma2):
     def model(G):
         combinations = []
         loss = Sum_rate_utility_WeiCui(G.shape[1], G.shape[2], sigma2)
-        G_copy = G.numpy()
         for i_1 in range(0, G.shape[1] * G.shape[2]):
             for i_2 in range(0, G.shape[1] * G.shape[2]):
-                if i_1 != i_2 and i_1%G.shape[2] != i_2%G.shape[2]:
+                if i_1 != i_2 and tf.floor(i_1/G.shape[2]) != tf.floor(i_2/G.shape[2]):
                     temp = np.zeros((G.shape[1] * G.shape[2],))
                     temp[i_1] = 1
                     temp[i_2] = 1
@@ -145,13 +159,13 @@ def greedy_hieristic(N_rf, sigma2):
             output[n] = best_pair
             selected = set()
             pair_index = np.nonzero(best_pair)
-            selected.add(pair_index[0][0]%G.shape[2])
-            selected.add(pair_index[0][1]%G.shape[2])
+            selected.add(int(tf.floor(pair_index[0][0]/G.shape[2])))
+            selected.add(int(tf.floor(pair_index[0][1]/G.shape[2])))
             if N_rf > 2:
                 for n_rf in range(2, N_rf):
                     new_comb = []
                     for additional_i in range(G.shape[1] * G.shape[2]):
-                        if output[n, additional_i] != 1 and not additional_i % G.shape[2] in selected:
+                        if output[n, additional_i] != 1 and not int(tf.floor(additional_i/G.shape[2])) in selected:
                             temp = output[n].copy()
                             temp[additional_i] = 1
                             new_comb.append(temp)
@@ -162,41 +176,107 @@ def greedy_hieristic(N_rf, sigma2):
                         if current_min < min:
                             min = current_min
                             best_comb = com
+                    pair_index = np.nonzero(best_comb)[0]
+                    for each_nrf in range(0, pair_index.shape[0]):
+                        selected.add(int(tf.floor(pair_index[each_nrf] / G.shape[2])))
                     output[n] = best_comb
         output = tf.constant(output, dtype=tf.float32)
         return output
     return model
-def sparse_greedy_hueristic(N_rf, M, K):
-    def model(G, quantized_G):
-        return 0
-def partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K):
+def sparse_greedy_hueristic(N_rf, sigma2, K, M, p):
+    def model(top_val, top_indice):
+        loss = Sum_rate_utility_WeiCui(K, M, sigma2)
+        output = np.zeros((top_indice.shape[0], K*M))
+        G_copy = np.zeros((top_indice.shape[0], K, M))
+        for n in range(0, top_indice.shape[0]):
+            for i in range(0, K*p):
+                # print(K*p)
+                p_i = int(i % p)
+                user_i = int(tf.floor(i / p))
+                G_copy[n, user_i, int(top_indice[n, user_i, p_i])] = top_val[n, user_i, p_i]
+        G_copy = tf.constant(G_copy, dtype=tf.float32)
+        print("done generating partial information")
+        for n in range(0, G_copy.shape[0]):
+            # print("==================================== type", n, "====================================")
+            combinations = []
+            for index_1 in range(0, K*p):
+                for index_2 in range(0, K*p):
+                    p_1 = int(index_1%p)
+                    user_1 = int(tf.floor(index_1/p))
+                    p_2 = int(index_2%p)
+                    user_2 = int(tf.floor(index_2/p))
+                    if index_1 != index_2 and user_1 != user_2:
+                        comb = np.zeros((K * M,))
+                        comb[user_1*M + top_indice[n, user_1, p_1]] = 1
+                        comb[user_2*M + top_indice[n, user_2, p_2]] = 1
+                        combinations.append(comb)
+            min = 100
+            best_pair = None
+            for com in combinations:
+                current_min = loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G_copy[n:n+1])
+                if current_min < min:
+                    min = current_min
+                    best_pair = com
+            output[n] = best_pairs
+            selected = set()
+            pair_index = np.nonzero(best_pair)
+            selected.add(int(tf.floor(pair_index[0][0]/G_copy.shape[2])))
+            selected.add(int(tf.floor(pair_index[0][1]/G_copy.shape[2])))
+            if N_rf > 2:
+                for n_rf in range(2, N_rf):
+                    new_comb = []
+                    for additional_i in range(0, K*p):
+                        p_i = int(additional_i%p)
+                        user_i = int(tf.floor(additional_i/p))
+                        beamformer_i = int(top_indice[n, user_i, p_i])
+                        if output[n, user_i*M+beamformer_i] != 1:
+                            if not int(tf.floor((user_i*M+beamformer_i)/M)) in selected:
+                                temp = output[n].copy()
+                                temp[user_i*M+beamformer_i] = 1
+                                new_comb.append(temp)
+                    min = 100
+                    best_comb = None
+                    for com in new_comb:
+                        current_min = loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G_copy[n:n+1])
+                        if current_min < min:
+                            min = current_min
+                            best_comb = com
+                    output[n] = best_comb
+                    pair_index = np.nonzero(best_comb)[0]
+                    for each_nrf in range(0, pair_index.shape[0]):
+                        selected.add(int(tf.floor(pair_index[each_nrf] / G_copy.shape[2])))
+        output = tf.constant(output, dtype=tf.float32)
+        return output
+    return model
+def partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K, sigma2):
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
-        G = tf.square(tf.abs(G))
+        G = (tf.abs(G))
         top_values, top_indices,  = tf.math.top_k(G, k=p)
         temp = tf.keras.layers.Reshape((K*p,))(top_values)
         # min = tf.tile(tf.expand_dims(tf.reduce_min(temp, axis=1), axis=[1,2]), (1, K, p))
         min = tf.tile(tf.keras.layers.Reshape((1 ,1))(tf.reduce_min(temp, axis=1)), (1, K, p))
         max = tf.tile(tf.keras.layers.Reshape((1, 1))(tf.reduce_max(temp, axis=1)), (1, K, p))
-        top_values_quantized = tf.round((top_values-min)/(max-min)*(2**B))/(2**B)
-        return sparse_greedy_hueristic(N_rf, M, K)(top_values_quantized)
+        # top_values_quantized = tf.round((top_values-min)/(max-min)*(2**B-1))/(2**B-1)
+        top_values_quantized = top_values
+        return sparse_greedy_hueristic(N_rf, sigma2, K, M, p)(top_values_quantized, top_indices)
     return model
 def partial_feedback_top_N_rf_model(N_rf, B, p, M, K, sigma2):
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
-        G = tf.square(tf.abs(G))
+        G = tf.abs(G)
         top_values, top_indices, = tf.math.top_k(G, k=p)
         print(top_values.shape)
         temp = tf.keras.layers.Reshape((K * p,))(top_values)
         min = tf.tile(tf.keras.layers.Reshape((1, 1))(tf.reduce_min(temp, axis=1)), (1, K, p))
         max = tf.tile(tf.keras.layers.Reshape((1, 1))(tf.reduce_max(temp, axis=1)), (1, K, p))
-        top_values_quantized = tf.round((top_values - min) / (max - min) * (2 ** B)) / (2 ** B)
+        top_values_quantized = tf.round((top_values - min) / (max - min) * (2 ** B - 1)) / (2 ** B - 1) + 0.1
         G_prime = np.zeros(G.shape)
         for n in range(top_values_quantized.shape[0]):
             for k in range(0, K):
                 for each_p in range(0, p):
                     G_prime[n, k, top_indices[n, k, each_p]] = top_values_quantized[n, k, each_p]
-        return greedy_hieristic(N_rf, sigma2)(top_values_quantized)
+        return top_N_rf_user_model(M, K, N_rf)(tf.constant(G_prime, dtype=tf.float32))
     return model
 
 ############################## Layers ##############################
@@ -1741,13 +1821,14 @@ if __name__ == "__main__":
     # DiscreteVAE(2, 4, (2,))
 
     N = 1000
-    M = 10
+    M = 6
     K = 5
     B = 3
     seed = 200
-    N_rf = 5
+    N_rf = 4
     G = generate_link_channel_data(N, K, M)
-    mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
+    # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
+    mod = partial_feedback_semi_exhaustive_model(N_rf, B, 1, M, K, 0.1)
     mod(G)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
