@@ -621,8 +621,8 @@ def perception_model(x, output, layer, logit=True):
 def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
     inputs = Input(input_shape, dtype=tf.float32)
     if normalization:
-        min = tf.tile(tf.expand_dims(tf.reduce_min(inputs, axis=2), axis=2), (1, 1, M))
-        max = tf.tile(tf.expand_dims(tf.reduce_max(inputs, axis=2), axis=2), (1, 1, M))
+        min = tf.tile(tf.expand_dims(tf.reduce_min(inputs, axis=2), axis=2), (1, 1, inputs.shape[2]))
+        max = tf.tile(tf.expand_dims(tf.reduce_max(inputs, axis=2), axis=2), (1, 1, inputs.shape[2]))
         x = (inputs - min) / (max - min)
     x = inputs
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(x)
