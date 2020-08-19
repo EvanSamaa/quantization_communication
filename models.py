@@ -252,7 +252,7 @@ def partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K, sigma2):
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
         G = (tf.abs(G))
-        top_values, top_indices,  = tf.math.top_k(G, k=p)
+        top_values, top_indices = tf.math.top_k(G, k=p)
         temp = tf.keras.layers.Reshape((K*p,))(top_values)
         # min = tf.tile(tf.expand_dims(tf.reduce_min(temp, axis=1), axis=[1,2]), (1, K, p))
         min = tf.tile(tf.keras.layers.Reshape((1 ,1))(tf.reduce_min(temp, axis=1)), (1, K, p))
@@ -618,9 +618,14 @@ def perception_model(x, output, layer, logit=True):
     else:
         return Softmax(x)
 
-def Autoencoder_Encoding_module(input_shape, i=0, code_size=15):
+def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
     inputs = Input(input_shape, dtype=tf.float32)
-    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
+    if normalization:
+        min = tf.tile(tf.expand_dims(tf.reduce_min(inputs, axis=2), axis=2), (1, 1, M))
+        max = tf.tile(tf.expand_dims(tf.reduce_max(inputs, axis=2), axis=2), (1, 1, M))
+        x = (inputs - min) / (max - min)
+    x = inputs
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)

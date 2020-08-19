@@ -20,7 +20,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model(ds_load)
+        prediction = model(ds_load)[0]
         print(tf.reduce_sum(prediction[0]))
         out = loss_fn1(prediction, ds_load)
         result[0] = tf.reduce_mean(out)
@@ -67,7 +67,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug_15th/N_rf=10_LSTM_perlink_model"
+    file = "trained_models/aug19th/VAE_feedback+2_layer_per_link_DNN+commitment_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
@@ -88,8 +88,8 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
-    # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-    for i in range(2, 6):
+    model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    for i in range(3,4):
         N_rf = i
         print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         # print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = k_clustering_hieristic(N_rf)
-        model = greedy_hieristic(N_rf, sigma2_n)
+        # model = greedy_hieristic(N_rf, sigma2_n)
         # model = top_N_rf_user_model(M, K, N_rf)
         # model = partial_feedback_semi_exhaustive_model(N_rf, B, 5, M, K, sigma2_n)
         # print(model.summary())

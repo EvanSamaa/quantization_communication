@@ -39,13 +39,13 @@ def train_step(features, labels, N=None, epoch=0):
         loss_1 = sum_rate(scheduled_output, features)
         loss_2 = VAE_loss()(z_qq, z_e)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
-        # for i in range(0, predictions.shape[1]):
+        # for i in range(0, scheduled_output.shape[1]):
         #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        #     sr = sum_rate(predictions[:, i], features)
-        #     mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions[:, i]))
-        #     ce = tf.keras.losses.CategoricalCrossentropy()(predictions[:, i], mask)
-        #     loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * sr
-        #     loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
+        #     sr = sum_rate(scheduled_output[:, i], features)
+        #     # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+        #     # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+        #     # loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
         # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
         loss = loss_1 + loss_2
@@ -54,8 +54,6 @@ def train_step(features, labels, N=None, epoch=0):
     train_loss(sum_rate(scheduled_output, features))
     # train_binarization_loss(loss_4)
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
-
-
 def random_complex(shape, sigma2):
     A_R = np.random.normal(0, sigma2, shape)
     A_R = np.array(A_R, dtype=complex)
@@ -64,7 +62,7 @@ def random_complex(shape, sigma2):
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug19th/B=10E=30VAE_feedback+2_layer_per_link_DNN_3_times{}"
+    fname_template = "trained_models/aug19th/B=10E=30VAE_feedback+2_layer_per_link_DNN_3_times+per_user_regularization{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
