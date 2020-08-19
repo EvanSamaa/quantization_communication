@@ -35,11 +35,11 @@ def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape() as tape:
         scheduled_output, z_qq, z_e, reconstructed_input = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
+        # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         loss_1 = sum_rate(scheduled_output, features)
         loss_2 = VAE_loss()(z_qq, z_e)
         print(loss_2.shape)
-        loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
+        # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
         # for i in range(0, predictions.shape[1]):
         #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         #     sr = sum_rate(predictions[:, i], features)
@@ -49,7 +49,7 @@ def train_step(features, labels, N=None, epoch=0):
         #     loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
         # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
-        loss = loss_1 + loss_2 + loss_4
+        loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(sum_rate(scheduled_output, features))
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     N = 50
     M = 40
     K = 10
-    B = 10
+    B = 30
     seed = 100
     N_rf = 3
     sigma2_h = 6.3
