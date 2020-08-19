@@ -74,7 +74,7 @@ if __name__ == "__main__":
     N = 50
     M = 40
     K = 10
-    B = 30
+    B = 20
     seed = 100
     N_rf = 3
     sigma2_h = 6.3
