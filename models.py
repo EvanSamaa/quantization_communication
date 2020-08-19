@@ -1798,7 +1798,7 @@ class NN_Clustering():
 def Feedbakk_FDD_model_encoder_decoder(M, K, B, E):
     inputs = Input((K, M))
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E, normalization=True)
     decoder = Autoencoder_Decoding_module(M, (K, E))
     z_e = encoder(inputs)
     z_qq = find_nearest_e(z_e)
