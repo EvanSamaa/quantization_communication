@@ -99,6 +99,6 @@ if __name__ == "__main__":
         # model = k_clustering_hieristic(N_rf)
         # model = greedy_hieristic(N_rf, sigma2_n)
         # model = top_N_rf_user_model(M, K, N_rf)
-        model = partial_feedback_semi_exhaustive_model(N_rf, B, 1, M, K, sigma2_n)
+        model = partial_feedback_semi_exhaustive_model(N_rf, B, 5, M, K, sigma2_n)
         # print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
