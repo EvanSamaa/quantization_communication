@@ -1796,7 +1796,7 @@ class NN_Clustering():
         return output
 
 
-def Feedbakk_FDD_model_encoder_decoder(M, K, B, E):
+def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
     inputs = Input((K, M))
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
     encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E, normalization=False)
@@ -1820,6 +1820,22 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, output_all=False):
     z_e = reconstruction_output[:, :, M+E:]
     scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input])
+    return model
+def Feedbakk_FDD_model_scheduler_morebit(M, K, B, E, N_rf, k, more=1, output_all=False):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    scheduling_module = FDD_per_link_archetecture(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E*more, normalization=False)
+    decoder = Autoencoder_Decoding_module(M, (K, E*more))
+    z_e_all = encoder(inputs_mod)
+    z_qq = find_nearest_e(z_e_all[:, :, :E])
+    for i in range(1, more):
+        z_qq = tf.concat((z_qq, find_nearest_e(z_e_all[:, :, E*i:E*(i+1)])), axis=2)
+    z_fed_forward = z_e_all + tf.stop_gradient(z_qq - z_e_all)
+    reconstructed_input = decoder(z_fed_forward)
+    scheduled_output = scheduling_module(reconstructed_input)
+    model = Model(inputs, [scheduled_output, z_qq, z_e_all, reconstructed_input])
     return model
 
 
@@ -1857,7 +1873,7 @@ if __name__ == "__main__":
     N_rf = 4
     G = generate_link_channel_data(N, K, M)
     # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
-    model = Feedbakk_FDD_model_encoder_decoder(M, K, B, 30)
+    model = Feedbakk_FDD_model_scheduler_morebit(M, K, B, 30, N_rf, k=6, more=2)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
 
