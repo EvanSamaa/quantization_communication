@@ -68,7 +68,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 20
+    N = 10
     M = 40
     K = 10
     B = 10
