@@ -81,7 +81,7 @@ if __name__ == "__main__":
     tf.random.set_seed(seed)
     np.random.seed(seed)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, 30, N_rf, 6)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, 30, N_rf, 6, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
