@@ -74,7 +74,7 @@ if __name__ == "__main__":
     N = 1000
     M = 40
     K = 10
-    B = 10
+    B = 1
     seed = 200
     check = 100
     N_rf = 3

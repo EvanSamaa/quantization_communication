@@ -257,7 +257,7 @@ def partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K, sigma2):
         # min = tf.tile(tf.expand_dims(tf.reduce_min(temp, axis=1), axis=[1,2]), (1, K, p))
         min = tf.tile(tf.keras.layers.Reshape((1 ,1))(tf.reduce_min(temp, axis=1)), (1, K, p))
         max = tf.tile(tf.keras.layers.Reshape((1, 1))(tf.reduce_max(temp, axis=1)), (1, K, p))
-        # top_values_quantized = tf.round((top_values-min)/(max-min)*(2**B-1))/(2**B-1)
+        top_values_quantized = tf.round((top_values-min)/(max-min)*(2**B-1))/(2**B-1)
         top_values_quantized = top_values
         return sparse_greedy_hueristic(N_rf, sigma2, K, M, p)(top_values_quantized, top_indices)
     return model
