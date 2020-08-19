@@ -624,7 +624,8 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
         min = tf.tile(tf.expand_dims(tf.reduce_min(inputs, axis=2), axis=2), (1, 1, inputs.shape[2]))
         max = tf.tile(tf.expand_dims(tf.reduce_max(inputs, axis=2), axis=2), (1, 1, inputs.shape[2]))
         x = (inputs - min) / (max - min)
-    x = inputs
+    else:
+        x = inputs
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
