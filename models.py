@@ -217,7 +217,7 @@ def sparse_greedy_hueristic(N_rf, sigma2, K, M, p):
                 if current_min < min:
                     min = current_min
                     best_pair = com
-            output[n] = best_pairs
+            output[n] = best_pair
             selected = set()
             pair_index = np.nonzero(best_pair)
             selected.add(int(tf.floor(pair_index[0][0]/G_copy.shape[2])))
