@@ -789,6 +789,15 @@ def VAE_encoding_loss(k, l):
         quantization_loss_2 = 0.25*tf.losses.mean_squared_error(y_pred_z_e, tf.stop_gradient(y_pred_z_q))
         return quantization_loss_1 + quantization_loss_2
     return loss_fn
+def VAE_loss():
+    def loss_fn(z_q, z_e):
+        # quantization_loss_1 = tf.square(tf.norm(tf.stop_gradient(y_pred_z_e)- y_pred_z_q))/y_pred.shape[0]]
+        quantization_loss_1 = tf.losses.mean_squared_error(z_q, tf.stop_gradient(z_e))
+        # quantization_loss_2 = 0.25*tf.square(tf.norm(tf.stop_gradient(y_pred_z_q) - y_pred_z_e))/y_pred.shape[0]
+        quantization_loss_2 = tf.losses.mean_squared_error(z_e, tf.stop_gradient(z_q))
+        loss = quantization_loss_1 + quantization_loss_2
+        return tf.reduce_mean(loss, axis=1)
+    return loss_fn
 # =========================== Custom function for straight through estimation ============================
 @tf.custom_gradient
 def sign_relu_STE(x):

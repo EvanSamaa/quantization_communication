@@ -618,18 +618,18 @@ def perception_model(x, output, layer, logit=True):
     else:
         return Softmax(x)
 
-def Autoencoder_Encoding_module(k, l, input_shape, i=0, code_size=15):
+def Autoencoder_Encoding_module(input_shape, i=0, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
-    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
-    x = tf.keras.layers.ReLU()(x)
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
+    x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
-    x = tf.keras.layers.Reshape((1, code_size))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
-def Autoencoder_Decoding_module(k, l, input_shape):
+def Autoencoder_Decoding_module(output_size, input_shape):
     inputs = Input(input_shape)
-    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
+    x = Dense(256, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
     x = LeakyReLU()(x)
-    x = Dense(k, kernel_initializer=tf.keras.initializers.he_normal())(x)
+    x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="decoder")
 def DiscreteVAE(k, l, input_shape, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
@@ -640,13 +640,13 @@ def DiscreteVAE(k, l, input_shape, code_size=15):
     find_nearest_e = Closest_embedding_layer(user_count=k, embedding_count=2**l, bit_count=code_size, i=0)
     encoding_reshaper = tf.keras.layers.Reshape((k*code_size, ), name="encoding_reshaper")
     # computation of encoding
-    # z_e = Autoencoder_Encoding_module(k, l, (1, ))(x_list[0])
     z_e = encoder(x_list[0])
     i = 1
     for item in x_list[1:]:
         # z_e = tf.concat((z_e, Autoencoder_Encoding_module(k, l, (1, ), i)(item)), axis=1)
         z_e = tf.concat((z_e, encoder(item)), axis=1)
         i = i + 1
+    print(z_e.shape)
     z_qq = find_nearest_e(z_e)
     z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
     z_fed_forward = encoding_reshaper(z_fed_forward)
@@ -1448,9 +1448,6 @@ def dnn_per_link(input_shape, N_rf):
     x = Dense(512)(inputs)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = Dense(512)(x)
-    x = sigmoid(x)
-    x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(N_rf, bias_initializer="ones")(x)
     # x = sigmoid(x)
     model = Model(inputs, x)
@@ -1793,6 +1790,32 @@ class NN_Clustering():
         return output
 
 
+def Feedbakk_FDD_model_encoder_decoder(M, K, B, E):
+    inputs = Input((K, M))
+    find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E)
+    decoder = Autoencoder_Decoding_module(M, (K, E))
+    z_e = encoder(inputs)
+    z_qq = find_nearest_e(z_e)
+    z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
+    out = decoder(z_fed_forward)
+    output_all = tf.keras.layers.concatenate((out, z_qq, z_e), 2)
+    # the output_all shape would look like
+    model = Model(inputs, output_all, name="DiscreteVAE")
+    return model
+def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    encoding_module = Feedbakk_FDD_model_encoder_decoder(M, K, B, E)
+    scheduling_module = FDD_per_link_archetecture(M, K, k=k, N_rf=N_rf)
+    reconstruction_output = encoding_module(inputs_mod)
+    reconstructed_input = reconstruction_output[:, :, :M]
+    z_qq = reconstruction_output[:, :, M: M+E]
+    z_e = reconstruction_output[:, :, M+E:]
+    scheduled_output = scheduling_module(reconstructed_input)
+    model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input])
+    return model
+
 
 
 
@@ -1821,15 +1844,14 @@ if __name__ == "__main__":
     # DiscreteVAE(2, 4, (2,))
 
     N = 1000
-    M = 6
-    K = 5
+    M = 40
+    K = 10
     B = 3
     seed = 200
     N_rf = 4
     G = generate_link_channel_data(N, K, M)
     # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
-    mod = partial_feedback_semi_exhaustive_model(N_rf, B, 1, M, K, 0.1)
-    mod(G)
+    model = Feedbakk_FDD_model_encoder_decoder(M, K, B, 30)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
 

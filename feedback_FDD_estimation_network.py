@@ -4,6 +4,8 @@ from models import *
 import numpy as np
 import scipy as sp
 from keras_adabound.optimizers import AdaBound
+
+
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
     if N == 0:
@@ -31,16 +33,13 @@ def train_step(features, labels, N=None, epoch=0):
         train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
         return
     with tf.GradientTape() as tape:
-        # f_features = float_to_floatbits(features, complex=True)
-        # predictions = model(f_features)
-        predictions = model(features)
+        scheduled_output, z_qq, z_e, reconstructed_input = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions))
-        # mask = tf.stop_gradient(binary_activation(predictions, shift=0.5))
-        # print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
-        # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
-        loss_1 = sum_rate(predictions, features)
-        loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions, mask)
+        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
+        loss_1 = sum_rate(scheduled_output, features)
+        loss_2 = VAE_loss()(z_qq, z_e)
+        print(loss_2.shape)
+        loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
         # for i in range(0, predictions.shape[1]):
         #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         #     sr = sum_rate(predictions[:, i], features)
@@ -48,53 +47,44 @@ def train_step(features, labels, N=None, epoch=0):
         #     ce = tf.keras.losses.CategoricalCrossentropy()(predictions[:, i], mask)
         #     loss_1 = loss_1 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * sr
         #     loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
-            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
+        # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
-        # predictions_hard = predictions + tf.stop_gradient(binary_activation(predictions, shift=0.5) - predictions)
-        # loss_4 = OutPut_Limit(N_rf)(predictions_hard)
-        # loss_4 = tf.keras.losses.CategoricalCrossentropy()(predictions, mask)
-        loss_3 = Binarization_regularization()(predictions)
-        loss = loss_1 + loss_4
+        loss = loss_1 + loss_2 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    # optimizer.apply_gradients(gradients, model.trainable_variables)
-    train_loss(sum_rate(predictions, features))
-    train_binarization_loss(loss_3)
-    # train_VS(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(predictions), features))
-    # train_hard_loss(sum_rate(binary_activation(predictions[:, predictions.shape[1]-1]), features))
+    train_loss(sum_rate(scheduled_output, features))
+    train_binarization_loss(loss_4)
+    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
+
+
 def random_complex(shape, sigma2):
     A_R = np.random.normal(0, sigma2, shape)
     A_R = np.array(A_R, dtype=complex)
     A_R.imag = np.random.normal(0, sigma2, shape)
     return A_R
+
+
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug_15th/N_rf=5_Feedback_3layer_model_softmax+commitment_loss{}"
+    fname_template = "trained_models/aug19th/VAE_feedback+2_layer_per_link_DNN+commitment_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
-    swap_delay = check/2
+    swap_delay = check / 2
     # problem Definition
     N = 50
     M = 40
     K = 10
     B = 10
     seed = 100
-    N_rf = 5
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
     tf.random.set_seed(seed)
     np.random.seed(seed)
-    supervised_loss = tf.keras.losses.CategoricalCrossentropy()
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    # loss_object_1 = Sum_rate_utility_RANKING(K, M, sigma2_n, N_rf)
-    vertical_sum = Sum_rate_utility_WeiCui_wrong_axis(K, M, sigma2_n)
-    # model = FDD_per_link_archetecture_sigmoid(M, K, k=6, N_rf=N_rf, output_all=False)
-    model = FDD_per_link_archetecture(M, K, k=6, N_rf=N_rf, output_all=False)
-    # model = FDD_per_user_architecture_double_softmax(M, K, k=4, N_rf=N_rf, output_all=True)
-    # model = FDD_per_link_LSTM(M, K, 6, N_rf, output_all=False)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, 30, N_rf, 6)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
@@ -113,13 +103,8 @@ if __name__ == "__main__":
         train_VS.reset_states()
         train_hard_loss.reset_states()
         # ======== ======== training step ======== ========
-        if epoch < SUPERVISE_TIME:
-            train_ds = generate_supervised_link_channel_data(N, K, M, N_rf)
-            for features, labels in train_ds:
-                train_step(features, labels, 0)
-        else:
-            train_features = generate_link_channel_data(N, K, M)
-            train_step(train_features, None, training_mode, epoch = epoch)
+        train_features = generate_link_channel_data(N, K, M)
+        train_step(train_features, None, training_mode, epoch=epoch)
         # train_step(features=train_features, labels=None)
         template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
         print(template.format(epoch + 1,
@@ -135,8 +120,10 @@ if __name__ == "__main__":
             model.save(fname_template.format(".h5"))
             max_acc = train_loss.result()
         if epoch % check == 0:
-            if epoch >= (SUPERVISE_TIME) and epoch >= (check*2):
-                improvement = graphing_data[epoch - (check*2): epoch - check, 0].mean() - graphing_data[epoch - check: epoch, 0].mean()
+            if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
+                improvement = graphing_data[epoch - (check * 2): epoch - check, 0].mean() - graphing_data[
+                                                                                            epoch - check: epoch,
+                                                                                            0].mean()
                 print("the accuracy improvement in the past 500 epochs is ", improvement)
                 if improvement <= 0.001:
                     break
@@ -144,4 +131,4 @@ if __name__ == "__main__":
     tf.keras.backend.clear_session()
     print("Training end")
 
-    
+
