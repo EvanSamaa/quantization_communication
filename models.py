@@ -1842,7 +1842,6 @@ def Feedbakk_FDD_model_scheduler_morebit(M, K, B, E, N_rf, k, more=1, output_all
 def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    scheduling_module = FDD_per_link_archetecture(M, K, k=k, N_rf=N_rf, output_all=output_all)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
     encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
     decoder = Autoencoder_Decoding_module(M * K, (K * E * more))
