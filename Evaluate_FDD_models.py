@@ -5,7 +5,7 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 1000
+    num_data = 10
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
@@ -19,7 +19,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model(ds_load)[:, -1]
+        prediction = model(ds_load)
         print(tf.reduce_sum(prediction[0]))
         out = loss_fn1(prediction, ds_load)
         result[0] = tf.reduce_mean(out)
@@ -98,6 +98,6 @@ if __name__ == "__main__":
         # model = k_clustering_hieristic(N_rf)
         # model = greedy_hieristic(N_rf, sigma2_n)
         # model = top_N_rf_user_model(M, K, N_rf)
-        # model = partial_feedback_semi_exhaustive_model(N_rf, B, 5, M, K, sigma2_n)
+        model = partial_feedback_semi_exhaustive_model(N_rf, B, 2, M, K, sigma2_n)
         # print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
