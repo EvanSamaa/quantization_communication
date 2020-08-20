@@ -1810,15 +1810,12 @@ def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
     # the output_all shape would look like
     model = Model(inputs, output_all, name="DiscreteVAE")
     return model
-def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, output_all=False):
+def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    encoding_module = Feedbakk_FDD_model_encoder_decoder(M, K, B, E)
+    encoding_module = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=more, qbit=qbit)
     scheduling_module = FDD_per_link_archetecture(M, K, k=k, N_rf=N_rf, output_all=output_all)
-    reconstruction_output = encoding_module(inputs_mod)
-    reconstructed_input = reconstruction_output[:, :, :M]
-    z_qq = reconstruction_output[:, :, M: M+E]
-    z_e = reconstruction_output[:, :, M+E:]
+    reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
     scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input])
     return model
