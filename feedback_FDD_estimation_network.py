@@ -62,7 +62,7 @@ def random_complex(shape, sigma2):
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug19th/B=20E=30+corrected_VAE_feedback(3layerDecoder)+2_layer_per_link_DNN_6_times+MP{}"
+    fname_template = "trained_models/aug19th/B=20E=30+relu_VAE_feedback+2_layer_per_link_DNN_6_times+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
