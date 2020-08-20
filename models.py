@@ -617,7 +617,6 @@ def perception_model(x, output, layer, logit=True):
         return x
     else:
         return Softmax(x)
-
 def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
     inputs = Input(input_shape, dtype=tf.float32)
     if normalization:
@@ -627,14 +626,14 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     else:
         x = inputs
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(x)
-    x = LeakyReLU()(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
-    x = LeakyReLU()(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="decoder")

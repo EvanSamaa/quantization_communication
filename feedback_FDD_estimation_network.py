@@ -59,7 +59,7 @@ def train_step(features, labels, N=None, epoch=0):
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/Schedular_B=5,E=30+relu_VAE+2qbit{}"
+    fname_template = "trained_models/aug20th/Schedular_B=5,E=30+VAE+1qbit{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # model = Feedbakk_FDD_model_scheduler(M, K, B, 15, N_rf, 6, output_all=True)
     # model = Feedbakk_FDD_model_scheduler_morebit(M, K, B, 30, N_rf, 6, more=2, output_all=True)
     # model = CSI_reconstruction_model_seperate_decoders(M, K, B, 30, N_rf, 6, more=1)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=2, output_all=False)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=1, output_all=False)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
