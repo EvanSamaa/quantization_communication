@@ -1834,6 +1834,7 @@ def Feedbakk_FDD_model_scheduler_morebit(M, K, B, E, N_rf, k, more=1, output_all
     for i in range(1, more):
         z_qq = tf.concat((z_qq, find_nearest_e(z_e_all[:, :, E*i:E*(i+1)])), axis=2)
     z_fed_forward = z_e_all + tf.stop_gradient(z_qq - z_e_all)
+    z_fed_forward = tf.keras.layers.Reshape((K*E*more, ))(z_fed_forward)
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e_all, reconstructed_input])
