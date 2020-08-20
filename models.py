@@ -1839,6 +1839,23 @@ def Feedbakk_FDD_model_scheduler_morebit(M, K, B, E, N_rf, k, more=1, output_all
     scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e_all, reconstructed_input])
     return model
+def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    scheduling_module = FDD_per_link_archetecture(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
+    decoder = Autoencoder_Decoding_module(M * K, (K * E * more))
+    z_e_all = encoder(inputs_mod)
+    z_qq = find_nearest_e(z_e_all[:, :, :E])
+    for i in range(1, more):
+        z_qq = tf.concat((z_qq, find_nearest_e(z_e_all[:, :, E * i:E * (i + 1)])), axis=2)
+    z_fed_forward = z_e_all + tf.stop_gradient(z_qq - z_e_all)
+    z_fed_forward = tf.keras.layers.Reshape((K * E * more,))(z_fed_forward)
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
+    model = Model(inputs, [reconstructed_input, z_qq, z_e_all])
+    return model
+
 
 
 
