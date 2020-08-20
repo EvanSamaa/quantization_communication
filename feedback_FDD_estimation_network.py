@@ -38,7 +38,7 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         loss_1 = 0
         loss_2 = VAE_loss()(z_qq, z_e)
-        # loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))/N
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
         for i in range(0, scheduled_output.shape[1]):
             # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
@@ -63,7 +63,7 @@ def random_complex(shape, sigma2):
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug19th/B=20E=30+corrected_VAE_feedback+2_layer_per_link_DNN_6_times+MP+reconstructed{}"
+    fname_template = "trained_models/aug19th/B=20E=30+corrected_VAE_feedback+2_layer_per_link_DNN_6_times+MP+0.02reconstructed{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
