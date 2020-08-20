@@ -1860,7 +1860,7 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
     z_e_all = encoder(inputs_mod)
     z_e = z_e_all[:, :, :E * more]
     if qbit > 0:
-        z_val = z_e_all[:, :, E * more:E * more+1]
+        z_val = z_e_all[:, :, E * more:E * more+qbit]
         z_val = sigmoid(z_val) + tf.stop_gradient(binary_activation(z_val) - sigmoid(z_val))
     z_qq = find_nearest_e(z_e[:, :, :E])
     for i in range(1, more):
