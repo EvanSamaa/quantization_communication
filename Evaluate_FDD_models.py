@@ -5,9 +5,10 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 10
+    num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_fn1 = tf.keras.losses.MeanSquaredError()
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     # loss_fn2 = Binarization_regularization(K, num_data, M, k=N_rf)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
@@ -19,14 +20,14 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model(ds_load)[0][:, -1]
+        prediction = model(ds_load)[0]
         print(tf.reduce_sum(prediction[0]))
-        out = loss_fn1(prediction, ds_load)
+        out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
         print("the soft result is ", result)
         print("the variance is ", tf.math.reduce_std(out))
-
+        A[2]
         prediction_binary = binary_activation(prediction)
         out_binary = loss_fn1(prediction_binary, ds_load)
         result[0] = tf.reduce_mean(out_binary)
@@ -66,7 +67,7 @@ def plot_data(arr, col):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/aug20th/B=10,E=30+relu_VAE+qualitybit"
+    file = "trained_models/aug20th/B=5,E=30+relu_VAE+qualitybit"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
@@ -83,9 +84,8 @@ if __name__ == "__main__":
     np.random.seed(seed)
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    training_data = np.load(training_data_path)
-    plot_data(training_data, 0)
-    A[2]
+    # training_data = np.load(training_data_path)
+    # plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
@@ -93,8 +93,9 @@ if __name__ == "__main__":
         N_rf = i
         print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        # print(model.get_layer("model").summary())
-        # print(model.summary())
+        print(model.get_layer("encoder_0").summary())
+        print(model.get_layer("decoder").summary())
+        print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = k_clustering_hieristic(N_rf)
         # model = greedy_hieristic(N_rf, sigma2_n)
