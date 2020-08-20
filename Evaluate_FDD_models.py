@@ -61,12 +61,12 @@ def plot_data(arr, col):
     arr = arr[:i, :]
     x = np.arange(0, arr.shape[0])
     plt.plot(x, arr[:, col])
-    plt.plot(x, arr[:, 3])
     # plt.plot(x, arr[:, 3])
-    plt.title("Sum Rate")
+    # plt.plot(x, arr[:, 3])
+    plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/aug19th/B=20E=30+corrected_VAE_feedback(3layerDecoder)+2_layer_per_link_DNN_6_times+MP+0.02reconstructed"
+    file = "trained_models/aug20th/B=10,E=30+relu_VAE+qualitybit"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
@@ -85,6 +85,7 @@ if __name__ == "__main__":
     training_data_path = file + ".npy"
     training_data = np.load(training_data_path)
     plot_data(training_data, 0)
+    A[2]
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
