@@ -795,7 +795,7 @@ def VAE_loss():
         quantization_loss_1 = tf.losses.mean_squared_error(z_q, tf.stop_gradient(z_e))
         # quantization_loss_2 = 0.25*tf.square(tf.norm(tf.stop_gradient(y_pred_z_q) - y_pred_z_e))/y_pred.shape[0]
         quantization_loss_2 = tf.losses.mean_squared_error(z_e, tf.stop_gradient(z_q))
-        loss = quantization_loss_1 + quantization_loss_2
+        loss = quantization_loss_1 + 0.25*quantization_loss_2
         return tf.reduce_mean(loss, axis=1)
     return loss_fn
 # =========================== Custom function for straight through estimation ============================

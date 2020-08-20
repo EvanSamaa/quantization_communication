@@ -626,14 +626,14 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
         x = (inputs - min) / (max - min)
     else:
         x = inputs
-    x = Dense(128, kernel_initializer=tf.keras.initializers.he_normal())(x)
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape):
     inputs = Input(input_shape)
-    x = Dense(128, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
@@ -1828,13 +1828,13 @@ def Feedbakk_FDD_model_scheduler_morebit(M, K, B, E, N_rf, k, more=1, output_all
     scheduling_module = FDD_per_link_archetecture(M, K, k=k, N_rf=N_rf, output_all=output_all)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
     encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E*more, normalization=False)
-    decoder = Autoencoder_Decoding_module(M, (K, E*more))
+    decoder = Autoencoder_Decoding_module(M*K, (K*E*more))
     z_e_all = encoder(inputs_mod)
     z_qq = find_nearest_e(z_e_all[:, :, :E])
     for i in range(1, more):
         z_qq = tf.concat((z_qq, find_nearest_e(z_e_all[:, :, E*i:E*(i+1)])), axis=2)
     z_fed_forward = z_e_all + tf.stop_gradient(z_qq - z_e_all)
-    reconstructed_input = decoder(z_fed_forward)
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e_all, reconstructed_input])
     return model
