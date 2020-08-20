@@ -34,7 +34,7 @@ def train_step(features, labels, N=None, epoch=0):
         return
     with tf.GradientTape() as tape:
         # scheduled_output, z_qq, z_e, reconstructed_input = model(features)
-        z_qq, z_e, reconstructed_input = model(features)
+        reconstructed_input, z_qq, z_e = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
