@@ -1,1 +1,4 @@
-e
+trained_models/aug19th/B=20E=30VAE_feedback+2_layer_per_link_DNN_6_times.h5
+    this model has 30 as the embedding dimension, like most other models
+trained_models/aug19th/B=20E=30VAE_feedback+2_layer_per_link_DNN_6_times+MP.h5
+    this model only has 10
