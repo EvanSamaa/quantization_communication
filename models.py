@@ -1858,15 +1858,18 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
-    decoder = Autoencoder_Decoding_module(M, (K, E * more))
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + 1, normalization=False)
+    decoder = Autoencoder_Decoding_module(M, (K, E * more + 1))
     z_e_all = encoder(inputs_mod)
-    z_qq = find_nearest_e(z_e_all[:, :, :E])
+    z_e = z_e_all[:, :, :E * more]
+    z_val = z_e_all[:, :, E * more:E * more+1]
+    z_qq = find_nearest_e(z_e[:, :, :E])
     for i in range(1, more):
-        z_qq = tf.concat((z_qq, find_nearest_e(z_e_all[:, :, E * i:E * (i + 1)])), axis=2)
-    z_fed_forward = z_e_all + tf.stop_gradient(z_qq - z_e_all)
+        z_qq = tf.concat((z_qq, find_nearest_e(z_e[:, :, E * i:E * (i + 1)])), axis=2)
+    z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
+    z_fed_forward = tf.concat((z_fed_forward, z_val), axis=2)
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
-    model = Model(inputs, [reconstructed_input, z_qq, z_e_all])
+    model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
 
 
