@@ -2,11 +2,10 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-# from matplotlib import pyplot as plt
-
+from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 10
+    num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
@@ -20,7 +19,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model(ds_load)[0]
+        prediction = model(ds_load)[0][:, -1]
         print(tf.reduce_sum(prediction[0]))
         out = loss_fn1(prediction, ds_load)
         result[0] = tf.reduce_mean(out)
@@ -67,7 +66,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/aug19th/VAE_feedback+2_layer_per_link_DNN+commitment_loss"
+    file = "trained_models/aug19th/VAE_feedback+2_layer_per_link_DNN"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
@@ -84,8 +83,8 @@ if __name__ == "__main__":
     np.random.seed(seed)
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    # training_data = np.load(training_data_path)
-    # plot_data(training_data, 0)
+    training_data = np.load(training_data_path)
+    plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)

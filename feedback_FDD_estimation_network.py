@@ -62,7 +62,7 @@ def random_complex(shape, sigma2):
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug19th/B=20E=30VAE_feedback+2_layer_per_link_DNN_6_times{}"
+    fname_template = "trained_models/aug19th/B=20E=30VAE_feedback+2_layer_per_link_DNN_6_times+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -81,9 +81,9 @@ if __name__ == "__main__":
     tf.random.set_seed(seed)
     np.random.seed(seed)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, 30, N_rf, 6, output_all=True)
+    # model = Feedbakk_FDD_model_scheduler(M, K, B, 15, N_rf, 6, output_all=True)
     model = Feedbakk_FDD_model_scheduler_morebit(M, K, B, 30, N_rf, 6, more=2, output_all=True)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    optimizer = tf.keras.optimizers.Adam(lr=0.001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
