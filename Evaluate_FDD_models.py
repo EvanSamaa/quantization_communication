@@ -19,7 +19,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model(ds_load)
+        prediction = model(ds_load)[0][:, -1]
         print(tf.reduce_sum(prediction[0]))
         out = loss_fn1(prediction, ds_load)
         result[0] = tf.reduce_mean(out)
@@ -66,7 +66,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug_15th/Longer_Feedback_model_softmax+commitment_loss+MP"
+    file = "trained_models/aug19th/B=20E=30+corrected_VAE_feedback(3layerDecoder)+2_layer_per_link_DNN_6_times+MP+0.02reconstructed"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
@@ -98,6 +98,6 @@ if __name__ == "__main__":
         # model = k_clustering_hieristic(N_rf)
         # model = greedy_hieristic(N_rf, sigma2_n)
         # model = top_N_rf_user_model(M, K, N_rf)
-        model = partial_feedback_semi_exhaustive_model(N_rf, B, 2, M, K, sigma2_n)
+        # model = partial_feedback_semi_exhaustive_model(N_rf, B, 2, M, K, sigma2_n)
         # print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)

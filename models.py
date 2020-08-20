@@ -635,6 +635,8 @@ def Autoencoder_Decoding_module(output_size, input_shape):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
     x = sigmoid(x)
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="decoder")
