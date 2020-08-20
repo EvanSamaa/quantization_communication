@@ -85,7 +85,7 @@ if __name__ == "__main__":
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # model = Feedbakk_FDD_model_scheduler(M, K, B, 15, N_rf, 6, output_all=True)
     # model = Feedbakk_FDD_model_scheduler_morebit(M, K, B, 30, N_rf, 6, more=2, output_all=True)
-    model = CSI_reconstruction_model(M, K, B, 30, N_rf, 6, more=2, output_all=True)
+    model = CSI_reconstruction_model(M, K, B, 30, N_rf, 6, more=2)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
