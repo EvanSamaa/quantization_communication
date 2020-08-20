@@ -66,7 +66,7 @@ def plot_data(arr, col):
     plt.title("Sum Rate")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/aug19th/VAE_feedback+2_layer_per_link_DNN"
+    file = "trained_models/aug19th/B=20E=30VAE_feedback+2_layer_per_link_DNN_6_times"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
