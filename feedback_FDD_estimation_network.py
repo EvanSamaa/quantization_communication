@@ -64,7 +64,7 @@ def random_complex(shape, sigma2):
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/B=10,E=30+relu_VAE+qualitybit{}"
+    fname_template = "trained_models/aug20th/B=10 ,E=30+relu_VAE{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
