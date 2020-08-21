@@ -33,34 +33,34 @@ def train_step(features, labels, N=None, epoch=0):
         train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
         return
     with tf.GradientTape() as tape:
-        scheduled_output, z_qq, z_e, reconstructed_input = model(features)
-        # reconstructed_input, z_qq, z_e = model(features)
+        # scheduled_output, z_qq, z_e, reconstructed_input = model(features)
+        reconstructed_input, z_qq, z_e = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
-        loss_1 = 0
-        # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        # loss_1 = 0
+        loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.square(tf.abs(features)))
         loss_2 = VAE_loss()(z_qq, z_e)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
-        for i in range(0, scheduled_output.shape[1]):
-            # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-            sr = sum_rate(scheduled_output[:, i], features)
-            # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
-            # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-            # loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
-            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
+        # for i in range(0, scheduled_output.shape[1]):
+        #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
+        #     sr = sum_rate(scheduled_output[:, i], features)
+        #     # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+        #     # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+        #     # loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
+        #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
         loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(sum_rate(scheduled_output[:, -1], features))
-    # train_loss(loss_1)
+    # train_loss(sum_rate(scheduled_output[:, -1], features))
+    train_loss(loss_1)
     # train_binarization_loss(loss_4)
-    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
+    # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/Schedular_B=5,E=30+relu_VAE+noise_injection+VM{}"
+    fname_template = "trained_models/aug20th/B=5 ,E=10+relu_VAE+1qbit+sq_input{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -80,8 +80,8 @@ if __name__ == "__main__":
     tf.random.set_seed(seed)
     np.random.seed(seed)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=1)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
+    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=0)
+    # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
