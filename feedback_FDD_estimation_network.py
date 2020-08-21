@@ -53,10 +53,10 @@ def train_step(features, labels, N=None, epoch=0):
         loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(sum_rate(scheduled_output, features))
+    train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_1)
     # train_binarization_loss(loss_4)
-    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
+    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 
 
 if __name__ == "__main__":
