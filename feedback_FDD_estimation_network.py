@@ -60,7 +60,7 @@ def train_step(features, labels, N=None, epoch=0):
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/B=10 ,E=10+relu_VAE{}"
+    fname_template = "trained_models/aug20th/B=10 ,E=5s+relu_VAE{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     M = 40
     K = 10
     B = 10
-    E = 10
+    E = 5
     seed = 100
     N_rf = 3
     sigma2_h = 6.3
