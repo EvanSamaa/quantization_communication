@@ -66,11 +66,11 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 1
+    N = 500
     M = 40
     K = 10
-    B = 3
-    E = 2
+    B = 5
+    E = 10
     seed = 100
     N_rf = 3
     sigma2_h = 6.3
