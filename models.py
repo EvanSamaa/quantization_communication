@@ -286,7 +286,7 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         self.user_count = user_count
         self.bit_count = bit_count
         self.embedding_count = embedding_count
-        initializer = tf.keras.initializers.he_normal()
+        self.initializer = tf.keras.initializers.he_normal()
         # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
         self.E = tf.Variable(tf.random.normal(([self.embedding_count, self.bit_count]), 0, 0.01)
         , trainable=True)
@@ -629,6 +629,7 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
+    x = sigmoid(x)
     return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape):
     inputs = Input(input_shape)
