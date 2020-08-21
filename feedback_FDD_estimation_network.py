@@ -81,7 +81,7 @@ if __name__ == "__main__":
     np.random.seed(seed)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=1)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=1, output_all=True)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
