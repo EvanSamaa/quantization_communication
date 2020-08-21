@@ -287,12 +287,12 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         self.user_count = user_count
         self.bit_count = bit_count
         self.embedding_count = embedding_count
-        self.initializer = tf.keras.initializers.he_uniform()
+        initializer = tf.keras.initializers.he_uniform()
         # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
         #E is in the shape of [E, 2**B]
         self.E = self.add_weight(name='embedding',
                                  shape=(self.bit_count, self.embedding_count),
-                                 initializer=self.initializer,
+                                 initializer=initializer,
                                  trainable=True)
         self.i = i
     def call(self, z, training=True):
@@ -314,7 +314,6 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
             'bit_count':self.bit_count,
             'user_count':self.user_count,
             'embedding_count':self.embedding_count,
-            'initializer':self.initializer,
             'i':self.i,
             'name':"Closest_embedding_layer_{}".format(self.i)
         })

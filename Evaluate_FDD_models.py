@@ -67,7 +67,7 @@ def plot_data(arr, col):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/aug20th/B=10 ,E=5+relu_VAE"
+    file = "trained_models/aug20th/test"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user}
@@ -93,9 +93,6 @@ if __name__ == "__main__":
         N_rf = i
         print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        print(model.get_layer("encoder_0").summary())
-        print(model.get_layer("decoder").summary())
-        print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = k_clustering_hieristic(N_rf)
         # model = greedy_hieristic(N_rf, sigma2_n)
