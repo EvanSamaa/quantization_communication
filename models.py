@@ -643,6 +643,7 @@ def Autoencoder_Decoding_module(output_size, input_shape):
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
+    x = tf.keras.layers.ReLU()(x)
     return Model(inputs, x, name="decoder")
 def DiscreteVAE(k, l, input_shape, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
