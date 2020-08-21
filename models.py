@@ -297,17 +297,17 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
 
         self.i = i
     def call(self, z, training=True):
-        # if training:
-        #     z = z + tf.random.normal((z.shape[1], z.shape[2]), 0, 0.01)
+        if training:
+            z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.reduce_mean(z)/10)
         # z is in the shape of [None, K, E]
         # print(tf.keras.sum(z**2, axis=1, keepdims=True).shape)
         distances = (KB.sum(z**2, axis=2, keepdims=True)
                      - 2 * KB.dot(z, self.E)
                      + KB.sum(self.E ** 2, axis=0, keepdims=True))
         encoding_indices = KB.argmax(-distances, axis=2)
-        # encodings = KB.one_hot(encoding_indices, self.embedding_count)
         # encodings = tf.gather(tf.transpose(self.E), encoding_indices)
-        encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices, validate_indices=False)
+        encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices)
+        print(encodings)
         return encodings
     def get_config(self):
         config = super().get_config().copy()
