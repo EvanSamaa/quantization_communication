@@ -306,8 +306,8 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
                      + KB.sum(self.E ** 2, axis=0, keepdims=True))
         encoding_indices = KB.argmax(-distances, axis=2)
         # encodings = KB.one_hot(encoding_indices, self.embedding_count)
-        encodings = tf.gather(tf.transpose(self.E), encoding_indices)
-        # print(output.shape)
+        # encodings = tf.gather(tf.transpose(self.E), encoding_indices)
+        encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices, validate_indices=False)
         return encodings
     def get_config(self):
         config = super().get_config().copy()
