@@ -1878,10 +1878,6 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
 
-
-
-
-
 def Floatbits_FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector
