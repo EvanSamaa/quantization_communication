@@ -5,6 +5,7 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, ThresholdedReLU, Flatten
 from tensorflow.keras.activations import sigmoid
 import random
+from tensorflow.keras import backend as KB
 from util import *
 # import tensorflow_addons as tfa
 # from sklearn.cluster import KMeans
@@ -286,26 +287,35 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         self.user_count = user_count
         self.bit_count = bit_count
         self.embedding_count = embedding_count
-        self.initializer = tf.keras.initializers.he_normal()
+        self.initializer = tf.keras.initializers.he_uniform()
         # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
-        self.E = tf.Variable(tf.random.normal(([self.embedding_count, self.bit_count]), 0, 0.01)
-        , trainable=True)
+        #E is in the shape of [E, 2**B]
+        self.E = self.add_weight(name='embedding',
+                                 shape=(self.bit_count, self.embedding_count),
+                                 initializer=self.initializer,
+                                 trainable=True)
+
         self.i = i
     def call(self, z, training=True):
         # if training:
         #     z = z + tf.random.normal((z.shape[1], z.shape[2]), 0, 0.01)
-        z = tf.expand_dims(z, 2)
-        z = tf.tile(z, (1, 1, self.E.shape[0], 1))
-        eu_distance = tf.reduce_sum(tf.square(tf.stop_gradient(z) - self.E), axis=3) # calculate euclidience distance between
-        k = tf.argmin(eu_distance, axis=2)
-        output = tf.gather(self.E, k)
-        return output
+        # z is in the shape of [None, K, E]
+        # print(tf.keras.sum(z**2, axis=1, keepdims=True).shape)
+        distances = (KB.sum(z**2, axis=2, keepdims=True)
+                     - 2 * KB.dot(z, self.E)
+                     + KB.sum(self.E ** 2, axis=0, keepdims=True))
+        encoding_indices = KB.argmax(-distances, axis=2)
+        # encodings = KB.one_hot(encoding_indices, self.embedding_count)
+        encodings = tf.gather(tf.transpose(self.E), encoding_indices)
+        # print(output.shape)
+        return encodings
     def get_config(self):
         config = super().get_config().copy()
         config.update({
             'bit_count':self.bit_count,
             'user_count':self.user_count,
             'embedding_count':self.embedding_count,
+            'initializer':self.initializer,
             'i':self.i,
             'name':"Closest_embedding_layer_{}".format(self.i)
         })
