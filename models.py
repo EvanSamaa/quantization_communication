@@ -635,9 +635,6 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(x)
-    x = LeakyReLU()(x)
-    x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape):
