@@ -60,7 +60,7 @@ def train_step(features, labels, N=None, epoch=0):
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/B=5 ,E=30+relu_VAE+Relu_output{}"
+    fname_template = "trained_models/aug20th/B=5 ,E=30+relu_VAE+Relu_output+noise_injection{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
