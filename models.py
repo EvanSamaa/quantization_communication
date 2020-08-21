@@ -294,7 +294,6 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
                                  shape=(self.bit_count, self.embedding_count),
                                  initializer=self.initializer,
                                  trainable=True)
-
         self.i = i
     def call(self, z, training=True):
         if training:
