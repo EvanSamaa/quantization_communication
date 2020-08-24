@@ -676,13 +676,13 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
     return Model(inputs, x, name="encoder_{}".format(i))
-def Autoencoder_Decoding_module(output_size, input_shape):
+def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(inputs)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
-    return Model(inputs, x, name="decoder")
+    return Model(inputs, x, name="decoder_{}".format(i))
 def DiscreteVAE(k, l, input_shape, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
     x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
@@ -1935,7 +1935,6 @@ def CSI_reconstruction_model_seperate_decoders_moving_avg_update(M, K, B, E, N_r
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
-
 def Floatbits_FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector
@@ -1953,6 +1952,31 @@ def Floatbits_FDD_model_softmax(M, K, B):
         output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
     model = Model(inputs, output)
     return model
+def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, more=1):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    B_t = 2
+    E_t = 10
+    find_nearest_e_b = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
+    find_nearest_e_t = Closest_embedding_layer(user_count=K, embedding_count=2 ** B_t, bit_count=E_t, i=1)
+    encoder_b = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
+    encoder_t = Autoencoder_Encoding_module((K, E), i=1, code_size=E_t * more, normalization=False)
+    decoder_b = Autoencoder_Decoding_module(M, (K, (E_t+E) * more), i=0)
+    decoder_t = Autoencoder_Decoding_module(E, (K, E_t * more), i=1)
+    # user side
+    z_e_b = encoder_b(inputs_mod)
+    z_e_t = encoder_t(z_e_b)
+    z_q_t = find_nearest_e_t(z_e_t)
+    z_fed_forward_t = z_e_t + tf.stop_gradient(z_q_t - z_e_t)
+    z_e_b = z_e_b + decoder_t(z_fed_forward_t)
+    z_q_b = find_nearest_e_b(z_e_b)
+    z_fed_forward_b = z_e_b + tf.stop_gradient(z_q_b - z_e_b)
+    z_in = tf.concat((z_fed_forward_t, z_fed_forward_b), axis=2)
+    # base station side
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder_b(z_in))
+    model = Model(inputs, [reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t])
+    print(model.summary())
+    return model
 
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
@@ -1968,7 +1992,7 @@ if __name__ == "__main__":
     N_rf = 4
     G = generate_link_channel_data(N, K, M)
     # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
-    model = CSI_reconstruction_model_seperate_decoders(M, K, B, 30, N_rf, k=6, more=2)
+    model = CSI_reconstruction_VQVAE2(M, K, B, 30, N_rf, 1, more=1)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)
