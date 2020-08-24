@@ -59,7 +59,7 @@ def train_step(features, labels, N=None, epoch=0):
     # train_binarization_loss(loss_4)
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug24th/Scheduler_B=5 ,E=30, B_t=2, E_t=10+VAE2+noise_injection{}"
+    fname_template = "trained_models/Aug24th/Scheduler_B=5,E=30,B_t=2,E_t=10+VAE2+noise_injection{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -121,8 +121,8 @@ if __name__ == "__main__":
         graphing_data[epoch, 2] = train_VS.result()
         graphing_data[epoch, 3] = train_hard_loss.result()
         if train_loss.result() < max_acc:
-            model.save(fname_template.format(".h5"))
             max_acc = train_loss.result()
+            model.save(fname_template.format(".h5"))
         if epoch % check == 0:
             if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                 improvement = graphing_data[epoch - (check * 2): epoch - check, 0].mean() - graphing_data[
