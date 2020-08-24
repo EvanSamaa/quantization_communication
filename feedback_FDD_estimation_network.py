@@ -58,7 +58,7 @@ def train_step(features, labels, N=None, epoch=0):
     # train_binarization_loss(loss_4)
     # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/B=5 ,E=10, B_t=2, E_t=10+VAE2+noise_injection{}"
+    fname_template = "trained_models/aug20th/B=5 ,E=30, B_t=2, E_t=10+VAE2+noise_injection{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
