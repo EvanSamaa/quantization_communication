@@ -60,7 +60,7 @@ def train_step(features, labels, N=None, epoch=0):
 
 
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/B=5 ,E=30+VAE+noise_injection+qbit_multiplication{}"
+    fname_template = "trained_models/aug20th/B=5 ,E=30+VAE_0.1commitment+noise_injection{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     tf.random.set_seed(seed)
     np.random.seed(seed)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=1)
+    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=0)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
