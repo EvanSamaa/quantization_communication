@@ -1863,6 +1863,15 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
     scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input])
     return model
+def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1, qbit=0, output_all=False):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    encoding_module = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t, E_t)
+    scheduling_module = FDD_per_link_archetecture(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = encoding_module(inputs_mod)
+    scheduled_output = scheduling_module(reconstructed_input)
+    model = Model(inputs, [scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input])
+    return model
 def Feedbakk_FDD_model_scheduler_morebit(M, K, B, E, N_rf, k, more=1, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)

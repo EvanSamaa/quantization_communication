@@ -34,11 +34,12 @@ def train_step(features, labels, N=None, epoch=0):
         return
     with tf.GradientTape() as tape:
         # scheduled_output, z_qq, z_e, reconstructed_input = model(features)
-        reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
+        scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input = model(features)
+        # reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
-        # loss_1 = 0
-        loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        loss_1 = sum_rate(scheduled_output, features)
+        # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_q_t, z_e_t) + vae_loss.call(z_q_b, z_e_b)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
         # for i in range(0, scheduled_output.shape[1]):
@@ -53,12 +54,12 @@ def train_step(features, labels, N=None, epoch=0):
         loss = loss_1 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    # train_loss(sum_rate(scheduled_output[:, -1], features))
-    train_loss(loss_1)
+    train_loss(sum_rate(scheduled_output, features))
+    # train_loss(loss_1)
     # train_binarization_loss(loss_4)
-    # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
+    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/B=10 ,E=30, B_t=3, E_t=10+VAE2+noise_injection{}"
+    fname_template = "trained_models/aug24th/Scheduler_B=5 ,E=30, B_t=2, E_t=10+VAE2+noise_injection{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -67,8 +68,12 @@ if __name__ == "__main__":
     N = 50
     M = 40
     K = 10
-    B = 10
+
+    B = 5
     E = 30
+    B_t = 2
+    E_t = 10
+
     seed = 100
     N_rf = 3
     sigma2_h = 6.3
@@ -78,8 +83,7 @@ if __name__ == "__main__":
     tf.random.set_seed(seed)
     np.random.seed(seed)
     # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=0)
-    # model = CSI_reconstruction_model_seperate_decoders_moving_avg_update(M, K, B, E, N_rf, 6, more=1, qbit=0)
-    model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=3, E_t=10, more=1)
+    model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
