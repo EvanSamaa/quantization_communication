@@ -8,7 +8,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    loss_fn1 = tf.keras.losses.MeanSquaredError()
+    # loss_fn1 = tf.keras.losses.MeanSquaredError()
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     # loss_fn2 = Binarization_regularization(K, num_data, M, k=N_rf)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
@@ -20,14 +20,14 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model(ds_load)[0]
+        prediction = model(ds_load)[0][:, -1]
         print(tf.reduce_sum(prediction[0]))
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
         print("the soft result is ", result)
         print("the variance is ", tf.math.reduce_std(out))
-        A[2]
+
         prediction_binary = binary_activation(prediction)
         out_binary = loss_fn1(prediction_binary, ds_load)
         result[0] = tf.reduce_mean(out_binary)
@@ -67,7 +67,7 @@ def plot_data(arr, col):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/aug20th/B=8 ,E=30, B_t=2, E_t=10+VAE2+noise_injection"
+    file = "trained_models/Aug24th/Scheduler_B=10,E=30,B_t=2,E_t=10+VAE2+noise_injection+MP"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -90,6 +90,7 @@ if __name__ == "__main__":
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    print(model.summary())
     for i in range(3,4):
         N_rf = i
         print("========================================== B =", i)
