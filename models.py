@@ -1952,23 +1952,21 @@ def Floatbits_FDD_model_softmax(M, K, B):
         output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
     model = Model(inputs, output)
     return model
-def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, more=1):
+def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     B_t = 2
     E_t = 10
     find_nearest_e_b = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
     find_nearest_e_t = Closest_embedding_layer(user_count=K, embedding_count=2 ** B_t, bit_count=E_t, i=1)
-    encoder_b = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
-    encoder_t = Autoencoder_Encoding_module((K, E), i=1, code_size=E_t * more, normalization=False)
+    encoder_b = Autoencoder_Encoding_module((K, M + E_t), i=0, code_size=E * more, normalization=False)
+    encoder_t = Autoencoder_Encoding_module((K, M), i=1, code_size=E_t * more, normalization=False)
     decoder_b = Autoencoder_Decoding_module(M, (K, (E_t+E) * more), i=0)
-    decoder_t = Autoencoder_Decoding_module(E, (K, E_t * more), i=1)
     # user side
-    z_e_b = encoder_b(inputs_mod)
-    z_e_t = encoder_t(z_e_b)
+    z_e_t = encoder_t(inputs_mod)
     z_q_t = find_nearest_e_t(z_e_t)
     z_fed_forward_t = z_e_t + tf.stop_gradient(z_q_t - z_e_t)
-    z_e_b = z_e_b + decoder_t(z_fed_forward_t)
+    z_e_b = encoder_b(tf.concat((z_fed_forward_t, inputs_mod), axis=2))
     z_q_b = find_nearest_e_b(z_e_b)
     z_fed_forward_b = z_e_b + tf.stop_gradient(z_q_b - z_e_b)
     z_in = tf.concat((z_fed_forward_t, z_fed_forward_b), axis=2)
