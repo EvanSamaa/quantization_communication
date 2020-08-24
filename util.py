@@ -7,6 +7,7 @@ from tensorflow.keras.activations import sigmoid
 import random
 import math
 from itertools import combinations
+import tensorflow.keras.backend as KB
 # import cv2
 import os
 from soft_sort.tf_ops import soft_rank
@@ -789,15 +790,55 @@ def VAE_encoding_loss(k, l):
         quantization_loss_2 = 0.25*tf.losses.mean_squared_error(y_pred_z_e, tf.stop_gradient(y_pred_z_q))
         return quantization_loss_1 + quantization_loss_2
     return loss_fn
-def VAE_loss():
-    def loss_fn(z_q, z_e):
+class VAE_loss_general():
+    def __init__(self, moving_avg = False, model = None):
+        self.moving_avg = moving_avg
+        self.model = model
+        self.M = None
+        self.N = None
+    def call(self, z_q, z_e):
         # quantization_loss_1 = tf.square(tf.norm(tf.stop_gradient(y_pred_z_e)- y_pred_z_q))/y_pred.shape[0]]
         quantization_loss_1 = tf.losses.mean_squared_error(z_q, tf.stop_gradient(z_e))
         # quantization_loss_2 = 0.25*tf.square(tf.norm(tf.stop_gradient(y_pred_z_q) - y_pred_z_e))/y_pred.shape[0]
         quantization_loss_2 = tf.losses.mean_squared_error(z_e, tf.stop_gradient(z_q))
-        loss = quantization_loss_1 + 0.1*quantization_loss_2
+        loss = quantization_loss_1 + 0.1 * quantization_loss_2
+        if self.moving_avg:
+            code_book = self.model.get_layer("Closest_embedding_layer_moving_avg").E
+            last_m = self.model.get_layer("Closest_embedding_layer_moving_avg").last_m
+            choices = [[] for i in range(last_m.shape[1])]
+            distances = (KB.sum(z_e ** 2, axis=2, keepdims=True)
+                         - 2 * KB.dot(z_e, code_book)
+                         + KB.sum(code_book ** 2, axis=0, keepdims=True))
+            encoding_indices = KB.argmax(-distances, axis=2)
+            encoding_indices = tf.reshape(encoding_indices,
+                                          shape=(encoding_indices.shape[0] * encoding_indices.shape[1],))
+            z_e = tf.reshape(z_e, shape=(z_e.shape[0] * z_e.shape[1], z_e.shape[2]))
+            for i in range(0, z_e.shape[0]):
+                choices[encoding_indices[i].numpy()].append(z_e[i:i+1,:])
+                # print(len(choices[encoding_indices[i].numpy()]))
+            if self.M is None:
+                self.M = [0 for i in range(last_m.shape[1])]
+                self.N = [0 for i in range(last_m.shape[1])]
+                for i in range(0, len(choices)):
+                    if len(choices[i]) != 0:
+                        self.M[i] = tf.reduce_sum(tf.concat(choices[i], axis=0), axis=0)
+                        self.N[i] = tf.Variable(len(choices[i]), dtype=tf.float32)
+                    else:
+                        self.M[i] = None # alternatively adjust M to be the mean of all encoding + some noise
+            else:
+                for i in range(0, len(choices)):
+                    if len(choices[i]) != 0 and not (self.M[i] is None):
+                        self.M[i] = 0.99*self.M[i] + 0.01*tf.reduce_sum(tf.concat(choices[i], axis=0), axis=0)
+                        self.N[i] = 0.99*self.N[i] + 0.01*tf.Variable(len(choices[i]), dtype=tf.float32)
+                    elif len(choices[i]) != 0 and self.M[i] is None:
+                        self.M[i] = tf.reduce_sum(tf.concat(choices[i], axis=0), axis=0)
+                        self.N[i] = tf.Variable(len(choices[i]), dtype=tf.float32)
+                    else:
+                        self.M[i] = None
+            for i in range(0, code_book.shape[1]):
+                if not(self.M[i] is None):
+                    self.model.get_layer("Closest_embedding_layer_moving_avg").E[:, i].assign(self.M[i]/self.N[i])
         return tf.reduce_mean(loss, axis=1)
-    return loss_fn
 # =========================== Custom function for straight through estimation ============================
 @tf.custom_gradient
 def sign_relu_STE(x):

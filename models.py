@@ -317,6 +317,45 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
             'name':"Closest_embedding_layer_{}".format(self.i)
         })
         return config
+class Closest_embedding_layer_moving_avg(tf.keras.layers.Layer):
+    def __init__(self, user_count=2, embedding_count=8, bit_count=15, i=0, **kwargs):
+        super(Closest_embedding_layer_moving_avg, self).__init__(name="Closest_embedding_layer_moving_avg")
+        self.user_count = user_count
+        self.bit_count = bit_count
+        self.embedding_count = embedding_count
+        initializer = tf.keras.initializers.he_uniform()
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+        #E is in the shape of [E, 2**B]
+        self.E = self.add_weight(name='embedding',
+                                 shape=(self.bit_count, self.embedding_count),
+                                 initializer=initializer,
+                                 trainable=False)
+        self.i = i
+        self.last_m = self.add_weight(name='last_m',
+                                 shape=(self.bit_count, self.embedding_count),
+                                 initializer=initializer,
+                                 trainable=False)
+    def call(self, z, training=True):
+        z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
+        # z is in the shape of [None, K, E]
+        # print(tf.keras.sum(z**2, axis=1, keepdims=True).shape)
+        distances = (KB.sum(z**2, axis=2, keepdims=True)
+                     - 2 * KB.dot(z, self.E)
+                     + KB.sum(self.E ** 2, axis=0, keepdims=True))
+        encoding_indices = KB.argmax(-distances, axis=2)
+        # encodings = tf.gather(tf.transpose(self.E), encoding_indices)
+        encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices)
+        return encodings
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'bit_count':self.bit_count,
+            'user_count':self.user_count,
+            'embedding_count':self.embedding_count,
+            'i':self.i,
+            'name': self.name
+        })
+        return config
 class Interference_Input_modification(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Interference_Input_modification, self).__init__()
@@ -1876,6 +1915,26 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
+def CSI_reconstruction_model_seperate_decoders_moving_avg_update(M, K, B, E, N_rf, k, more=1, qbit=0):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    find_nearest_e = Closest_embedding_layer_moving_avg(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
+    decoder = Autoencoder_Decoding_module(M, (K, E * more))
+    z_e_all = encoder(inputs_mod)
+    z_e = z_e_all[:, :, :E * more]
+    if qbit > 0:
+        z_val = z_e_all[:, :, E*more:E*more+qbit]
+        z_val = sigmoid(z_val) + tf.stop_gradient(binary_activation(z_val) - sigmoid(z_val)) + 0.1
+    z_qq = find_nearest_e(z_e[:, :, :E])
+    for i in range(1, more):
+        z_qq = tf.concat((z_qq, find_nearest_e(z_e[:, :, E * i:E * (i + 1)])), axis=2)
+    z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
+    if qbit > 0:
+        z_fed_forward = tf.multiply(z_fed_forward, z_val)
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
+    model = Model(inputs, [reconstructed_input, z_qq, z_e])
+    return model
 
 def Floatbits_FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
@@ -1912,7 +1971,6 @@ if __name__ == "__main__":
     model = CSI_reconstruction_model_seperate_decoders(M, K, B, 30, N_rf, k=6, more=2)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
-
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)
     # nn.train_network(G)
     # nn.save_model("trained_models/Aug8th/nn_k_mean_dim_15/")

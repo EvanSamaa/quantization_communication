@@ -39,7 +39,7 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         # loss_1 = 0
         loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        loss_2 = VAE_loss()(z_qq, z_e)
+        loss_2 = vae_loss.call(z_qq, z_e)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
         # for i in range(0, scheduled_output.shape[1]):
         #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
@@ -57,10 +57,8 @@ def train_step(features, labels, N=None, epoch=0):
     train_loss(loss_1)
     # train_binarization_loss(loss_4)
     # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
-
-
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/B=5 ,E=30+VAE_0.25commitment+noise_injection{}"
+    fname_template = "trained_models/aug20th/B=5 ,E=30+moving_avg_VAE+noise_injection{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -79,8 +77,11 @@ if __name__ == "__main__":
     EPOCHS = 100000
     tf.random.set_seed(seed)
     np.random.seed(seed)
+    # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=0)
+    model = CSI_reconstruction_model_seperate_decoders_moving_avg_update(M, K, B, E, N_rf, 6, more=1, qbit=0)
+
+    vae_loss = VAE_loss_general(True, model)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=0)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
