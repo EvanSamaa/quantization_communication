@@ -1955,8 +1955,6 @@ def Floatbits_FDD_model_softmax(M, K, B):
 def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    B_t = 2
-    E_t = 10
     find_nearest_e_b = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
     find_nearest_e_t = Closest_embedding_layer(user_count=K, embedding_count=2 ** B_t, bit_count=E_t, i=1)
     encoder_b = Autoencoder_Encoding_module((K, M + E_t), i=0, code_size=E * more, normalization=False)
