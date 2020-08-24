@@ -39,6 +39,7 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         loss_1 = 0
+        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_q_t, z_e_t) + vae_loss.call(z_q_b, z_e_b)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
@@ -51,7 +52,7 @@ def train_step(features, labels, N=None, epoch=0):
             # loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         print("==============================")
-        loss = loss_1 + loss_2
+        loss = loss_1 + loss_2 + loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
@@ -59,7 +60,7 @@ def train_step(features, labels, N=None, epoch=0):
     # train_binarization_loss(loss_4)
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug24th/N_rf=4_Scheduler_B=10,E=30,B_t=10,E_t=30+VAE2+noise_injection+MP{}"
+    fname_template = "trained_models/Aug24th/Scheduler_B=10,E=30+VAE+noise_injection+MP+reconstruction_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -68,14 +69,12 @@ if __name__ == "__main__":
     N = 50
     M = 40
     K = 10
-
     B = 10
     E = 30
     B_t = 10
     E_t = 30
-
     seed = 100
-    N_rf = 4
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
@@ -84,11 +83,12 @@ if __name__ == "__main__":
     np.random.seed(seed)
     # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=0)
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
-    model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
+    # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
+    # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
+    
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
-    # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
