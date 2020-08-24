@@ -826,6 +826,7 @@ class VAE_loss_general():
                     else:
                         # self.M[i] = None # alternatively adjust M to be the mean of all encoding + some noise
                         self.M[i] = tf.reduce_mean(z_e, axis=0) + tf.random.normal((z_e.shape[1],), 0, tf.math.reduce_std(z_e, axis=0))
+                        self.N[i] = tf.Variable(1, dtype=tf.float32)
             else:
                 for i in range(0, len(choices)):
                     if len(choices[i]) != 0:
@@ -833,7 +834,7 @@ class VAE_loss_general():
                         self.N[i] = 0.99 * self.N[i] + 0.01 * tf.Variable(len(choices[i]), dtype=tf.float32)
                     else:
                         self.M[i] = 0.99 * self.M[i] + 0.01 * tf.random.normal((z_e.shape[1],), 0, tf.math.reduce_std(z_e, axis=0))
-                        self.N[i] = 0.99 * self.N[i] + 1 * tf.Variable(len(choices[i]), dtype=tf.float32)
+                        self.N[i] = 0.99 * self.N[i] + 0.01 * tf.Variable(len(choices[i]), dtype=tf.float32)
                         # self.M[i] = None
                     # if len(choices[i]) != 0 and not (self.M[i] is None):
                     #     self.M[i] = 0.99*self.M[i] + 0.01*tf.reduce_sum(tf.concat(choices[i], axis=0), axis=0)
