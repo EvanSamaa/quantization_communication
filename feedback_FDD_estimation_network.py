@@ -71,8 +71,8 @@ if __name__ == "__main__":
 
     B = 5
     E = 30
-    B_t = 2
-    E_t = 10
+    B_t = 5
+    E_t = 30
 
     seed = 100
     N_rf = 3
