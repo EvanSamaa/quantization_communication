@@ -58,7 +58,7 @@ def train_step(features, labels, N=None, epoch=0):
     # train_binarization_loss(loss_4)
     # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/aug20th/B=12 ,E=30, B_t=2, E_t=10+VAE2+noise_injection{}"
+    fname_template = "trained_models/aug20th/B=10 ,E=30, B_t=3, E_t=10+VAE2+noise_injection{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     N = 50
     M = 40
     K = 10
-    B = 12
+    B = 10
     E = 30
     seed = 100
     N_rf = 3
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     np.random.seed(seed)
     # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=0)
     # model = CSI_reconstruction_model_seperate_decoders_moving_avg_update(M, K, B, E, N_rf, 6, more=1, qbit=0)
-    model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, more=1)
+    model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=3, E_t=10, more=1)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
