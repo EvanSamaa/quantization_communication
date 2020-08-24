@@ -75,7 +75,7 @@ if __name__ == "__main__":
     E_t = 30
 
     seed = 100
-    N_rf = 3
+    N_rf = 5
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
