@@ -632,7 +632,7 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
         x = (inputs - min) / (max - min)
     else:
         x = inputs
-    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(x)
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal())(x)
@@ -715,7 +715,6 @@ def DiscreteVAE_regression(l, input_shape, code_size = 15):
     model = Model(inputs, output_all, name="DiscreteVAEregression")
     print(model.summary())
     return model
-
 ############################## Encoding models with bitstring input ##############################
 def F_Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
@@ -1861,19 +1860,19 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
-    decoder = Autoencoder_Decoding_module(M, (K, E * more + qbit))
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
+    decoder = Autoencoder_Decoding_module(M, (K, E * more))
     z_e_all = encoder(inputs_mod)
     z_e = z_e_all[:, :, :E * more]
     if qbit > 0:
         z_val = z_e_all[:, :, E * more:E * more+qbit]
-        z_val = sigmoid(z_val) + tf.stop_gradient(binary_activation(z_val) - sigmoid(z_val))
+        z_val = sigmoid(z_val) + tf.stop_gradient(binary_activation(z_val) - sigmoid(z_val)) + 0.1s
     z_qq = find_nearest_e(z_e[:, :, :E])
     for i in range(1, more):
         z_qq = tf.concat((z_qq, find_nearest_e(z_e[:, :, E * i:E * (i + 1)])), axis=2)
     z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
     if qbit > 0:
-        z_fed_forward = tf.concat((z_fed_forward, z_val), axis=2)
+        z_fed_forward = tf.multiply(z_fed_forward, z_val)
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
