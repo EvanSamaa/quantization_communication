@@ -62,7 +62,7 @@ def train_step(features, labels, N=None, epoch=0):
     # train_binarization_loss(loss_4)
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/Scheduler+sigmoid_B10E10_encoder+outerproduct_in+reconstruction{}"
+    fname_template = "trained_models/Aug25th/Scheduler+B10E10_encoder+outerproduct_in+reconstruction{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
