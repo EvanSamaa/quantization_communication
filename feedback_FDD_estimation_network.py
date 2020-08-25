@@ -55,7 +55,7 @@ def train_step(features, labels, N=None, epoch=0):
         # print("==============================")
         loss = loss_1 + loss_2
 
-    gradients = tape.gradient(loss, model)
+    gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # train_loss(sum_rate(scheduled_output[:, -1], features))
     train_loss(loss_1)
