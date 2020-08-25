@@ -132,7 +132,6 @@ if __name__ == "__main__":
         graphing_data[epoch, 2] = train_VS.result()
         graphing_data[epoch, 3] = train_hard_loss.result()
         if train_loss.result() < max_acc:
-            A[2]
             max_acc = train_loss.result()
             model.save(fname_template.format(".h5"))
         if epoch % check == 0:
