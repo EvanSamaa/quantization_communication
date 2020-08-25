@@ -54,17 +54,9 @@ def train_step(features, labels, N=None, epoch=0):
         #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # print("==============================")
         loss = loss_1 + loss_2
-    # ========================================================================
-    slow_var = model.get_layer("closest_embedding_layer").trainable_variables + model.get_layer("encoder_0").trainable_variables
-    fast_var = model.get_layer("decoder_0").trainable_variables
-    gradient_slow = tape.gradient(loss, slow_var)
-    gradient_fast = tape.gradient(loss, fast_var)
-    optimizer.apply_gradients(zip(gradient_slow, slow_var))
-    optimizer_fast.apply_gradients(zip(gradient_fast, fast_var))
-    del tape
-    # ========================================================================
-    # gradients = tape.gradient(loss, model)
-    # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+    gradients = tape.gradient(loss, model)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # train_loss(sum_rate(scheduled_output[:, -1], features))
     train_loss(loss_1)
     # train_binarization_loss(loss_4)
@@ -100,7 +92,6 @@ if __name__ == "__main__":
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     optimizer = tf.keras.optimizers.Adam(lr=0.001)
-    optimizer_fast = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
