@@ -296,7 +296,7 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
                                  trainable=True)
         self.i = i
     def call(self, z, training=True):
-        z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
+        # z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
         # z is in the shape of [None, K, E]
         # print(tf.keras.sum(z**2, axis=1, keepdims=True).shape)
         distances = (KB.sum(z**2, axis=2, keepdims=True)
@@ -306,8 +306,8 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         # print(encoding_indices)
         # encodings = tf.gather(tf.transpose(self.E), encoding_indices)
         encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices)
-        # if not (encoding_indices.shape[0] is None):
-        #     print(np.unique(encoding_indices.numpy()))
+        if not (encoding_indices.shape[0] is None):
+            print(np.unique(encoding_indices.numpy()).shape)
         return encodings
     def get_config(self):
         config = super().get_config().copy()
@@ -338,8 +338,8 @@ class Closest_embedding_layer_moving_avg(tf.keras.layers.Layer):
                                  initializer=initializer,
                                  trainable=False)
     def call(self, z, training=True):
-        if training:
-            z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
+        # if training:
+        #     z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
         # z is in the shape of [None, K, E]
         # print(tf.keras.sum(z**2, axis=1, keepdims=True).shape)
         distances = (KB.sum(z**2, axis=2, keepdims=True)
@@ -348,8 +348,8 @@ class Closest_embedding_layer_moving_avg(tf.keras.layers.Layer):
         encoding_indices = KB.argmax(-distances, axis=2)
         # encodings = tf.gather(tf.transpose(self.E), encoding_indices)
         encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices)
-        # if not (encoding_indices.shape[0] is None):
-        #     print(np.unique(encoding_indices.numpy()))
+        if not (encoding_indices.shape[0] is None):
+            print(np.unique(encoding_indices.numpy()))
         return encodings
     def get_config(self):
         config = super().get_config().copy()
@@ -676,7 +676,13 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
         x = (inputs - min) / (max - min)
     else:
         x = inputs
-    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_1".format(i))(x)
+    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_1".format(i))(x)
+    x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_3".format(i))(x)
+    x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_4".format(i))(x)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
