@@ -801,7 +801,7 @@ class VAE_loss_general():
         quantization_loss_1 = tf.losses.mean_squared_error(z_q, tf.stop_gradient(z_e))
         # quantization_loss_2 = 0.25*tf.square(tf.norm(tf.stop_gradient(y_pred_z_q) - y_pred_z_e))/y_pred.shape[0]
         quantization_loss_2 = tf.losses.mean_squared_error(z_e, tf.stop_gradient(z_q))
-        loss = quantization_loss_1 + 0.25 * quantization_loss_2
+        loss = quantization_loss_1 + 1 * quantization_loss_2
         if self.moving_avg:
             code_book = self.model.get_layer("Closest_embedding_layer_moving_avg").E
             last_m = self.model.get_layer("Closest_embedding_layer_moving_avg").last_m
