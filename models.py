@@ -1924,8 +1924,9 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
 def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.keras.layers.BatchNormalization()(inputs_mod)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=True)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, E * more))
     z_e_all = encoder(inputs_mod)
     z_e = z_e_all[:, :, :E * more]
