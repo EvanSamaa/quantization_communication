@@ -40,7 +40,8 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         # loss_1 = 0
-        loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        loss_1 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_qq, z_e)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
         # for i in range(0, scheduled_output.shape[1]):
@@ -56,11 +57,11 @@ def train_step(features, labels, N=None, epoch=0):
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # train_loss(sum_rate(scheduled_output[:, -1], features))
-    train_loss(loss_1)
+    train_loss(tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)))
     # train_binarization_loss(loss_4)
     # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/Deep_encoder+Deep_decoder{}"
+    fname_template = "trained_models/Aug25th/Deep_encoder+Deep_decoder+euclid_dist_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2

@@ -849,6 +849,12 @@ class VAE_loss_general():
                 if self.N[i] > 0:
                     self.model.get_layer("Closest_embedding_layer_moving_avg").E[:, i].assign(self.M[i]/self.N[i])
         return tf.reduce_mean(loss, axis=1)
+def Reconstruction_loss(K, M):
+    def loss(reconstructed_input, features):
+        y = tf.abs(features)
+        distance = tf.math.reduce_euclidean_norm(reconstructed_input-features, axis=2)
+        loss = tf.reduce_mean(distance, axis=1)
+        return loss
 # =========================== Custom function for straight through estimation ============================
 @tf.custom_gradient
 def sign_relu_STE(x):
