@@ -6,7 +6,7 @@ import scipy as sp
 from keras_adabound.optimizers import AdaBound
 
 
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
     if N == 0:
         with tf.GradientTape() as tape:
@@ -40,7 +40,7 @@ def train_step(features, labels, N=None, epoch=0):
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         loss_1 = 0
-        loss_3 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
+        # loss_3 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_qq, z_e)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
         for i in range(0, scheduled_output.shape[1]):
@@ -52,7 +52,7 @@ def train_step(features, labels, N=None, epoch=0):
             # loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # print("==============================")
-        loss = loss_1 + loss_2 + loss_3
+        loss = loss_1 + loss_2
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -109,6 +109,11 @@ if __name__ == "__main__":
         train_hard_loss.reset_states()
         # ======== ======== training step ======== ========
         train_features = generate_link_channel_data(N, K, M)
+
+
+        inputs_mod = tf.abs(train_features)
+        inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
+        inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
         train_step(train_features, None, training_mode, epoch=epoch)
         # train_step(features=train_features, labels=None)
         template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
