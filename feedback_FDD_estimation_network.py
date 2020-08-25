@@ -62,7 +62,7 @@ def train_step(features, labels, N=None, epoch=0):
     # train_binarization_loss(loss_4)
     # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/sigmoid_Deep_encoder+Deep_decoder+outer_product_in_B=5,E=5{}"
+    fname_template = "trained_models/Aug25th/sigmoid_Deep_encoder+Deep_decoder+outer_product_in_B=10,E=20{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -71,8 +71,8 @@ if __name__ == "__main__":
     N = 50
     M = 40
     K = 10
-    B = 5
-    E = 5
+    B = 10
+    E = 20
     B_t = 10
     E_t = 30
     seed = 100
