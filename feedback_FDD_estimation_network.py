@@ -33,14 +33,14 @@ def train_step(features, labels, N=None, epoch=0):
         train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
         return
     with tf.GradientTape(persistent=True) as tape:
-        # scheduled_output, z_qq, z_e, reconstructed_input = model(features)
-        reconstructed_input, z_qq, z_e= model(features)
+        scheduled_output, z_qq, z_e, reconstructed_input = model(features)
+        # reconstructed_input, z_qq, z_e= model(features)
         # scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input = model(features)
         # reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
-        # loss_1 = 0
-        loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        loss_1 = sum_rate(scheduled_output, features)
+        # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_1 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_qq, z_e)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
@@ -57,12 +57,12 @@ def train_step(features, labels, N=None, epoch=0):
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    # train_loss(sum_rate(scheduled_output[:, -1], features))
-    train_loss(loss_1)
+    train_loss(sum_rate(scheduled_output, features))
+    # train_loss(loss_1)
     # train_binarization_loss(loss_4)
-    # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
+    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/sigmoid_Deep_encoder+Deep_decoder+outer_product_in_B=10,E=20{}"
+    fname_template = "trained_models/Aug25th/Scheduler+sigmoid_B10E10_encoder+outerproduct_in{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     M = 40
     K = 10
     B = 10
-    E = 20
+    E = 10
     B_t = 10
     E_t = 30
     seed = 100
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     print(model.summary())
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-    # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=False)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
