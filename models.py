@@ -1945,7 +1945,7 @@ def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, mo
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
-    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1)), perm=[0, 1, 3, 2])
+    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
     inputs_mod = tf.keras.layers.Reshape(K, M*M)(tf.matmul(inputs_mod, inputs_mod2))
 
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
