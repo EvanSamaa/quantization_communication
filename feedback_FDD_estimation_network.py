@@ -99,8 +99,8 @@ if __name__ == "__main__":
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-    optimizer_fast = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Adam(lr=0.001)
+    optimizer_fast = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
