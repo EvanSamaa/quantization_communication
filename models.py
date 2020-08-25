@@ -306,8 +306,8 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         # print(encoding_indices)
         # encodings = tf.gather(tf.transpose(self.E), encoding_indices)
         encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices)
-        if not (encoding_indices.shape[0] is None):
-            print(np.unique(encoding_indices.numpy()))
+        # if not (encoding_indices.shape[0] is None):
+        #     print(np.unique(encoding_indices.numpy()))
         return encodings
     def get_config(self):
         config = super().get_config().copy()
@@ -348,8 +348,8 @@ class Closest_embedding_layer_moving_avg(tf.keras.layers.Layer):
         encoding_indices = KB.argmax(-distances, axis=2)
         # encodings = tf.gather(tf.transpose(self.E), encoding_indices)
         encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices)
-        if not (encoding_indices.shape[0] is None):
-            print(np.unique(encoding_indices.numpy()))
+        # if not (encoding_indices.shape[0] is None):
+        #     print(np.unique(encoding_indices.numpy()))
         return encodings
     def get_config(self):
         config = super().get_config().copy()
