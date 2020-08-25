@@ -296,16 +296,18 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
                                  trainable=True)
         self.i = i
     def call(self, z, training=True):
-        if training:
-            z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
+        z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
         # z is in the shape of [None, K, E]
         # print(tf.keras.sum(z**2, axis=1, keepdims=True).shape)
         distances = (KB.sum(z**2, axis=2, keepdims=True)
                      - 2 * KB.dot(z, self.E)
                      + KB.sum(self.E ** 2, axis=0, keepdims=True))
         encoding_indices = KB.argmax(-distances, axis=2)
+        # print(encoding_indices)
         # encodings = tf.gather(tf.transpose(self.E), encoding_indices)
         encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices)
+        if not (encoding_indices.shape[0] is None):
+            print(np.unique(encoding_indices.numpy()))
         return encodings
     def get_config(self):
         config = super().get_config().copy()
@@ -336,7 +338,8 @@ class Closest_embedding_layer_moving_avg(tf.keras.layers.Layer):
                                  initializer=initializer,
                                  trainable=False)
     def call(self, z, training=True):
-        z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
+        if training:
+            z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
         # z is in the shape of [None, K, E]
         # print(tf.keras.sum(z**2, axis=1, keepdims=True).shape)
         distances = (KB.sum(z**2, axis=2, keepdims=True)
@@ -345,6 +348,8 @@ class Closest_embedding_layer_moving_avg(tf.keras.layers.Layer):
         encoding_indices = KB.argmax(-distances, axis=2)
         # encodings = tf.gather(tf.transpose(self.E), encoding_indices)
         encodings = tf.nn.embedding_lookup(tf.transpose(self.E), encoding_indices)
+        if not (encoding_indices.shape[0] is None):
+            print(np.unique(encoding_indices.numpy()))
         return encodings
     def get_config(self):
         config = super().get_config().copy()
@@ -1961,6 +1966,8 @@ def Floatbits_FDD_model_softmax(M, K, B):
         output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
     model = Model(inputs, output)
     return model
+# def CSI_vanilla_reconstruction_model(M, K, B, E, N_rf, k, more=1):
+
 def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
