@@ -33,7 +33,8 @@ def train_step(features, labels, N=None, epoch=0):
         train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
         return
     with tf.GradientTape() as tape:
-        scheduled_output, z_qq, z_e, reconstructed_input = model(features)
+        # scheduled_output, z_qq, z_e, reconstructed_input = model(features)
+        reconstructed_input, z_qq, z_e= model(features)
         # scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input = model(features)
         # reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
