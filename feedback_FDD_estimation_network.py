@@ -32,7 +32,7 @@ def train_step(features, labels, N=None, epoch=0):
         train_VS(loss_object_2(predictions, features))
         train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
         return
-    with tf.GradientTape() as tape:
+    with tf.GradientTape(persistent=True) as tape:
         # scheduled_output, z_qq, z_e, reconstructed_input = model(features)
         reconstructed_input, z_qq, z_e= model(features)
         # scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input = model(features)
@@ -54,14 +54,23 @@ def train_step(features, labels, N=None, epoch=0):
         #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # print("==============================")
         loss = loss_1 + loss_2
-    gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    # ========================================================================
+    slow_var = model.get_layer("closest_embedding_layer").trainable_variables + model.get_layer("encoder_0").trainable_variables
+    fast_var = model.get_layer("decoder_0").trainable_variables
+    gradient_slow = tape.gradient(loss, slow_var)
+    gradient_fast = tape.gradient(loss, fast_var)
+    optimizer.apply_gradients(zip(gradient_slow, slow_var))
+    optimizer_fast.apply_gradients(zip(gradient_fast, fast_var))
+    del tape
+    # ========================================================================
+    # gradients = tape.gradient(loss, model)
+    # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # train_loss(sum_rate(scheduled_output[:, -1], features))
     train_loss(loss_1)
     # train_binarization_loss(loss_4)
     # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/Deep_encoder+Deep_decoder+B=10,E=8{}"
+    fname_template = "trained_models/Aug25th/Deep_encoder+Deep_decoder+fastandslow{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -71,7 +80,7 @@ if __name__ == "__main__":
     M = 40
     K = 10
     B = 10
-    E = 8
+    E = 64
     B_t = 10
     E_t = 30
     seed = 100
@@ -83,6 +92,7 @@ if __name__ == "__main__":
     tf.random.set_seed(seed)
     np.random.seed(seed)
     model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=0)
+    print(model.summary())
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
     # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
@@ -90,6 +100,7 @@ if __name__ == "__main__":
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    optimizer_fast = tf.keras.optimizers.Adam()
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
@@ -121,6 +132,7 @@ if __name__ == "__main__":
         graphing_data[epoch, 2] = train_VS.result()
         graphing_data[epoch, 3] = train_hard_loss.result()
         if train_loss.result() < max_acc:
+            A[2]
             max_acc = train_loss.result()
             model.save(fname_template.format(".h5"))
         if epoch % check == 0:
