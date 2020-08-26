@@ -59,7 +59,7 @@ def train_step(features, labels, N=None, epoch=0):
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(sum_rate(scheduled_output, features))
     # train_loss(loss_1)
-    # train_binarization_loss(loss_4)
+    train_binarization_loss(loss_4)
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
 if __name__ == "__main__":
     fname_template = "trained_models/Aug25th/Scheduler+B4x3E10code_stacking+reconstruction_loss{}"
