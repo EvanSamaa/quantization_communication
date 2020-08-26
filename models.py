@@ -684,9 +684,9 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = inputs
-    # x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
-    # x = LeakyReLU()(x)
-    # x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
+    x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="decoder_{}".format(i))
 def DiscreteVAE(k, l, input_shape, code_size=15):
@@ -1910,6 +1910,29 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     z_fed_forward = tf.keras.layers.Reshape((K * E * more,))(z_fed_forward)
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e_all])
+    return model
+def CSI_reconstruction_model_seperate_decoders_input_mod_2(M, K, B, E, N_rf, k, more=1, qbit=0):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
+    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
+    inputs_mod = tf.keras.layers.Reshape((K, M*M))(tf.matmul(inputs_mod, inputs_mod2))
+    find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
+    encoder = Autoencoder_Encoding_module((K, M*M), i=0, code_size=E * more + qbit, normalization=False)
+    decoder = Autoencoder_Decoding_module(M, (K, E * more))
+    z_e_all = encoder(inputs_mod)
+    z_e = z_e_all[:, :, :E * more]
+    if qbit > 0:
+        z_val = z_e_all[:, :, E*more:E*more+qbit]
+        z_val = sigmoid(z_val) + tf.stop_gradient(binary_activation(z_val) - sigmoid(z_val)) + 0.1
+    z_qq = find_nearest_e(z_e[:, :, :E])
+    for i in range(1, more):
+        z_qq = tf.concat((z_qq, find_nearest_e(z_e[:, :, E * i:E * (i + 1)])), axis=2)
+    z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
+    if qbit > 0:
+        z_fed_forward = tf.multiply(z_fed_forward, z_val)
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
+    model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
 def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
