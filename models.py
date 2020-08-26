@@ -689,7 +689,7 @@ def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalizatio
     inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs)
     inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
     inputs_mod = tf.keras.layers.Reshape((K, M, M, 1))(tf.matmul(inputs_mod, inputs_mod2))
-    x = distribute(tf.keras.layers.Conv2D(6, 5))(inputs_mod)
+    x = distribute(tf.keras.layers.Conv2D(4, 5))(inputs_mod)
     x = distribute(tf.keras.layers.MaxPool2D())(x)
     x = LeakyReLU()(x)
     print(x.shape)
