@@ -32,7 +32,7 @@ def train_step(features, labels, N=None, epoch=0):
         train_VS(loss_object_2(predictions, features))
         train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
         return
-    with tf.GradientTape() as tape:
+    with tf.GradientTape(persistent=True) as tape:
         scheduled_output, z_qq, z_e, reconstructed_input = model(features)
         # reconstructed_input, z_qq, z_e= model(features)
         # scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input = model(features)
@@ -54,16 +54,19 @@ def train_step(features, labels, N=None, epoch=0):
             loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + loss_2 + loss_4 + loss_3
+        loss = loss_1 + loss_2 + loss_3
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    gradients2 = tape.gradient(loss_4, model.get_layer("model_3").trainable_variables)
+    optimizer2.apply_gradients(zip(gradients2, model.get_layer("model_3").trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_1)
     train_binarization_loss(loss_3)
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
+    del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/Scheduler+B4x8E10code_stacking+MP+reconstruction_loss+commitment_loss{}"
+    fname_template = "trained_models/Aug25th/Scheduler+B4x8E10code_stacking+MP+reconstruction_loss+seperate_commitment_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -93,6 +96,7 @@ if __name__ == "__main__":
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    optimizer2 = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
     graphing_data = np.zeros((EPOCHS, 4))
