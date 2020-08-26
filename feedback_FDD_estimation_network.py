@@ -61,7 +61,7 @@ def train_step(features, labels, N=None, epoch=0):
     # train_binarization_loss(loss_4)
     # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/B10E10_CNN_encoder_more_filter{}"
+    fname_template = "trained_models/Aug25th/B10E10_CNN_encoder_5x5filter{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
