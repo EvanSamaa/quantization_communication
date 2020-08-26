@@ -703,7 +703,7 @@ def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalizatio
     return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
-    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
