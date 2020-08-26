@@ -33,35 +33,35 @@ def train_step(features, labels, N=None, epoch=0):
         train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
         return
     with tf.GradientTape() as tape:
-        scheduled_output, z_qq, z_e, reconstructed_input = model(features)
-        # reconstructed_input, z_qq, z_e= model(features)
+        # scheduled_output, z_qq, z_e, reconstructed_input = model(features)
+        reconstructed_input, z_qq, z_e= model(features)
         # scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input = model(features)
         # reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
-        loss_1 = 0
-        loss_3 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
+        loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, features)
+        # loss_3 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_qq, z_e)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
-        for i in range(0, scheduled_output.shape[1]):
-            # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-            sr = sum_rate(scheduled_output[:, i], features)
-            # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
-            # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-            # loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
-            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
-        # print("==============================")
-        loss = loss_1 + loss_2 + loss_3
+        # for i in range(0, scheduled_output.shape[1]):
+        #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
+        #     sr = sum_rate(scheduled_output[:, i], features)
+        #     # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+        #     # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+        #     # loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
+        #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
+        # # print("==============================")
+        loss = loss_1 + loss_2
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(sum_rate(scheduled_output[:, -1], features))
-    # train_loss(loss_1)
+    # train_loss(sum_rate(scheduled_output[:, -1], features))
+    train_loss(loss_1)
     # train_binarization_loss(loss_4)
-    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
+    # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/Scheduler+B10E10_small_decoder+outerproduct_in+MP{}"
+    fname_template = "trained_models/Aug25th/B10E10_small_decoder+outerproduct_in+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     print(model.summary())
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
+    # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=1, qbit=0, output_all=True)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
