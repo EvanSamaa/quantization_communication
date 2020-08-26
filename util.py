@@ -1063,6 +1063,20 @@ def generate_binary_encoding(dim):
         encoding_space[:, dim-i-1] = num_range%2
         num_range = np.floor(num_range/2)
     return tf.constant(encoding_space, dtype=tf.float32)
+def sparse_matrix_from_full(G, p):
+    G = (tf.abs(G))
+    K = G.shape[1]
+    M = G.shape[2]
+    top_values, top_indices = tf.math.top_k(G, k=p)
+    G_copy = np.zeros((top_indices.shape[0], K, M))
+    for n in range(0, top_indices.shape[0]):
+        for i in range(0, K * p):
+            # print(K*p)
+            p_i = int(i % p)
+            user_i = int(tf.floor(i / p))
+            G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
+    G_copy = tf.constant(G_copy, dtype=tf.float32)
+    return G_copy
 if __name__ == "__main__":
     N = 500
     M = 20
