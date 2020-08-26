@@ -296,7 +296,7 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
                                  trainable=True)
         self.i = i
     def call(self, z, training=True):
-        # z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
+        z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
         # z is in the shape of [None, K, E]
         # print(tf.keras.sum(z**2, axis=1, keepdims=True).shape)
         distances = (KB.sum(z**2, axis=2, keepdims=True)
@@ -692,11 +692,9 @@ def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalizatio
     x = distribute(tf.keras.layers.Conv2D(4, 5))(inputs_mod)
     x = distribute(tf.keras.layers.MaxPool2D())(x)
     x = LeakyReLU()(x)
-    print(x.shape)
     x = tf.keras.layers.BatchNormalization()(x)
     x = distribute(tf.keras.layers.Conv2D(1, 5))(x)
     x = distribute(tf.keras.layers.MaxPool2D())(x)
-    print(x.shape)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Reshape((x.shape[1], x.shape[2]*x.shape[3]))(x)
@@ -705,7 +703,7 @@ def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalizatio
     return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
-    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
@@ -1956,7 +1954,7 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_CNN_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, E * more))
     z_e_all = encoder(inputs_mod)
     z_e = z_e_all[:, :, :E * more]
