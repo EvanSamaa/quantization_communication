@@ -7,10 +7,10 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     # tp_fn = ExpectedThroughput(name = "throughput")
     num_data = 10000
     result = np.zeros((3, ))
-    # loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    loss_fn1 = tf.keras.losses.MeanSquaredError()
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    # loss_fn1 = tf.keras.losses.MeanSquaredError()
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
-    # loss_fn2 = Binarization_regularization(K, num_data, M, k=N_rf)
+    # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
     tf.random.set_seed(80)
     print("Testing Starts")
@@ -67,7 +67,7 @@ def plot_data(arr, col):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug25th/B10E10_small_decoder+outerproduct_in+MP"
+    file = "trained_models/Aug24th/N_rf=4_Scheduler_B=10,E=30,B_t=10,E_t=30+VAE2+noise_injection+MP"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     B = 3
     seed = 200
     check = 100
-    N_rf = 3
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     tf.random.set_seed(seed)
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     print(model.summary())
-    for i in range(3,4):
+    for i in range(N_rf,N_rf+1):
         N_rf = i
         print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
