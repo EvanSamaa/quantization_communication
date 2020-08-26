@@ -1076,6 +1076,10 @@ def sparse_matrix_from_full(G, p):
             user_i = int(tf.floor(i / p))
             G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
     G_copy = tf.constant(G_copy, dtype=tf.float32)
+    print(top_indices.shape)
+    mask = tf.scatter_nd(top_indices, tf.expand_dims(G, 3), tf.shape(G))
+    print(mask.shape)
+    A[2]
     return G_copy
 if __name__ == "__main__":
     N = 500
