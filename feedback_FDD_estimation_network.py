@@ -54,7 +54,7 @@ def train_step(features, labels, N=None, epoch=0):
             loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + loss_2 + loss_3 + loss_4
+        loss = loss_1 + loss_2 + loss_4
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -63,7 +63,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_binarization_loss(loss_3)
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/Scheduler+B4x3E10code_stacking+MP+reconstruction_loss+commitment_loss{}"
+    fname_template = "trained_models/Aug25th/Scheduler+B4x3E10code_stacking+MP+commitment_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
