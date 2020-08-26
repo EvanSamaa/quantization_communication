@@ -681,9 +681,30 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
+    inputs = Input(input_shape, dtype=tf.float32)
+    K = input_shape[0]
+    M = input_shape[1]
+    distribute = tf.keras.layers.TimeDistributed
+    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs)
+    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
+    inputs_mod = tf.keras.layers.Reshape((K, M, M, 1))(tf.matmul(inputs_mod, inputs_mod2))
+    x = distribute(tf.keras.layers.Conv2D(6, 3))(inputs_mod)
+    x = distribute(tf.keras.layers.MaxPool2D())(x)
+    x = LeakyReLU()(x)
+    print(x.shape)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = distribute(tf.keras.layers.Conv2D(1, 3))(x)
+    x = distribute(tf.keras.layers.MaxPool2D())(x)
+    print(x.shape)
+    x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Reshape((x.shape[1], x.shape[2]*x.shape[3]))(x)
+    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(x)
+    x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
+    return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
-    x = inputs
     x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
@@ -1900,7 +1921,7 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
+    encoder = Autoencoder_CNN_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
     decoder = Autoencoder_Decoding_module(M * K, (K * E * more))
     z_e_all = encoder(inputs_mod)
     z_qq = find_nearest_e(z_e_all[:, :, :E])
@@ -1914,11 +1935,8 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
 def CSI_reconstruction_model_seperate_decoders_input_mod_2(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
-    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
-    inputs_mod = tf.keras.layers.Reshape((K, M*M))(tf.matmul(inputs_mod, inputs_mod2))
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M*M), i=0, code_size=E * more + qbit, normalization=False)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, E * more))
     z_e_all = encoder(inputs_mod)
     z_e = z_e_all[:, :, :E * more]
@@ -1938,7 +1956,7 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
+    encoder = Autoencoder_CNN_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, E * more))
     z_e_all = encoder(inputs_mod)
     z_e = z_e_all[:, :, :E * more]
@@ -2053,7 +2071,8 @@ if __name__ == "__main__":
     N_rf = 4
     G = generate_link_channel_data(N, K, M)
     # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
-    model = CSI_reconstruction_VQVAE2(M, K, B, 30, N_rf, 1, more=1)
+    # model = CSI_reconstruction_VQVAE2(M, K, B, 30, N_rf, 1, more=1)
+    model = Autoencoder_CNN_Encoding_module(input_shape=(K, M), i=0, code_size=15, normalization=False)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)
