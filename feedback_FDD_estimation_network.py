@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # print(model.summary())
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=3, qbit=0, output_all=True)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=3, qbit=0, output_all=False)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
