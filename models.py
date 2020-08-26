@@ -296,7 +296,7 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
                                  trainable=True)
         self.i = i
     def call(self, z, training=True):
-        z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0))
+        z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0)/10.0)
         # z is in the shape of [None, K, E]
         # print(tf.keras.sum(z**2, axis=1, keepdims=True).shape)
         distances = (KB.sum(z**2, axis=2, keepdims=True)
