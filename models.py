@@ -1930,26 +1930,6 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e_all])
     return model
-def CSI_reconstruction_model_seperate_decoders_input_mod_2(M, K, B, E, N_rf, k, more=1, qbit=0):
-    inputs = Input((K, M))
-    inputs_mod = tf.abs(inputs)
-    find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
-    decoder = Autoencoder_Decoding_module(M, (K, E * more))
-    z_e_all = encoder(inputs_mod)
-    z_e = z_e_all[:, :, :E * more]
-    if qbit > 0:
-        z_val = z_e_all[:, :, E*more:E*more+qbit]
-        z_val = sigmoid(z_val) + tf.stop_gradient(binary_activation(z_val) - sigmoid(z_val)) + 0.1
-    z_qq = find_nearest_e(z_e[:, :, :E])
-    for i in range(1, more):
-        z_qq = tf.concat((z_qq, find_nearest_e(z_e[:, :, E * i:E * (i + 1)])), axis=2)
-    z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
-    if qbit > 0:
-        z_fed_forward = tf.multiply(z_fed_forward, z_val)
-    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
-    model = Model(inputs, [reconstructed_input, z_qq, z_e])
-    return model
 def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2014,6 +1994,7 @@ def CSI_reconstruction_model_seperate_decoders_moving_avg_update(M, K, B, E, N_r
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
+
 def Floatbits_FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector

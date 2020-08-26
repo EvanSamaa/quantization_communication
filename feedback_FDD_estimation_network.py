@@ -39,7 +39,8 @@ def train_step(features, labels, N=None, epoch=0):
         # reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
-        loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, sparse_matrix_from_full(tf.abs(features), 5))
+        # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, sparse_matrix_from_full(tf.abs(features), 5))
+        loss_1 = tf.keras.losses.MeanSquaredError(reconstructed_input, tf.abs(features))
         # loss_3 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_qq, z_e)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
@@ -61,7 +62,7 @@ def train_step(features, labels, N=None, epoch=0):
     # train_binarization_loss(loss_4)
     # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/B10E30+sparse_loss+noise{}"
+    fname_template = "trained_models/Aug25th/B4x8E10code_stacking{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -70,8 +71,8 @@ if __name__ == "__main__":
     N = 50
     M = 40
     K = 10
-    B = 10
-    E = 30
+    B = 4
+    E = 10
     B_t = 10
     E_t = 30
     seed = 100
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     tf.random.set_seed(seed)
     np.random.seed(seed)
-    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=1, qbit=0)
+    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=8, qbit=0)
     print(model.summary())
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
