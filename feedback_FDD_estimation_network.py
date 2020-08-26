@@ -41,7 +41,7 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = sum_rate(scheduled_output, features)
-        # loss_3 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
+        loss_3 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_qq, z_e)
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
         # for i in range(0, scheduled_output.shape[1]):
@@ -53,16 +53,16 @@ def train_step(features, labels, N=None, epoch=0):
         #     # loss_4 = loss_4 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * ce
         #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + loss_2
+        loss = loss_1 + loss_2 + loss_3
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    # train_loss(sum_rate(scheduled_output[:, -1], features))
-    train_loss(loss_1)
+    train_loss(sum_rate(scheduled_output, features))
+    # train_loss(loss_1)
     # train_binarization_loss(loss_4)
-    # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
+    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug25th/Scheduler+B4x3E10code_stacking{}"
+    fname_template = "trained_models/Aug25th/Scheduler+B4x3E10code_stacking+reconstruction_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
