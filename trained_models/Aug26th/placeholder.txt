@@ -1,1 +1,1 @@
-w
+this one makes use of the outer product
