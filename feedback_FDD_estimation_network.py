@@ -44,7 +44,7 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = 0
-        loss_3 = Reconstruction_loss()(reconstructed_input, tf.abs(features))
+        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_qq, z_e)
         loss_4 = 0
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
