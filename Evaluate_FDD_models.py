@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     series = [(1,3), (2,3), (3,3), (4,3), (5,3), (1,10), (2,10), (3,10), (4,10), (5,10)]
     mores = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20, 30, 40]
-    for i in series:
+    for i in mores:
         print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
         model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
