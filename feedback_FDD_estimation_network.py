@@ -45,31 +45,28 @@ def train_step(features, labels, N=None, epoch=0):
         loss_2 = vae_loss.call(z_qq, z_e)
         loss_4 = 0
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
-        for i in range(0, scheduled_output.shape[1]):
-            # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-            sr = sum_rate(scheduled_output[:, i], features)
-            mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
-            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
+        # for i in range(0, scheduled_output.shape[1]):
+        #     # predictions = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
+        #     sr = sum_rate(scheduled_output[:, i], features)
+        #     mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+        #     ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+        #     loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        if tf.reduce_mean(loss_3) >= 15:
-            loss = loss_2 + loss_3
-        else:
-            loss = loss_1 + loss_2 + loss_3 + loss_4
+        loss = loss_1 + loss_2 + loss_3 + loss_4
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_3").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients2, model.get_layer("model_3").trainable_variables))
-    train_loss(sum_rate(scheduled_output[:, -1], features))
-    # train_loss(loss_1)
-    train_binarization_loss(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
+    # train_loss(sum_rate(scheduled_output[:, -1], features))
+    train_loss(loss_3)
+    # train_binarization_loss(loss_3)
+    # train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/Scheduler+B1x32E4code_stacking+input_mod+MP+reconstruction_loss_till15+commitment_loss{}"
+    fname_template = "trained_models/Aug27th/B1x32E4code_stacking+input_mod{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
