@@ -66,7 +66,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/Scheduler+B4x8E10code_stacking+input_mod+MP+reconstruction_loss+commitment_loss{}"
+    fname_template = "trained_models/Aug27th/Scheduler+B1x32E4code_stacking+input_mod+MP+reconstruction_loss+commitment_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -75,8 +75,8 @@ if __name__ == "__main__":
     N = 50
     M = 40
     K = 10
-    B = 4
-    E = 10
+    B = 1
+    E = 4
     B_t = 10
     E_t = 30
     seed = 100
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # print(model.summary())
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=8, qbit=0, output_all=True)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=32, qbit=0, output_all=True)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)

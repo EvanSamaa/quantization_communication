@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
     num_data = 1000
@@ -67,7 +67,7 @@ def plot_data(arr, col):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug26th_no_OP/Scheduler+B4x{}E10code_stacking+MP+reconstruction_loss+seperate_commitment_loss"
+    file = "trained_models/Aug27th/Scheduler+B4x8E10code_stacking+input_mod+MP+reconstruction_loss+commitment_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -92,14 +92,14 @@ if __name__ == "__main__":
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     series = [(1,3), (2,3), (3,3), (4,3), (5,3), (1,10), (2,10), (3,10), (4,10), (5,10)]
     mores = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20, 30, 40]
-    for i in mores:
-        print("========================================== B =", i)
+    # for i in mores:
+    #     print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
-        # model = NN_Clustering(N_rf, M, reduced_dim=8)
-        # model = k_clustering_hieristic(N_rf)
-        # model = greedy_hieristic(N_rf, sigma2_n)
-        # model = top_N_rf_user_model(M, K, N_rf)
-        # model = partial_feedback_semi_exhaustive_model(N_rf, B, 5, M, K, sigma2_n)
-        # print(model.summary())
-        test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+    model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    # model = NN_Clustering(N_rf, M, reduced_dim=8)
+    # model = k_clustering_hieristic(N_rf)
+    # model = greedy_hieristic(N_rf, sigma2_n)
+    # model = top_N_rf_user_model(M, K, N_rf)
+    # model = partial_feedback_semi_exhaustive_model(N_rf, B, 5, M, K, sigma2_n)
+    # print(model.summary())
+    test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
