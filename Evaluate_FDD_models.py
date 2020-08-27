@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
     num_data = 10000
@@ -67,8 +67,8 @@ def plot_data(arr, col):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug24th/N_rf=4_Scheduler_B=10,E=30,B_t=10,E_t=30+VAE2+noise_injection+MP"
-    custome_obj = {'Closest_embedding_latrained_models/Aug24th/N_rf=4_Scheduler_B=10,Eyer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
+    file = "/Users/evansamaa/Desktop/quantization_communication/trained_models/Aug25th/Scheduler+B4x3E10code_stacking+MP+reconstruction_loss+seperate_commitment_loss"
+    custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
                    "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg}
@@ -78,15 +78,15 @@ if __name__ == "__main__":
     B = 3
     seed = 200
     check = 100
-    N_rf = 4
+    N_rf = 3
     sigma2_h = 6.3
     sigma2_n = 0.1
     tf.random.set_seed(seed)
     np.random.seed(seed)
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    training_data = np.load(training_data_path)
-    plot_data(training_data, 0)
+    # training_data = np.load(training_data_path)
+    # plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
