@@ -5,7 +5,10 @@ import numpy as np
 import scipy as sp
 from keras_adabound.optimizers import AdaBound
 
-
+custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
+                   'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
+                   "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
+                   "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg}
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
     if N == 0:
@@ -93,7 +96,7 @@ if __name__ == "__main__":
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
     # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=8, qbit=0, output_all=True)
-    model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5")
+    model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
