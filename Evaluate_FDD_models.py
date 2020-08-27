@@ -91,7 +91,7 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     series = [1, 2, 3, 4, 5, 10, 20, 32]
-    for i in series
+    for i in series:
         print("========================================== B =", i)
         model = partial_feedback_top_N_rf_model(N_rf, i, 1, M, K, sigma2_n)
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
