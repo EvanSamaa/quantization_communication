@@ -90,10 +90,11 @@ if __name__ == "__main__":
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     mores = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20, 30, 40]
+    mores = [1,2,3,4,5,6,7,8,9,10]
     for i in mores :
         model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
         print("========================================== B =", i)
-        # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
+        model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = k_clustering_hieristic(N_rf)
         # model = greedy_hieristic(N_rf, sigma2_n)
