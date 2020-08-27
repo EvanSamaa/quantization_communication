@@ -89,7 +89,6 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
-    print(model.summary())
     mores = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20, 30, 40]
     for i in mores :
         model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
