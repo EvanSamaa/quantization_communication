@@ -69,7 +69,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/Per_User_Schedular+B1x32+commitment{}"
+    fname_template = "trained_models/Aug27th/512x1_Per_User_Schedular+B1x32+commitment{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
