@@ -57,7 +57,7 @@ def train_step(features, labels, N=None, epoch=0):
             # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + 0*loss_4
+        loss = loss_1 + 0.4*loss_4
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -69,7 +69,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/512x2_Per_User_Schedular+MP{}"
+    fname_template = "trained_models/Aug27th/512x2_Per_User_Schedular+0.4xfine_grain_CE+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     # print(model.summary())
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 4, more=32, qbit=0, output_all=False)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=32, qbit=0, output_all=False)
     model = FDD_per_user_architecture_double_softmax_all_softmaxes(M, K, 6, N_rf, True)
     # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
