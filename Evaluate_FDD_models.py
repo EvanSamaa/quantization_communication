@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
     num_data = 1000
@@ -62,7 +62,7 @@ def plot_data(arr, col):
     arr = arr[:i, :]
     x = np.arange(0, arr.shape[0])
     plt.plot(x, arr[:, col])
-    # plt.plot(x, arr[:, 3])
+    plt.plot(x, arr[:, 3])
     # plt.plot(x, arr[:, 3])
     plt.title("Reconstruction Loss")
     plt.show()
@@ -87,8 +87,8 @@ if __name__ == "__main__":
     training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
-    # training_data = np.load(training_data_path)
-    # plot_data(training_data, 0)
+    training_data = np.load(training_data_path)
+    plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     series = [(1,3), (2,3), (3,3), (4,3), (5,3), (1,10), (2,10), (3,10), (4,10), (5,10)]
     mores = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20, 30, 40]
@@ -97,8 +97,7 @@ if __name__ == "__main__":
     # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     print(model.summary())
-    model = FDD_per_user_architecture_double_softmax(M, K, k=4, N_rf=3, output_all=False)
-    print(model.summary())
+    print(model.get_layer("per_user_DNN").summary())
     # model = NN_Clustering(N_rf, M, reduced_dim=8)
     # model = k_clustering_hieristic(N_rf)
     # model = greedy_hieristic(N_rf, sigma2_n)

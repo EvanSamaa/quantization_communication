@@ -1627,9 +1627,9 @@ def per_user_DNN(input_shape, M, N_rf=1):
     inputs = Input(shape=input_shape)
     x = Dense(512)(inputs)
     x = sigmoid(x)
-    # x = tf.keras.layers.BatchNormalization()(x)
-    # x = Dense(512)(x)
-    # x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(512)(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(M+N_rf, bias_initializer="ones")(x)
     model = Model(inputs, x, name="per_user_DNN")
@@ -1696,7 +1696,7 @@ def FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3, output_all=False
     input_pass_0 = input_modder(decision_0, input_mod, k - 1.0)
     output_i = dnn(input_pass_0)
     selection_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(output_i[:, :,-N_rf:]), axis=2)
-    output_i = tf.multiply(sm(output_i[:, :, :-N_rf]), tf.expand_dims(selection_i, axis=2))
+    output_i = tf.multiply(sm(output_i[:, :, :-N_rf]), tf.tile(tf.expand_dims(selection_i, axis=2), (1, 1, M)))
     if output_all:
         output_0 = tf.keras.layers.Reshape((1, M*K))(output_i)
     for times in range(1, k):
@@ -1704,7 +1704,7 @@ def FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3, output_all=False
         input_i = input_modder(output_i, input_mod, k - times - 1.0)
         output_i = dnn(input_i)
         selection_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(output_i[:, :, -N_rf:]), axis=2)
-        output_i = tf.multiply(sm(output_i[:, :, :-N_rf]), tf.expand_dims(selection_i, axis=2))
+        output_i = tf.multiply(sm(output_i[:, :, :-N_rf]), tf.tile(tf.expand_dims(selection_i, axis=2), (1, 1, M)))
         if output_all:
             output_0 = tf.concat((output_0, tf.keras.layers.Reshape((1, M*K))(output_i)), axis=1)
     output_i = tf.keras.layers.Reshape((K*M, ))(output_i)
