@@ -44,7 +44,7 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = 0
-        # loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_qq, z_e)
         loss_4 = 0
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
@@ -57,7 +57,7 @@ def train_step(features, labels, N=None, epoch=0):
             loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + loss_2 + loss_4
+        loss = loss_1 + loss_2 + loss_4 + loss_3
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -69,7 +69,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/Schedular+Pretrained_B4x8E10_VAE+MP+commitment{}"
+    fname_template = "trained_models/Aug27th/Per_User_Schedular+B1x32+commitment{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -78,8 +78,8 @@ if __name__ == "__main__":
     N = 50
     M = 40
     K = 10
-    B = 4
-    E = 10
+    B = 1
+    E = 4
     B_t = 10
     E_t = 30
     seed = 100
@@ -95,8 +95,8 @@ if __name__ == "__main__":
     # print(model.summary())
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-    # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=8, qbit=0, output_all=True)
-    model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
+    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 4, more=32, qbit=0, output_all=False)
+    # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
