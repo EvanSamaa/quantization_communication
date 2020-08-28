@@ -41,8 +41,6 @@ def train_step(features, labels, N=None, epoch=0):
         # scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input = model(features)
         # reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
         scheduled_output, per_user_softmaxes, overall_softmax = model(features)
-        print(per_user_softmaxes.shape)
-        print(overall_softmax.shape)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
