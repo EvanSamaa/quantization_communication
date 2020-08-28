@@ -42,7 +42,7 @@ def train_step(features, labels, N=None, epoch=0):
         # reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
         scheduled_output = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
+        # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = 0
         # loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
