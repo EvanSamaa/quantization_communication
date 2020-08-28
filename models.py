@@ -1628,9 +1628,9 @@ def per_user_DNN(input_shape, M, N_rf=1):
     x = Dense(512)(inputs)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = Dense(512)(x)
-    x = sigmoid(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    # x = Dense(512)(x)
+    # x = sigmoid(x)
+    # x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(M+N_rf, bias_initializer="ones")(x)
     model = Model(inputs, x, name="per_user_DNN")
     return model
