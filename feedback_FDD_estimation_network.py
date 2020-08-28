@@ -71,7 +71,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/512x1_Per_User_Schedular+B4x8E10+fine_grain_CE+MP+reconstruction{}"
+    fname_template = "trained_models/Aug27th/512x1_Per_User_Schedular+B4x8E10+fine_grain_CE+MP+reconstruction+highLR{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    optimizer = tf.keras.optimizers.Adam(lr=0.001)
     optimizer2 = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
