@@ -856,14 +856,14 @@ def Reconstruction_loss():
         loss = tf.reduce_mean(distance, axis=1)
         return loss
     return loss_fn
-def All_softmaxes_CE(M, K):
+def All_softmaxes_CE(N_rf):
     def loss_fn(per_user_softmaxes, overall_softmax):
-        loss = 0
-        loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(tf.argmax(per_user_softmaxes, axis=2),
-                                                                        per_user_softmaxes)
-        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
-        loss = loss + tf.keras.losses.CategoricalCrossentropy()(overall_softmax, mask)
+        loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(tf.argmax(overall_softmax, axis=2),
+                                                                        overall_softmax)
+        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(per_user_softmaxes))
+        loss = loss + tf.keras.losses.CategoricalCrossentropy()(per_user_softmaxes, mask)
         return loss
+    return loss_fn
 
 
 # =========================== Custom function for straight through estimation ============================
