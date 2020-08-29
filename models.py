@@ -1735,10 +1735,9 @@ def FDD_per_user_architecture_return_all_softmaxes(M, K, k=2, N_rf=3, yes_abs=Fa
     input_modder = Interference_Input_modification_per_user(K, M, N_rf, k)
     sm = tf.keras.layers.Softmax()
     dnn = per_user_DNN((K, M * K + M + 3), M, N_rf)
-    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
+    decision_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf/M/K)
     input_pass_0 = input_modder(decision_0, input_mod, k - 1.0)
     output_i = dnn(input_pass_0)
-
     selection_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(output_i[:, :, -N_rf:]), axis=2)
     per_user_selection_i = sm(output_i[:, :, :-N_rf])
     output_i = tf.multiply(per_user_selection_i, tf.tile(tf.expand_dims(selection_i, axis=2), (1, 1, M)))
@@ -1966,7 +1965,7 @@ def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, o
     encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit)
     scheduling_module = FDD_per_user_architecture_return_all_softmaxes(M, K, k=k, N_rf=N_rf, yes_abs=False)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
-    reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
+    inputs_mod, z_qq, z_e = encoding_module(inputs_mod)
     scheduled_output, per_user_softmaxes, overall_softmax = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input, per_user_softmaxes, overall_softmax])
     return model
