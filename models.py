@@ -1966,7 +1966,7 @@ def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, o
     scheduling_module = FDD_per_user_architecture_return_all_softmaxes(M, K, k=k, N_rf=N_rf, yes_abs=False)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
-    scheduled_output, per_user_softmaxes, overall_softmax = scheduling_module(reconstructed_input)
+    scheduled_output, per_user_softmaxes, overall_softmax = scheduling_module(inputs_mod)
     model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input, per_user_softmaxes, overall_softmax])
     return model
 def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
@@ -1989,7 +1989,7 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
     scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
-    scheduled_output = scheduling_module(inputs_mod)
+    scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input])
     return model
 def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1, qbit=0, output_all=False):
