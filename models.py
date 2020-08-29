@@ -1963,7 +1963,7 @@ def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, o
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit)
-    scheduling_module = FDD_per_user_architecture_return_all_softmaxes(M, K, k=k, N_rf=N_rf, yes_abs=False)
+    scheduling_module = FDD_per_user_architecture_return_all_softmaxes(M, K, k=k, N_rf=N_rf)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
     scheduled_output, per_user_softmaxes, overall_softmax = scheduling_module(reconstructed_input)
