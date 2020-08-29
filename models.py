@@ -1924,10 +1924,11 @@ def FDD_per_user_architecture_double_softmax_all_softmaxes(M, K, k=2, N_rf=3, ou
 
 
 def FDD_per_user_architecture_return_all_softmaxes(M, K, k=2, N_rf=3, yes_abs=False):
-    inputs = Input(shape=(K, M), dtype=tf.complex64)
     if yes_abs:
+        inputs = Input(shape=(K, M), dtype=tf.complex64)
         input_mod = tf.square(tf.abs(inputs))  # (None, K, M)
     else:
+        inputs = Input(shape=(K, M), dtype=tf.float32)
         input_mod = inputs
     input_modder = Interference_Input_modification_per_user(K, M, N_rf, k)
     sm = tf.keras.layers.Softmax()
