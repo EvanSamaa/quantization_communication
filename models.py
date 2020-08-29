@@ -7,8 +7,6 @@ from tensorflow.keras.activations import sigmoid
 import random
 from tensorflow.keras import backend as KB
 from util import *
-
-
 # import tensorflow_addons as tfa
 # from sklearn.cluster import KMeans
 # from matplotlib import pyplot as plt
@@ -23,8 +21,6 @@ def MLP_loss_function(inputshape=[1000, 3]):
     x = Dense(1)(x)
     model = Model(inputs, x, name="category_count_MLP")
     return model
-
-
 def LSTM_loss_function(k, input_shape=[], state_size=30):
     inputs = Input(shape=input_shape)
     x = tf.keras.layers.LSTM(state_size)(inputs)
@@ -35,8 +31,6 @@ def LSTM_loss_function(k, input_shape=[], state_size=30):
     x = Dense(1)(x)
     model = Model(inputs, x, name="category_count_LSTM")
     return model
-
-
 def Convnet_loss_function(input_shape=[1000, 4], combinations=8):
     # you need to format the input into (1, batchsize, encoding size)
     inputs = Input(shape=input_shape)
@@ -56,8 +50,6 @@ def Convnet_loss_function(input_shape=[1000, 4], combinations=8):
     model = Model(inputs, x, name="category_count_conv_net")
     print(model.summary())
     return model
-
-
 ############################## analytical model ##############################
 def create_uniformed_quantization_model(k, bin_num=10, prob=True):
     def uniformed_quantization_prob(x):
@@ -79,12 +71,8 @@ def create_uniformed_quantization_model(k, bin_num=10, prob=True):
         return uniformed_quantization_prob
     else:
         return uniformed_quantization_reg
-
-
 def create_optimal_model_k_2(k, input):
     x = floatbits_to_float(input)
-
-
 def k_clustering_hieristic(N_rf):
     def model(G, angle=-1):
         G = tf.abs(G).numpy()
@@ -138,8 +126,6 @@ def k_clustering_hieristic(N_rf):
         return output
 
     return model
-
-
 def top_N_rf_user_model(M, K, N_rf):
     def model(G):
         G = tf.reshape(G, (G.shape[0], M * K))
@@ -156,8 +142,6 @@ def top_N_rf_user_model(M, K, N_rf):
         return tf.constant(out_2, dtype=tf.float32)
 
     return model
-
-
 def greedy_hieristic(N_rf, sigma2):
     def model(G):
         combinations = []
@@ -208,8 +192,6 @@ def greedy_hieristic(N_rf, sigma2):
         return output
 
     return model
-
-
 def sparse_greedy_hueristic(N_rf, sigma2, K, M, p):
     def model(top_val, top_indice):
         loss = Sum_rate_utility_WeiCui(K, M, sigma2)
@@ -276,8 +258,6 @@ def sparse_greedy_hueristic(N_rf, sigma2, K, M, p):
         return output
 
     return model
-
-
 def partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K, sigma2):
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
@@ -292,8 +272,6 @@ def partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K, sigma2):
         return sparse_greedy_hueristic(N_rf, sigma2, K, M, p)(top_values_quantized, top_indices)
 
     return model
-
-
 def partial_feedback_top_N_rf_model(N_rf, B, p, M, K, sigma2):
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
@@ -312,8 +290,6 @@ def partial_feedback_top_N_rf_model(N_rf, B, p, M, K, sigma2):
         return top_N_rf_user_model(M, K, N_rf)(tf.constant(G_prime, dtype=tf.float32))
 
     return model
-
-
 ############################## Layers ##############################
 class Closest_embedding_layer(tf.keras.layers.Layer):
     def __init__(self, user_count=2, embedding_count=8, bit_count=15, i=0, **kwargs):
@@ -329,7 +305,6 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
                                  initializer=initializer,
                                  trainable=True)
         self.i = i
-
     def call(self, z, training=True):
         # z = z + tf.random.normal([z.shape[1], z.shape[2]], 0, tf.math.reduce_std(z, axis=0)/10.0)
         # z is in the shape of [None, K, E]
@@ -344,7 +319,6 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
         # if not (encoding_indices.shape[0] is None):
         #     print(np.unique(encoding_indices.numpy()).shape)
         return encodings
-
     def get_config(self):
         config = super().get_config().copy()
         config.update({
@@ -355,8 +329,6 @@ class Closest_embedding_layer(tf.keras.layers.Layer):
             'name': "Closest_embedding_layer_{}".format(self.i)
         })
         return config
-
-
 class Closest_embedding_layer_moving_avg(tf.keras.layers.Layer):
     def __init__(self, user_count=2, embedding_count=8, bit_count=15, i=0, **kwargs):
         super(Closest_embedding_layer_moving_avg, self).__init__(name="Closest_embedding_layer_moving_avg")
@@ -401,8 +373,6 @@ class Closest_embedding_layer_moving_avg(tf.keras.layers.Layer):
             'name': self.name
         })
         return config
-
-
 class Interference_Input_modification(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Interference_Input_modification, self).__init__()
@@ -440,8 +410,6 @@ class Interference_Input_modification(tf.keras.layers.Layer):
             'name': "Interference_Input_modification"
         })
         return config
-
-
 class Interference_Input_modification_no_loop(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Interference_Input_modification_no_loop, self).__init__()
@@ -476,8 +444,6 @@ class Interference_Input_modification_no_loop(tf.keras.layers.Layer):
             'name': "Interference_Input_modification_no_loop"
         })
         return config
-
-
 class Interference_Input_modification_per_user(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Interference_Input_modification_per_user, self).__init__()
@@ -514,17 +480,13 @@ class Interference_Input_modification_per_user(tf.keras.layers.Layer):
             'name': "Interference_Input_modification_per_user"
         })
         return config
-
-
-############################## MLP models ##############################
+############################## MLP modes ##############################
 def create_MLP_model(input_shape, k):
     # outputs logit
     inputs = Input(shape=input_shape)
     x = perception_model(inputs, k, 5)
     model = Model(inputs, x, name="max_nn")
     return model
-
-
 def create_MLP_mean0_model(input_shape, k):
     # outputs logit
     inputs = Input(shape=input_shape)
@@ -532,8 +494,6 @@ def create_MLP_mean0_model(input_shape, k):
     x = perception_model(x, k, 5)
     model = Model(inputs, x, name="max_nn")
     return model
-
-
 def create_large_MLP_model(input_shape, k):
     inputs = Input(shape=input_shape)
     x = perception_model(inputs, 50, 10)
@@ -542,8 +502,6 @@ def create_large_MLP_model(input_shape, k):
     model = Model(inputs, x, name="Deep_max_nn")
     print(model.summary())
     return model
-
-
 def create_MLP_model_with_transform(input_shape, k):
     # model = create_MLP_model_with_transform((k,k), k)
     # needs to call transform first
@@ -553,8 +511,6 @@ def create_MLP_model_with_transform(input_shape, k):
     x = perception_model(x, k, 2)
     model = Model(inputs, x, name="max_nn")
     return model
-
-
 def ranking_transform(x):
     out = np.zeros((x.shape[0], x.shape[1], x.shape[1]))
     for k in range(x.shape[0]):
@@ -563,16 +519,12 @@ def ranking_transform(x):
                 if x[k, i] >= x[k, j]:
                     out[k, i, j] = 1
     return tf.convert_to_tensor(out, dtype=tf.float32)
-
-
 def create_regression_MLP_netowkr(input_shape, k):
     inputs = Input(shape=input_shape)
     x = perception_model(inputs, 1, 5)
     x = tf.squeeze(x)
     model = Model(inputs, x, name="max_nn_with_regression0")
     return model
-
-
 ############################## LSTM models ##############################
 # model = create_LSTM_model(k, [k, 1], 10)
 def create_LSTM_model(k, input_shape=[], state_size=10):
@@ -584,8 +536,6 @@ def create_LSTM_model(k, input_shape=[], state_size=10):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
-
-
 def create_LSTM_model_backwards(k, input_shape=[]):
     inputs = Input(shape=input_shape)
     x = tf.keras.layers.LSTM(30, go_backwards=True)(inputs)
@@ -595,8 +545,6 @@ def create_LSTM_model_backwards(k, input_shape=[]):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
-
-
 def create_LSTM_model_with2states(k, input_shape=[], state_size=10):
     inputs = Input(shape=input_shape)
     x, final_memory_state, final_carry_state = tf.keras.layers.LSTM(30, return_sequences=True, return_state=True)(
@@ -608,8 +556,6 @@ def create_LSTM_model_with2states(k, input_shape=[], state_size=10):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
-
-
 def create_BLSTM_model_with2states(k, input_shape=[], state_size=10):
     inputs = Input(shape=input_shape)
     x, final_memory_state, final_carry_state = tf.keras.layers.LSTM(30, go_backwards=True, return_sequences=True,
@@ -622,8 +568,6 @@ def create_BLSTM_model_with2states(k, input_shape=[], state_size=10):
     x = Dense(10)(x)
     model = Model(inputs, x, name="max_rnn")
     return model
-
-
 ############################## Encoding models ##############################
 def create_encoding_model(k, l, input_shape):
     inputs = Input(shape=input_shape)
@@ -634,8 +578,6 @@ def create_encoding_model(k, l, input_shape):
     out = perception_model(encoding, k, 5)
     model = Model(inputs, out, name="auto_encoder_nn")
     return model
-
-
 def create_uniform_encoding_model(k, l, input_shape):
     inputs = Input(shape=input_shape)
     x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
@@ -646,8 +588,6 @@ def create_uniform_encoding_model(k, l, input_shape):
     out = perception_model(encoding, k, 5)
     model = Model(inputs, out, name="auto_encoder_nn")
     return model
-
-
 def boosting_regression_model(models, input_shape, k):
     inputs = Input(shape=input_shape)
     x = models[0](inputs)
@@ -658,8 +598,6 @@ def boosting_regression_model(models, input_shape, k):
     x = Dense(1, kernel_initializer=initializer)(x)
     model = Model(inputs, x, name="ensemble")
     return model
-
-
 def Encoder_module(L):
     def encoder_module(x):
         x = Dense(20)(x)
@@ -672,8 +610,6 @@ def Encoder_module(L):
         return x
 
     return encoder_module
-
-
 def Uniform_Encoder_module(k, l, input_shape):
     inputs = Input(shape=input_shape)
     x = Dense(20)(inputs)
@@ -682,8 +618,6 @@ def Uniform_Encoder_module(k, l, input_shape):
     x = tf.keras.activations.sigmoid(x) + tf.stop_gradient(tf.math.sign(x) - tf.keras.activations.sigmoid(x))
     model = Model(inputs, x, name="encoder_unit")
     return model
-
-
 def create_encoding_model_with_annealing(k, l, input_shape):
     inputs = Input(shape=input_shape)
     epoch = inputs[:, 1][0]
@@ -697,8 +631,6 @@ def create_encoding_model_with_annealing(k, l, input_shape):
     model = Model(inputs, out, name="k2_L2_annealing_nn")
     print(model.summary())
     return model
-
-
 def Uniform_Encoder_module_with_annealing(k, l, input_shape):
     inputs = Input(shape=input_shape)
     epoch = inputs[:, 1][0]
@@ -709,8 +641,6 @@ def Uniform_Encoder_module_with_annealing(k, l, input_shape):
     x = annealing_tanh(x, epoch) + tf.stop_gradient(tf.math.sign(x) - annealing_tanh(x, epoch))
     model = Model(inputs, x, name="encoder_unit")
     return model
-
-
 def Encoder_module_annealing(L):
     def encoder_module(x, N):
         x = Dense(50)(x)
@@ -724,8 +654,6 @@ def Encoder_module_annealing(L):
         return x
 
     return encoder_module
-
-
 def create_encoding_model_with_annealing_LSTM(k, l, input_shape):
     inputs = Input(shape=input_shape)
     epoch = inputs[:, 1][0]
@@ -738,13 +666,9 @@ def create_encoding_model_with_annealing_LSTM(k, l, input_shape):
     model = Model(inputs, out, name="k2_L2_annealing_nn_LSTM")
     print(model.summary())
     return model
-
-
 def ensemble_regression(k, input_shape):
     regression_1 = create_regression_MLP_netowkr(input_shape, k)
     regression_2 = tf.keras.models.load_model("trained_models/Sept 19th/N_10000_5_Layer_MLP_regression.h5")
-
-
 def create_uniform_encoding_model_with_annealing(k, l, input_shape):
     inputs = Input(shape=input_shape)
     x_list = tf.split(inputs, num_or_size_splits=k + 1, axis=1)
@@ -757,8 +681,6 @@ def create_uniform_encoding_model_with_annealing(k, l, input_shape):
     out = perception_model(encoding, k, 5)
     model = Model(inputs, out, name="auto_encoder_nn")
     return model
-
-
 def perception_model(x, output, layer, logit=True):
     for i in range(layer - 1):
         x = Dense(50)(x)
@@ -768,8 +690,6 @@ def perception_model(x, output, layer, logit=True):
         return x
     else:
         return Softmax(x)
-
-
 def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
     inputs = Input(input_shape, dtype=tf.float32)
     if normalization:
@@ -779,12 +699,10 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     else:
         x = inputs
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_1".format(i))(x)
-    x = LeakyReLU()(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
-
-
 def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
     inputs = Input(input_shape, dtype=tf.float32)
     K = input_shape[0]
@@ -805,17 +723,13 @@ def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalizatio
     x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
-
-
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
-    x = LeakyReLU()(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="decoder_{}".format(i))
-
-
 def DiscreteVAE(k, l, input_shape, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
     x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
@@ -841,8 +755,6 @@ def DiscreteVAE(k, l, input_shape, code_size=15):
     output_all = tf.keras.layers.concatenate((out, z_qq, z_e), 1)
     model = Model(inputs, output_all, name="DiscreteVAE")
     return model
-
-
 def DiscreteVAE_diff_scheduler(k, l, input_shape, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
     x_list = tf.split(inputs, num_or_size_splits=k, axis=1)
@@ -871,8 +783,6 @@ def DiscreteVAE_diff_scheduler(k, l, input_shape, code_size=15):
     output_all = tf.keras.layers.concatenate((out, z_q, z_e), 1)
     model = Model(inputs, output_all, name="DiscreteVAE")
     return model
-
-
 def DiscreteVAE_regression(l, input_shape, code_size=15):
     inputs = Input(input_shape, dtype=tf.float32)
     encoder = Autoencoder_Encoding_module(3, l, (1,), code_size=code_size)
@@ -890,8 +800,6 @@ def DiscreteVAE_regression(l, input_shape, code_size=15):
     model = Model(inputs, output_all, name="DiscreteVAEregression")
     print(model.summary())
     return model
-
-
 ############################## Encoding models with bitstring input ##############################
 def F_Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
@@ -912,8 +820,6 @@ def F_Encoder_module_annealing(L, i=0):
         return x
 
     return encoder_module
-
-
 def F_create_encoding_model_with_annealing(k, l, input_shape):
     # features_mod = tf.ones((features.shape[1], 1)) * N
     # features_mod = tf.concat((features_mod, features), axis=2)
@@ -931,8 +837,6 @@ def F_create_encoding_model_with_annealing(k, l, input_shape):
     model = Model(inputs, out, name="k2_L2_annealing_nn_on_floatpoint_bit")
     print(model.summary())
     return model
-
-
 def F_create_LSTM_encoding_model_with_annealing(k, l, input_shape):
     # features_mod = tf.ones((features.shape[1], 1)) * N
     # features_mod = tf.concat((features_mod, features), axis=2)
@@ -950,8 +854,6 @@ def F_create_LSTM_encoding_model_with_annealing(k, l, input_shape):
     model = Model(inputs, out, name="k2_L2_annealing_nn_on_floatpoint_bit_CNN")
     print(model.summary())
     return model
-
-
 def F_LSTM_Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
         x = tf.keras.layers.Reshape((23, 1))(x)
@@ -972,8 +874,6 @@ def F_LSTM_Encoder_module_annealing(L, i=0):
         return x
 
     return encoder_module
-
-
 def F_create_CNN_encoding_model_with_annealing(k, l, input_shape):
     # features_mod = tf.ones((features.shape[1], 1)) * N
     # features_mod = tf.concat((features_mod, features), axis=2)
@@ -991,8 +891,6 @@ def F_create_CNN_encoding_model_with_annealing(k, l, input_shape):
     model = Model(inputs, out, name="k2_L2_annealing_nn_on_floatpoint_bit_CNN")
     print(model.summary())
     return model
-
-
 def F_CNN_Encoder_module_annealing(L, i=0):
     def encoder_module(x, N):
         x = tf.keras.layers.Reshape((23, 1))(x)
@@ -1015,8 +913,6 @@ def F_CNN_Encoder_module_annealing(L, i=0):
         return x
 
     return encoder_module
-
-
 def Thresholdin_network(input_shape):
     inputs = Input(shape=input_shape)
     epoch = inputs[0, 0, 0]
@@ -1032,12 +928,8 @@ def Thresholdin_network(input_shape):
     print(model.summary())
     print(model.trainable_variables)
     return model
-
-
 def F_swapadoo_Encoder(k, l, input_shape):
     inputs = Input(shape=input_shape)
-
-
 ############################## Encoding models with Prof Yu's proposal input ##############################
 def F_create_encoding_regression_module(input_shape, levels, j=0):
     inputs = Input(shape=input_shape)
@@ -1053,8 +945,6 @@ def F_create_encoding_regression_module(input_shape, levels, j=0):
     # x = annealing_tanh(x, epoch) + tf.stop_gradient(tf.math.sign(x) - annealing_tanh(x, epoch))
     model = Model(inputs, x, name="encoder_unit_" + str(j))
     return model
-
-
 def F_creating_common_encoding_regression(input_shape, levels=2, k=2):
     inputs = Input(shape=input_shape)
     epoch = inputs[0, 0, 0]
@@ -1066,8 +956,6 @@ def F_creating_common_encoding_regression(input_shape, levels=2, k=2):
         encoding = tf.concat((encoding, encoding_model(x_list[i][:, 0, :])), axis=1)
     model = Model(inputs, encoding, name="encoder_network")
     return model
-
-
 def F_creating_distinct_encoding_regression(input_shape, levels=2, k=2):
     inputs = Input(shape=input_shape)
     epoch = inputs[0, 0, 0]
@@ -1080,8 +968,6 @@ def F_creating_distinct_encoding_regression(input_shape, levels=2, k=2):
             axis=1)
     model = Model(inputs, encoding, name="encoder_network")
     return model
-
-
 ############################## FDD Scheduling Models ##############################
 def CommonFDD_Quantizer(M, B, K, i=0):
     inputs = Input(shape=[M, ])
@@ -1096,8 +982,6 @@ def CommonFDD_Quantizer(M, B, K, i=0):
         binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_{}".format(i)))
     model = Model(inputs, x, name="commonFDD_quantizer")
     return model
-
-
 def FDD_encoding_model_no_constraint(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1115,8 +999,6 @@ def FDD_encoding_model_no_constraint(M, K, B):
     output = sigmoid(x)
     model = Model(inputs, output)
     return model
-
-
 def Floatbits_FDD_encoding_model_no_constraint(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     quantizer = CommonFDD_Quantizer(M * 2 * 23, B, K)
@@ -1133,8 +1015,6 @@ def Floatbits_FDD_encoding_model_no_constraint(M, K, B):
     output = sigmoid(x)
     model = Model(inputs, output)
     return model
-
-
 def FDD_encoding_model_constraint_13_with_softmax(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1158,8 +1038,6 @@ def FDD_encoding_model_constraint_13_with_softmax(M, K, B):
     # x = tf.sigmoid(x)
     model = Model(inputs, output)
     return model
-
-
 def Floatbits_FDD_encoding_model_constraint_13_with_softmax(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     quantizer = CommonFDD_Quantizer(M * 2 * 23, B, K)
@@ -1182,8 +1060,6 @@ def Floatbits_FDD_encoding_model_constraint_13_with_softmax(M, K, B):
     # x = tf.sigmoid(x)
     model = Model(inputs, output)
     return model
-
-
 def LSTM_Ranking_model(M, K, k, sum_all=True):
     inputs = Input(shape=[M * K, ], name="ranking_network_input")
     x_reshape = tf.expand_dims(inputs, 1)
@@ -1195,8 +1071,6 @@ def LSTM_Ranking_model(M, K, k, sum_all=True):
         x = tf.reduce_sum(x, axis=1)
     model = Model(inputs, x)
     return model
-
-
 def FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1225,8 +1099,6 @@ def FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, k=3):
     output = tf.concat((output, ranking_output), axis=1)
     model = Model(inputs, output)
     return model
-
-
 def Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K, B, k=3):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     quantizer = CommonFDD_Quantizer(M * 2 * 23, B, K)
@@ -1254,8 +1126,6 @@ def Floatbits_FDD_encoding_model_constraint_123_with_softmax_and_soft_mask(M, K,
     output = tf.concat((output, ranking_output), axis=1)
     model = Model(inputs, output)
     return model
-
-
 def FDD_encoding_model_constraint_13_with_regularization(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex128)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1272,8 +1142,6 @@ def FDD_encoding_model_constraint_13_with_regularization(M, K, B):
         binary_activation(x) - tf.tanh(tf.keras.layers.ReLU()(x), name="tanh_neg_output"))
     model = Model(inputs, x)
     return model
-
-
 ############################## FDD Scheduling Models No quantizing ##############################
 def FDD_model_no_constraint(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
@@ -1292,8 +1160,6 @@ def FDD_model_no_constraint(M, K, B):
     output = sigmoid(x)
     model = Model(inputs, output)
     return model
-
-
 # def Fully_connected_Ranking_Model(M, K, k):
 #     inputs = Input(shape=(M*K), dtype=tf.float32)
 #     x = Dense(M*K)
@@ -1307,8 +1173,6 @@ def DNN_Ranking_NN_submodule(M, K, k, inputshape):
     x = tf.keras.layers.Softmax()(x)
     dnn_model = Model(inputs, x, name="dnn_softmax_network")
     return dnn_model
-
-
 def DNN_Ranking_model(input_shape, M, K, k, sum_all=False):
     inputs = Input(input_shape)
     dnn = DNN_Ranking_NN_submodule(M, K, k, input_shape)
@@ -1325,8 +1189,6 @@ def DNN_Ranking_model(input_shape, M, K, k, sum_all=False):
         output = output + dnn(tf.multiply(stretched_rank_matrix, inputs))
     model = Model(inputs, output, name="dnn_ranking_module")
     return model
-
-
 def FDD_with_CNN(M, K, N_rf):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1343,8 +1205,6 @@ def FDD_with_CNN(M, K, N_rf):
     model = Model(inputs, x)
     print(model.summary())
     return model
-
-
 def Floatbits_FDD_model_no_constraint(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector
@@ -1361,8 +1221,6 @@ def Floatbits_FDD_model_no_constraint(M, K, B):
     # output = sigmoid(x)
     model = Model(inputs, output)
     return model
-
-
 def DNN_3_layer_model(input_shape, M, K, i=0):
     inputs = Input(shape=input_shape, dtype=tf.float32)
     x = Dense(3 * M)(inputs)
@@ -1373,8 +1231,6 @@ def DNN_3_layer_model(input_shape, M, K, i=0):
     x = tf.keras.layers.Softmax()(x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
-
-
 def DNN_3_layer_model_sigmoid(input_shape, M, K, i=0):
     inputs = Input(shape=input_shape, dtype=tf.float32)
     size = 32
@@ -1386,8 +1242,6 @@ def DNN_3_layer_model_sigmoid(input_shape, M, K, i=0):
     x = tf.sigmoid(x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
-
-
 def DNN_3_layer_model_harder_softmax(input_shape, M, K, i=0):
     inputs = Input(shape=input_shape, dtype=tf.float32)
     x = Dense(3 * M)(inputs)
@@ -1398,8 +1252,6 @@ def DNN_3_layer_model_harder_softmax(input_shape, M, K, i=0):
     x = tf.keras.layers.Softmax()(10 * x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
-
-
 def DNN_3_layer_Thicc_model(input_shape, M, K, Nrf=3, i=0):
     inputs = Input(shape=input_shape, dtype=tf.float32)
     x = Dense(256)(inputs)
@@ -1409,8 +1261,6 @@ def DNN_3_layer_Thicc_model(input_shape, M, K, Nrf=3, i=0):
     x = Dense(M * K * Nrf)(x)
     model = Model(inputs, x, name="pass_{}".format(i))
     return model
-
-
 def FDD_softmax_k_times_with_magnitude(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
@@ -1426,8 +1276,6 @@ def FDD_softmax_k_times_with_magnitude(M, K, k):
         x = x + DNN_3_layer_Thicc_model((2 * K * M), M, K, i)(input_pass_i)
     model = Model(inputs, x)
     return model
-
-
 def FDD_softmax_k_times_with_magnitude_rounded(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
@@ -1449,8 +1297,6 @@ def FDD_softmax_k_times_with_magnitude_rounded(M, K, k):
         x = x + DNN_3_layer_Thicc_model((2 * K * M), M, K, i)(input_pass_i)
     model = Model(inputs, x)
     return model
-
-
 def FDD_softmax_k_times(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1465,8 +1311,6 @@ def FDD_softmax_k_times(M, K, k):
         x = x + DNN_3_layer_Thicc_model((3 * K * M), M, K, i)(input_pass_i)
     model = Model(inputs, x)
     return model
-
-
 def FDD_softmax_k_times_hard_output(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1482,8 +1326,6 @@ def FDD_softmax_k_times_hard_output(M, K, k):
         x = x + output_i
     model = Model(inputs, x)
     return model
-
-
 def FDD_softmax_k_times_hard_output_with_magnitude(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
@@ -1500,8 +1342,6 @@ def FDD_softmax_k_times_hard_output_with_magnitude(M, K, k):
     x = x + tf.stop_gradient(binary_activation(x, 0.5) - x)
     model = Model(inputs, x)
     return model
-
-
 def FDD_softmax_k_times_common_dnn(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1516,8 +1356,6 @@ def FDD_softmax_k_times_common_dnn(M, K, k):
         x = x + dnn_model(input_pass_i)
     model = Model(inputs, x)
     return model
-
-
 def FDD_ranked_softmax(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
@@ -1534,8 +1372,6 @@ def FDD_ranked_softmax(M, K, k):
         output = tf.concat((output, tf.keras.layers.Reshape((decision_i.shape[1], 1))(decision_i)), axis=2)
     model = Model(inputs, output)
     return model
-
-
 def FDD_harder_softmax_k_times(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
@@ -1550,8 +1386,6 @@ def FDD_harder_softmax_k_times(M, K, k):
         x = x + DNN_3_layer_model_harder_softmax((2 * K * M), M, K, i)(input_pass_i)
     model = Model(inputs, x)
     return model
-
-
 def FDD_ranked_softmax_state_change(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
@@ -1570,8 +1404,6 @@ def FDD_ranked_softmax_state_change(M, K, k):
         input_mod = input_mod * tf.subtract(tf.ones((M * K,)), decision_i)
     model = Model(inputs, output)
     return model
-
-
 def FDD_ranked_LSTM_softmax(M, K, k):
     lstm_model = tf.keras.layers.LSTMCell(M * K)
     interpreter = DNN_3_layer_model((M * K,), M, K)
@@ -1596,8 +1428,6 @@ def FDD_ranked_LSTM_softmax(M, K, k):
         output = tf.concat((output, tf.keras.layers.Reshape((decision_i.shape[1], 1))(decision_i)), axis=2)
     model = Model(inputs, output)
     return model
-
-
 def FDD_ranked_softmax_common_DNN(M, K, k):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
@@ -1615,8 +1445,6 @@ def FDD_ranked_softmax_common_DNN(M, K, k):
         output = tf.concat((output, tf.keras.layers.Reshape((decision_i.shape[1], 1))(decision_i)), axis=2)
     model = Model(inputs, output)
     return model
-
-
 def FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     x = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1637,8 +1465,6 @@ def FDD_model_softmax(M, K, B):
     # x = tf.sigmoid(x)
     model = Model(inputs, output)
     return model
-
-
 def FDD_softmax_with_soft_mask(M, K, B, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     # input_mod = tf.keras.layers.Concatenate(axis=2)([tf.math.real(inputs), tf.math.imag(inputs)])
@@ -1670,8 +1496,6 @@ def FDD_softmax_with_soft_mask(M, K, B, k=3):
     model = Model(inputs, output)
     print(model.summary())
     return model
-
-
 def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     mod_input = tf.abs(inputs)
@@ -1710,8 +1534,6 @@ def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     output = tf.concat((output, ranking_output), axis=1)
     model = Model(inputs, output)
     return model
-
-
 def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
@@ -1726,8 +1548,6 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
         x = dnn_model(input_pass_i)
     model = Model(inputs, x)
     return model
-
-
 def dnn_per_link(input_shape, N_rf):
     inputs = Input(shape=input_shape)
     x = Dense(512)(inputs)
@@ -1737,8 +1557,6 @@ def dnn_per_link(input_shape, N_rf):
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
-
-
 def FDD_per_link_archetecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -1768,8 +1586,6 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3, output_all=False):
     if output_all:
         model = Model(inputs, output_0)
     return model
-
-
 def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -1796,8 +1612,6 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
     output = tf.reduce_sum(output, axis=2)
     model = Model(inputs, output)
     return model
-
-
 def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -1822,8 +1636,6 @@ def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3, output_all=False):
     if output_all:
         model = Model(inputs, output_0)
     return model
-
-
 def FDD_Dumb_model(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -1840,12 +1652,10 @@ def FDD_Dumb_model(M, K, k=2, N_rf=3):
         output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(output_i), axis=1)
     model = Model(inputs, output_i)
     return model
-
-
 def per_user_DNN(input_shape, M, N_rf=1):
     inputs = Input(shape=input_shape)
     x = Dense(512)(inputs)
-    x = LeakyReLU()(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     # x = Dense(512)(x)
     # x = sigmoid(x)
@@ -1853,8 +1663,6 @@ def per_user_DNN(input_shape, M, N_rf=1):
     x = Dense(M + N_rf, bias_initializer="ones")(x)
     model = Model(inputs, x, name="per_user_DNN")
     return model
-
-
 def tiny_DNN(input_shape, N_rf):
     inputs = Input(shape=input_shape, dtype=tf.float32)
     x = Dense(128)(inputs)
@@ -1863,8 +1671,6 @@ def tiny_DNN(input_shape, N_rf):
     x = Dense(N_rf, bias_initializer="ones")(x)
     model = Model(inputs, x)
     return model
-
-
 def LSTM_like_model_for_FDD(M, K, N_rf, k):
     inputs = Input(shape=(K, M), dtype=tf.float32)
     input_modder = Interference_Input_modification(K, M, N_rf, k)
@@ -1890,8 +1696,6 @@ def LSTM_like_model_for_FDD(M, K, N_rf, k):
     output = tf.concat(output, axis=1)
     model = Model(inputs, output)
     return model
-
-
 def FDD_per_user_architecture_double_softmax_all_softmaxes(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))  # (None, K, M)
@@ -1921,8 +1725,6 @@ def FDD_per_user_architecture_double_softmax_all_softmaxes(M, K, k=2, N_rf=3, ou
     if output_all:
         model = Model(inputs, [output_0] + tim)
     return model
-
-
 def FDD_per_user_architecture_return_all_softmaxes(M, K, k=2, N_rf=3, yes_abs=False):
     if yes_abs:
         inputs = Input(shape=(K, M), dtype=tf.complex64)
@@ -1955,8 +1757,6 @@ def FDD_per_user_architecture_return_all_softmaxes(M, K, k=2, N_rf=3, yes_abs=Fa
         output[2] = tf.concat((output[2], tf.expand_dims(per_user_selection_i, axis=1)), axis=1)
     model = Model(inputs, output)
     return model
-
-
 def FDD_per_user_architecture(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))  # (None, K, M)
@@ -1975,8 +1775,6 @@ def FDD_per_user_architecture(M, K, k=2, N_rf=3):
     output_i = tf.keras.layers.Reshape((K * M,))(output_i)
     model = Model(inputs, output_i)
     return model
-
-
 def FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))  # (None, K, M)
@@ -2003,8 +1801,6 @@ def FDD_per_user_architecture_double_softmax(M, K, k=2, N_rf=3, output_all=False
     if output_all:
         model = Model(inputs, output_0)
     return model
-
-
 def FDD_per_link_LSTM(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -2016,8 +1812,6 @@ def FDD_per_link_LSTM(M, K, k=2, N_rf=3, output_all=False):
     if output_all:
         model = Model(inputs, out)
     return model
-
-
 class NN_Clustering():
     def __init__(self, cluster_count, original_dim, reduced_dim=10):
         self.cluster_count = cluster_count
@@ -2166,8 +1960,6 @@ class NN_Clustering():
                 if np.sum(clusters[i]) != 0:
                     output[n, max] = 1
         return output
-
-
 def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2178,8 +1970,6 @@ def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, o
     scheduled_output, per_user_softmaxes, overall_softmax = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input, per_user_softmaxes, overall_softmax])
     return model
-
-
 def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
     inputs = Input((K, M))
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
@@ -2193,8 +1983,6 @@ def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
     # the output_all shape would look like
     model = Model(inputs, output_all, name="DiscreteVAE")
     return model
-
-
 def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2205,8 +1993,6 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
     scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input])
     return model
-
-
 def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2216,8 +2002,6 @@ def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1
     scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input])
     return model
-
-
 def Feedbakk_FDD_model_scheduler_morebit(M, K, B, E, N_rf, k, more=1, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2235,8 +2019,6 @@ def Feedbakk_FDD_model_scheduler_morebit(M, K, B, E, N_rf, k, more=1, output_all
     scheduled_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, z_qq, z_e_all, reconstructed_input])
     return model
-
-
 def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2252,8 +2034,6 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e_all])
     return model
-
-
 def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2274,8 +2054,6 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
-
-
 def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2300,8 +2078,6 @@ def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, mo
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
-
-
 def CSI_reconstruction_model_seperate_decoders_moving_avg_update(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2322,8 +2098,6 @@ def CSI_reconstruction_model_seperate_decoders_moving_avg_update(M, K, B, E, N_r
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
-
-
 def Floatbits_FDD_model_softmax(M, K, B):
     inputs = Input(shape=(K, M * 2 * 23), dtype=tf.float32)
     # create input vector
@@ -2341,10 +2115,7 @@ def Floatbits_FDD_model_softmax(M, K, B):
         output = tf.concat((output, tf.keras.layers.Softmax()(x_list2[i])), axis=1)
     model = Model(inputs, output)
     return model
-
-
 # def CSI_vanilla_reconstruction_model(M, K, B, E, N_rf, k, more=1):
-
 def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2366,8 +2137,6 @@ def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1):
     model = Model(inputs, [reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t])
     print(model.summary())
     return model
-
-
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
