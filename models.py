@@ -1553,9 +1553,6 @@ def dnn_per_link(input_shape, N_rf):
     x = Dense(512)(inputs)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = Dense(512)(x)
-    x = sigmoid(x)
-    x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(N_rf)(x)
     # x = sigmoid(x)
     model = Model(inputs, x)
@@ -1563,7 +1560,7 @@ def dnn_per_link(input_shape, N_rf):
 def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
     input_modder = Interference_Input_modification(K, M, N_rf, k)
     dnns = dnn_per_link((M * K, 4 + M * K), N_rf)
     # compute interference from k,i
