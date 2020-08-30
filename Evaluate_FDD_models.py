@@ -66,7 +66,7 @@ def plot_data(arr, col):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug27th/2x512_per_linkx6+2xdouble_CE_loss+MP"
+    file = "trained_models/Aug27th/2x512_per_linkx6+doubleCE_loss+MP+halfLR"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
