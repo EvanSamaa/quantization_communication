@@ -1997,7 +1997,7 @@ def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, o
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
     scheduled_output, per_user_softmaxes, overall_softmax = scheduling_module(reconstructed_input)
-    model = Model(inputs, [c])
+    model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input, per_user_softmaxes, overall_softmax])
     return model
 def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
     inputs = Input((K, M))
