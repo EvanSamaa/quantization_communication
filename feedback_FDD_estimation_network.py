@@ -56,7 +56,7 @@ def train_step(features, labels, N=None, epoch=0):
             # loss_1 = loss_1 + sr
             # ce = All_softmaxes_CE(N_rf)(per_user_softmaxes[:, i], overall_softmax[:, i])
             ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-            loss_4 = loss_4 + 1.0/N_rf*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
             loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
