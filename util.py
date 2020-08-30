@@ -383,7 +383,7 @@ def Harden_scheduling_neg(k=3, K=0, M=0, sigma2=0):
         # assumes the input shape is (batch, k*M) for y_pred,
         # and the shape for G is (batch, K, N)
         # generate mask to mask out points that are not in top k vvvvv
-        base_mask = np.ones((y_pred.shape))*tf.constant(1/K/M, tf.float32)
+        base_mask = np.ones((y_pred.shape))*1/K/M
         values, index = tf.math.top_k(y_pred, k=k)
         for i in range(0, y_pred.shape[0]):
             base_mask[i, index[i]] = 1
