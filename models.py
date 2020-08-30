@@ -1564,28 +1564,24 @@ def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False)
     input_modder = Interference_Input_modification(K, M, N_rf, k)
     dnns = dnn_per_link((M * K, 4 + M * K), N_rf)
     # compute interference from k,i
-    output=[]
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
-    out_put_i = dnns(input_i)
-    out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
+    raw_out_put_i = dnns(input_i)
+    raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
-    out_put_i = tf.reduce_sum(out_put_i, axis=2)
-    if output_all:
-        output_0 = tf.keras.layers.Reshape((1, M * K))(out_put_i)
+    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
     # begin the second - kth iteration
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
-        out_put_i = dnns(input_i)
-        out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
+        raw_out_put_i = dnns(input_i)
+        raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
-        out_put_i = tf.reduce_sum(out_put_i, axis=2)
-        if output_all:
-            output_0 = tf.concat((output_0, tf.keras.layers.Reshape((1, M * K))(out_put_i)), axis=1)
-    model = Model(inputs, out_put_i)
-    if output_all:
-        model = Model(inputs, output_0)
+        out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+    model = Model(inputs, output)
     return model
 def FDD_per_link_archetecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
