@@ -870,7 +870,6 @@ def All_softmaxes_CE_general(N_rf):
         for i in range(0, N_rf):
             loss = loss + tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(tf.argmax(per_user_softmaxes[:, :, i], axis=1),
                                                                         per_user_softmaxes[:, :, i])
-
         return loss
     return loss_fn
 
