@@ -62,14 +62,14 @@ def train_step(features, labels, N=None, epoch=0):
             loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + 0.5*loss_4 + loss_2 + loss_3
+        loss = loss_1 + loss_4 + loss_2 + loss_3
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_3").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients2, model.get_layer("model_3").trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
-    # train_loss(loss_3)
+    train_loss(loss_3)
     # train_binarization_loss(loss_3)
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
