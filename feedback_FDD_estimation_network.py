@@ -56,7 +56,7 @@ def train_step(features, labels, N=None, epoch=0):
             # loss_1 = loss_1 + sr
             # ce = All_softmaxes_CE(N_rf)(per_user_softmaxes[:, i], overall_softmax[:, i])
             ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            loss_4 = loss_4 + 1.0/N_rf*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
             loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
@@ -74,7 +74,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/2x512LeakyReLU_per_linkx6+CE_loss+MP{}"
+    fname_template = "trained_models/Aug27th/2x512_per_linkx6+doubleCE_loss+MP+halfLR{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+    optimizer = tf.keras.optimizers.Adam(lr=0.00005)
     optimizer2 = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
