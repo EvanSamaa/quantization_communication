@@ -109,8 +109,7 @@ if __name__ == "__main__":
     model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    # optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-    optimizer = tf.keras.optimizers.SGD(lr=0.00001)
+    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
     optimizer2 = tf.keras.optimizers.Adam(lr=0.0001)
     # optimizer = tf.keras.optimizers.SGD(lr=0.001)
     # for data visualization
