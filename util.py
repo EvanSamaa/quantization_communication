@@ -378,6 +378,17 @@ def Harden_scheduling(k=3, K=0, M=0, sigma2=0):
             base_mask[i, index[i]] = 1
         return tf.constant(base_mask, dtype=tf.float32)
     return masking
+def Harden_scheduling_neg(k=3, K=0, M=0, sigma2=0):
+    def masking(y_pred):
+        # assumes the input shape is (batch, k*M) for y_pred,
+        # and the shape for G is (batch, K, N)
+        # generate mask to mask out points that are not in top k vvvvv
+        base_mask = np.ones((y_pred.shape))*tf.constant(1/K/M, tf.float32)
+        values, index = tf.math.top_k(y_pred, k=k)
+        for i in range(0, y_pred.shape[0]):
+            base_mask[i, index[i]] = 1
+        return tf.constant(base_mask, dtype=tf.float32)
+    return masking
 def Masking_with_learned_weights(K, M, sigma2, k=3):
     stretch_matrix = np.zeros((M * K, K))
     for i in range(0, K):
@@ -864,12 +875,13 @@ def All_softmaxes_CE(N_rf):
         loss = loss + tf.keras.losses.CategoricalCrossentropy()(per_user_softmaxes, mask)
         return loss
     return loss_fn
-def All_softmaxes_CE_general(N_rf):
+def All_softmaxes_CE_general(N_rf, K, M):
     def loss_fn(raw_output):
         loss = 0
         for i in range(0, N_rf):
-            loss = loss + tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(tf.argmax(raw_output[:, :, i], axis=1),
-                                                                        raw_output[:, :, i])
+            # loss = loss + tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(tf.argmax(raw_output[:, :, i], axis=1),
+            #                                                             raw_output[:, :, i])
+            loss = loss + tf.keras.losses.CategoricalCrossentropy(Harden_scheduling_neg(1, K, M)(raw_output[:, :, i]), raw_output[:, :, i])
         return loss
     return loss_fn
 
