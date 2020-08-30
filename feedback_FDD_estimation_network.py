@@ -36,12 +36,12 @@ def train_step(features, labels, N=None, epoch=0):
         train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
         return
     with tf.GradientTape(persistent=True) as tape:
-        scheduled_output, z_qq, z_e, reconstructed_input = model(features)
+        # scheduled_output, z_qq, z_e, reconstructed_input = model(features)
         # reconstructed_input, z_qq, z_e= model(features)
         # scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input = model(features)
         # reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
         # scheduled_output, per_user_softmaxes, overall_softmax = model(features)
-        # scheduled_output, z_qq, z_e, reconstructed_input, per_user_softmaxes, overall_softmax = model(features)
+        scheduled_output, z_qq, z_e, reconstructed_input, per_user_softmaxes, overall_softmax = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
@@ -52,14 +52,14 @@ def train_step(features, labels, N=None, epoch=0):
         for i in range(0, scheduled_output.shape[1]):
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-            # ce = All_softmaxes_CE(N_rf)(per_user_softmaxes[:, i], overall_softmax[:, i])
-            # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-            mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
-            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
+            ce = All_softmaxes_CE(N_rf)(per_user_softmaxes[:, i], overall_softmax[:, i])
+            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+            # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+            # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + loss_2 + loss_3 + loss_4
+        loss = loss_2 + loss_3 + loss_4 + loss_1
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -71,7 +71,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/LSTM_Schedular+B4x8E10+CE+MP+reconstruction+no_square{}"
+    fname_template = "trained_models/Aug27th/per_user_Scheduler+B=1x32E=4_general_decoder{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -97,11 +97,12 @@ if __name__ == "__main__":
     # print(model.summary())
     # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
     # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=32, qbit=0, output_all=False)
+    # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=32, qbit=0, output_all=False)
     # model = FDD_per_user_architecture_return_all_softmaxes(M, K, 6, N_rf)
     # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
     # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
-    # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6)
+    model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
+    model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)

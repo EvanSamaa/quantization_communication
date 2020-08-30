@@ -1557,6 +1557,36 @@ def dnn_per_link(input_shape, N_rf):
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
+def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    input_modder = Interference_Input_modification(K, M, N_rf, k)
+    dnns = dnn_per_link((M * K, 4 + M * K), N_rf)
+    # compute interference from k,i
+    output=[]
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
+    input_i = input_modder(output_0, input_mod, k - 1.0)
+    out_put_i = dnns(input_i)
+    out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
+    # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+    out_put_i = tf.reduce_sum(out_put_i, axis=2)
+    if output_all:
+        output_0 = tf.keras.layers.Reshape((1, M * K))(out_put_i)
+    # begin the second - kth iteration
+    for times in range(1, k):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        out_put_i = dnns(input_i)
+        out_put_i = tf.keras.layers.Softmax(axis=1)(out_put_i)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        out_put_i = tf.reduce_sum(out_put_i, axis=2)
+        if output_all:
+            output_0 = tf.concat((output_0, tf.keras.layers.Reshape((1, M * K))(out_put_i)), axis=1)
+    model = Model(inputs, out_put_i)
+    if output_all:
+        model = Model(inputs, output_0)
+    return model
 def FDD_per_link_archetecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -1962,12 +1992,12 @@ class NN_Clustering():
 def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit)
+    encoding_module = CSI_reconstruction_model(M, K, B, E, N_rf, k, more=more)
     scheduling_module = FDD_per_user_architecture_return_all_softmaxes(M, K, k=k, N_rf=N_rf)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
     scheduled_output, per_user_softmaxes, overall_softmax = scheduling_module(reconstructed_input)
-    model = Model(inputs, [scheduled_output, z_qq, z_e, reconstructed_input, per_user_softmaxes, overall_softmax])
+    model = Model(inputs, [c])
     return model
 def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
     inputs = Input((K, M))
@@ -1986,8 +2016,7 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit)
-    # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
-    scheduling_module = LSTM_like_model_for_FDD(M, K, N_rf, k)
+    scheduling_module = FDD(M, K, k=k, N_rf=N_rf, output_all=output_all)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
     scheduled_output = scheduling_module(reconstructed_input)
@@ -2023,7 +2052,7 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_CNN_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
     decoder = Autoencoder_Decoding_module(M * K, (K * E * more))
     z_e_all = encoder(inputs_mod)
     z_qq = find_nearest_e(z_e_all[:, :, :E])
@@ -2031,7 +2060,7 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
         z_qq = tf.concat((z_qq, find_nearest_e(z_e_all[:, :, E * i:E * (i + 1)])), axis=2)
     z_fed_forward = z_e_all + tf.stop_gradient(z_qq - z_e_all)
     z_fed_forward = tf.keras.layers.Reshape((K * E * more,))(z_fed_forward)
-    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
+    reconstructed_input = tf.keras.layers.Reshape((K,M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e_all])
     return model
 def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0):
