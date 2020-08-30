@@ -868,8 +868,8 @@ def All_softmaxes_CE_general(N_rf):
     def loss_fn(per_user_softmaxes):
         loss = 0
         for i in range(0, N_rf):
-            mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(per_user_softmaxes[:, :, i]))
-            loss = loss + tf.keras.losses.CategoricalCrossentropy()(per_user_softmaxes[:, :, i], mask)
+            loss = loss + tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(tf.argmax(per_user_softmaxes, axis=2),
+                                                                        per_user_softmaxes)
         return loss
     return loss_fn
 
