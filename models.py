@@ -1551,11 +1551,12 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
 def dnn_per_link(input_shape, N_rf):
     inputs = Input(shape=input_shape)
     x = Dense(512)(inputs)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(512)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
     x = sigmoid(x)
-    x = Dense(N_rf, bias_initializer="ones")(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(N_rf)(x)
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
