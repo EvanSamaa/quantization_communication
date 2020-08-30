@@ -879,9 +879,8 @@ def All_softmaxes_CE_general(N_rf, K, M):
     def loss_fn(raw_output):
         loss = 0
         for i in range(0, N_rf):
-            # loss = loss + tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(tf.argmax(raw_output[:, :, i], axis=1),
-            #                                                             raw_output[:, :, i])
-            loss = loss + tf.keras.losses.CategoricalCrossentropy()(Harden_scheduling_neg(1, K, M)(raw_output[:, :, i]), raw_output[:, :, i])
+            loss = loss + tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(tf.argmax(raw_output[:, :, i], axis=1), raw_output[:, :, i])
+
         return loss
     return loss_fn
 
