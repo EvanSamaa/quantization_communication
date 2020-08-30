@@ -52,10 +52,12 @@ def train_step(features, labels, N=None, epoch=0):
         loss_4 = 0
         for i in range(0, scheduled_output.shape[1]):
             sr = sum_rate(scheduled_output[:, i], features)
-            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+            # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+            loss_1 = loss_1 + sr
             # ce = All_softmaxes_CE(N_rf)(per_user_softmaxes[:, i], overall_softmax[:, i])
             ce = All_softmaxes_CE_general(N_rf)(raw_output[:, i])
-            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            loss_4 = loss_4 + ce
             # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
             # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
             # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
@@ -73,7 +75,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/2x512_per_linkx10+finegrain_CE_loss+MP{}"
+    fname_template = "trained_models/Aug27th/2x512_per_linkx6+finegrain_CE_loss+MP_noexp{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -105,7 +107,7 @@ if __name__ == "__main__":
     # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
     # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
     # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
-    model = FDD_per_link_archetecture_more_granular(M, K, 10, N_rf, output_all=True)
+    model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
