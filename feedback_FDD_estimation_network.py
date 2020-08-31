@@ -66,7 +66,7 @@ def train_step(features, labels, N=None, epoch=0):
 
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
+    gradients2 = tape.gradient(loss_4/2, model.get_layer("model_2").trainable_variables)
     optimizer2.apply_gradients(zip(gradients2, model.get_layer("model_2").trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
@@ -74,7 +74,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/VAEB=1x32E=4+2x512_per_linkx6_alt+seperate_doubleCE_loss+MP{}"
+    fname_template = "trained_models/Aug27th/VAEB=1x32E=4+2x512_per_linkx6_alt+0.5*seperate_doubleCE_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
