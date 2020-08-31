@@ -20,7 +20,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model.predict(ds_load)[0][:, -1]
+        prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
@@ -72,8 +72,8 @@ if __name__ == "__main__":
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
                    "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg}
     N = 1000
-    M = 40
-    K = 10
+    M = 64
+    K = 50
     B = 3
     seed = 200
     check = 100
@@ -86,21 +86,20 @@ if __name__ == "__main__":
     training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
-    training_data = np.load(training_data_path)
-    plot_data(training_data, 0)
+    # training_data = np.load(training_data_path)
+    # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-    series = [(1,3), (2,3), (3,3), (4,3), (5,3), (1,10), (2,10), (3,10), (4,10), (5,10)]
-    mores = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20, 30, 40]
-    # for i in mores:
-    #     print("========================================== B =", i)
-    # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-    model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-    print(model.get_layer("model").summary())
-    print(model.summary())
-    # model = NN_Clustering(N_rf, M, reduced_dim=8)
-    # model = k_clustering_hieristic(N_rf)
-    # model = greedy_hieristic(N_rf, sigma2_n)
-    # model = top_N_rf_user_model(M, K, N_rf)
-    # model = partial_feedback_semi_exhaustive_model(N_rf, B, 5, M, K, sigma2_n)
-    # print(model.summary())
-    test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+    N_rfs = [2, 3, 4, 5, 6]
+    for i in N_rfs:
+        print("========================================== Nrf =", i)
+        # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
+    #     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    #     print(model.get_layer("model").summary())
+    #     print(model.summary())
+        # model = NN_Clustering(N_rf, M, reduced_dim=8)
+        # model = k_clustering_hieristic(N_rf)
+        # model = greedy_hieristic(N_rf, sigma2_n)
+        # model = top_N_rf_user_model(M, K, N_rf)
+        model = partial_feedback_semi_exhaustive_model(i, 32, 10, M, K, sigma2_n)
+        # print(model.summary())
+        test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)

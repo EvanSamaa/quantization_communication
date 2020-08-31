@@ -73,13 +73,13 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug31/M=64_K=50/N_rf=3/VAEB=1x{}E=4+1x512_per_linkx6_alt+seperate_doubleCE_loss+MP{}"
+    fname_template = "trained_models/Aug31/M=64_K=50/N_rf=4/VAEB=1x{}E=4+1x512_per_linkx6_alt+seperate_doubleCE_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 10
+    N = 5
     M = 64
     K = 50
     B = 1
@@ -87,12 +87,12 @@ if __name__ == "__main__":
     B_t = 10
     E_t = 30
     seed = 100
-    N_rf = 3
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [4, 8, 16, 32, 64, 128]
+    mores = [8, 16, 32, 64, 128]
     for more in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
