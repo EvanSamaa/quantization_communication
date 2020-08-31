@@ -73,92 +73,92 @@ def train_step(features, labels, N=None, epoch=0):
     train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
-    fname_template = "trained_models/Aug27th/VAEB=1x32E=4+1x512_per_linkx6_alt+seperate_doubleCE_loss+MP{}"
+    fname_template = "trained_models/Aug31/M=64_K=50/N_rf=4/VAEB=1x{}E=4+1x512_per_linkx6_alt+seperate_doubleCE_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
     N = 50
-    M = 40
-    K = 10
+    M = 64
+    K = 50
     B = 1
     E = 4
     B_t = 10
     E_t = 30
     seed = 100
-    N_rf = 3
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    train_VS = tf.keras.metrics.Mean(name='test_loss')
-    tf.random.set_seed(seed)
-    np.random.seed(seed)
-    # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
-    # print(model.summary())
-    # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
-    # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-    # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=32, qbit=0, output_all=False)
-    # model = FDD_per_user_architecture_return_all_softmaxes(M, K, 6, N_rf)
-    # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
-    # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
-    # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
-    # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
-    # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-    model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=32, qbit=0, output_all=True)
-    print(model.summary())
-    vae_loss = VAE_loss_general(False)
-    sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-    optimizer2 = tf.keras.optimizers.Adam(lr=0.0001)
-    # optimizer = tf.keras.optimizers.SGD(lr=0.001)
-    # for data visualization
-    graphing_data = np.zeros((EPOCHS, 4))
-    train_loss = tf.keras.metrics.Mean(name='train_loss')
-    train_binarization_loss = tf.keras.metrics.Mean(name='train_loss')
-    train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
-    # begin setting up training loop
-    max_acc = 10000
-    # training Loop
-    for epoch in range(EPOCHS):
-        # ======== ======== data recording features ======== ========
-        train_loss.reset_states()
-        train_binarization_loss.reset_states()
-        train_VS.reset_states()
-        train_hard_loss.reset_states()
-        # ======== ======== training step ======== ========
-        train_features = generate_link_channel_data(N, K, M)
-
-
-        inputs_mod = tf.abs(train_features)
-        inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
-        inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
-        train_step(train_features, None, training_mode, epoch=epoch)
-        # train_step(features=train_features, labels=None)
-        template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
-        print(template.format(epoch + 1,
-                              train_loss.result(),
-                              train_binarization_loss.result(),
-                              train_VS.result(),
-                              train_hard_loss.result()))
-        graphing_data[epoch, 0] = train_loss.result()
-        graphing_data[epoch, 1] = train_binarization_loss.result()
-        graphing_data[epoch, 2] = train_VS.result()
-        graphing_data[epoch, 3] = train_hard_loss.result()
-        if train_loss.result() < max_acc:
-            max_acc = train_loss.result()
-            model.save(fname_template.format(".h5"))
-        if epoch % check == 0:
-            if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
-                improvement = graphing_data[epoch - (check * 2): epoch - check, 0].mean() - graphing_data[
-                                                                                            epoch - check: epoch,
-                                                                                            0].mean()
-                print("the accuracy improvement in the past 500 epochs is ", improvement)
-                if improvement <= 0.001:
-                    break
-    np.save(fname_template.format(".npy"), graphing_data)
-    tf.keras.backend.clear_session()
-    print("Training end")
+    mores = [2, 4, 8, 16, 32, 64, 128]
+    for more in mores:
+        train_VS = tf.keras.metrics.Mean(name='test_loss')
+        tf.random.set_seed(seed)
+        np.random.seed(seed)
+        # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
+        # print(model.summary())
+        # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
+        # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
+        # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=32, qbit=0, output_all=False)
+        # model = FDD_per_user_architecture_return_all_softmaxes(M, K, 6, N_rf)
+        # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
+        # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
+        # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
+        # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
+        # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
+        model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
+        print(model.summary())
+        vae_loss = VAE_loss_general(False)
+        sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+        optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+        optimizer2 = tf.keras.optimizers.Adam(lr=0.0001)
+        # optimizer = tf.keras.optimizers.SGD(lr=0.001)
+        # for data visualization
+        graphing_data = np.zeros((EPOCHS, 4))
+        train_loss = tf.keras.metrics.Mean(name='train_loss')
+        train_binarization_loss = tf.keras.metrics.Mean(name='train_loss')
+        train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
+        # begin setting up training loop
+        max_acc = 10000
+        # training Loop
+        for epoch in range(EPOCHS):
+            # ======== ======== data recording features ======== ========
+            train_loss.reset_states()
+            train_binarization_loss.reset_states()
+            train_VS.reset_states()
+            train_hard_loss.reset_states()
+            # ======== ======== training step ======== ========
+            train_features = generate_link_channel_data(N, K, M)
+            inputs_mod = tf.abs(train_features)
+            inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
+            inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
+            train_step(train_features, None, training_mode, epoch=epoch)
+            # train_step(features=train_features, labels=None)
+            template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
+            print(template.format(epoch + 1,
+                                  train_loss.result(),
+                                  train_binarization_loss.result(),
+                                  train_VS.result(),
+                                  train_hard_loss.result()))
+            graphing_data[epoch, 0] = train_loss.result()
+            graphing_data[epoch, 1] = train_binarization_loss.result()
+            graphing_data[epoch, 2] = train_VS.result()
+            graphing_data[epoch, 3] = train_hard_loss.result()
+            if train_loss.result() < max_acc:
+                max_acc = train_loss.result()
+                model.save(fname_template.format(more, ".h5"))
+            if epoch % check == 0:
+                if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
+                    improvement = graphing_data[epoch - (check * 2): epoch - check, 0].mean() - graphing_data[
+                                                                                                epoch - check: epoch,
+                                                                                                0].mean()
+                    print("the accuracy improvement in the past 500 epochs is ", improvement)
+                    if improvement <= 0.001:
+                        break
+        np.save(fname_template.format(more, ".npy"), graphing_data)
+        tf.keras.backend.clear_session()
+        print("Training end")
 
 
