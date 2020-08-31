@@ -108,6 +108,7 @@ if __name__ == "__main__":
     # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
     # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
     model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=32, qbit=0, output_all=True)
+    print(model.summary())
     vae_loss = VAE_loss_general(False)
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
