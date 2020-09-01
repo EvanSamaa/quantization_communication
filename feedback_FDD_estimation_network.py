@@ -50,7 +50,6 @@ def train_step(features, labels, N=None, epoch=0):
         loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_2 = vae_loss.call(z_qq, z_e)
         loss_4 = 0
-        print(N_rf)
         for i in range(0, scheduled_output.shape[1]):
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
