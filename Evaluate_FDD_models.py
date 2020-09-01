@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     # tp_fn = ExpectedThroughput(name = "throughput")
     num_data = 10
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     mores = [4, 8, 16, 32, 64, 128]
     for i in mores:
-        print("========================================== Nrf =", i)
+        print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
         model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
     #     print(model.get_layer("model").summary())
