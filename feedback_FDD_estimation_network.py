@@ -76,7 +76,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Aug31/M=64_K=50/B=32/N_rf={}+VAEB=1x32E=4+1x512_per_linkx6_alt+seperate_doubleCE_loss+MP{}"
+    fname_template = "trained_models/Aug31/M=64_K=50/N_rf=3/VAEB=1x128E=4+1x512_per_linkx6_alt+seperate_doubleCE_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -95,8 +95,7 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    N_rfs = [1, 2, 3, 4 ,5 ,6, 7, 8]
-    for N_rf in N_rfs:
+    for i in range(0, 1):
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
         np.random.seed(seed)
@@ -110,7 +109,7 @@ if __name__ == "__main__":
         # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
         # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
         # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-        model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=32, qbit=0, output_all=True)
+        model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=128, qbit=0, output_all=True)
         print(model.summary())
         vae_loss = VAE_loss_general(False)
         sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -133,9 +132,6 @@ if __name__ == "__main__":
             train_hard_loss.reset_states()
             # ======== ======== training step ======== ========
             train_features = generate_link_channel_data(N, K, M)
-            inputs_mod = tf.abs(train_features)
-            inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
-            inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
             train_step(train_features, None, training_mode, epoch=epoch)
             # train_step(features=train_features, labels=None)
             template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
@@ -148,9 +144,9 @@ if __name__ == "__main__":
             graphing_data[epoch, 1] = train_binarization_loss.result()
             graphing_data[epoch, 2] = train_VS.result()
             graphing_data[epoch, 3] = train_hard_loss.result()
-            if train_loss.result() < max_acc:
-                max_acc = train_loss.result()
-                model.save(fname_template.format(N_rf, ".h5"))
+            if train_hard_loss.result() < max_acc:
+                max_acc = train_hard_loss.result()
+                model.save(fname_template.format(".h5"))
             if epoch % check == 0:
                 if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                     improvement = graphing_data[epoch - (check * 2): epoch - check, 0].mean() - graphing_data[
@@ -159,7 +155,7 @@ if __name__ == "__main__":
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
                     if improvement <= 0.001:
                         break
-        np.save(fname_template.format(N_rf, ".npy"), graphing_data)
+        np.save(fname_template.format(".npy"), graphing_data)
         tf.keras.backend.clear_session()
         print("Training end")
 
