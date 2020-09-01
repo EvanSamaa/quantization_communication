@@ -95,6 +95,7 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
+
     for i in range(0, 1):
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
