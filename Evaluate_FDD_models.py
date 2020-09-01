@@ -6,7 +6,7 @@ import tensorflow as tf
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
-    session = tf.compat.v1.Session(config=config)s
+    session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
     num_data = 1000
     result = np.zeros((3, ))
