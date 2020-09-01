@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -23,7 +23,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model.predict(ds_load)[0][:, -1]
+        prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
@@ -69,7 +69,7 @@ def plot_data(arr, col):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug31/M=64_K=50/N_rf=4/VAEB=1x{}E=4+1x512_per_linkx6_alt+seperate_doubleCE_loss+MP"
+    file = "trained_models/Aug31/M=64_K=50/N_rf=3/VAEB=1x32E=4+1x512_per_linkx6_alt+seperate_doubleCE_loss+MP"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -87,23 +87,24 @@ if __name__ == "__main__":
     np.random.seed(seed)
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    # training_data = np.load(training_data_path)
-    # plot_data(training_data, 0)
+    training_data = np.load(training_data_path)
+    plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
-    mores = [4, 8, 16 ,32, 64, 128]
+    mores = [10, 20, 30 ,40, 50, 60]
     for i in mores:
-        print("========================================== B =", i)
+        K=i
+        print("========================================== K =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
+        # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     #     print(model.get_layer("model").summary())
     #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = k_clustering_hieristic(N_rf)
         # model = greedy_hieristic(N_rf, sigma2_n)
         # model = top_N_rf_user_model(M, K, N_rf)
-        # model = partial_feedback_semi_exhaustive_model(i, 32, 10, M, K, sigma2_n)
+        model = partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
         # print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
