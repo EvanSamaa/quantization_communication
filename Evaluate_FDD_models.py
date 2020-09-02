@@ -8,7 +8,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 2
+    num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -69,7 +69,7 @@ def plot_data(arr, col=[]):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug31/B=32_K=50_N_rf=4/M={}_K=50+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
+    file = "trained_models/Aug31/M=64_K=50/B=32_one_CE_loss/N_rf=8+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MPs"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     B = 3
     seed = 200
     check = 100
-    N_rf = 4
+    N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 0.1
     tf.random.set_seed(seed)
@@ -95,10 +95,12 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     mores = [128]
     for i in mores:
-        M = i
+        tf.random.set_seed(seed)
+        np.random.seed(seed)
+        # M = i
         print("========================================== K =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
+        model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     #     print(model.get_layer("model").summary())
     #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
