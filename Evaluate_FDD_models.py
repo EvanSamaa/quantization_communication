@@ -23,7 +23,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model.predict(ds_load)[0][:, -1]
+        prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
@@ -55,7 +55,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         #     plt.pause(0.0001)
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
-def plot_data(arr, col):
+def plot_data(arr, col=[]):
     cut = 0
     for i in range(arr.shape[0]-1, 0, -1):
         if arr[i, 0] != 0:
@@ -63,8 +63,8 @@ def plot_data(arr, col):
             break
     arr = arr[:i, :]
     x = np.arange(0, arr.shape[0])
-    plt.plot(x, arr[:, col])
-    plt.plot(x, arr[:, 3])
+    for i in col:
+        plt.plot(x, arr[:, i])
     # plt.plot(x, arr[:, 3])
     plt.title("Reconstruction Loss")
     plt.show()
@@ -93,18 +93,18 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
-    mores = [10, 20, 30, 40, 50, 60]
+    mores = [7, 8]
     for i in mores:
-        K=i
+        N_rf = i
         print("========================================== K =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
+        # model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
     #     print(model.get_layer("model").summary())
     #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = k_clustering_hieristic(N_rf)
         # model = greedy_hieristic(N_rf, sigma2_n)
-        # model = top_N_rf_user_model(M, K, N_rf)
+        model = top_N_rf_user_model(M, K, N_rf)
         # model = partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
         # print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
