@@ -76,7 +76,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Aug31/M=64_K=50/N_rf_4_one_CE_loss/VAEB=1x{}E=4+1x512_per_linkx6_alt+CE_loss+MP{}"
+    fname_template = "trained_models/Aug31/M=64_K=50/B=64/N_rf={}+VAEB=1x64E=4+1x512_per_linkx6_alt+CE_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -95,11 +95,12 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [128, 4, 8, 16, 32, 64]
+    mores = [2,3,4,5,6,7,8]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
         np.random.seed(seed)
+        N_rf = i
         # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
         # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
         # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
@@ -110,7 +111,7 @@ if __name__ == "__main__":
         # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
         # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
         # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-        model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=i, qbit=0, output_all=True)
+        model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=64, qbit=0, output_all=True)
         vae_loss = VAE_loss_general(False)
         sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
         optimizer = tf.keras.optimizers.Adam(lr=0.0001)
