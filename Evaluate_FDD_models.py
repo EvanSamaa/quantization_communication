@@ -80,7 +80,7 @@ if __name__ == "__main__":
     B = 3
     seed = 200
     check = 100
-    N_rf = 1
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     tf.random.set_seed(seed)
