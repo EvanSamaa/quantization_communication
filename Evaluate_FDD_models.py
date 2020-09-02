@@ -88,7 +88,7 @@ def plot_data(arr, col=[]):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug31/M=64_K=50/N_rf_4_one_CE_loss/VAEB=1x{}E=4+1x512_per_linkx6_alt+CE_loss+MP"
+    file = "trained_models/Aug31/B=64_K=50_N_rf=4/M={}_K=50+VAEB=1x64E=4+1x512_per_linkx6_alt+CE_loss+MP"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
-    mores = [4, 8 ,16, 32, 64, 128]
+    mores = [32, 64, 128]
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
@@ -121,6 +121,7 @@ if __name__ == "__main__":
         model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
     #     print(model.get_layer("model").summary())
     #     print(model.summary())
+        M = i
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = top_N_rf_user_model(M, K, N_rf)
         # model = partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
