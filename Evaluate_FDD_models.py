@@ -23,7 +23,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model.predict(ds_load)[0][:,-1]
+        prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     B = 3
     seed = 200
     check = 100
-    N_rf = 4
+    N_rf = 1
     sigma2_h = 6.3
     sigma2_n = 0.1
     tf.random.set_seed(seed)
@@ -98,14 +98,14 @@ if __name__ == "__main__":
         # K=i
         print("========================================== K =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        N_rf=i
-        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
+        # N_rf=i
+        # model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
     #     print(model.get_layer("model").summary())
     #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = k_clustering_hieristic(N_rf)
         # model = greedy_hieristic(N_rf, sigma2_n)
-        # model = top_N_rf_user_model(M, K, N_rf)
+        model = top_N_rf_user_model(M, K, N_rf)
         # model = partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
         # print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
