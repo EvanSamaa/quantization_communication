@@ -82,7 +82,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 2
+    N = 5
     M = 64
     K = 50
     B = 1
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [256, 128, 64, 32]
+    mores = [128, 64, 32]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
