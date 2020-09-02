@@ -76,7 +76,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Aug31/M=64_K=50/B=32_one_CE_loss/N_rf={}+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP{}"
+    fname_template = "trained_models/Aug31/M=64_B=32_Nrf=4/M=64_K={}+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -90,17 +90,17 @@ if __name__ == "__main__":
     B_t = 10
     E_t = 30
     seed = 100
-    N_rf = 3
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [1, 2, 3, 4, 5, 6, 7, 8]
+    mores = [60, 50, 40, 30, 20, 10]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        N_rf = i
+        K=i
         # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
         # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
         # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
