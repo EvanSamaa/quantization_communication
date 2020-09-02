@@ -69,7 +69,7 @@ def plot_data(arr, col=[]):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug31/M=64_B=32_Nrf=4/M=64_K={}+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
+    file = "trained_models/Aug31/B=32_K=50_N_rf=4/M={}_K=50+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -93,9 +93,9 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
-    mores = [7, 8]
+    mores = [32, 64, 128]
     for i in mores:
-        N_rf = i
+        M = i
         print("========================================== K =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
         # model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
