@@ -147,7 +147,7 @@ if __name__ == "__main__":
             graphing_data[epoch, 3] = train_hard_loss.result()
             if train_hard_loss.result() < max_acc:
                 max_acc = train_hard_loss.result()
-                model.save(fname_template.format(K, ".h5"))
+                model.save(fname_template.format(M, ".h5"))
             if epoch % check == 0:
                 if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                     improvement = graphing_data[epoch - (check * 2): epoch - check, 0].mean() - graphing_data[
@@ -156,7 +156,7 @@ if __name__ == "__main__":
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
                     if improvement <= 0.001:
                         break
-        np.save(fname_template.format(K,".npy"), graphing_data)
+        np.save(fname_template.format(M,".npy"), graphing_data)
         tf.keras.backend.clear_session()
         print("Training end")
 
