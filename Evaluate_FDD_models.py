@@ -3,6 +3,25 @@ from models import *
 import numpy as np
 import tensorflow as tf
 # from matplotlib import pyplot as plt
+def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
+    num_data = 10
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    result = np.zeros((3,))
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
+    print("Testing Starts")
+    ds = generate_link_channel_data(num_data, K, M)
+    ds_load = ds
+    prediction = model(ds_load)
+    for i in prediction:
+        out = loss_fn1(i, tf.abs(ds_load))
+        result[0] = tf.reduce_mean(out)
+        result[1] = loss_fn2(i)
+        print("the soft result is ", result)
+        print("the variance is ", tf.math.reduce_std(out))
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -100,13 +119,13 @@ if __name__ == "__main__":
         # M = i
         print("========================================== K =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+        # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     #     print(model.get_layer("model").summary())
     #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
-        # model = k_clustering_hieristic(N_rf)
-        # model = greedy_hieristic(N_rf, sigma2_n)
         # model = top_N_rf_user_model(M, K, N_rf)
         # model = partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
         # print(model.summary())
-        test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+        model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
+        test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+        # test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
