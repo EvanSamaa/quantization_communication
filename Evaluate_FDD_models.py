@@ -8,7 +8,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 1000
+    num_data = 2
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
-    mores = [32, 64, 128]
+    mores = [128]
     for i in mores:
         M = i
         print("========================================== K =", i)
