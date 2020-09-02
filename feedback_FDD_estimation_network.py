@@ -82,7 +82,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 5
+    N = 2
     M = 64
     K = 50
     B = 1
