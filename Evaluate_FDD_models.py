@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -69,7 +69,7 @@ def plot_data(arr, col):
     plt.title("Reconstruction Loss")
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug31/M=64_K=50/B=32_one_CE_loss/N_rf={}+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
+    file = "trained_models/Aug31/M=64_K=50/B=32_one_CE_loss/N_rf=8+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -87,8 +87,8 @@ if __name__ == "__main__":
     np.random.seed(seed)
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    # training_data = np.load(training_data_path)
-    # plot_data(training_data, 0)
+    training_data = np.load(training_data_path)
+    plot_data(training_data, 0)
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)

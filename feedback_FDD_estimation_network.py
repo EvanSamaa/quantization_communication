@@ -76,7 +76,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Aug31/M=64_B=32_Nrf=4/M=64_K={}+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP{}"
+    fname_template = "trained_models/Aug31/B=32_K=50_N_rf=4/M={}_K=50+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
