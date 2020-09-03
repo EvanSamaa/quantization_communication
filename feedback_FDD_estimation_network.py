@@ -55,8 +55,8 @@ def train_step(features, labels, N=None, epoch=0):
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             # loss_1 = loss_1 + sr
             # ce = All_softmaxes_CE(N_rf)(per_user_softmaxes[:, i], overall_softmax[:, i])
-            # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-            # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
             loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
@@ -76,26 +76,25 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Aug31/M=64_K=50/B=16/N_rf={}+VAEB=1x16E=4+1x512_per_linkx6_alt+CE_loss+MP{}"
+    fname_template = "trained_models/Aug31/M=64_K=50/B=16_2_CE_loss/N_rf={}+VAEB=1x16E=4+1x512_per_linkx6_alt+double_CE_loss+MP{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 3
+    N = 10
     M = 64
     K = 50
     B = 1
     E = 4
-    B_t = 10
-    E_t = 30
+    more = 16
     seed = 100
     N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [8, 2,3,4,5,6,7,2]
+    mores = [8,2,3,4,5,6,7]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
@@ -111,7 +110,7 @@ if __name__ == "__main__":
         # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
         # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
         # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-        model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=16, qbit=0, output_all=True)
+        model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
         vae_loss = VAE_loss_general(False)
         sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
         optimizer = tf.keras.optimizers.Adam(lr=0.0001)
