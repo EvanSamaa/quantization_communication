@@ -74,7 +74,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         #     plt.pause(0.0001)
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
-def plot_data(arr, col=[]):
+def plot_data(arr, col=[], title="loss"):
     cut = 0
     for i in range(arr.shape[0]-1, 0, -1):
         if arr[i, 0] != 0:
@@ -85,10 +85,10 @@ def plot_data(arr, col=[]):
     for i in col:
         plt.plot(x, arr[:, i])
     # plt.plot(x, arr[:, 3])
-    plt.title("Reconstruction Loss")
+    plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Aug31/M=64_K=50/B=16/N_rf=2+VAEB=1x16E=4+1x512_per_linkx6_alt+CE_loss+MP"
+    file = "trained_models/Aug31/M=64_K=50/N_rf_4_one_CE_loss/VAEB=1x{}E=4+1x512_per_linkx6_alt+CE_loss+MP"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -107,17 +107,17 @@ if __name__ == "__main__":
     model_path = file + ".h5"
     training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
-    # plot_data(training_data, 0)
+    # plot_data(training_data, [0, 3], "-sum rate")
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
-    mores = [2, 3, 4, 5, 6, 7, 8]
+    mores = [4, 8, 16, 32, 64, 128]
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        print("========================================== N_rf =", i)
-        N_rf = i
+        print("========================================== B =", i)
+        B = i
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
         model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
         #     print(model.get_layer("model").summary())
