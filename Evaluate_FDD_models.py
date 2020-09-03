@@ -42,7 +42,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model(ds_load)
+        prediction = model.predict(ds_load)[0][:, -1]
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        print("========================================== M =", i)
+        print("========================================== N_rf =", i)
         N_rf = i
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
         model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
