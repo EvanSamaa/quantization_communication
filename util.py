@@ -1122,3 +1122,4 @@ if __name__ == "__main__":
     # features = generate_link_channel_data(N, K, M)
     # predictions = model(features)
     # loss_1 = Sum_rate_utility_top_k_with_mask(K, M, sigma2)(predictions, features)
+
