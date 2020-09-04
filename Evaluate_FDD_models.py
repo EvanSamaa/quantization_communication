@@ -109,7 +109,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 3rd/K=50,M=64/B=32_weights_1/N_rf=8+VAEB=1x32E=4+1x512_per_linkx6_alt+weighted_double_CE_loss+MP"
+    file = "trained_models/Sept 3rd/K=50,M=64/B=32_weights_1_for_both_CE_loss/N_rf={}+VAEB=1x32E=4+1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -133,12 +133,12 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
-    mores = [4]
+    mores = [6, 7, 8]
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        print("========================================== B =", i)
-        B = i
+        print("========================================== Nrf =", i)
+        N_rf = i
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
         model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
         #     print(model.get_layer("model").summary())
