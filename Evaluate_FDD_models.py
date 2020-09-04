@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 10
     config = tf.compat.v1.ConfigProto()
@@ -109,7 +109,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 3rd/K=50,M=64/B=32_weights_1_for_both_CE_loss/N_rf={}+VAEB=1x32E=4+1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction"
+    file = "trained_models/Sept 3rd/K=50,M=64/B=32_weights_1/N_rf=2+VAEB=1x32E=4+1x512_per_linkx6_alt+weighted_double_CE_loss+MP"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -127,8 +127,8 @@ if __name__ == "__main__":
     np.random.seed(seed)
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    # training_data = np.load(training_data_path)
-    # plot_data(training_data, [0, 3], "-sum rate")
+    training_data = np.load(training_data_path)
+    plot_data(training_data, [0, 3], "-sum rate")
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
