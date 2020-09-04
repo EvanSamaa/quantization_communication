@@ -2,7 +2,7 @@ from util import *
 from models import *
 import numpy as np
 import tensorflow as tf
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 10
     config = tf.compat.v1.ConfigProto()
@@ -127,8 +127,8 @@ if __name__ == "__main__":
     np.random.seed(seed)
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    training_data = np.load(training_data_path)
-    plot_data(training_data, [0, 3], "-sum rate")
+    # training_data = np.load(training_data_path)
+    # plot_data(training_data, [0, 3], "-sum rate")
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
