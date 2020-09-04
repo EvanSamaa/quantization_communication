@@ -140,7 +140,7 @@ if __name__ == "__main__":
         print("========================================== Nrf =", i)
         N_rf = i
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
         #     print(model.get_layer("model").summary())
         #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
