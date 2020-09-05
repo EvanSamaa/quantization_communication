@@ -2086,6 +2086,8 @@ class NN_Clustering():
                 if np.sum(clusters[i]) != 0:
                     output[n, max] = 1
         return output
+
+#============================== FDD models with feedback ==============================
 def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -2118,6 +2120,16 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
     scheduled_output, raw_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, raw_output, z_qq, z_e, reconstructed_input])
+    return model
+def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    encoding_module = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=more, qbit=qbit)
+    scheduling_module = FDD_per_link_archetecture_more_granular(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    reconstructed_input= encoding_module(inputs_mod)
+    scheduled_output, raw_output = scheduling_module(reconstructed_input)
+    model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
     return model
 def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
@@ -2179,6 +2191,19 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
         z_fed_forward = tf.multiply(z_fed_forward, z_val)
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
+    return model
+def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=1, qbit=0):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
+    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
+    inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
+    decoder = Autoencoder_Decoding_module(M, (K, E * more))
+    z = encoder(inputs_mod)
+    z = sigmoid(z) + tf.stop_gradient(binary_activation(z) - sigmoid(z))
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
+    model = Model(inputs, reconstructed_input)
     return model
 def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
