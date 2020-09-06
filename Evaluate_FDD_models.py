@@ -133,7 +133,7 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
-    mores = [2, 3, 4, 5, 6, 7, 8]
+    mores = [3, 4, 5, 6, 7, 8]
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
