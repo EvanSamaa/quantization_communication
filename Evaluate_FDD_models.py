@@ -127,8 +127,8 @@ if __name__ == "__main__":
     np.random.seed(seed)
     model_path = file + ".h5"
     training_data_path = file + ".npy"
-    training_data = np.load(training_data_path)
-    plot_data(training_data, [0, 3], "-sum rate")
+    # training_data = np.load(training_data_path)
+    # plot_data(training_data, [0, 3], "-sum rate")
     # training_data = np.load(training_data_path)
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
