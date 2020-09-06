@@ -2129,8 +2129,6 @@ def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, outp
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input= encoding_module(inputs_mod)
     scheduled_output, raw_output = scheduling_module(reconstructed_input)
-    print(len(raw_output))
-    A[2]
     model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
     return model
 def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1, qbit=0, output_all=False):
