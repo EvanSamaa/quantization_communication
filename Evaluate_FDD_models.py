@@ -43,6 +43,41 @@ def test_greedy_different_K(M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         result[1] = loss_fn2(output)
         print("the result is ", result)
         print("the variance is ", tf.math.reduce_std(out))
+def test_DNN_different_K(file_name, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
+    num_data = 10
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    result = np.zeros((3,))
+    print("Testing Starts")
+    ds = generate_link_channel_data(num_data, 60, M)
+    Ks = [10, 20, 30, 40, 50, 60]
+    for i in Ks:
+        ds_load = ds[:, :i]
+        loss_fn1 = Sum_rate_utility_WeiCui(i, M, sigma2_n)
+        loss_fn2 = Total_activation_limit_hard(i, M, N_rf=0)
+        model = tf.keras.models.load_model(file_name.format(i), custom_objects=custome_obj)
+        prediction = model.predict(ds_load)[0][:, -1]
+        out = loss_fn1(prediction, tf.abs(ds_load))
+        result[0] = tf.reduce_mean(out)
+        result[1] = loss_fn2(prediction)
+        print("the soft result is ", result)
+        print("the variance is ", tf.math.reduce_std(out))
+
+        prediction_binary = binary_activation(prediction)
+        out_binary = loss_fn1(prediction_binary, ds_load)
+        result[0] = tf.reduce_mean(out_binary)
+        result[1] = loss_fn2(prediction_binary)
+        print("the hard result is ", result)
+        print("the variance for binary result is ", tf.math.reduce_std(out_binary))
+
+        prediction_hard = Harden_scheduling(k=N_rf)(prediction)
+        out_hard = loss_fn1(prediction_hard, ds_load)
+        result[0] = tf.reduce_mean(out_hard)
+        result[1] = loss_fn2(prediction_hard)
+        print("the top Nrf result is ", result)
+        print("the variance for hard result is ", tf.math.reduce_std(out_hard))
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -136,7 +171,7 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     # A[2]
-    mores = [10, 20, 30, 40, 50, 60]
+    mores = [60]
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
@@ -150,8 +185,8 @@ if __name__ == "__main__":
         # model = top_N_rf_user_model(M, K, N_rf)
         # model = partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
         # print(model.summary())
-        test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-
+        # test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+        test_DNN_different_K(file, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
 
         # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
         # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
