@@ -89,19 +89,19 @@ if __name__ == "__main__":
     K = 50
     B = 1
     E = 4
-    more = 16
+    more = 32
     seed = 100
     N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [1,2,3,4,5,6,7,8]
+    mores = [80, 70, 60,10,20,30,40,50]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        more = i
+        K = i
         # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
         # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
         # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
