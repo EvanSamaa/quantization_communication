@@ -109,7 +109,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept 3rd/K=50,M=64/Naive_model_B=32_weight2_for_both_CE_losses/N_rf={}+B32_1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction"
+    file = "trained_models/Sept 3rd/K=50,M=64/Naive_model_B=64_weight2_for_both_CE_losses/N_rf={}+B64_1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
