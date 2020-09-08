@@ -89,8 +89,7 @@ if __name__ == "__main__":
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        M=i[1]
-        more=i[0]
+        N_rf = i
         model = tf.keras.models.load_model(fname_template_from.format(i, ".h5"), custom_objects=custome_obj)
         vae_loss = VAE_loss_general(False)
         sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
