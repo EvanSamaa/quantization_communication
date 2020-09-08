@@ -65,8 +65,8 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template_from = "trained_models/Sept 3rd/K=50,M=64/Naive_model_B=16_CE1_weight1/N_rf={}+B16_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
-    fname_template_to = "trained_models/Sept8th/K=50,M=64/Naive_model_B=16_CE1_weight_1_retrain/N_rf={}+B16_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
+    fname_template_from = "trained_models/Sept 3rd/K=50,M=64/Naive_model_B=64_CE1_weight1/N_rf={}+B64_1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction{}"
+    fname_template_to = "trained_models/Sept 3rd/K=50,M=64/Naive_model_B=64_CE1_weight1/N_rf=1+B64_1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction{}"
     check = 100
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     K = 50
     B = 1
     E = 4
-    more = 32
+    more = 64
     seed = 100
     N_rf = 4
     sigma2_h = 6.3
