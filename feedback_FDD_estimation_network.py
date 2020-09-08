@@ -89,14 +89,14 @@ if __name__ == "__main__":
     K = 50
     B = 1
     E = 4
-    more = 32
+    more = 128
     seed = 100
     N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [[50, 128],[50, 64],[50, 32],[64, 32],[64, 64],[64, 128]]
+    mores = [1,2,3,4,5,6,7,8]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
