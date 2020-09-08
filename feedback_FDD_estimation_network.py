@@ -78,13 +78,13 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept 3rd/Naive_model_varying_K/K={}+B16_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
+    fname_template = "trained_models/Sept 3rd/Naive_model_varying_M/M={}+B{}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
     check = 300
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 6
+    N = 3
     M = 64
     K = 50
     B = 1
@@ -96,12 +96,13 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [60,10,20,30,40,50]
+    mores = [[32, 128],[32, 64],[32, 32],[40, 32],[40, 64],[40, 128]]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        K = i
+        M=i[1]
+        more=i[0]
         # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
         # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
         # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
@@ -149,7 +150,7 @@ if __name__ == "__main__":
             graphing_data[epoch, 3] = train_hard_loss.result()
             if train_hard_loss.result() < max_acc:
                 max_acc = train_hard_loss.result()
-                model.save(fname_template.format(i, ".h5"))
+                model.save(fname_template.format(i[1],i[0], ".h5"))
             if epoch % check == 0:
                 if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                     improvement = graphing_data[epoch - (check * 2): epoch - check, 0].mean() - graphing_data[
@@ -158,7 +159,7 @@ if __name__ == "__main__":
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
                     if improvement <= 0.001:
                         break
-        np.save(fname_template.format(i,".npy"), graphing_data)
+        np.save(fname_template.format(i[1],i[0],".npy"), graphing_data)
         tf.keras.backend.clear_session()
         print("Training end")
 
