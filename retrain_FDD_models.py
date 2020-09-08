@@ -84,12 +84,12 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [1,2,3,4,5,6,7,8]
+    mores = [4,8,16,32,64,128]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        N_rf = i
+        B = i
         model = tf.keras.models.load_model(fname_template_from.format(i, ".h5"), custom_objects=custome_obj)
         vae_loss = VAE_loss_general(False)
         sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
