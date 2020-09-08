@@ -171,7 +171,7 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     # A[2]
-    mores = [128]
+    mores = [32, 64, 128]
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
