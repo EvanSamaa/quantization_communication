@@ -65,7 +65,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template_from = "trained_models/Sept 3rd/K=50,M=64/Naive_model_B=64_CE1_weight1/N_rf={}+B64_1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction{}"
+    fname_template_from = "trained_models/Sept 3rd/K=50,M=64/Naive_model_B=16_CE1_weight1/N_rf={}+B16_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
     fname_template_to = "trained_models/Sept8th/K=50,M=64/Naive_model_B=64_CE_weight_1_retrain/N_rf={}+B64_1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction{}"
     check = 100
     SUPERVISE_TIME = 0
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     swap_delay = check / 2
     # problem Definition
     N = 2
-    M = 64
+    M = 16
     K = 50
     B = 1
     E = 4
