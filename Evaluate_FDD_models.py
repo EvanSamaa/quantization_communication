@@ -175,7 +175,7 @@ if __name__ == "__main__":
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        B = i
+        M = i
         print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
         model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
