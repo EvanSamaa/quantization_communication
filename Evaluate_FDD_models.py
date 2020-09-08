@@ -144,7 +144,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept8th/K=50,M=64/Naive_model_B=32_CE1_weight_1_retrain/N_rf={}+VAEB=1x32E=4+1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction"
+    file = "trained_models/Sept8th/K=50,M=64/Naive_model_Nrf=4_varying_B/N_rf=4+B{}_1x512_per_linkx6_alt+weighted_double_CE_loss+MP+half_reconstruction"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     # A[2]
-    mores = [1,2,3,4,5,6,7,8]
+    mores = [4,8,16,32,64,128]
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
