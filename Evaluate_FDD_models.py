@@ -148,7 +148,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept8th/K=50,M=64/unonstrained_model_1CE_with_different_mask/set_of_weights_2/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss.h5"
+    file = "trained_models/Sept8th/K=50,M=64/unonstrained_model_1CE_with_different_mask/set_of_weights_3/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss.h5"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -186,12 +186,12 @@ if __name__ == "__main__":
         N_rf = i
         print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        # model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
+        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
         #     print(model.get_layer("model").summary())
         #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = top_N_rf_user_model(M, K, N_rf)
-        model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
+        # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
         # print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
         # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
