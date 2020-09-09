@@ -60,7 +60,8 @@ def train_step(features, labels, N=None, epoch=0):
             ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
             loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
-            mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+            # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+            mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
             loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
@@ -73,13 +74,13 @@ def train_step(features, labels, N=None, epoch=0):
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
     # train_binarization_loss(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]), features))
+    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept8th/K=50,M=64/unconstrained_model_double_CE/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
+    fname_template = "trained_models/Sept8th/K=50,M=64/unconstrained_model_CE_with_different_mask/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
     check = 300
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -164,9 +165,9 @@ if __name__ == "__main__":
                     max_acc = valid_sum_rate.result()
                     model.save(fname_template.format(i, ".h5"))
                 if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
-                    improvement = graphing_data[epoch - (check * 2): epoch - check, 0].mean() - graphing_data[
+                    improvement = graphing_data[epoch - (check * 2): epoch - check, 2].mean() - graphing_data[
                                                                                                 epoch - check: epoch,
-                                                                                                0].mean()
+                                                                                                2].mean()
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
 
                     if improvement <= 0.001:

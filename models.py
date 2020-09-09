@@ -448,6 +448,8 @@ def DP_partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K, sigma2):
             out.append(prev_out)
         return out
     return model
+############################## Misc Models ##############################
+
 ############################## Layers ##############################
 class Closest_embedding_layer(tf.keras.layers.Layer):
     def __init__(self, user_count=2, embedding_count=8, bit_count=15, i=0, **kwargs):

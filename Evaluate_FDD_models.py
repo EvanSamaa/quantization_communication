@@ -83,7 +83,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 1000
+    num_data = 1
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -98,6 +98,9 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
+        # for k in range(0, 10):
+        #     plt.plot(np.arange(0, K*M), prediction[k])
+        #     plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
@@ -112,7 +115,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         print("the hard result is ", result)
         print("the variance for binary result is ", tf.math.reduce_std(out_binary))
 
-        prediction_hard = Harden_scheduling(k=N_rf)(prediction)
+        prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
         out_hard = loss_fn1(prediction_hard, ds_load)
         result[0] = tf.reduce_mean(out_hard)
         result[1] = loss_fn2(prediction_hard)
@@ -144,7 +147,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept8th/K=50,M=64/Unconstraint_model/Nrf=8_1x512_per_linkx6_alt+weighted_double_CE_loss"
+    file = "trained_models/Sept8th/K=50,M=64/Unconstraint_model/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -161,10 +164,10 @@ if __name__ == "__main__":
     tf.random.set_seed(seed)
     np.random.seed(seed)
     model_path = file + ".h5"
-    training_data_path = file + ".npy"
-    training_data = np.load(training_data_path)
-    plot_data(training_data, [0, 3], "-sum rate")
+    # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
+    # plot_data(training_data, [0, 3], "-sum rate")
+    # training_data = np.load(training_datsa_path)
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
@@ -172,6 +175,10 @@ if __name__ == "__main__":
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     # A[2]
     mores = [1,2,3,4,5,6,7,8]
+    # for i in mores:
+    #     training_data_path = file + ".npy"
+    #     training_data = np.load(training_data_path.format(i))
+    #     plot_data(training_data, [2], "-sum rate")
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
