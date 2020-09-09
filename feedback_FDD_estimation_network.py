@@ -52,7 +52,7 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = vae_loss.call(z_qq, z_e)
         loss_4 = 0
-        factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:1.0, 6:1.0, 7:1.0, 8:1.0}
+        factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:0.01, 6:0.01, 7:0.01, 8:0.01}
         for i in range(0, scheduled_output.shape[1]):
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
@@ -79,8 +79,8 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept8th/K=50,M=64/Unconstraint_model/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
-    check = 100
+    fname_template = "trained_models/Sept8th/K=50,M=64/unconstrained_model_weight_2/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
+    check = 300
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
