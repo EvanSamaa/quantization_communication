@@ -57,8 +57,8 @@ def train_step(features, labels, N=None, epoch=0):
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
 
-            # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-            # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+            loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
             mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept8th/K=50,M=64/unconstrained_model_weight_2/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
+    fname_template = "trained_models/Sept8th/K=50,M=64/unconstrained_model_double_CE/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
     check = 300
     SUPERVISE_TIME = 0
     training_mode = 2
