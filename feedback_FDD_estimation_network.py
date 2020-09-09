@@ -80,7 +80,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept8th/K=50,M=64/unconstrained_model_CE_with_different_mask/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
+    fname_template = "trained_models/Sept8th/K=50,M=64/unonstrained_model_1CE_with_different_mask/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
     check = 300
     SUPERVISE_TIME = 0
     training_mode = 2
