@@ -193,9 +193,19 @@ def greedy_hieristic(N_rf, sigma2):
 
     return model
 def sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p):
-    def model(top_val, top_indice, G):
+    def model(top_val, top_indice, G=None):
         loss = Sum_rate_utility_WeiCui(K, M, sigma2)
         output = np.zeros((top_indice.shape[0], K * M))
+        if G is None:
+            G_copy = np.zeros((top_indice.shape[0], K, M))
+            for n in range(0, top_indice.shape[0]):
+                for i in range(0, K * p):
+                    # print(K*p)
+                    p_i = int(i % p)
+                    user_i = int(tf.floor(i / p))
+                    G_copy[n, user_i, int(top_indice[n, user_i, p_i])] = top_val[n, user_i, p_i]
+            G_copy = tf.constant(G_copy, dtype=tf.float32)
+            G = G_copy
         print("done generating partial information")
         for n in range(0, G.shape[0]):
             # print("==================================== type", n, "====================================")
@@ -410,6 +420,13 @@ def partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2):
         G = (tf.abs(G))
         top_values, top_indices = tf.math.top_k(G, k=p)
         return sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p)(top_values, top_indices, G)
+    return model
+def partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, B, p, M, K, sigma2):
+    # uniformly quantize the values then pick the top Nrf to output
+    def model(G):
+        G = (tf.abs(G))
+        top_values, top_indices = tf.math.top_k(G, k=p)
+        return sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p)(top_values, top_indices, None)
     return model
 def partial_feedback_top_N_rf_model(N_rf, B, p, M, K, sigma2):
     # uniformly quantize the values then pick the top Nrf to output
