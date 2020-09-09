@@ -102,8 +102,7 @@ if __name__ == "__main__":
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        M=i[1]
-        more=i[0]
+        N_rf = i
         # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
         # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
         # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
@@ -126,15 +125,19 @@ if __name__ == "__main__":
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         train_binarization_loss = tf.keras.metrics.Mean(name='train_loss')
         train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
+        valid_sum_rate = tf.keras.metrics.Mean(name='valid_loss')
         # begin setting up training loop
         max_acc = 10000
+        max_acc_loss = 10000
         # training Loop
+        valid_data = generate_link_channel_data(1000, K, M)
         for epoch in range(EPOCHS):
             # ======== ======== data recording features ======== ========
             train_loss.reset_states()
             train_binarization_loss.reset_states()
             train_VS.reset_states()
             train_hard_loss.reset_states()
+            valid_sum_rate.reset_states()
             # ======== ======== training step ======== ========
             train_features = generate_link_channel_data(N, K, M)
             train_step(train_features, None, training_mode, epoch=epoch)
@@ -149,15 +152,23 @@ if __name__ == "__main__":
             graphing_data[epoch, 1] = train_binarization_loss.result()
             graphing_data[epoch, 2] = train_VS.result()
             graphing_data[epoch, 3] = train_hard_loss.result()
-            if train_hard_loss.result() < max_acc:
-                max_acc = train_hard_loss.result()
-                model.save(fname_template.format(i[1],i[0], ".h5"))
+            if train_hard_loss.result() < max_acc_loss:
+                max_acc_loss = train_hard_loss.result()
+                model.save(fname_template.format(i, "_max_train.h5"))
             if epoch % check == 0:
+                prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
+                out = sum_rate(Harden_scheduling(k=N_rf)(prediction), tf.abs(valid_data))
+                valid_sum_rate(out)
+                graphing_data[epoch, 2] = valid_sum_rate.result()
+                if valid_sum_rate.result() < max_acc:
+                    max_acc = valid_sum_rate.result()
+                    model.save(fname_template.format(i, ".h5"))
                 if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                     improvement = graphing_data[epoch - (check * 2): epoch - check, 0].mean() - graphing_data[
                                                                                                 epoch - check: epoch,
                                                                                                 0].mean()
                     print("the accuracy improvement in the past 500 epochs is ", improvement)
+
                     if improvement <= 0.001:
                         break
         np.save(fname_template.format(i[1],i[0],".npy"), graphing_data)
