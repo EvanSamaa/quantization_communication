@@ -1,0 +1,13 @@
+        factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:1.0, 6:1.0, 7:1.0, 8:1.0}
+        for i in range(0, scheduled_output.shape[1]):
+            sr = sum_rate(scheduled_output[:, i], features)
+            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+
+            ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+            loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+
+            # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+            mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, i]))
+            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+            loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs

@@ -52,18 +52,18 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = vae_loss.call(z_qq, z_e)
         loss_4 = 0
-        # factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:0.1, 6:0.1, 7:1.0, 8:1}
+        factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:1.0, 6:1.0, 7:1.0, 8:1.0}
         for i in range(0, scheduled_output.shape[1]):
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
 
-            # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-            # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+            loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
             # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
             mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
         loss = loss_1 + loss_4
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept8th/K=50,M=64/unonstrained_model_1CE_with_different_mask/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
+    fname_template = "trained_models/Sept8th/K=50,M=64/unonstrained_model_1CE_with_different_mask/new_set_of_weights/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
     check = 300
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [8,2,3,4,5,6,7,1]
+    mores = [8,7,6]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
