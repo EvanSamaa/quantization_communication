@@ -83,7 +83,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 1000
+    num_data = 100
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -148,7 +148,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept8th/K=50,M=64/unonstrained_model_1CE_with_different_mask/set_of_weights_2/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss"
+    file = "trained_models/Sept8th/K=50,M=64/unonstrained_model_1CE_with_different_mask/weight=0.05/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = top_N_rf_user_model(M, K, N_rf)
-        # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
+        # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 5, M, K, sigma2_n)
         # print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
         # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
