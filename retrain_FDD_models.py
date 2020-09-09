@@ -127,7 +127,7 @@ if __name__ == "__main__":
             graphing_data[epoch, 1] = train_binarization_loss.result()
             graphing_data[epoch, 3] = train_hard_loss.result()
             if epoch % check == 0:
-                prediction = model.predict(valid_data, batch_size=10)[0][:, -1]
+                prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
                 out = sum_rate(Harden_scheduling(k=N_rf)(prediction), tf.abs(valid_data))
                 valid_sum_rate(out)
                 graphing_data[epoch, 2] = valid_sum_rate.result()
