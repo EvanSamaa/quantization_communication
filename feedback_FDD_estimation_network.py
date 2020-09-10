@@ -11,30 +11,6 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference
                    "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg}
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
-    if N == 0:
-        with tf.GradientTape() as tape:
-            predictions = model(features)
-            print(tf.argmax(predictions[0]), tf.reduce_max(predictions[0]))
-            # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
-            loss_3 = tf.reduce_sum(predictions, axis=1) - N_rf
-            loss = supervised_loss(predictions, labels) + tf.square(loss_3)
-        gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-        train_loss(loss_object_1(predictions, features))
-        # train_binarization_loss(loss_3)
-        return
-    elif N == 1:
-        with tf.GradientTape() as tape:
-            predictions = model(features)
-            # predictions = Masking_with_learned_weights_soft(K, M, sigma2_n, k=N_rf)(predictions)
-            loss = supervised_loss(predictions, Harden_scheduling(k=N_rf)(predictions))
-        gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-        train_loss(loss_object_1(predictions, features))
-        # train_binarization_loss(loss_3)
-        train_VS(loss_object_2(predictions, features))
-        train_hard_loss(loss_object_1(Harden_scheduling(k=N_rf)(predictions), features))
-        return
     with tf.GradientTape(persistent=True) as tape:
         # scheduled_output, z_qq, z_e, reconstructed_input = model(features)
         # reconstructed_input, z_qq, z_e= model(features)
@@ -49,7 +25,7 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = 0
-        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        loss_3 = training_mode*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = vae_loss.call(z_qq, z_e)
         loss_4 = 0
         factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:1.0, 6:0.5, 7:0.5, 8:0.25}
@@ -98,12 +74,13 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [8,7,6,5,4,3,2,1]
+    mores = [100, 10, 1, 0.1, 0.01, 0.001]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        N_rf = i
+        training_mode = i
+        N_rf = 8
         # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
         # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
         # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
