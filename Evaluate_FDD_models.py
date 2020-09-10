@@ -97,8 +97,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
-        # prediction = model(ds_load)
+        # prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
+        prediction = model(ds_load)
         # for k in range(0, 10):
         #     plt.plot(np.arange(0, K*M), prediction[k])
         #     plt.show()
@@ -148,7 +148,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept8th/K=50,M=64/Naive_model_B=16_CE1_weight_1_retrain/N_rf={}+B16_1x512_per_linkx6_alt+weighted_double_CE_loss"
+    file = "trained_models/Sept8th/K=50,M=64/Naive_model_varying_reconstruction_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -186,12 +186,12 @@ if __name__ == "__main__":
         N_rf = i
         print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
+        # model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
         #     print(model.get_layer("model").summary())
         #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = top_N_rf_user_model(M, K, N_rf)
-        # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 15, M, K, sigma2_n)
+        model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 1, M, K, sigma2_n)
         # print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
         # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
