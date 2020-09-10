@@ -80,8 +80,8 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept8th/K=50,M=64/naive_with_good_weights/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss{}"
-    check = 300
+    fname_template = "trained_models/Sept8th/K=50,M=64/Naive_model_B=32_good_weight_/Nrf={}_1x512_per_linkx6_alt+weighted_CE_loss{}"
+    check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     K = 50
     B = 1
     E = 4
-    more = 128
+    more = 32
     seed = 100
     N_rf = 4
     sigma2_h = 6.3
