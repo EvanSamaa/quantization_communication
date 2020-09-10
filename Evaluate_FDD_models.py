@@ -148,7 +148,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept8th/K=50,M=64/unonstrained_model_1CE_with_different_mask/weight=0.2/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss"
+    file = "trained_models/Sept8th/K=50,M=64/naive_with_good_weights/Nrf={}_1x512_per_linkx6_alt+weighted_double_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     # A[2]
-    mores = [6,7,8]
+    mores = [1,2,3,4,5,6,7,8]
     # for i in mores:
     #     training_data_path = file + ".npy"
     #     training_data = np.load(training_data_path.format(i))
