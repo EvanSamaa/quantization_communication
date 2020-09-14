@@ -74,7 +74,7 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [0.001, 0.01, 0.1, 1, 10, 50]
+    mores = [100, 1000, 500, 10000]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
