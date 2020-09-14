@@ -20,13 +20,13 @@ def train_step(features, labels, N=None, epoch=0):
         # scheduled_output, z_qq, z_e, reconstructed_input, per_user_softmaxes, overall_softmax = model(features)
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        scheduled_output, raw_output, reconstructed_input = model(features)
+        scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = 0
         loss_3 = training_mode*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        # loss_2 = vae_loss.call(z_qq, z_e)
+        loss_2 = training_mode*vae_loss.call(z_qq, z_e)
         loss_4 = 0
         factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:1.0, 6:0.5, 7:0.5, 8:0.25}
         for i in range(0, scheduled_output.shape[1]):
@@ -42,7 +42,7 @@ def train_step(features, labels, N=None, epoch=0):
             loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + loss_3
+        loss = loss_1 + loss_3 + loss_2
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept8th/K=50,M=64/Naive_model_varying_reconstruction_loss/beta{}_1x512_per_linkx6_alt+weighted_CE_loss{}"
+    fname_template = "trained_models/Sept8th/K=50,M=64/VAE Reconstruction loss/beta{}_1x512_per_linkx6_alt+weighted_CE_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     sigma2_n = 0.1
     # hyperparameters
     EPOCHS = 100000
-    mores = [100, 1000, 500, 10000]
+    mores = [1, 10, 50, 100, 1000, 500, 10000]
     for i in mores:
         train_VS = tf.keras.metrics.Mean(name='test_loss')
         tf.random.set_seed(seed)
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
         # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
         # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-        model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
+        model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
         # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
         vae_loss = VAE_loss_general(False)
         sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
