@@ -271,6 +271,7 @@ def sparse_greedy_hueristic(N_rf, sigma2, K, M, p):
         for n in range(0, G_copy.shape[0]):
             # print("==================================== type", n, "====================================")
             combinations = []
+            count = 0
             for index_1 in range(0, K * p):
                 for index_2 in range(0, K * p):
                     p_1 = int(index_1 % p)
@@ -282,6 +283,9 @@ def sparse_greedy_hueristic(N_rf, sigma2, K, M, p):
                         comb[user_1 * M + top_indice[n, user_1, p_1]] = 1
                         comb[user_2 * M + top_indice[n, user_2, p_2]] = 1
                         combinations.append(comb)
+                    count = count + 1
+                if count >= 1000:
+                    break
             min = 100
             best_pair = None
             for com in combinations:

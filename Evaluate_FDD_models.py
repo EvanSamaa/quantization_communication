@@ -1,8 +1,9 @@
 from util import *
 from models import *
 import numpy as np
+# from scipy.io import savemat
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 10
     config = tf.compat.v1.ConfigProto()
@@ -78,12 +79,30 @@ def test_DNN_different_K(file_name, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 
         result[1] = loss_fn2(prediction_hard)
         print("the top Nrf result is ", result)
         print("the variance for hard result is ", tf.math.reduce_std(out_hard))
+def different_greedy(m1, m2, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
+    num_data = 100
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    ds = generate_link_channel_data(num_data, K, M)
+    max_difference = 0
+    worstG = None
+    for i in range(num_data):
+        gain_1 = loss_fn1(m1(ds[i:i+1]), ds[i:i+1])
+        gain_2 = loss_fn1(m2(ds[i:i+1]), ds[i:i+1])
+        difference = tf.abs(tf.abs(gain_1) - tf.abs(gain_2))
+        if difference >= max_difference:
+            max_difference = difference
+            worstG = ds[i]
+        if difference > 11:
+            break
+    print(worstG)
+    np.save("G_with_most_difference.npy", np.array(worstG))
+    # savemat("G_with_most_difference.mat", {"G":np.array(worstG)})
 def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 100
+    num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -91,14 +110,18 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
     print("Testing Starts")
-    k = 5
     for e in range(0, 1):
         ds = generate_link_channel_data(num_data, K, M)
-        # ds, angle = generate_link_channel_data_with_angle(1000, K, M)
+        # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
+        # print(ds)
         ds_load = ds
+        # for k in range(K):
+        #     plt.polar(np.arange(0, 2*np.pi, 2*np.pi/M), tf.abs(ds_load[0, k, :]))
+        #     plt.polar(np.array(-np.pi*np.sin(angle[0, 0, k])), np.array(100), 'ro')
+        #     plt.show()
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        # prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
-        prediction = model(ds_load)
+        prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
+        # prediction = model(ds_load)
         # for k in range(0, 10):
         #     plt.plot(np.arange(0, K*M), prediction[k])
         #     plt.show()
@@ -148,7 +171,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept8th/K=50,M=64/Naive_model_varying_reconstruction_loss"
+    file = "trained_models/Sept8th/K=50,M=64/Naive_model_varying_reconstruction_loss/beta{}_1x512_per_linkx6_alt+weighted_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -159,7 +182,7 @@ if __name__ == "__main__":
     B = 32
     seed = 200
     check = 100
-    N_rf = 4
+    N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 0.1
     tf.random.set_seed(seed)
@@ -175,7 +198,7 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     # A[2]
-    mores = [1,2,3,4,5,6,7,8]
+    mores = [0.1,0.01,0.001,1,10,50]
     # for i in mores:
     #     training_data_path = file + ".npy"
     #     training_data = np.load(training_data_path.format(i))
@@ -183,16 +206,16 @@ if __name__ == "__main__":
     for i in mores:
         tf.random.set_seed(seed)
         np.random.seed(seed)
-        N_rf = i
         print("========================================== B =", i)
         # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        # model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
+        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
         #     print(model.get_layer("model").summary())
         #     print(model.summary())
         # model = NN_Clustering(N_rf, M, reduced_dim=8)
         # model = top_N_rf_user_model(M, K, N_rf)
-        model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 1, M, K, sigma2_n)
-        # print(model.summary())
+        # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 5, M, K, sigma2_n)
+        # model = partial_feedback_pure_greedy_model(N_rf, 32, 1, M, K, sigma2_n)
+        print(model.summary())
         test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
         # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
         # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
