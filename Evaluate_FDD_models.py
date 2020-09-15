@@ -172,7 +172,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept8th/K=50,M=64/VAE Reconstruction loss/beta{}_1x512_per_linkx6_alt+weighted_CE_loss"
+    file = "trained_models/Sept8th/K=50,M=64/VAE Reconstruction loss/beta{}s_1x512_per_linkx6_alt+weighted_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     B = 32
     seed = 200
     check = 100
-    N_rf = 8
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 0.1
     tf.random.set_seed(seed)
@@ -199,6 +199,17 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     # A[2]
+    generate_link_channel_data(N, K, M, 4, sigma2_h=0.1, sigma2_n=0.1)
+    data = np.load("G_with_most_difference.npy")
+    data = np.expand_dims(data, 0)
+    out1 = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)(data)
+    out2 = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(data)
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    print(loss_fn1(out1, data))
+    print(loss_fn1(out2, data))
+
+    print(data.shape)
+    A[2]
     mores = [1, 10, 50, 100, 1000, 500, 10000]
     # for i in mores:
     #     training_data_path = file + ".npy"
