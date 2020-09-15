@@ -142,7 +142,7 @@ if __name__ == "__main__":
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
                         max_acc = valid_sum_rate.result()
-                        model.save(fname_template.format(i, ".h5"))
+                        model.save(fname_template.format(more, N_rf, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                         improvement = graphing_data[epoch - (check * 2): epoch - check, 2].mean() - graphing_data[
                                                                                                     epoch - check: epoch,
