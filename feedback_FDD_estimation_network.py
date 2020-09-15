@@ -75,7 +75,7 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     mores = [1,2,3,4,5,6,7,8]
-    Bs = [64]
+    Bs = [16, 32, 64]
     for j in Bs:
         for i in mores:
             train_VS = tf.keras.metrics.Mean(name='test_loss')
