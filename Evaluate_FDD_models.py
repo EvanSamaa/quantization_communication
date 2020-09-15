@@ -111,7 +111,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
     print("Testing Starts")
     for e in range(0, 1):
-        ds = generate_link_channel_data(num_data, K, M)
+        ds = generate_link_channel_data(num_data, K, M, N_rf)
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
