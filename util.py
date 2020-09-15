@@ -21,6 +21,8 @@ def generate_link_channel_data(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 2  # Number of Paths
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
     P = P/tf.sqrt(tf.constant(M, dtype=tf.complex64))/tf.sqrt(tf.constant(Nrf, dtype=tf.complex64))*10.0
+    print(tf.transpose(P, conjugate=True) @ P)
+
     P = tf.expand_dims(P, 0)
     P = tf.tile(P, (N, 1, 1))
     LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
