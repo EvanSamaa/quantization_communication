@@ -172,7 +172,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept8th/K=50,M=64/VAE Reconstruction loss/beta{}s_1x512_per_linkx6_alt+weighted_CE_loss"
+    file = "trained_models/Sept14th/retrain_with_new_data_generation/B={}, Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -198,38 +198,29 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    # A[2]
-    generate_link_channel_data(N, K, M, 4, sigma2_h=0.1, sigma2_n=0.1)
-    data = np.load("G_with_most_difference.npy")
-    data = np.expand_dims(data, 0)
-    out1 = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)(data)
-    out2 = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(data)
-    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    print(loss_fn1(out1, data))
-    print(loss_fn1(out2, data))
-
-    print(data.shape)
-    A[2]
-    mores = [1, 10, 50, 100, 1000, 500, 10000]
+    mores = [1, 2, 3, 4, 5, 6, 7, 8]
+    Bs = [16, 32, 64]
     # for i in mores:
     #     training_data_path = file + ".npy"
     #     training_data = np.load(training_data_path.format(i))
     #     plot_data(training_data, [2], "-sum rate")
-    for i in mores:
-        tf.random.set_seed(seed)
-        np.random.seed(seed)
-        print("========================================== B =", i)
-        # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-        model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
-        #     print(model.get_layer("model").summary())
-        #     print(model.summary())
-        # model = NN_Clustering(N_rf, M, reduced_dim=8)
-        # model = top_N_rf_user_model(M, K, N_rf)
-        # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 5, M, K, sigma2_n)
-        # model = partial_feedback_pure_greedy_model(N_rf, 32, 1, M, K, sigma2_n)
-        print(model.summary())
-        test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-        # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-        # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
-        # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
-        # test_greedy(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+    for j in Bs:
+        for i in mores:
+            tf.random.set_seed(seed)
+            np.random.seed(seed)
+            print("========================================== B =", j, "Nrf = ", i)
+            N_rf = i
+            # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
+            model = tf.keras.models.load_model(model_path.format(j, i), custom_objects=custome_obj)
+            #     print(model.get_layer("model").summary())
+            #     print(model.summary())
+            # model = NN_Clustering(N_rf, M, reduced_dim=8)
+            # model = top_N_rf_user_model(M, K, N_rf)
+            # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 5, M, K, sigma2_n)
+            # model = partial_feedback_pure_greedy_model(N_rf, 32, 1, M, K, sigma2_n)
+            print(model.summary())
+            test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
+            # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
+            # test_greedy(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
