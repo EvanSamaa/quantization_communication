@@ -149,7 +149,7 @@ if __name__ == "__main__":
                                                                                                     2].mean()
                         print("the accuracy improvement in the past 500 epochs is ", improvement)
 
-                        if improvement <= 0.001:
+                        if improvement <= 0.0001:
                             break
             np.save(fname_template.format(more, N_rf,".npy"), graphing_data)
             tf.keras.backend.clear_session()
