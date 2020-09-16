@@ -110,10 +110,6 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
-        for k in range(K):
-            plt.polar(np.arange(0, 2*np.pi, 2*np.pi/M), tf.abs(ds_load[0, k, :]))
-            # plt.polar(np.array(-np.pi*np.sin(angle[0, 0, k])), np.array(100), 'ro')
-            plt.show()
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
         # prediction = model.predict(ds_load, batch_size=10)
