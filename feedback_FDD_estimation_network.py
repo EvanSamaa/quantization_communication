@@ -18,15 +18,15 @@ def train_step(features, labels, N=None, epoch=0):
         # reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = model(features)
         # scheduled_output, per_user_softmaxes, overall_softmax = model(features)
         # scheduled_output, z_qq, z_e, reconstructed_input, per_user_softmaxes, overall_softmax = model(features)
-        # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
+        scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
-        scheduled_output, raw_output, reconstructed_input = model(features)
+        # scheduled_output, raw_output, reconstructed_input = model(features)
         # scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = 0
         loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
+        loss_2 = 10.0*vae_loss.call(z_qq, z_e)
         loss_4 = 0
         factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:1.0, 6:0.5, 7:0.5, 8:0.25}
         for i in range(0, scheduled_output.shape[1]):
