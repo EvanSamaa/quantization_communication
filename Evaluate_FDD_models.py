@@ -112,7 +112,6 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
-        # prediction = model.predict(ds_load, batch_size=10)
         # prediction = model(ds_load)
         # for k in range(0, 10):
         #     plt.plot(np.arange(0, K*M), prediction[k])
