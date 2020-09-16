@@ -210,7 +210,6 @@ if __name__ == "__main__":
             # model = top_N_rf_user_model(M, K, N_rf)
             model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
             # model = partial_feedback_pure_greedy_model(N_rf, 32, 1, M, K, sigma2_n)
-            print(model.summary())
             test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
