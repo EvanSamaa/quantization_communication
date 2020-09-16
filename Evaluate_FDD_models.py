@@ -36,9 +36,9 @@ def test_greedy_different_resolution(M = 20, K = 5, B = 10, N_rf = 5, sigma2_h =
         model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, i, M, K, sigma2_n)
         output = model(ds)
         out = loss_fn1(output, tf.abs(ds))
-        result[i-1] = out
+        result[i-1] = tf.reduce_mean(out)
         print("the result for {} is ".format(i), out)
-        np.save("trained_models/Sept14th/greedy_resolution_change.npy")
+        np.save("trained_models/Sept14th/greedy_resolution_change.npy", result)
 def test_DNN_different_K(file_name, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 10
     config = tf.compat.v1.ConfigProto()

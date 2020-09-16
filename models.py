@@ -440,6 +440,7 @@ def partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, B, p, M, 
         G_copy = tf.constant(G_copy, dtype=tf.float32)
         if p > 10:
             top_values, top_indices = tf.math.top_k(G, k=10)
+            return sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, 10)(top_values, top_indices, G_copy)
         return sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p)(top_values, top_indices, G_copy)
     return model
 def partial_feedback_top_N_rf_model(N_rf, B, p, M, K, sigma2):
