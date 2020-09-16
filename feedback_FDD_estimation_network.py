@@ -56,7 +56,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept14th/VAE_varying_dict_dim/Perfect_CSI Nrf=8, 1x512_per_linkx6_alt+weighted_CE_loss{}"
+    fname_template = "trained_models/Sept14th/retrain_perfect_CSI/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -74,15 +74,14 @@ if __name__ == "__main__":
     sigma2_n = 1
     # hyperparameters
     EPOCHS = 100000
-    mores = [1]
+    mores = [8,7,6,5,4,3,2,1]
     Es = [1]
     for j in Es:
         for i in mores:
             train_VS = tf.keras.metrics.Mean(name='test_loss')
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            E = j
-            more = i
+            N_rf = i
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
             # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
@@ -134,7 +133,7 @@ if __name__ == "__main__":
                 graphing_data[epoch, 3] = train_hard_loss.result()
                 if train_hard_loss.result() < max_acc_loss:
                     max_acc_loss = train_hard_loss.result()
-                    model.save(fname_template.format("_max_train.h5"))
+                    model.save(fname_template.format(N_rf, "_max_train.h5"))
                 if epoch % check == 0:
                     prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
                     out = sum_rate(Harden_scheduling(k=N_rf)(prediction), tf.abs(valid_data))
@@ -142,7 +141,7 @@ if __name__ == "__main__":
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
                         max_acc = valid_sum_rate.result()
-                        model.save(fname_template.format(".h5"))
+                        model.save(fname_template.format(N_rf, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                         improvement = graphing_data[epoch - (check * 2): epoch - check, 2].mean() - graphing_data[
                                                                                                     epoch - check: epoch,
@@ -151,7 +150,7 @@ if __name__ == "__main__":
 
                         if improvement <= 0.0001:
                             break
-            np.save(fname_template.format(".npy"), graphing_data)
+            np.save(fname_template.format(N_rf, ".npy"), graphing_data)
             tf.keras.backend.clear_session()
             print("Training end")
 
