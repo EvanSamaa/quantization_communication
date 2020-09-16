@@ -199,15 +199,15 @@ if __name__ == "__main__":
     #     training_data_path = file + ".npy"
     #     training_data = np.load(training_data_path.format(i))
     #     plot_data(training_data, [2], "-sum rate")
-    test_greedy_different_resolution(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    # test_greedy_different_resolution(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     for j in Bs:
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
             print("========================================== B =", j, "Nrf = ", i)
             N_rf = i
+            model = tf.keras.models.load_model(model_path.format(j, i), custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
-            test_greedy_different_resolution(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
             # model = NN_Clustering(N_rf, M, reduced_dim=8)
