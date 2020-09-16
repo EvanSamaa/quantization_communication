@@ -2183,8 +2183,11 @@ class NN_Clustering():
 def All_info_scheduler(M, K, k=2, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))  # (None, K, M)
-    input_mod = tf.tile(tf.expand_dims(input_mod, 1), (1,K,1,1))
-    input_mod = tf.keras.layers.Reshape(K, M*K)(input_mod)
+    input_mod = tf.tile(tf.expand_dims(input_mod, 1), (1,K*M,1,1))
+    input_mod = tf.keras.layers.Reshape(K*M, K*M)(input_mod)
+    input_mod = tf.concat((input_mod, tf.eye(K*M)), axis=2)
+    
+
 
 #============================== FDD models with feedback ==============================
 def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
