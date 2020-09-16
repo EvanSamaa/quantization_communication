@@ -430,7 +430,17 @@ def partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, B, p, M, 
     def model(G):
         G = (tf.abs(G))
         top_values, top_indices = tf.math.top_k(G, k=p)
-        return sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p)(top_values, top_indices, None)
+        G_copy = np.zeros((top_indices.shape[0], K, M))
+        for n in range(0, top_indices.shape[0]):
+            for i in range(0, K * p):
+                # print(K*p)
+                p_i = int(i % p)
+                user_i = int(tf.floor(i / p))
+                G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
+        G_copy = tf.constant(G_copy, dtype=tf.float32)
+        if p > 10:
+            top_values, top_indices = tf.math.top_k(G, k=10)
+        return sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p)(top_values, top_indices, G_copy)
     return model
 def partial_feedback_top_N_rf_model(N_rf, B, p, M, K, sigma2):
     # uniformly quantize the values then pick the top Nrf to output
