@@ -2186,7 +2186,7 @@ def All_info_scheduler(M, K, k=2, N_rf=3):
     input_mod = tf.tile(tf.expand_dims(input_mod, 1), (1,K*M,1,1))
     input_mod = tf.keras.layers.Reshape(K*M, K*M)(input_mod)
     input_mod = tf.concat((input_mod, tf.eye(K*M)), axis=2)
-    
+
 
 
 #============================== FDD models with feedback ==============================
