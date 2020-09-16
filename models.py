@@ -2180,6 +2180,9 @@ class NN_Clustering():
                 if np.sum(clusters[i]) != 0:
                     output[n, max] = 1
         return output
+def All_info_scheduler(M, K, k=2, N_rf=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))  # (None, K, M)
 
 #============================== FDD models with feedback ==============================
 def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
