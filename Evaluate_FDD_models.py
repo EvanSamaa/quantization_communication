@@ -111,9 +111,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # print(ds)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        # prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
-        # prediction = model.predict(ds_load, batch_size=10)
-        prediction = model(ds_load)
+        prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
+        # prediction = model(ds_load)
         # for k in range(0, 10):
         #     plt.plot(np.arange(0, K*M), prediction[k])
         #     plt.show()
@@ -163,7 +162,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept14th/VAE_retrain/B={}, Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss"
+    file = "trained_models/Sept14th/retrain_perfect_CSI/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -189,26 +188,26 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [1, 2, 3, 4, 5, 6, 7, 8]
-    Bs = [16]
+    mores = [1,2,3,4,5,6,7,8]
+    Es = [0]
     # for i in mores:
     #     training_data_path = file + ".npy"
     #     training_data = np.load(training_data_path.format(i))
     #     plot_data(training_data, [2], "-sum rate")
     # test_greedy_different_resolution(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    for j in Bs:
+    for j in Es:
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            print("========================================== B =", j, "Nrf = ", i)
+            print("========================================== E =", j, "more = ", i)
             N_rf = i
-            # model = tf.keras.models.load_model(model_path.format(j, i), custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
             # model = NN_Clustering(N_rf, M, reduced_dim=8)
             # model = top_N_rf_user_model(M, K, N_rf)
-            model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
+            # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
             # model = partial_feedback_pure_greedy_model(N_rf, 32, 1, M, K, sigma2_n)
             test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
