@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
-    num_data = 10
+    num_data = 1000
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -14,15 +14,17 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
     print("Testing Starts")
-    ds = generate_link_channel_data(num_data, K, M)
-    ds_load = ds
+    ds_load = generate_link_channel_data(num_data, K, M, 1)
     prediction = model(ds_load)
+    counter = 1
     for i in prediction:
-        out = loss_fn1(i, tf.abs(ds_load))
+        i_complex = tf.complex(tf.sqrt(counter*1.0), 0.0)
+        out = loss_fn1(i, tf.abs(ds_load/i_complex))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(i)
         print("the soft result is ", result)
         print("the variance is ", tf.math.reduce_std(out))
+        counter = counter + 1
 def test_greedy_different_resolution(M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 1000
     config = tf.compat.v1.ConfigProto()
@@ -166,7 +168,6 @@ if __name__ == "__main__":
     data = np.load("trained_models/Sept14th/greedy_resolution_change.npy")
     plt.plot(data)
     plt.show()
-    A[2]
     file = "trained_models/Sept14th/retrain_perfect_CSI/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -178,7 +179,7 @@ if __name__ == "__main__":
     B = 32
     seed = 200
     check = 100
-    N_rf = 4
+    N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1
     tf.random.set_seed(seed)
@@ -200,6 +201,9 @@ if __name__ == "__main__":
     #     training_data = np.load(training_data_path.format(i))
     #     plot_data(training_data, [2], "-sum rate")
     # test_greedy_different_resolution(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, sigma2_n, perfect_CSI=True)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    A[2]
     for j in Es:
         for i in mores:
             tf.random.set_seed(seed)

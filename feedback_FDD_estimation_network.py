@@ -4,7 +4,7 @@ from models import *
 import numpy as np
 import scipy as sp
 from keras_adabound.optimizers import AdaBound
-
+from matplotlib import pyplot as plt
 custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -33,16 +33,22 @@ def train_step(features, labels, N=None, epoch=0):
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
 
-            # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-            # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:1.0, 6:0.5, 7:0.5, 8:0.25}
 
-            # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
-            mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, i]))
-            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
+        # for i in range(0, scheduled_output.shape[1]):
+        #     sr = sum_rate(scheduled_output[:, i], features)
+        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+        #
+        #     # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+        #     # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        #
+        #     # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+        #     mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, i]))
+        #     ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+        #     loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1+loss_4
+        loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
@@ -50,7 +56,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
     # train_binarization_loss(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
+    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output), features))
     del tape
 if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
@@ -62,7 +68,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 2
+    N = 100
     M = 64
     K = 50
     B = 1
@@ -135,7 +141,7 @@ if __name__ == "__main__":
                     max_acc_loss = train_hard_loss.result()
                     model.save(fname_template.format(N_rf, "_max_train.h5"))
                 if epoch % check == 0:
-                    prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
+                    prediction = model.predict(valid_data, batch_size=5)
                     out = sum_rate(Harden_scheduling(k=N_rf)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()

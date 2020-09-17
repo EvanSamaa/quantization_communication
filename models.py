@@ -1,5 +1,5 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, ThresholdedReLU, Flatten
@@ -412,40 +412,33 @@ def DP_sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p, G, prev_Nrf=0, prev_o
         for n in range(0, G_copy.shape[0]):
             # print("==================================== type", n, "====================================")
             selected = set()
-            if prev_Nrf < 2:
-                combinations = []
+            combinations = []
+            if prev_Nrf == 0:
                 for index_1 in range(0, K * p):
-                    for index_2 in range(0, K * p):
-                        p_1 = int(index_1 % p)
-                        user_1 = int(tf.floor(index_1 / p))
-                        p_2 = int(index_2 % p)
-                        user_2 = int(tf.floor(index_2 / p))
-                        if index_1 != index_2 and user_1 != user_2:
-                            comb = np.zeros((K * M,))
-                            comb[user_1 * M + top_indice[n, user_1, p_1]] = 1
-                            comb[user_2 * M + top_indice[n, user_2, p_2]] = 1
-                            combinations.append(comb)
+                    p_1 = int(index_1 % p)
+                    user_1 = int(tf.floor(index_1 / p))
+                    comb = np.zeros((K * M,))
+                    comb[user_1 * M + top_indice[n, user_1, p_1]] = 1
+                    combinations.append(comb)
                 min = 100
-                best_pair = None
+                best_one = None
                 for com in combinations:
-                    current_min = loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G_copy[n:n + 1])
+                    current_min = loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G[n:n + 1])
                     if current_min < min:
                         min = current_min
-                        best_pair = com
-                output[n] = best_pair
-                pair_index = np.nonzero(best_pair)
-                selected.add(int(tf.floor(pair_index[0][0] / G_copy.shape[2])))
-                selected.add(int(tf.floor(pair_index[0][1] / G_copy.shape[2])))
+                        best_one = com
+                # print(min)
+                output[n] = best_one
+                selected = set()
+                pair_index = np.nonzero(best_one)
+                selected.add(int(tf.floor(pair_index[0][0] / G.shape[2])))
             if prev_Nrf >= 1:
                 output[n] = prev_out[n]
                 pair_index = np.nonzero(prev_out[n])
                 selected.add(int(tf.floor(pair_index[0][0] / G_copy.shape[2])))
-                print(selected)
-                A[2]
-            if N_rf > 2:
-                for n_rf in range(3, N_rf+1):
+            if N_rf >= 2:
+                for n_rf in range(2, N_rf+1):
                     if n_rf > prev_Nrf:
-                        print(prev_Nrf)
                         new_comb = []
                         for additional_i in range(0, K * p):
                             p_i = int(additional_i % p)
@@ -463,6 +456,7 @@ def DP_sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p, G, prev_Nrf=0, prev_o
                             if current_min < min:
                                 min = current_min
                                 best_comb = com
+                        # print(min)
                         output[n] = best_comb
                         pair_index = np.nonzero(best_comb)[0]
                         for each_nrf in range(0, pair_index.shape[0]):
@@ -572,7 +566,9 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
         # top_values_quantized = top_values
         out = []
         prev_out = None
+        G_original = G
         for i in range(1, N_rf+1):
+            G = G_original/tf.sqrt(i * 1.0)
             prev_out = DP_sparse_pure_greedy_hueristic(i, sigma2, K, M, p, G, i-1, prev_out)(top_values, top_indices)
             # print(prev_out)
             out.append(prev_out)
@@ -675,7 +671,7 @@ class Interference_Input_modification(tf.keras.layers.Layer):
     def call(self, x, input_mod, step):
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
-        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        power = tf.tile(tf.expand_dims(tf.reduce_sum( input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
         interference_f = tf.multiply(power, x)
         unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
         interference_t = tf.matmul(input_mod, unflattened_output_0)
@@ -768,6 +764,69 @@ class Interference_Input_modification_per_user(tf.keras.layers.Layer):
             'N_rf': self.N_rf,
             'k': self.k,
             'name': "Interference_Input_modification_per_user"
+        })
+        return config
+class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Per_link_Input_modification_more_G, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x, input_mod, step):
+        tall_ones = np.zeros((K * M, K))
+        count = 0
+        while count < M*K:
+             
+
+                tall_ones[count, M] = 1
+
+                count = count + 1
+        tall_ones = tf.constant(tall_ones)
+
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
+        print(input_mod.shape)
+        all_input = tf.expand_dims(input_mod, axis=1)
+        x = input_reshaper(x)
+        x = tf.tile(x, (1, 1, self.K * self.M))
+        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
+        input_i = input_concatnator(
+            [input_reshaper(input_mod), interference_t, interference_f, x, iteration_num])
+        return input_i
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'name': "Per_link_Input_modification_more_G"
+        })
+        return config
+
+class AllInput_input_mod(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, **kwargs):
+        super(AllInput_input_mod, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+    def call(self, x_tm1, G_mod):
+        x_tm1 = tf.tile(tf.expand_dims(x_tm1, 1), (1, self.N_rf, 1))
+        G_mod = tf.tile(tf.expand_dims(G_mod, 1), (1, self.N_rf, 1))
+        x_tm1 = tf.concat((x_tm1, G_mod), axis=2)
+        onesies = tf.stop_gradient(0*G_mod[:, :, :self.N_rf] + tf.eye(self.N_rf))
+        x_tm1 = tf.concat((x_tm1, onesies), axis=2)
+        return x_tm1
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'name': "AllInput_input_mod"
         })
         return config
 ############################## MLP modes ##############################
@@ -1876,6 +1935,32 @@ def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     model = Model(inputs, output)
     return model
+def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    input_modder = Per_link_Input_modification_more_G(K, M, N_rf, k)
+    dnns = dnn_per_link((M * K, 2 + M * K + M + K), N_rf)
+    # compute interference from k,i
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
+    input_i = input_modder(output_0, input_mod, k - 1.0)
+    raw_out_put_i = dnns(input_i)
+    raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
+    # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    # begin the second - kth iteration
+    for times in range(1, k):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        raw_out_put_i = dnns(input_i)
+        raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+    model = Model(inputs, output)
+    return model
 def FDD_per_link_archetecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -2285,8 +2370,38 @@ def All_info_scheduler(M, K, k=2, N_rf=3):
     input_mod = tf.keras.layers.Reshape(K*M, K*M)(input_mod)
     input_mod = tf.concat((input_mod, tf.eye(K*M)), axis=2)
 
+def DNN_All_info_scheduler(M, K, Nrf):
+    inputs = Input(shape=(Nrf, 2*M*K + Nrf))
+    x = Dense(512)(inputs)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(512)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(512)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(M*K)(x)
+    x = tf.keras.layers.Softmax(axis=2)(x)
+    return Model(inputs, x)
+def All_info_scheduler(M, K, N_rf=3):
+    input_modder = AllInput_input_mod(K, M, N_rf)
+    dnn = DNN_All_info_scheduler(M, K, N_rf)
 
-
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))  # (None, K, M)
+    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    input_mod = tf.keras.layers.Reshape((K*M, ))(input_mod)
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M, )), input_mod[:, :]))
+    input_0 = input_modder(output_0, input_mod)
+    raw_output_1 = dnn(input_0)
+    for i in range(1, N_rf):
+        output_i = tf.reduce_sum(raw_output_1[:, :i, :], axis=1)
+        input_i = input_modder(output_i, input_mod)
+        raw_output_1 = dnn(input_i)
+    output_i = tf.reduce_sum(raw_output_1[:, :, :], axis=1)
+    model = Model(inputs, output_i)
+    return model
 #============================== FDD models with feedback ==============================
 def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
@@ -2495,16 +2610,16 @@ if __name__ == "__main__":
     # print(Thresholdin_network((2, )).summary())
     # DiscreteVAE(2, 4, (2,))
 
-    N = 1000
-    M = 40
-    K = 10
+    N = 1
+    M = 64
+    K = 50
     B = 3
     seed = 200
     N_rf = 4
-    G = generate_link_channel_data(N, K, M)
+    G = generate_link_channel_data(N, K, M, N_rf)
     # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
     # model = CSI_reconstruction_VQVAE2(M, K, B, 30, N_rf, 1, more=1)
-    model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, sigma2, perfect_CSI=True)
+    model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, 1, perfect_CSI=True)
     model(G)
     # model = Autoencoder_CNN_Encoding_module(input_shape=(K, M), i=0, code_size=15, normalization=False)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
