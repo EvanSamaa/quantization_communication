@@ -1,5 +1,5 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, ThresholdedReLU, Flatten
@@ -577,7 +577,7 @@ class Interference_Input_modification(tf.keras.layers.Layer):
     def call(self, x, input_mod, step):
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
-        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        power = tf.tile(tf.expand_dims(tf.reduce_sum( input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
         interference_f = tf.multiply(power, x)
         unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
         interference_t = tf.matmul(input_mod, unflattened_output_0)
@@ -670,6 +670,69 @@ class Interference_Input_modification_per_user(tf.keras.layers.Layer):
             'N_rf': self.N_rf,
             'k': self.k,
             'name': "Interference_Input_modification_per_user"
+        })
+        return config
+class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Per_link_Input_modification_more_G, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x, input_mod, step):
+        tall_ones = np.zeros((K * M, K))
+        count = 0
+        while count < M*K:
+             
+
+                tall_ones[count, M] = 1
+
+                count = count + 1
+        tall_ones = tf.constant(tall_ones)
+
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
+        print(input_mod.shape)
+        all_input = tf.expand_dims(input_mod, axis=1)
+        x = input_reshaper(x)
+        x = tf.tile(x, (1, 1, self.K * self.M))
+        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
+        input_i = input_concatnator(
+            [input_reshaper(input_mod), interference_t, interference_f, x, iteration_num])
+        return input_i
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'name': "Per_link_Input_modification_more_G"
+        })
+        return config
+
+class AllInput_input_mod(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, **kwargs):
+        super(AllInput_input_mod, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+    def call(self, x_tm1, G_mod):
+        x_tm1 = tf.tile(tf.expand_dims(x_tm1, 1), (1, self.N_rf, 1))
+        G_mod = tf.tile(tf.expand_dims(G_mod, 1), (1, self.N_rf, 1))
+        x_tm1 = tf.concat((x_tm1, G_mod), axis=2)
+        onesies = tf.stop_gradient(0*G_mod[:, :, :self.N_rf] + tf.eye(self.N_rf))
+        x_tm1 = tf.concat((x_tm1, onesies), axis=2)
+        return x_tm1
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'name': "AllInput_input_mod"
         })
         return config
 ############################## MLP modes ##############################
@@ -1778,6 +1841,32 @@ def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     model = Model(inputs, output)
     return model
+def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    input_modder = Per_link_Input_modification_more_G(K, M, N_rf, k)
+    dnns = dnn_per_link((M * K, 2 + M * K + M + K), N_rf)
+    # compute interference from k,i
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
+    input_i = input_modder(output_0, input_mod, k - 1.0)
+    raw_out_put_i = dnns(input_i)
+    raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
+    # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    # begin the second - kth iteration
+    for times in range(1, k):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        raw_out_put_i = dnns(input_i)
+        raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+    model = Model(inputs, output)
+    return model
 def FDD_per_link_archetecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -2180,15 +2269,39 @@ class NN_Clustering():
                 if np.sum(clusters[i]) != 0:
                     output[n, max] = 1
         return output
-def All_info_scheduler(M, K, k=2, N_rf=3):
+
+def DNN_All_info_scheduler(M, K, Nrf):
+    inputs = Input(shape=(Nrf, 2*M*K + Nrf))
+    x = Dense(512)(inputs)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(512)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(512)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(M*K)(x)
+    x = tf.keras.layers.Softmax(axis=2)(x)
+    return Model(inputs, x)
+def All_info_scheduler(M, K, N_rf=3):
+    input_modder = AllInput_input_mod(K, M, N_rf)
+    dnn = DNN_All_info_scheduler(M, K, N_rf)
+
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))  # (None, K, M)
-    input_mod = tf.tile(tf.expand_dims(input_mod, 1), (1,K*M,1,1))
-    input_mod = tf.keras.layers.Reshape(K*M, K*M)(input_mod)
-    input_mod = tf.concat((input_mod, tf.eye(K*M)), axis=2)
-    
-
-
+    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    input_mod = tf.keras.layers.Reshape((K*M, ))(input_mod)
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K*M, )), input_mod[:, :]))
+    input_0 = input_modder(output_0, input_mod)
+    raw_output_1 = dnn(input_0)
+    for i in range(1, N_rf):
+        output_i = tf.reduce_sum(raw_output_1[:, :i, :], axis=1)
+        input_i = input_modder(output_i, input_mod)
+        raw_output_1 = dnn(input_i)
+    output_i = tf.reduce_sum(raw_output_1[:, :, :], axis=1)
+    model = Model(inputs, output_i)
+    return model
 #============================== FDD models with feedback ==============================
 def Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
@@ -2403,10 +2516,11 @@ if __name__ == "__main__":
     B = 3
     seed = 200
     N_rf = 4
-    G = generate_link_channel_data(N, K, M)
+    G = generate_link_channel_data(N, K, M, N_rf)
     # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
     # model = CSI_reconstruction_VQVAE2(M, K, B, 30, N_rf, 1, more=1)
-    model = Autoencoder_CNN_Encoding_module(input_shape=(K, M), i=0, code_size=15, normalization=False)
+    # model = Autoencoder_CNN_Encoding_module(input_shape=(K, M), i=0, code_size=15, normalization=False)
+    model = FDD_per_link_archetecture_more_G(M, K, N_rf=4, k=6)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)
