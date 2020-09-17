@@ -162,7 +162,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept14th/retrain_perfect_CSI/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_losss"
+    file = "trained_models/Sept14th/retrain_perfect_CSI/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
