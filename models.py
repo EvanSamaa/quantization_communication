@@ -404,6 +404,78 @@ def DP_sparse_greedy_hueristic(N_rf, sigma2, K, M, p, prev_Nrf=0, prev_out=None)
         return output
 
     return model
+def DP_sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p, G, prev_Nrf=0, prev_out=None):
+    def model(top_val, top_indice):
+        loss = Sum_rate_utility_WeiCui(K, M, sigma2)
+        output = np.zeros((top_indice.shape[0], K * M))
+        G_copy = G
+        for n in range(0, G_copy.shape[0]):
+            # print("==================================== type", n, "====================================")
+            selected = set()
+            if prev_Nrf < 2:
+                combinations = []
+                for index_1 in range(0, K * p):
+                    for index_2 in range(0, K * p):
+                        p_1 = int(index_1 % p)
+                        user_1 = int(tf.floor(index_1 / p))
+                        p_2 = int(index_2 % p)
+                        user_2 = int(tf.floor(index_2 / p))
+                        if index_1 != index_2 and user_1 != user_2:
+                            comb = np.zeros((K * M,))
+                            comb[user_1 * M + top_indice[n, user_1, p_1]] = 1
+                            comb[user_2 * M + top_indice[n, user_2, p_2]] = 1
+                            combinations.append(comb)
+                min = 100
+                best_pair = None
+                for com in combinations:
+                    current_min = loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G_copy[n:n + 1])
+                    if current_min < min:
+                        min = current_min
+                        best_pair = com
+                output[n] = best_pair
+                pair_index = np.nonzero(best_pair)
+                selected.add(int(tf.floor(pair_index[0][0] / G_copy.shape[2])))
+                selected.add(int(tf.floor(pair_index[0][1] / G_copy.shape[2])))
+            if prev_Nrf >= 1:
+                output[n] = prev_out[n]
+                pair_index = np.nonzero(prev_out[n])
+                selected.add(int(tf.floor(pair_index[0][0] / G_copy.shape[2])))
+                print(selected)
+                A[2]
+            if N_rf > 2:
+                for n_rf in range(3, N_rf+1):
+                    if n_rf > prev_Nrf:
+                        print(prev_Nrf)
+                        new_comb = []
+                        for additional_i in range(0, K * p):
+                            p_i = int(additional_i % p)
+                            user_i = int(tf.floor(additional_i / p))
+                            beamformer_i = int(top_indice[n, user_i, p_i])
+                            if output[n, user_i * M + beamformer_i] != 1:
+                                if not int(tf.floor((user_i * M + beamformer_i) / M)) in selected:
+                                    temp = output[n].copy()
+                                    temp[user_i * M + beamformer_i] = 1
+                                    new_comb.append(temp)
+                        min = 100
+                        best_comb = None
+                        for com in new_comb:
+                            current_min = loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G_copy[n:n + 1])
+                            if current_min < min:
+                                min = current_min
+                                best_comb = com
+                        output[n] = best_comb
+                        pair_index = np.nonzero(best_comb)[0]
+                        for each_nrf in range(0, pair_index.shape[0]):
+                            selected.add(int(tf.floor(pair_index[each_nrf] / G_copy.shape[2])))
+                    else:
+                        output[n] = prev_out[n]
+                        pair_index = np.nonzero(prev_out[n])[0]
+                        for each_nrf in range(0, pair_index.shape[0]):
+                            selected.add(int(tf.floor(pair_index[each_nrf] / G_copy.shape[2])))
+        output = tf.constant(output, dtype=tf.float32)
+        return output
+
+    return model
 def partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K, sigma2):
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
@@ -476,6 +548,32 @@ def DP_partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K, sigma2):
         prev_out = None
         for i in range(2, N_rf+1):
             prev_out = DP_sparse_greedy_hueristic(i, sigma2, K, M, p, i-1, prev_out)(top_values_quantized, top_indices)
+            # print(prev_out)
+            out.append(prev_out)
+        return out
+    return model
+def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=False):
+    # uniformly quantize the values then pick the top Nrf to output
+    def model(G):
+        G = (tf.abs(G))
+        top_values, top_indices = tf.math.top_k(G, k=p)
+        if perfect_CSI == False:
+            G_copy = np.zeros((top_indices.shape[0], K, M))
+            for n in range(0, top_indices.shape[0]):
+                for i in range(0, K * p):
+                    # print(K*p)
+                    p_i = int(i % p)
+                    user_i = int(tf.floor(i / p))
+                    G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
+            G_copy = tf.constant(G_copy, dtype=tf.float32)
+            G = G_copy
+        if p > 10:
+            top_values, top_indices = tf.math.top_k(G, k=10)
+        # top_values_quantized = top_values
+        out = []
+        prev_out = None
+        for i in range(1, N_rf+1):
+            prev_out = DP_sparse_pure_greedy_hueristic(i, sigma2, K, M, p, G, i-1, prev_out)(top_values, top_indices)
             # print(prev_out)
             out.append(prev_out)
         return out
@@ -2406,7 +2504,9 @@ if __name__ == "__main__":
     G = generate_link_channel_data(N, K, M)
     # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
     # model = CSI_reconstruction_VQVAE2(M, K, B, 30, N_rf, 1, more=1)
-    model = Autoencoder_CNN_Encoding_module(input_shape=(K, M), i=0, code_size=15, normalization=False)
+    model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, sigma2, perfect_CSI=True)
+    model(G)
+    # model = Autoencoder_CNN_Encoding_module(input_shape=(K, M), i=0, code_size=15, normalization=False)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)
