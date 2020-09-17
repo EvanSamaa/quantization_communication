@@ -162,7 +162,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept14th/VAE_varying_dict_dim/E={}, More={}, Nrf=8, 1x512_per_linkx6_alt+weighted_CE_loss"
+    file = "trained_models/Sept14th/retrain_perfect_CSI/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_losss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -188,8 +188,8 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [16,32,64]
-    Es = [4, 10]
+    mores = [1,2,3,4,5,6,7,8]
+    Es = [0]
     # for i in mores:
     #     training_data_path = file + ".npy"
     #     training_data = np.load(training_data_path.format(i))
@@ -200,8 +200,8 @@ if __name__ == "__main__":
             tf.random.set_seed(seed)
             np.random.seed(seed)
             print("========================================== E =", j, "more = ", i)
-            N_rf = 8
-            model = tf.keras.models.load_model(model_path.format(i, j), custom_objects=custome_obj)
+            N_rf = i
+            model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
