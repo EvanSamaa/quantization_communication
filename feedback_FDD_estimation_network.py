@@ -39,7 +39,7 @@ def train_step(features, labels, N=None, epoch=0):
             # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
             mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
         loss = loss_1 + loss_4
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept14th/perfect_CSI_fixed_concat_X/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss{}"
+    fname_template = "trained_models/Sept14th/perfect_CSI_fixed_concat_X_different_weights/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -94,7 +94,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
-            # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
+            # model = Feedbakk_FDD_mcodel_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
