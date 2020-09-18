@@ -74,7 +74,7 @@ if __name__ == "__main__":
     sigma2_n = 1
     # hyperparameters
     EPOCHS = 100000
-    EPOCHS = 1
+    # EPOCHS = 1
     mores = [8,7,6,5,4,3,2,1]
     Es = [1]
     for j in Es:
