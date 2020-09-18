@@ -33,20 +33,14 @@ def train_step(features, labels, N=None, epoch=0):
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
 
-        factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:1.0, 6:0.5, 7:0.5, 8:0.25}
+            # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+            # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
-        # for i in range(0, scheduled_output.shape[1]):
-        #     sr = sum_rate(scheduled_output[:, i], features)
-        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-        #
-        #     # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-        #     # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-        #
-        #     # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
-        #     mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, i]))
-        #     ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-        #     loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-        #     # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
+            # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+            mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, i]))
+            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+            loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -56,7 +50,7 @@ def train_step(features, labels, N=None, epoch=0):
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
     # train_binarization_loss(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output), features))
+    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
@@ -68,7 +62,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 100
+    N = 3
     M = 64
     K = 50
     B = 1
@@ -80,6 +74,7 @@ if __name__ == "__main__":
     sigma2_n = 1
     # hyperparameters
     EPOCHS = 100000
+    EPOCHS = 1
     mores = [8,7,6,5,4,3,2,1]
     Es = [1]
     for j in Es:

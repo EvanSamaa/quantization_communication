@@ -777,19 +777,17 @@ class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
         self.Mm = None
         # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
     def call(self, x, input_mod, step):
-        tall_ones = np.zeros((K * M, K))
-        count = 0
         if self.Mk is None:
-            self.Mk = np.zeros((self.K*self.M, self.K))
-            self.Mm = np.zeros((self.K*self.M, self.M))
+            self.Mk = np.zeros((self.K*self.M, self.K), dtype=np.float32)
+            self.Mm = np.zeros((self.K*self.M, self.M), dtype=np.float32)
             for i in range(0, self.K):
                 for j in range(0, self.M):
                     self.Mk[i*self.M+j, i] = 1.0
             for i in range(0, self.M):
                 for j in range(0, self.K):
                     self.Mm[i*self.K+j, i] = 1.0
-            self.Mk = tf.constant(self.Mk, dtype=tf.float32)
-            self.Mm = tf.constant(self.Mm, dtype=tf.float32)
+            # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
+            # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         interference_t = tf.matmul(self.Mk, input_mod)
@@ -800,7 +798,6 @@ class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
             [input_reshaper(input_mod), interference_t, interference_f, x, iteration_num])
-        print(input_i.shape)
         return input_i
 
     def get_config(self):
