@@ -137,7 +137,7 @@ if __name__ == "__main__":
                     max_acc_loss = train_hard_loss.result()
                     model.save(fname_template.format(N_rf, "_max_train.h5"))
                 if epoch % check == 0:
-                    prediction = model.predict(valid_data, batch_size=5)
+                    prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
                     out = sum_rate(Harden_scheduling(k=N_rf)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
