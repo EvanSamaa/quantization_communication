@@ -792,10 +792,8 @@ class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         interference_t = tf.matmul(self.Mk, input_mod)
         interference_f = tf.matmul(self.Mm, tf.transpose(input_mod, (0, 2, 1)))
-        all_input = tf.expand_dims(input_mod, axis=1)
-        x = input_reshaper(x)
-        x = tf.tile(x, (1, 1, self.K * self.M))
-        x = tf.reduce_sum(x, axis=2)
+        x = tf.expand_dims(x, axis=1)
+        x = tf.tile(x, (1, self.K * self.M, 1))
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
             [input_reshaper(input_mod), interference_t, interference_f, x, iteration_num])
@@ -1947,7 +1945,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     input_mod = tf.square(tf.abs(inputs))
     input_mod = tf.keras.layers.BatchNormalization()(input_mod)
     input_modder = Per_link_Input_modification_more_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K, 2 + 1 + M + K), N_rf)
+    dnns = dnn_per_link((M * K, 2 + M*K + M + K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
