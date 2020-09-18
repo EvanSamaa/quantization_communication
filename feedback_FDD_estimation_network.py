@@ -33,8 +33,7 @@ def train_step(features, labels, N=None, epoch=0):
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
 
-            ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            #
 
             mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
