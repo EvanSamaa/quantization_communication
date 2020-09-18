@@ -42,7 +42,7 @@ def train_step(features, labels, N=None, epoch=0):
             loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1
+        loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept14th/fullCSI_more_G_smaller_x/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss{}"
+    fname_template = "trained_models/Sept14th/perfect_CSI_fixed_concat_X/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -92,8 +92,8 @@ if __name__ == "__main__":
             # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
             # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
-            # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
+            # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             vae_loss = VAE_loss_general(False)

@@ -679,8 +679,9 @@ class Interference_Input_modification(tf.keras.layers.Layer):
         interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
         interference_t = input_reshaper(interference_t)
         interference_f = input_reshaper(interference_f)
-        x = input_reshaper(x)
-        x = tf.tile(x, (1, 1, self.K * self.M))
+        x = tf.keras.layers.Reshape((self.K * self.M,))(x)
+        # x = tf.reduce_sum(x, axis=1, keepdims=True)
+        x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), interference_t) + tf.constant(step))
         input_i = input_concatnator(
             [input_reshaper(input_mod), interference_t, interference_f, x, iteration_num])
@@ -793,7 +794,7 @@ class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
         interference_t = tf.matmul(self.Mk, input_mod)
         interference_f = tf.matmul(self.Mm, tf.transpose(input_mod, (0, 2, 1)))
         x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
-        x = tf.reduce_sum(x, axis=1, keepdims=True)
+        # x = tf.reduce_sum(x, axis=1, keepdims=True)
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
