@@ -56,7 +56,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept14th/VAE_moreG/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss{}"
+    fname_template = "trained_models/Sept14th/fullCSI_more_G_smaller_x/Perfect_CSI Nrf={}, 1x512_per_linkx6_alt+weighted_CE_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
