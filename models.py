@@ -767,6 +767,68 @@ class Interference_Input_modification_per_user(tf.keras.layers.Layer):
             'name': "Interference_Input_modification_per_user"
         })
         return config
+class Per_link_Input_modification_more_G_less_X(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Per_link_Input_modification_more_G_less_X, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        self.Mk = None
+        self.Mm = None
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x, input_mod, step):
+        if self.Mk is None:
+            self.Mk = np.zeros((self.K*self.M, self.K), dtype=np.float32)
+            self.Mm = np.zeros((self.K*self.M, self.M), dtype=np.float32)
+            for i in range(0, self.K):
+                for j in range(0, self.M):
+                    self.Mk[i*self.M+j, i] = 1.0
+            for i in range(0, self.M):
+                for j in range(0, self.K):
+                    self.Mm[i*self.K+j, i] = 1.0
+            # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
+            # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        interference_f = tf.multiply(power, x)
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
+        interference_t = input_reshaper(interference_t)
+        interference_f = input_reshaper(interference_f)
+        G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
+        G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
+        G_user_mean = tf.reduce_mean(input_mod, axis=2, keepdims=True)
+        print(G_user_mean.shape)
+        G_user_mean = tf.matmul(self.Mk, G_user_mean)
+        print(G_user_mean.shape)
+        affected = tf.matmul(self.Mk, input_mod)
+        effectedBy = tf.matmul(self.Mm, tf.transpose(input_mod, (0, 2, 1)))
+        x = tf.reduce_sum(x, axis=2)
+        # x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
+        # x = tf.reduce_sum(x, axis=1, keepdims=True)
+        x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
+        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
+
+        input_i = input_concatnator(
+            [input_reshaper(input_mod), affected, effectedBy, G_user_mean, G_mean, interference_t, interference_f, x, iteration_num])
+        return input_i
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'name': "Per_link_Input_modification_more_G_less_X",
+            'Mk': None,
+            'Mm': None
+        })
+        return config
 class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Per_link_Input_modification_more_G, self).__init__()
@@ -804,6 +866,7 @@ class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
         affected = tf.matmul(self.Mk, input_mod)
         effectedBy = tf.matmul(self.Mm, tf.transpose(input_mod, (0, 2, 1)))
         x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
+        # x = tf.reduce_sum(x, axis=2)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
@@ -1956,8 +2019,8 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
     input_mod = tf.keras.layers.BatchNormalization()(input_mod)
-    input_modder = Per_link_Input_modification_more_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K, 4 + M + K + M*K), N_rf)
+    input_modder = Per_link_Input_modification_more_G_less_X(K, M, N_rf, k)
+    dnns = dnn_per_link((M * K, 6 + 64 +150), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
