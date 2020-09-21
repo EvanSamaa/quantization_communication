@@ -791,14 +791,24 @@ class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
             # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
-        interference_t = tf.matmul(self.Mk, input_mod)
-        interference_f = tf.matmul(self.Mm, tf.transpose(input_mod, (0, 2, 1)))
+
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        interference_f = tf.multiply(power, x)
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
+        interference_t = input_reshaper(interference_t)
+        interference_f = input_reshaper(interference_f)
+
+        affected = tf.matmul(self.Mk, input_mod)
+        effectedBy = tf.matmul(self.Mm, tf.transpose(input_mod, (0, 2, 1)))
         x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
-            [input_reshaper(input_mod), interference_t, interference_f, x, iteration_num])
+            [input_reshaper(input_mod), affected, effectedBy, interference_t, interference_f, x, iteration_num])
         return input_i
 
     def get_config(self):
@@ -1951,6 +1961,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
+    print(input_i.shape)
     raw_out_put_i = dnns(input_i)
     raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
