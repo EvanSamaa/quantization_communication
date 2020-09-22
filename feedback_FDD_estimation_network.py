@@ -28,7 +28,7 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
         loss_4 = 0
-        factor = {1:1.0, 2:1.0, 3:1.0, 4:1.0, 5:1.0, 6:0.5, 7:0.5, 8:0.25}
+        factor = {1:10.0, 2:10.0, 3:1.0, 4:1.0, 5:0.25, 6:0.25, 7:0.25, 8:0.25}
         for i in range(0, scheduled_output.shape[1]):
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [8,7,6,5,4,3,2,1]
+    mores = [6,4,3,2,1]
     Es = [1]
     for j in Es:
         for i in mores:
