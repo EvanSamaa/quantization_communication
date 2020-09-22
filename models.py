@@ -2240,6 +2240,35 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     model = Model(inputs, output)
     return model
+def FDD_per_link_archetecture_more_G_no_SM_between_passes(M, K, k=2, N_rf=3, output_all=False):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    input_modder = Per_link_Input_modification_compress_XG_alt(K, M, N_rf, k)
+    dnns = dnn_per_link((M * K,9 + 2*K + 64), N_rf)
+    # compute interference from k,i
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
+    input_i = input_modder(output_0, input_mod, k - 1.0)
+    raw_out_put_i = dnns(input_i)
+    sm_raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
+
+    raw_out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+    # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+    out_put_i = tf.reduce_sum(sm_raw_out_put_i, axis=2) # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(sm_raw_out_put_i, axis=1)]
+    # begin the second - kth iteration
+    for times in range(1, k):
+        raw_out_put_i = tf.keras.layers.Reshape((K, M))(raw_out_put_i)
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        raw_out_put_i = dnns(input_i)
+        sm_raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)  # (None, K*M, Nrf)
+        raw_out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        out_put_i = tf.reduce_sum(sm_raw_out_put_i, axis=2)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(sm_raw_out_put_i, axis=1)], axis=1)
+    model = Model(inputs, output)
+    return model
 def FDD_per_link_archetecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
