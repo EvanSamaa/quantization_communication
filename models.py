@@ -2258,7 +2258,7 @@ def FDD_per_link_archetecture_more_G_no_SM_between_passes(M, K, k=2, N_rf=3, out
     output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(sm_raw_out_put_i, axis=1)]
     # begin the second - kth iteration
     for times in range(1, k):
-        raw_out_put_i = tf.keras.layers.Reshape((K, M))(raw_out_put_i)
+        raw_out_put_i = tf.keras.layers.Reshape((K, M))(sigmoid(raw_out_put_i))
         input_i = input_modder(raw_out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         sm_raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)  # (None, K*M, Nrf)
