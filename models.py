@@ -1165,7 +1165,7 @@ class Per_link_Input_modification_compress_XG_alt_2(tf.keras.layers.Layer):
         return config
 class Per_link_Input_modification_more_G_alt_2(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
-        super(Per_link_Input_modification_compress_XG_alt_2, self).__init__()
+        super(Per_link_Input_modification_more_G_alt_2, self).__init__()
         self.K = K
         self.M = M
         self.N_rf = N_rf
@@ -1232,7 +1232,7 @@ class Per_link_Input_modification_more_G_alt_2(tf.keras.layers.Layer):
             'M': self.M,
             'N_rf': self.N_rf,
             'k': self.k,
-            'name': "Per_link_Input_modification_compress_XG_alt_2",
+            'name': "Per_link_Input_modification_more_G_alt_2",
             'Mk': None,
             'Mm': None
         })
