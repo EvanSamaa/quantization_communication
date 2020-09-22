@@ -1145,7 +1145,7 @@ class Per_link_Input_modification_compress_XG_alt_2(tf.keras.layers.Layer):
         input_i = input_concatnator(
             [input_reshaper(input_mod),
              G_user_mean, G_user_min, G_user_max,
-             G_mean, G_min, G_max
+             G_mean, G_min, G_max,
              interference_t, interference_f,
              x, self_decision, user_pos, same_user_decision,
              iteration_num])
