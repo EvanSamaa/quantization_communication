@@ -172,7 +172,8 @@ if __name__ == "__main__":
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
                    "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg,
                    "Per_link_Input_modification_more_G":Per_link_Input_modification_more_G,
-                   "Per_link_Input_modification_more_G_less_X":Per_link_Input_modification_more_G_less_X}
+                   "Per_link_Input_modification_more_G_less_X":Per_link_Input_modification_more_G_less_X,
+                   "Per_link_Input_modification_even_more_G":Per_link_Input_modification_even_more_G}
     N = 1
     M = 64
     K = 50
