@@ -166,7 +166,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
 
-    file = "trained_models/Sept14th/perfect_CSI_fixed_concat_X_compress_XG/Perfect_CSI Nrf=8, 2x128_per_linkx6_alt+0p1x_CE_loss"
+    file = "trained_models/Sept14th/perfect_CSI_fixed_concat_X_compress_XG_alt/Perfect_CSI Nrf=8, 2x512_per_linkx6_alt+weighted_CE_loss.h5"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -174,7 +174,8 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_more_G":Per_link_Input_modification_more_G,
                    "Per_link_Input_modification_more_G_less_X":Per_link_Input_modification_more_G_less_X,
                    "Per_link_Input_modification_even_more_G":Per_link_Input_modification_even_more_G,
-                   "Per_link_Input_modification_compress_XG":Per_link_Input_modification_compress_XG}
+                   "Per_link_Input_modification_compress_XG":Per_link_Input_modification_compress_XG,
+                   "Per_link_Input_modification_compress_XG_alt": Per_link_Input_modification_compress_XG_alt}
     N = 1
     M = 64
     K = 50
