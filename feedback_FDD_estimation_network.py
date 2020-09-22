@@ -57,7 +57,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept14th/perfect_CSI_moreG_lessX/Perfect_CSI Nrf={}, 2x512_per_linkx6_alt+weighted_CE_loss{}"
+    fname_template = "trained_models/Sept14th/perfect_CSI_fixed_concat_X_even_more_G/Perfect_CSI Nrf={}, 2x512_per_linkx6_alt+weighted_CE_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [5, 4, 3, 2, 1]
+    mores = [8, 7, 6, 5, 4, 3, 2, 1]
     Es = [1]
     for j in Es:
         for i in mores:
