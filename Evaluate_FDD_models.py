@@ -166,7 +166,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
 
-    file = "trained_models/Sept23rd/perfec_CSI_lots_of_G/Perfect_CSI Nrf={}, 2x512+weighted_CE   _loss"
+    file = "trained_models/Sept23rd/Nrf=4/Nrf=4_most_G_{}x"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [8,7,6,5,4,3,2,1]
+    mores = [1,2,4,5,6,7,8]
     Es = [0]
     # model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
@@ -207,7 +207,7 @@ if __name__ == "__main__":
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = i
+            N_rf = 4
             print("========================================== E =", j, "more = ", i)
             model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
