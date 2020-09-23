@@ -40,7 +40,7 @@ def train_step(features, labels, N=None, epoch=0):
             # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
             # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + 0.25*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            loss_4 = loss_4 + 0.02*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE{}"
+    fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p02CE{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -133,7 +133,7 @@ if __name__ == "__main__":
                                       train_hard_loss.result()))
                 graphing_data[epoch, 0] = train_loss.result()
                 graphing_data[epoch, 1] = train_binarization_loss.result()
-                graphing_data[epoch, 2] = train_VS.result()
+                # graphing_data[epoch, 2] = train_VS.result()
                 graphing_data[epoch, 3] = train_hard_loss.result()
                 if train_hard_loss.result() < max_acc_loss:
                     max_acc_loss = train_hard_loss.result()
@@ -147,7 +147,7 @@ if __name__ == "__main__":
                         max_acc = valid_sum_rate.result()
                         model.save(fname_template.format(i, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
-                        improvement = graphing_data[epoch - (check * 2): epoch - check, 2].mean() - graphing_data[
+                        improvement = graphing_data[epoch - (check * 2): epoch - check, 2].max() - graphing_data[
                                                                                                     epoch - check: epoch,
                                                                                                     2].mean()
                         print("the improvement in the past 500 epochs is: ", improvement)
