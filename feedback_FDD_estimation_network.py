@@ -36,7 +36,8 @@ def train_step(features, labels, N=None, epoch=0):
             # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
             # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
-            mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, i]))
+            # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, i]))
+            mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
             # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
             loss_4 = loss_4 + 0.25*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
@@ -57,8 +58,8 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept14th/perfect_CSI_fixed_concat_X_most_G/Perfect_CSI Nrf={}, 4x128+weighted_CE_loss{}"
-    check = 500
+    fname_template = "trained_models/Sept23rd/perfect_CSI_trained_with_GREEDY_CE/Perfect_CSI Nrf={}, 2x512+weighted_CE_loss{}"
+    check = 100
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
