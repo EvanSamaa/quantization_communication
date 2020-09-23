@@ -906,6 +906,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
                     self.Mm[i*self.K+j, i] = 1.0
             # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
             # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
@@ -2446,7 +2447,7 @@ def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False)
 def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    input_mod = input_mod / tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1)
     input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     dnns = dnn_per_link((M * K,11 + M*K), N_rf)
     # compute interference from k,i
