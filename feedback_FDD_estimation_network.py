@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [4,5,6,7,8]
+    mores = [1,2,4,5,6,7,8]
     Es = [1]
     for j in Es:
         for i in mores:
