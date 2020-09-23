@@ -166,7 +166,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
 
-    file = "trained_models/Sept23rd/Nrf=4/Nrf={}test.h5"
+    file = "trained_models/Sept23rd/Nrf=4/Nrf={}test"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
