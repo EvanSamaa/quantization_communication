@@ -959,71 +959,71 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         })
         return config
 
-    class Per_link_Input_modification_even_more_G(tf.keras.layers.Layer):
-        def __init__(self, K, M, N_rf, k, **kwargs):
-            super(Per_link_Input_modification_even_more_G, self).__init__()
-            self.K = K
-            self.M = M
-            self.N_rf = N_rf
-            self.k = k
-            self.Mk = None
-            self.Mm = None
-            # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+class Per_link_Input_modification_even_more_G(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Per_link_Input_modification_even_more_G, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        self.Mk = None
+        self.Mm = None
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
 
-        def call(self, x, input_mod, step):
-            if self.Mk is None:
-                self.Mk = np.zeros((self.K * self.M, self.K), dtype=np.float32)
-                self.Mm = np.zeros((self.K * self.M, self.M), dtype=np.float32)
-                for i in range(0, self.K):
-                    for j in range(0, self.M):
-                        self.Mk[i * self.M + j, i] = 1.0
-                for i in range(0, self.M):
-                    for j in range(0, self.K):
-                        self.Mm[i * self.K + j, i] = 1.0
-                # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
-                # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
-            input_concatnator = tf.keras.layers.Concatenate(axis=2)
-            input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
-            power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
-            interference_f = tf.multiply(power, x)
-            unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
-            interference_t = tf.matmul(input_mod, unflattened_output_0)
-            interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
-            interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
-            interference_t = input_reshaper(interference_t)
-            interference_f = input_reshaper(interference_f)
-            G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
-            G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
-            G_user_mean = tf.reduce_mean(input_mod, axis=2, keepdims=True)
-            G_user_mean = tf.matmul(self.Mk, G_user_mean)
-            G_user_max = tf.reduce_max(input_mod, axis=2, keepdims=True)
-            G_user_max = tf.matmul(self.Mk, G_user_max)
-            G_user_min = tf.reduce_max(input_mod, axis=2, keepdims=True)
-            G_user_min = tf.matmul(self.Mk, G_user_min)
-            # x = tf.reduce_sum(x, axis=2)
-            x = tf.keras.layers.Reshape((self.K * self.M,))(x)
-            # x = tf.reduce_sum(x, axis=1, keepdims=True)
-            x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
-            iteration_num = tf.stop_gradient(
-                tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
+    def call(self, x, input_mod, step):
+        if self.Mk is None:
+            self.Mk = np.zeros((self.K * self.M, self.K), dtype=np.float32)
+            self.Mm = np.zeros((self.K * self.M, self.M), dtype=np.float32)
+            for i in range(0, self.K):
+                for j in range(0, self.M):
+                    self.Mk[i * self.M + j, i] = 1.0
+            for i in range(0, self.M):
+                for j in range(0, self.K):
+                    self.Mm[i * self.K + j, i] = 1.0
+            # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
+            # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        interference_f = tf.multiply(power, x)
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
+        interference_t = input_reshaper(interference_t)
+        interference_f = input_reshaper(interference_f)
+        G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
+        G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
+        G_user_mean = tf.reduce_mean(input_mod, axis=2, keepdims=True)
+        G_user_mean = tf.matmul(self.Mk, G_user_mean)
+        G_user_max = tf.reduce_max(input_mod, axis=2, keepdims=True)
+        G_user_max = tf.matmul(self.Mk, G_user_max)
+        G_user_min = tf.reduce_max(input_mod, axis=2, keepdims=True)
+        G_user_min = tf.matmul(self.Mk, G_user_min)
+        # x = tf.reduce_sum(x, axis=2)
+        x = tf.keras.layers.Reshape((self.K * self.M,))(x)
+        # x = tf.reduce_sum(x, axis=1, keepdims=True)
+        x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
+        iteration_num = tf.stop_gradient(
+            tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
 
-            input_i = input_concatnator(
-                [input_reshaper(input_mod), G_user_mean, G_mean, G_user_min, G_user_max, interference_t, interference_f,
-                 x, iteration_num])
-            return input_i
+        input_i = input_concatnator(
+            [input_reshaper(input_mod), G_user_mean, G_mean, G_user_min, G_user_max, interference_t, interference_f,
+             x, iteration_num])
+        return input_i
 
-        def get_config(self):
-            config = super().get_config().copy()
-            config.update({
-                'K': self.K,
-                'M': self.M,
-                'N_rf': self.N_rf,
-                'k': self.k,
-                'name': "Per_link_Input_modification_even_more_G",
-                'Mk': None,
-                'Mm': None
-            })
-            return config
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'name': "Per_link_Input_modification_even_more_G",
+            'Mk': None,
+            'Mm': None
+        })
+        return config
 class Per_link_Input_modification_compress_XG(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Per_link_Input_modification_compress_XG, self).__init__()
