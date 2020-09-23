@@ -95,7 +95,7 @@ if __name__ == "__main__":
             # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 10, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 3, N_rf, output_all=True)
             # model = Feedbakk_FDD_mcodel_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             vae_loss = VAE_loss_general(False)
