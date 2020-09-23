@@ -177,7 +177,8 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_compress_XG":Per_link_Input_modification_compress_XG,
                    "Per_link_Input_modification_compress_XG_alt": Per_link_Input_modification_compress_XG_alt,
                    "Per_link_Input_modification_more_G_alt_2":Per_link_Input_modification_more_G_alt_2,
-                   "Per_link_Input_modification_compress_XG_alt_2":Per_link_Input_modification_compress_XG_alt_2}
+                   "Per_link_Input_modification_compress_XG_alt_2":Per_link_Input_modification_compress_XG_alt_2,
+                   "Per_link_Input_modification_most_G":Per_link_Input_modification_most_G}
     N = 1
     M = 64
     K = 50
