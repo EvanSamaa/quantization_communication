@@ -3035,10 +3035,12 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=Fals
     input_i = input_modder(input_mod)
     raw_out_put_i = dnns(input_i)
 
-    raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)  # (None, K*M, Nrf)
+    sm_raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)  # (None, K*M, Nrf)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
-    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)  # (None, K*M)
+    out_put_i = tf.reduce_sum(sm_raw_out_put_i, axis=2)  # (None, K*M)
     # output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    regularizer = Dense(3200)(out_put_i)
+
     # # begin the second - kth iteration
     # x = Dense(512)(output_after_softmax)
     # x = Dense(3200)(x)
