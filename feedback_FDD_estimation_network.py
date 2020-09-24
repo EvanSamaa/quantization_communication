@@ -150,9 +150,9 @@ if __name__ == "__main__":
                         max_acc = valid_sum_rate.result()
                         model.save(fname_template.format(i, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
-                        improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].max() - graphing_data[
+                        improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
-                                                                                                    2].max()
+                                                                                                    2].min()
                         counter = 0
                         for asldk in graphing_data[0:epoch+1, 2]:
                             if asldk != 0:
