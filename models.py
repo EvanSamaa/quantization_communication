@@ -3029,6 +3029,8 @@ def distributed_DNN(input_shape, N_rf):
 def FDD_reduced_output_space(M, K, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
+    norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
+    input_mod = tf.divide(input_mod, tf.tile(tf.expand_dims(norm, axis=1), (1, K, M)))
     user_selection_dnn = per_row_DNN((K, M), M, N_rf, name="per_user_dnn")
     precoder_selection_dnn = per_row_DNN((M, K), K, N_rf, name="per_precoder_dnn")
     user_selection = user_selection_dnn(input_mod)
