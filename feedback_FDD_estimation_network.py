@@ -141,6 +141,7 @@ if __name__ == "__main__":
                     out = sum_rate(Harden_scheduling(k=N_rf)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
+                    print("The validation accuracy is {}".format(valid_sum_rate.result()))
                     if valid_sum_rate.result() < max_acc:
                         max_acc = valid_sum_rate.result()
                         model.save(fname_template.format(N_rf, ".h5"))
@@ -149,7 +150,6 @@ if __name__ == "__main__":
                                                                                                     epoch - check: epoch,
                                                                                                     2].mean()
                         print("the accuracy improvement in the past 500 epochs is ", improvement)
-
                         if improvement <= 0.0001:
                             break
             np.save(fname_template.format(N_rf, ".npy"), graphing_data)
