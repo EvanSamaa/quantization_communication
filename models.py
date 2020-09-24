@@ -2706,7 +2706,7 @@ def FDD_Dumb_model(M, K, k=2, N_rf=3):
         output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(output_i), axis=1)
     model = Model(inputs, output_i)
     return model
-def per_row_DNN(input_shape, M, N_rf=1):
+def per_row_DNN(input_shape, M, N_rf=1, name="dnn"):
     inputs = Input(shape=input_shape)
     x = Dense(512)(inputs)
     x = sigmoid(x)
@@ -2715,7 +2715,7 @@ def per_row_DNN(input_shape, M, N_rf=1):
     # x = sigmoid(x)
     # x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(N_rf, bias_initializer="ones")(x)
-    model = Model(inputs, x, name="per_user_DNN")
+    model = Model(inputs, x, name=name)
     return model
 def tiny_DNN(input_shape, N_rf):
     inputs = Input(shape=input_shape, dtype=tf.float32)
@@ -3029,8 +3029,8 @@ def distributed_DNN(input_shape, N_rf):
 def FDD_reduced_output_space(M, K, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    user_selection_dnn = per_row_DNN((K, M), M, N_rf)
-    precoder_selection_dnn = per_row_DNN((M, K), K, N_rf)
+    user_selection_dnn = per_row_DNN((K, M), M, N_rf, name="per_user_dnn")
+    precoder_selection_dnn = per_row_DNN((M, K), K, N_rf, name="per_precoder_dnn")
     user_selection = user_selection_dnn(input_mod)
     user_selection = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(user_selection), axis=2, keepdims=True)
     precoder_selection = precoder_selection_dnn(tf.transpose(input_mod, perm=[0,2,1]))
