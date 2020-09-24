@@ -167,6 +167,7 @@ def plot_data(arr, col=[], title="loss"):
 if __name__ == "__main__":
 
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
+    file = "trained_models/Sept23rd/perfect_CSI_trained_with_GREEDY_CE/Perfect_CSI Nrf={}, 2x512+weighted_CE_loss"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -208,9 +209,10 @@ if __name__ == "__main__":
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = 4
+            N_rf = 8
             print("========================================== E =", j, "more = ", i)
-            model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+            print(model.summary())
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
