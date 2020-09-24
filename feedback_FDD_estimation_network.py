@@ -28,7 +28,7 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
-        loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
+        loss_4 = 0.1 * tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
 
         # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         # for i in range(0, scheduled_output.shape[1]):
@@ -129,7 +129,7 @@ if __name__ == "__main__":
                 train_step(train_features, None, training_mode, epoch=epoch)
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
-                print(template.format(epoch + 1,
+                print(template.format(epoch,
                                       train_loss.result(),
                                       train_binarization_loss.result(),
                                       train_VS.result(),
@@ -150,8 +150,8 @@ if __name__ == "__main__":
                         max_acc = valid_sum_rate.result()
                         model.save(fname_template.format(i, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
-                        improvement = graphing_data[epoch - (check * 2): epoch - check, 2].max() - graphing_data[
-                                                                                                    epoch - check: epoch,
+                        improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].max() - graphing_data[
+                                                                                                    epoch - check + 1: epoch + 1,
                                                                                                     2].max()
                         print("the improvement in the past 500 epochs is: ", improvement)
                         print("the validation SR is: ", valid_sum_rate.result())
