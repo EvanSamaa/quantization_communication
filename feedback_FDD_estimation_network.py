@@ -147,8 +147,8 @@ if __name__ == "__main__":
                         max_acc = valid_sum_rate.result()
                         model.save(fname_template.format(i, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
-                        improvement = graphing_data[epoch + 1 - (check * 2): epoch + 1 - check, 2].max() - graphing_data[
-                                                                                                    epoch - check + 1: epoch + 1,
+                        improvement = graphing_data[epoch - (check * 2): epoch - check, 2].max() - graphing_data[
+                                                                                                    epoch - check: epoch,
                                                                                                     2].max()
                         print("the improvement in the past 500 epochs is: ", improvement)
                         print("the validation SR is: ", valid_sum_rate.result())
