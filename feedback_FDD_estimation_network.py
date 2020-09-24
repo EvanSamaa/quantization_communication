@@ -58,7 +58,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+sigmoid_before_softmax{}"
+    fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+distributed_decision{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -95,7 +95,8 @@ if __name__ == "__main__":
             # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
             # model = Feedbakk_FDD_mcodel_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             vae_loss = VAE_loss_general(False)

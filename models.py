@@ -1418,9 +1418,9 @@ class AllInput_input_mod(tf.keras.layers.Layer):
         })
         return config
 
-class Per_link_smol_Inputmod(tf.keras.layers.Layer):
+class Distributed_input_mod(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
-        super(Per_link_smol_Inputmod, self).__init__()
+        super(Distributed_input_mod, self).__init__()
         self.K = K
         self.M = M
         self.N_rf = N_rf
@@ -1470,7 +1470,7 @@ class Per_link_smol_Inputmod(tf.keras.layers.Layer):
             'M': self.M,
             'N_rf': self.N_rf,
             'k': self.k,
-            'name': "Per_link_smol_Inputmod",
+            'name': "Distributed_input_mod",
             'Mk': None,
             'Mm': None
         })
@@ -2666,32 +2666,6 @@ def FDD_per_link_archetecture(M, K, k=2, N_rf=3, output_all=False):
     if output_all:
         model = Model(inputs, output_0)
     return model
-def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3):
-    inputs = Input(shape=(K, M), dtype=tf.complex64)
-    input_mod = tf.square(tf.abs(inputs))
-    input_modder = Interference_Input_modification_no_loop(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K, 3), 1)
-    # compute interference from k,i
-    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M * K)
-    input_i = input_modder(output_0, input_mod)
-    out_put_i = sigmoid(dnns(input_i))[:, :, 0]
-    input_mod = tf.keras.layers.Reshape((M * K,))(input_mod)
-    input_i = tf.concat((input_mod, out_put_i), axis=1)
-    # input_i = tf.multiply(input_mod, out_put_i)
-    x = Dense(512)(input_i)
-    x = sigmoid(x)
-    x = Dense(128)(x)
-    x = sigmoid(x)
-    x = Dense(128)(x)
-    x = sigmoid(x)
-    x = Dense(N_rf * M * K)(x)
-    x_list = tf.split(x, num_or_size_splits=N_rf, axis=1)
-    output = tf.keras.layers.Reshape((M * K, 1))(tf.keras.layers.Softmax()(x_list[0]))
-    for i in range(1, len(x_list)):
-        output = tf.concat((output, tf.keras.layers.Reshape((M * K, 1))(tf.keras.layers.Softmax()(x_list[i]))), axis=2)
-    output = tf.reduce_sum(output, axis=2)
-    model = Model(inputs, output)
-    return model
 def FDD_per_link_archetecture_sigmoid(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -3039,26 +3013,37 @@ class NN_Clustering():
                 if np.sum(clusters[i]) != 0:
                     output[n, max] = 1
         return output
-
+def distributed_DNN(input_shape, N_rf):
+    inputs = Input(shape=input_shape)
+    x = Dense(64)(inputs)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(64)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(N_rf)(x)
+    # x = sigmoid(x)
+    model = Model(inputs, x)
+    return model
 def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.tile(tf.expand_dims(norm, axis=1), (1, K, M)))
-    input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K, 8), N_rf)
+    input_modder = Distributed_input_mod(K, M, N_rf, k)
+    dnns = distributed_DNN((M * K, 8), N_rf)
     input_i = input_modder(input_mod)
     raw_out_put_i = dnns(input_i)
 
     raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)  # (None, K*M, Nrf)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
     out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)  # (None, K*M)
-    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
-    # begin the second - kth iteration
-    x = Dense(512)(output_after_softmax)
-    x = Dense(3200)(x)
-    output_before_softmax = x * output_before_softmax
-    model = Model(inputs, output)
+    # output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    # # begin the second - kth iteration
+    # x = Dense(512)(output_after_softmax)
+    # x = Dense(3200)(x)
+    # output_before_softmax = x * output_before_softmax
+    model = Model(inputs, out_put_i)
     return model
 def DNN_All_info_scheduler(M, K, Nrf):
     inputs = Input(shape=(Nrf, 2*M*K + Nrf))
