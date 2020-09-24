@@ -3033,7 +3033,7 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=Fals
     input_modder = Distributed_input_mod(K, M, N_rf, k)
     dnns = distributed_DNN((M * K, 8), N_rf)
     input_i = input_modder(input_mod)
-    raw_out_put_i = dnns(input_i)
+    raw_out_put_i = sigmoid(dnns(input_i))
 
     sm_raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)  # (None, K*M, Nrf)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
