@@ -153,7 +153,7 @@ if __name__ == "__main__":
                         improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].max() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
                                                                                                     2].max()
-                        for asldk in improvement[0:epoch+1, 2]:
+                        for asldk in graphing_data[0:epoch+1, 2]:
                             if asldk != 0:
                                 print(asldk)
                         print("the improvement in the past 500 epochs is: ", improvement)
