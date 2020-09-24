@@ -961,7 +961,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         return config
 class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
-        super(Per_link_Input_modification_most_G, self).__init__()
+        super(Per_link_Input_modification_learnable_G, self).__init__()
         self.K = K
         self.M = M
         self.N_rf = N_rf
@@ -1035,7 +1035,7 @@ class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
             'M': self.M,
             'N_rf': self.N_rf,
             'k': self.k,
-            'name': "Per_link_Input_modification_most_G",
+            'name': "Per_link_Input_modification_learnable_G",
             'Mk': None,
             'Mm': None
         })
