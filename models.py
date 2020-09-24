@@ -3036,7 +3036,7 @@ def FDD_reduced_output_space(M, K, N_rf=3):
     precoder_selection = precoder_selection_dnn(tf.transpose(input_mod, perm=[0,2,1]))
     precoder_selection = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(precoder_selection), axis=2, keepdims=True)
     precoder_selection = tf.transpose(precoder_selection, perm=[0, 2, 1])
-    out = tf.matmul(precoder_selection, user_selection)
+    out = tf.matmul(user_selection, precoder_selection)
     print(out.shape)
     model = Model(inputs, out)
     return model
