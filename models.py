@@ -2587,7 +2587,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.tile(tf.expand_dims(norm, axis=1), (1,K,M)))
     input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K,29 + M*K), N_rf)
+    dnns = dnn_per_link((M * K,11 + M*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
