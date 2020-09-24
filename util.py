@@ -379,12 +379,12 @@ def Harden_scheduling(k=3, K=0, M=0, sigma2=0):
             base_mask[i, index[i]] = 1
         return tf.constant(base_mask, dtype=tf.float32)
     return masking
-def Harden_scheduling_user_constrained(N_rf=3, K=0, M=0, sigma2=0):
+def Harden_scheduling_user_constrained(N_rf=3, K=0, M=0, sigma2=0, default_val = 0.0):
     def masking(y_pred):
         # assumes the input shape is (batch, k*M) for y_pred,
         # and the shape for G is (batch, K, N)
         # generate mask to mask out points that are not in top k vvvvv
-        base_mask = np.zeros((y_pred.shape))
+        base_mask = np.ones((y_pred.shape)) * default_val
         try:
             y_pred_np = y_pred.numpy()
         except:

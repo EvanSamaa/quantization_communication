@@ -166,12 +166,19 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
 
-    file = "trained_models\Sept14th\VAE_moreG\Perfect_CSI Nrf=8, 1x512_per_linkx6_alt+weighted_CE_loss_max_train"
+    file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
                    "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg,
-                   "Per_link_Input_modification_more_G":Per_link_Input_modification_more_G}
+                   "Per_link_Input_modification_more_G":Per_link_Input_modification_more_G,
+                   "Per_link_Input_modification_more_G_less_X":Per_link_Input_modification_more_G_less_X,
+                   "Per_link_Input_modification_even_more_G":Per_link_Input_modification_even_more_G,
+                   "Per_link_Input_modification_compress_XG":Per_link_Input_modification_compress_XG,
+                   "Per_link_Input_modification_compress_XG_alt": Per_link_Input_modification_compress_XG_alt,
+                   "Per_link_Input_modification_more_G_alt_2":Per_link_Input_modification_more_G_alt_2,
+                   "Per_link_Input_modification_compress_XG_alt_2":Per_link_Input_modification_compress_XG_alt_2,
+                   "Per_link_Input_modification_most_G":Per_link_Input_modification_most_G}
     N = 1
     M = 64
     K = 50
@@ -193,7 +200,7 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [8]
+    mores = [4]
     Es = [0]
     # model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
@@ -201,9 +208,9 @@ if __name__ == "__main__":
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
+            N_rf = 4
             print("========================================== E =", j, "more = ", i)
-            N_rf = i
-            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
