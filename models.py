@@ -2706,7 +2706,7 @@ def FDD_Dumb_model(M, K, k=2, N_rf=3):
         output_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(output_i), axis=1)
     model = Model(inputs, output_i)
     return model
-def per_user_DNN(input_shape, M, N_rf=1):
+def per_row_DNN(input_shape, M, N_rf=1):
     inputs = Input(shape=input_shape)
     x = Dense(512)(inputs)
     x = sigmoid(x)
@@ -2714,7 +2714,7 @@ def per_user_DNN(input_shape, M, N_rf=1):
     # x = Dense(512)(x)
     # x = sigmoid(x)
     # x = tf.keras.layers.BatchNormalization()(x)
-    x = Dense(M + N_rf, bias_initializer="ones")(x)
+    x = Dense(N_rf, bias_initializer="ones")(x)
     model = Model(inputs, x, name="per_user_DNN")
     return model
 def tiny_DNN(input_shape, N_rf):
@@ -3025,6 +3025,26 @@ def distributed_DNN(input_shape, N_rf):
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
+
+def FDD_reduced_output_space(M, K, N_rf=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    user_selection_dnn = per_row_DNN((K, M), M, N_rf)
+    precoder_selection_dnn = per_row_DNN((M, K), K, N_rf)
+    user_selection = user_selection_dnn(input_mod)
+    user_selection = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(user_selection), axis=2, keepdims=True)
+    precoder_selection = precoder_selection_dnn(tf.transpose(input_mod, perm=[0,2,1]))
+    precoder_selection = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(precoder_selection), axis=2, keepdims=True)
+    precoder_selection = tf.transpose(precoder_selection, perm=[0, 2, 1])
+    out = tf.matmul(precoder_selection, user_selection)
+    print(out.shape)
+    model = Model(inputs, out)
+    return model
+
+
+
+
+
 def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -3033,7 +3053,7 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=Fals
     input_modder = Distributed_input_mod(K, M, N_rf, k)
     dnns = distributed_DNN((M * K, 8), N_rf)
     input_i = input_modder(input_mod)
-    raw_out_put_i = sigmoid(dnns(input_i))
+    raw_out_put_i = dnns(input_i)
 
     sm_raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)  # (None, K*M, Nrf)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
