@@ -2708,7 +2708,13 @@ def FDD_Dumb_model(M, K, k=2, N_rf=3):
     return model
 def per_row_DNN(input_shape, M, N_rf=1, name="dnn"):
     inputs = Input(shape=input_shape)
-    x = Dense(512)(inputs)
+    x = Dense(64)(inputs)
+    x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(64)(x)
+    x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(64)(x)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     # x = Dense(512)(x)
