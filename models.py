@@ -969,10 +969,10 @@ class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
         self.Mk = None
         self.Mm = None
         self.row_picker = self.add_weight(name='row_picker',
-                                 shape=(self.M, 5),
+                                 shape=(self.M, 10),
                                  trainable=True)
         self.col_picker = self.add_weight(name='col_picker',
-                                 shape=(self.K, 5),
+                                 shape=(self.K, 10),
                                  trainable=True)
         # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
     def call(self, x, input_mod, step):
@@ -999,13 +999,13 @@ class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
         interference_f = input_reshaper(interference_f)
         G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
-        G_user_learned_data = tf.matmul(input_mod * x, self.row_picker)
+        G_user_learned_data = tf.matmul(input_mod, self.row_picker)
         G_user_learned_data = tf.matmul(self.Mk, G_user_learned_data)
         G_user_max = tf.reduce_max(input_mod, axis=2, keepdims=True)
         G_user_max = tf.matmul(self.Mk, G_user_max)
         G_user_min = tf.reduce_max(input_mod, axis=2, keepdims=True)
         G_user_min = tf.matmul(self.Mk, G_user_min)
-        G_col_learned_data = tf.matmul(tf.transpose(input_mod * x, perm=[0, 2, 1]), self.col_picker)
+        G_col_learned_data = tf.matmul(tf.transpose(input_mod, perm=[0, 2, 1]), self.col_picker)
         G_col_learned_data = tf.matmul(self.Mm, G_col_learned_data)
         G_col_max = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_max = tf.matmul(self.Mm, G_col_max)
@@ -2529,7 +2529,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.tile(tf.expand_dims(norm, axis=1), (1,K,M)))
     input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K,19 + M*K), N_rf)
+    dnns = dnn_per_link((M * K,29 + M*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
