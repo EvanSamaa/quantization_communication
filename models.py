@@ -987,7 +987,6 @@ class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
                     self.Mm[i*self.K+j, i] = 1.0
             # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
             # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
-
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
@@ -1000,13 +999,13 @@ class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
         interference_f = input_reshaper(interference_f)
         G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
-        G_user_learned_data = tf.matmul(input_mod, self.row_picker)
+        G_user_learned_data = tf.matmul(input_mod * x, self.row_picker)
         G_user_learned_data = tf.matmul(self.Mk, G_user_learned_data)
         G_user_max = tf.reduce_max(input_mod, axis=2, keepdims=True)
         G_user_max = tf.matmul(self.Mk, G_user_max)
         G_user_min = tf.reduce_max(input_mod, axis=2, keepdims=True)
         G_user_min = tf.matmul(self.Mk, G_user_min)
-        G_col_learned_data = tf.matmul(tf.transpose(input_mod, perm=[0, 2, 1]), self.col_picker)
+        G_col_learned_data = tf.matmul(tf.transpose(input_mod * x, perm=[0, 2, 1]), self.col_picker)
         G_col_learned_data = tf.matmul(self.Mm, G_col_learned_data)
         G_col_max = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_max = tf.matmul(self.Mm, G_col_max)
