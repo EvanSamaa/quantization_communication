@@ -51,10 +51,10 @@ def train_step(features, labels, N=None, epoch=0):
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients2, model.get_layer("model_2").trainable_variables))
-    train_loss(sum_rate(scheduled_output[:, -1], features))
+    train_loss(sum_rate(scheduled_output, features))
     # train_loss(loss_3)
     # train_binarization_loss(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
+    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output), features))
     del tape
 if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
@@ -142,7 +142,7 @@ if __name__ == "__main__":
                     max_acc_loss = train_hard_loss.result()
                     model.save(fname_template.format(i, "_max_train.h5"))
                 if epoch % check == 0:
-                    prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
+                    prediction = model.predict(valid_data, batch_size=5)
                     out = sum_rate(Harden_scheduling(k=N_rf)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
