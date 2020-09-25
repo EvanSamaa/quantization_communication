@@ -1462,7 +1462,7 @@ class Distributed_input_mod(tf.keras.layers.Layer):
         G_col_min = tf.matmul(self.Mm, G_col_min)
         input_i = input_concatnator(
             [input_reshaper(input_mod),
-             G_mean, G_max, G_min
+             G_mean, G_max, G_min,
              G_user_mean, G_user_min, G_user_max,
              G_col_max, G_col_min, G_col_mean,])
         return input_i
