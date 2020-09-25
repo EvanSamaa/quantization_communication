@@ -2649,7 +2649,8 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     # begin the second - kth iteration
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
-        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
+        input_i = input_modder(out_put_i, input_mod_temp, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = tf.keras.layers.Softmax(axis=1)(sigmoid(raw_out_put_i))
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
@@ -3111,7 +3112,6 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=Fals
     dnns = distributed_DNN((M * K, 10), N_rf)
     input_i = input_modder(input_mod)
     raw_out_put_i = dnns(input_i)
-
     sm_raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)  # (None, K*M, Nrf)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
     sum_sm_raw_out_put_i = tf.reduce_sum(sm_raw_out_put_i, axis=2)  # (None, K*M)
@@ -3119,7 +3119,9 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=Fals
     regularizer = sigmoid(Dense(M*K)(tf.keras.layers.Reshape((K*M,))(input_mod)*sum_sm_raw_out_put_i))
     out_put_i = tf.multiply(raw_out_put_i, tf.tile(tf.expand_dims(regularizer, axis=2), (1,1,N_rf)))
     out_put_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(out_put_i), axis=2)
-
+    output = [tf.expand_dims(out_put_i, axis=1)]
+    # for i in range(k):
+    #     input_i =
     # # begin the second - kth iteration
     # x = Dense(512)(output_after_softmax)
     # x = Dense(3200)(x)
