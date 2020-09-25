@@ -1477,7 +1477,7 @@ class Distributed_input_mod(tf.keras.layers.Layer):
         return config
 class Reduced_output_input_mod(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
-        super(Distributed_input_mod, self).__init__()
+        super(Reduced_output_input_mod, self).__init__()
         self.K = K
         self.M = M
         self.N_rf = N_rf
@@ -1516,7 +1516,7 @@ class Reduced_output_input_mod(tf.keras.layers.Layer):
             'M': self.M,
             'N_rf': self.N_rf,
             'k': self.k,
-            'name': "Distributed_input_mod",
+            'name': "Reduced_output_input_mod",
             'Mk': None,
             'Mm': None
         })
@@ -3078,8 +3078,8 @@ def FDD_reduced_output_space(M, K, N_rf=3):
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     input_modder = Reduced_output_input_mod(K, M, N_rf,3)
     input_mod = tf.divide(input_mod, tf.tile(tf.expand_dims(norm, axis=1), (1, K, M)))
-    user_selection_dnn = per_row_DNN((K, M), M, N_rf, name="per_user_dnn")
-    precoder_selection_dnn = per_row_DNN((M, K), K, N_rf, name="per_precoder_dnn")
+    user_selection_dnn = per_row_DNN((K, M), M + K + 1, N_rf, name="per_user_dnn")
+    precoder_selection_dnn = per_row_DNN((M, K), M + K + 1, N_rf, name="per_precoder_dnn")
     user_selection = user_selection_dnn(input_modder(input_mod, K))
     user_selection = tf.keras.layers.Softmax(axis=1)(user_selection)
     user_selection = user_selection + tf.stop_gradient(tf.divide(user_selection, tf.tile(tf.reduce_max(user_selection, axis=1, keepdims=True), [1, K, 1]))-user_selection)
