@@ -1501,7 +1501,7 @@ class Reduced_output_input_mod(tf.keras.layers.Layer):
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, num, 1))
-        G_col_mean = tf.transpose(tf.reduce_mean(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
+        G_col_mean = tf.reduce_mean(input_mod, axis=1, keepdims=True)
         G_col_mean = tf.tile(G_col_mean, [1, num, 1])
         input_i = input_concatnator(
             [input_mod,
