@@ -21,28 +21,28 @@ def train_step(features, labels, N=None, epoch=0):
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # predictions_hard = predictions + tf.stop_gradient(Harden_scheduling(k=N_rf)(predictions) - predictions)
         # scheduled_output, raw_output, reconstructed_input = model(features)
-        scheduled_output = model(features)
+        scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        loss_1 = sum_rate(scheduled_output, features)
+        loss_1 = 0
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
-        mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
-        loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
+        # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
+        loss_4 = 0
 
         # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
-        # for i in range(0, scheduled_output.shape[1]):
-        #     sr = sum_rate(scheduled_output[:, i], features)
-        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-        #
-        #     # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-        #     # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-        #
-        #     mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, i]))
-        #     # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
-        #     ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-        #     # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
-        #     loss_4 = loss_4 + 0.25*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        for i in range(0, scheduled_output.shape[1]):
+            sr = sum_rate(scheduled_output[:, i], features)
+            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+
+            # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+            # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+
+            mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, i]))
+            # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
+            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+            # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
+            loss_4 = loss_4 + 0.25*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
@@ -51,10 +51,10 @@ def train_step(features, labels, N=None, epoch=0):
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients2, model.get_layer("model_2").trainable_variables))
-    train_loss(sum_rate(scheduled_output, features))
+    train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
     # train_binarization_loss(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output), features))
+    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
     del tape
 if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
@@ -143,7 +143,7 @@ if __name__ == "__main__":
                     max_acc_loss = train_hard_loss.result()
                     model.save(fname_template.format(i, "_max_train.h5"))
                 if epoch % check == 0:
-                    prediction = model.predict(valid_data, batch_size=5)
+                    prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
