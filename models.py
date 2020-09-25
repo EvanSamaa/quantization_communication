@@ -1477,7 +1477,7 @@ class Distributed_input_mod(tf.keras.layers.Layer):
         return config
 class Reduced_output_input_mod(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
-        super(Distributed_input_mod, self).__init__()
+        super(Reduced_output_input_mod, self).__init__()
         self.K = K
         self.M = M
         self.N_rf = N_rf
@@ -1516,7 +1516,7 @@ class Reduced_output_input_mod(tf.keras.layers.Layer):
             'M': self.M,
             'N_rf': self.N_rf,
             'k': self.k,
-            'name': "Distributed_input_mod",
+            'name': "Reduced_output_input_mod",
             'Mk': None,
             'Mm': None
         })
