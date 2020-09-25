@@ -1475,6 +1475,52 @@ class Distributed_input_mod(tf.keras.layers.Layer):
             'Mm': None
         })
         return config
+class Reduced_output_input_mod(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Distributed_input_mod, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        self.Mk = None
+        self.Mm = None
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, input_mod, num):
+        # alternatively could be input_mod.T
+        if self.Mk is None:
+            self.Mk = np.zeros((self.K*self.M, self.K), dtype=np.float32)
+            self.Mm = np.zeros((self.K*self.M, self.M), dtype=np.float32)
+            for i in range(0, self.K):
+                for j in range(0, self.M):
+                    self.Mk[i*self.M+j, i] = 1.0
+            for i in range(0, self.M):
+                for j in range(0, self.K):
+                    self.Mm[i*self.K+j, i] = 1.0
+            # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
+            # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
+        G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, num, 1))
+        G_col_mean = tf.transpose(tf.reduce_mean(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
+        G_col_mean = tf.tile(G_col_mean, [1, num, 1])
+        input_i = input_concatnator(
+            [input_mod,
+             G_mean,
+             G_col_mean])
+        return input_i
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'name': "Distributed_input_mod",
+            'Mk': None,
+            'Mm': None
+        })
+        return config
 ############################## MLP modes ##############################
 def create_MLP_model(input_shape, k):
     # outputs logit
@@ -3030,14 +3076,15 @@ def FDD_reduced_output_space(M, K, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
+    input_modder = Reduced_output_input_mod(K, M, N_rf,3)
     input_mod = tf.divide(input_mod, tf.tile(tf.expand_dims(norm, axis=1), (1, K, M)))
     user_selection_dnn = per_row_DNN((K, M), M, N_rf, name="per_user_dnn")
     precoder_selection_dnn = per_row_DNN((M, K), K, N_rf, name="per_precoder_dnn")
-    user_selection = user_selection_dnn(input_mod)
+    user_selection = user_selection_dnn(input_modder(input_mod, K))
     user_selection = tf.keras.layers.Softmax(axis=1)(user_selection)
     user_selection = user_selection + tf.stop_gradient(tf.divide(user_selection, tf.tile(tf.reduce_max(user_selection, axis=1, keepdims=True), [1, K, 1]))-user_selection)
     user_selection = tf.reduce_sum(user_selection, axis=2, keepdims=True)
-    precoder_selection = precoder_selection_dnn(tf.transpose(input_mod, perm=[0,2,1]))
+    precoder_selection = precoder_selection_dnn(input_modder(tf.transpose(input_mod, perm=[0,2,1]), M))
     precoder_selection = tf.keras.layers.Softmax(axis=1)(precoder_selection)
     precoder_selection = precoder_selection + tf.stop_gradient(tf.divide(precoder_selection, tf.tile(tf.reduce_max(precoder_selection, axis=1, keepdims=True), [1, M, 1]))-precoder_selection)
     precoder_selection = tf.reduce_sum(precoder_selection, axis=2, keepdims=True)
