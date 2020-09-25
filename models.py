@@ -3116,11 +3116,8 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=Fals
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
     sum_sm_raw_out_put_i = tf.reduce_sum(sm_raw_out_put_i, axis=2)  # (None, K*M)
     # output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
-    user_regularizer = Dense(128)(tf.keras.layers.Reshape((K, M))(sum_sm_raw_out_put_i))
-    user_regularizer = tf.keras.layers.BatchNormalization()(user_regularizer)
-    user_regularizer = sigmoid(user_regularizer)
-    user_regularizer = tf.keras.layers.Reshape((K*M,))(sigmoid(Dense(M)(user_regularizer)))
-    out_put_i = tf.multiply(raw_out_put_i, tf.tile(tf.expand_dims(user_regularizer, axis=2), (1,1,N_rf)))
+    regularizer = sigmoid(Dense(M*N)(tf.reduce_sum(raw_out_put_i, axis=2)))
+    out_put_i = tf.multiply(raw_out_put_i, tf.tile(tf.expand_dims(regularizer, axis=2), (1,1,N_rf)))
     out_put_i = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(out_put_i), axis=2)
 
     # # begin the second - kth iteration
