@@ -60,7 +60,7 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+reduced_output_space{}"
+    fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+distributed_then_central{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
