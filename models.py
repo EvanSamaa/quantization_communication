@@ -1444,6 +1444,10 @@ class Distributed_input_mod(tf.keras.layers.Layer):
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
+        G_max = tf.reduce_max(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
+        G_max = tf.tile(tf.expand_dims(G_max, axis=1), (1, self.K * self.M, 1))
+        G_min = tf.reduce_min(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
+        G_min = tf.tile(tf.expand_dims(G_min, axis=1), (1, self.K * self.M, 1))
         G_user_mean = tf.reduce_mean(input_mod, axis=2, keepdims=True)
         G_user_mean = tf.matmul(self.Mk, G_user_mean)
         G_user_max = tf.reduce_max(input_mod, axis=2, keepdims=True)
@@ -1458,7 +1462,7 @@ class Distributed_input_mod(tf.keras.layers.Layer):
         G_col_min = tf.matmul(self.Mm, G_col_min)
         input_i = input_concatnator(
             [input_reshaper(input_mod),
-             G_mean,
+             G_mean, G_max, G_min
              G_user_mean, G_user_min, G_user_max,
              G_col_max, G_col_min, G_col_mean,])
         return input_i
@@ -3104,7 +3108,7 @@ def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=Fals
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.tile(tf.expand_dims(norm, axis=1), (1, K, M)))
     input_modder = Distributed_input_mod(K, M, N_rf, k)
-    dnns = distributed_DNN((M * K, 8), N_rf)
+    dnns = distributed_DNN((M * K, 10), N_rf)
     input_i = input_modder(input_mod)
     raw_out_put_i = dnns(input_i)
 
