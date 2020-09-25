@@ -2649,8 +2649,8 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     # begin the second - kth iteration
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
-        input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
-        input_i = input_modder(out_put_i, input_mod_temp, k - times - 1.0)
+        # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = tf.keras.layers.Softmax(axis=1)(sigmoid(raw_out_put_i))
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
@@ -3089,6 +3089,7 @@ def FDD_reduced_output_space(M, K, N_rf=3):
     user_selection = tf.keras.layers.Softmax(axis=1)(user_selection)
     # user_selection = user_selection + tf.stop_gradient(tf.divide(user_selection, tf.tile(tf.reduce_max(user_selection, axis=1, keepdims=True), [1, K, 1]))-user_selection)
     user_selection = tf.reduce_sum(user_selection, axis=2, keepdims=True)
+    user_selection = tf.tile()
     precoder_selection = precoder_selection_dnn(input_modder(tf.transpose(input_mod, perm=[0,2,1]), M))
     precoder_selection = tf.keras.layers.Softmax(axis=1)(precoder_selection)
     # precoder_selection = precoder_selection + tf.stop_gradient(tf.divide(precoder_selection, tf.tile(tf.reduce_max(precoder_selection, axis=1, keepdims=True), [1, M, 1]))-precoder_selection)
