@@ -60,7 +60,8 @@ if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
-    fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
+    # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
+    fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -73,7 +74,7 @@ if __name__ == "__main__":
     E = 1
     more = 32
     seed = 100
-    N_rf = 8
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 1
     # hyperparameters
@@ -97,7 +98,7 @@ if __name__ == "__main__":
             # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            model =  FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_reduced_output_space(M, K, N_rf)
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
             # model = Feedbakk_FDD_mcodel_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
@@ -151,9 +152,9 @@ if __name__ == "__main__":
                         max_acc = valid_sum_rate.result()
                         model.save(fname_template.format(i, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
-                        improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
+                        improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 0].min() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
-                                                                                                    2].min()
+                                                                                                    0].min()
                         counter = 0
                         for asldk in graphing_data[0:epoch+1, 2]:
                             if asldk != 0:

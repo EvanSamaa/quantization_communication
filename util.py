@@ -1132,10 +1132,19 @@ def sparse_matrix_from_full(G, p):
     return G_copy
 if __name__ == "__main__":
     N = 500
-    M = 20
-    K = 5
+    M = 64
+    K = 50
     B = 5
     sigma2 = 0
+    data = generate_link_channel_data(1, K, M, Nrf=1)
+    data = tf.square(tf.abs(data[0]))
+
+    data = data/tf.reduce_max(data)
+    print(data.shape)
+    for i in range(0, K):
+        print(tf.reduce_mean(data[i]), tf.reduce_max(data[i]), tf.reduce_min(data[i]))
+    A[2]
+
     generate_supervised_link_channel_data(N, K, M, 3)
     generate_link_channel_data(N, K, M)
     nChoosek_bits(4, 2)
