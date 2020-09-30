@@ -919,6 +919,11 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         interference_f = input_reshaper(interference_f)
         G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
+        G_max = tf.reduce_max(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
+        G_max = tf.tile(tf.expand_dims(G_max, axis=1), (1, self.K * self.M, 1))
+        G_min = tf.reduce_min(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
+        G_min = tf.tile(tf.expand_dims(G_min, axis=1), (1, self.K * self.M, 1))
+
         G_user_mean = tf.reduce_mean(input_mod, axis=2, keepdims=True)
         G_user_mean = tf.matmul(self.Mk, G_user_mean)
         G_user_max = tf.reduce_max(input_mod, axis=2, keepdims=True)
@@ -939,7 +944,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
 
         input_i = input_concatnator(
             [input_reshaper(input_mod),
-             G_mean,
+             G_mean, G_max, G_min,
              G_user_mean, G_user_min, G_user_max,
              G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f,
@@ -969,10 +974,10 @@ class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
         self.Mk = None
         self.Mm = None
         self.row_picker = self.add_weight(name='row_picker',
-                                 shape=(self.M, 10),
+                                 shape=(self.M, 4),
                                  trainable=True)
         self.col_picker = self.add_weight(name='col_picker',
-                                 shape=(self.K, 10),
+                                 shape=(self.K, 4),
                                  trainable=True)
         # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
     def call(self, x, input_mod, step):
@@ -2638,7 +2643,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
     # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
     input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K,11 + M*K), N_rf)
+    dnns = dnn_per_link((M * K,13 + M*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
