@@ -2669,6 +2669,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
     raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
+    raw_out_put_i = sigmoid((raw_out_put_i - 0.5) * 20.0)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
     out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
     output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
@@ -2679,6 +2680,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)
+        raw_out_put_i = sigmoid((raw_out_put_i - 0.5) * 20.0)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
