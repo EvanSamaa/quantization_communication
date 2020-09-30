@@ -979,13 +979,13 @@ class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
                                  shape=(20, 4),
                                  trainable=True)
         self.bias_row = self.add_weight(name='row_bias',
-                                 shape=(20),
+                                 shape=(20,),
                                  trainable=True)
         self.col_picker = self.add_weight(name='col_picker',
                                  shape=(self.K, 20),
                                  trainable=True)
         self.bias_col = self.add_weight(name='col_bias',
-                                 shape=(20),
+                                 shape=(20,),
                                  trainable=True)
         self.col_picker_2 = self.add_weight(name='col_picker_2',
                                           shape=(20, 4),
