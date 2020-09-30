@@ -19,7 +19,7 @@ def train_step(features, labels, N=None, epoch=0):
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
-        mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(partial_feedback_pure_greedy_model(N_rf, 32, 5, M, K, sigma2_n)))
+        mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(partial_feedback_pure_greedy_model(N_rf, 32, 5, M, K, sigma2_n)(features)))
         loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1], mask)
 
         # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE{}"
+    fname_template = "trained_models/SEPT30th/greedy_folder/Nrf={}greedy{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -110,7 +110,7 @@ if __name__ == "__main__":
             max_acc = 10000
             max_acc_loss = 10000
             # training Loop
-            valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+            valid_data = generate_link_channel_data(50, K, M, Nrf=N_rf)
             for epoch in range(EPOCHS):
                 # ======== ======== data recording features ======== ========
                 train_loss.reset_states()
