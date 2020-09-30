@@ -33,7 +33,7 @@ def train_step(features, labels, N=None, epoch=0):
             # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
             # # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + 0.1*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}all_G_data{}"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}all_G_data_more_CE{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
