@@ -909,7 +909,7 @@ def All_softmaxes_MSE_general(N_rf, K, M):
         loss = 0
         for i in range(0, N_rf):
             # loss = loss + tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(tf.argmax(raw_output[:, :, i], axis=1), raw_output[:, :, i])
-            loss = loss + tf.keras.losses.MeanSquaredError()(tf.argmax(raw_output[:, :, i], axis=1), raw_output[:, :, i])
+            # loss = loss + tf.keras.losses.MeanSquaredError()(tf.argmax(raw_output[:, :, i], axis=1), raw_output[:, :, i])
             loss = loss + tf.square(1.0 - tf.reduce_max(raw_output[:, :, i], axis=1))
             loss = loss + tf.reduce_sum(tf.square(raw_output[:, :, i])) - tf.square(tf.reduce_max(raw_output[:, :, i]))
             loss = loss
