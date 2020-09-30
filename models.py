@@ -973,11 +973,23 @@ class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
         self.Mk = None
         self.Mm = None
         self.row_picker = self.add_weight(name='row_picker',
-                                 shape=(self.M, 4),
+                                 shape=(self.M, 20),
+                                 trainable=True)
+        self.row_picker_2 = self.add_weight(name='row_picker_2',
+                                 shape=(20, 4),
+                                 trainable=True)
+        self.bias_row = self.add_weight(name='row_bias',
+                                 shape=(20),
                                  trainable=True)
         self.col_picker = self.add_weight(name='col_picker',
-                                 shape=(self.K, 4),
+                                 shape=(self.K, 20),
                                  trainable=True)
+        self.bias_col = self.add_weight(name='col_bias',
+                                 shape=(20),
+                                 trainable=True)
+        self.col_picker_2 = self.add_weight(name='col_picker_2',
+                                          shape=(20, 4),
+                                          trainable=True)
         # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
     def call(self, x, input_mod, step):
         if self.Mk is None:
@@ -1019,9 +1031,9 @@ class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
         G_col_max = tf.matmul(self.Mm, G_col_max)
         G_col_min = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_min = tf.matmul(self.Mm, G_col_min)
-        G_user_learned_data = tf.matmul(input_mod, self.row_picker)
+        G_user_learned_data = tf.matmul(LeakyReLU()(tf.matmul(input_mod, self.row_picker) + self.bias_row), self.row_picker_2)
         G_user_learned_data = tf.matmul(self.Mk, G_user_learned_data)
-        G_col_learned_data = tf.matmul(tf.transpose(input_mod, perm=[0, 2, 1]), self.col_picker)
+        G_col_learned_data = tf.matmul(LeakyReLU()(tf.matmul(tf.transpose(input_mod, perm=[0, 2, 1]), self.col_picker) + self.bias_col), self.col_picker_2)
         G_col_learned_data = tf.matmul(self.Mm, G_col_learned_data)
         # x = tf.reduce_sum(x, axis=2)
         x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
