@@ -3,7 +3,7 @@ from models import *
 import numpy as np
 # from scipy.io import savemat
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 1000
     config = tf.compat.v1.ConfigProto()
@@ -100,7 +100,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
 
-    num_data = 1000
+    num_data = 10
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -116,9 +116,9 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
         # prediction = model(ds_load)
-        # for k in range(0, 10):
-        #     plt.plot(np.arange(0, K*M), prediction[k])
-        #     plt.show()
+        for k in range(0, 10):
+            plt.plot(np.arange(0, K*M), prediction[k])
+            plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
