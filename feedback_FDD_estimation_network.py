@@ -52,7 +52,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/greedy_folder/Nrf={}greedy{}"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}all_G_data{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
