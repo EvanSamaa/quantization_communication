@@ -117,6 +117,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         prediction = model.predict(ds_load, batch_size=10)[0][:, -1]
         # prediction = model(ds_load)
         for k in range(0, 10):
+            g_model = partial_feedback_pure_greedy_model(N_rf, 32, 5, M, K, sigma2_n)
+            plt.plot(np.arange(0, K*M), g_model(ds_load[k:k+1])[0])
             plt.plot(np.arange(0, K*M), prediction[k])
             plt.show()
         # prediction = model(ds_load)
@@ -167,7 +169,7 @@ def plot_data(arr, col=[], title="loss"):
 if __name__ == "__main__":
 
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/SEPT30th/Nrf=4/Nrf=4sigmoid+sm"
+    file = "trained_models/SEPT30th/Nrf=4/Nrf=4trained_G_data_MSE+fine_grain_MSE"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,

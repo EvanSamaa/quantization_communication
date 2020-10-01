@@ -944,6 +944,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         input_i = input_concatnator(
             [input_reshaper(input_mod),
              G_mean, G_max, G_min,
+             # G_mean,
              G_user_mean, G_user_min, G_user_max,
              G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f,
