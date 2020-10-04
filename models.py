@@ -1015,7 +1015,7 @@ class Per_link_sequential_modification(tf.keras.layers.Layer):
         G_col_max = tf.matmul(self.Mm, G_col_max)
         G_col_min = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_min = tf.matmul(self.Mm, G_col_min)
-        x = tf.reduce_sum(x, axis=2)
+        # x = tf.reduce_sum(x, axis=2)
         x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
