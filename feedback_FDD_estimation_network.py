@@ -21,22 +21,22 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         loss_4 = 0
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
-        # for i in range(0, scheduled_output.shape[1]):
-        #     sr = sum_rate(scheduled_output[:, i], features)
-        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-        #
-        #     ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
-        #     loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-        #
-        #     mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, i]))/ (N_rf * 1.0)
-        #     # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
-        #     ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/(N_rf*1.0), mask)
-        #     # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
-        #     loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        for i in range(0, scheduled_output.shape[1]):
+            # sr = sum_rate(scheduled_output[:, i], features)
+            # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+            #
+            # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
+            # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            #
+            mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(raw_output[:, i]))
+            # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
+            ce = tf.keras.losses.CategoricalCrossentropy()(raw_output[:, i], mask)
+            # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
+            loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-raw_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1
+        loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}sequential"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}sequential+CE"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
