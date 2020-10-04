@@ -964,6 +964,84 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
             'Mm': None
         })
         return config
+
+class Per_link_sequential_modification(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Per_link_sequential_modification, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        self.Mk = None
+        self.Mm = None
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x, input_mod, step):
+        if self.Mk is None:
+            self.Mk = np.zeros((self.K*self.M, self.K), dtype=np.float32)
+            self.Mm = np.zeros((self.K*self.M, self.M), dtype=np.float32)
+            for i in range(0, self.K):
+                for j in range(0, self.M):
+                    self.Mk[i*self.M+j, i] = 1.0
+            for i in range(0, self.M):
+                for j in range(0, self.K):
+                    self.Mm[i*self.K+j, i] = 1.0
+            # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
+            # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        interference_f = tf.multiply(power, x)
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
+        interference_t = input_reshaper(interference_t)
+        interference_f = input_reshaper(interference_f)
+        G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
+        G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
+        G_max = tf.reduce_max(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
+        G_max = tf.tile(tf.expand_dims(G_max, axis=1), (1, self.K * self.M, 1))
+        G_min = tf.reduce_min(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
+        G_min = tf.tile(tf.expand_dims(G_min, axis=1), (1, self.K * self.M, 1))
+        G_user_mean = tf.reduce_mean(input_mod, axis=2, keepdims=True)
+        G_user_mean = tf.matmul(self.Mk, G_user_mean)
+        G_user_max = tf.reduce_max(input_mod, axis=2, keepdims=True)
+        G_user_max = tf.matmul(self.Mk, G_user_max)
+        G_user_min = tf.reduce_max(input_mod, axis=2, keepdims=True)
+        G_user_min = tf.matmul(self.Mk, G_user_min)
+        G_col_mean = tf.transpose(tf.reduce_mean(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
+        G_col_mean = tf.matmul(self.Mm, G_col_mean)
+        G_col_max = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
+        G_col_max = tf.matmul(self.Mm, G_col_max)
+        G_col_min = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
+        G_col_min = tf.matmul(self.Mm, G_col_min)
+        # x = tf.reduce_sum(x, axis=2)
+        x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
+        # x = tf.reduce_sum(x, axis=1, keepdims=True)
+        x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
+
+        input_i = input_concatnator(
+            [input_reshaper(input_mod),
+             G_mean, G_max, G_min,
+             # G_mean,
+             G_user_mean, G_user_min, G_user_max,
+             G_col_max, G_col_min, G_col_mean,
+             interference_t, interference_f,
+             x])
+        return input_i
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'name': "Per_link_sequential_modification",
+            'Mk': None,
+            'Mm': None
+        })
+        return config
 class Per_link_Input_modification_learnable_G(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Per_link_Input_modification_learnable_G, self).__init__()
@@ -2630,6 +2708,18 @@ def dnn_per_link(input_shape, N_rf):
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
+def dnn_sequential(input_shape):
+    inputs = Input(shape=input_shape)
+    x = Dense(64)(inputs)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(64)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    x = Dense(1)(x)
+    # x = sigmoid(x)
+    model = Model(inputs, x)
+    return model
 def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -2688,6 +2778,35 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     model = Model(inputs, output)
     return model
+def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
+    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
+    input_modder = Per_link_sequential_modification(K, M, N_rf, 1)
+    dnn_model = dnn_sequential((K*M, K*M+12))
+    output_final = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :])) # inital output/planning
+    input_i = input_modder(output_final, input_mod, k - 1.0)
+    raw_out_put_i = dnn_model(input_i)
+    out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)[:, :, 0]  # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1)]
+    output_final = tf.keras.layers.Reshape((K * M,))(out_put_i)
+    # begin the second - Nrf_th iteration
+
+    for times in range(1, N_rf):
+        out_put_i = tf.keras.layers.Reshape((K, M))(output_final)
+        # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        raw_out_put_i = dnn_model(input_i)
+        out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)[:, :, 0]
+        # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        output_final = output_final + out_put_i
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+    output.append(output_final)
+    model = Model(inputs, output)
+    return model
+
 def FDD_per_link_archetecture_more_G_no_SM_between_passes(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -3105,7 +3224,6 @@ def distributed_DNN(input_shape, N_rf):
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
-
 def FDD_reduced_output_space(M, K, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -3392,6 +3510,8 @@ def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1):
     model = Model(inputs, [reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t])
     print(model.summary())
     return model
+
+
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
     # F_create_CNN_encoding_model_with_annealing(2, 1, (2, 24))
@@ -3409,7 +3529,7 @@ if __name__ == "__main__":
     # model = CSI_reconstruction_VQVAE2(M, K, B, 30, N_rf, 1, more=1)
     # model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, 1, perfect_CSI=True)
     # model(G)
-    model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf)
+    model = FDD_one_at_a_time(M, K, 6, N_rf)
     # model = Autoencoder_CNN_Encoding_module(input_shape=(K, M), i=0, code_size=15, normalization=False)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
