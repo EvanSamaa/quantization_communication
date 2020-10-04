@@ -7,7 +7,7 @@ from tensorflow.keras.activations import sigmoid
 import random
 from tensorflow.keras import backend as KB
 from util import *
-# import tensorflow_addons as tfa
+import tensorflow_addons as tfa
 # from sklearn.cluster import KMeans
 # from matplotlib import pyplot as plt
 ############################## Trained Loss Functions ##############################
