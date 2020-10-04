@@ -21,7 +21,7 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         loss_4 = 0
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
-        for i in range(0, scheduled_output.shape[1]):
+        for i in range(0, raw_output.shape[1]):
             # sr = sum_rate(scheduled_output[:, i], features)
             # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             #
