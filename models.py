@@ -7,7 +7,7 @@ from tensorflow.keras.activations import sigmoid
 import random
 from tensorflow.keras import backend as KB
 from util import *
-import tensorflow_addons as tfa
+# import tensorflow_addons as tfa
 # from sklearn.cluster import KMeans
 # from matplotlib import pyplot as plt
 ############################## Trained Loss Functions ##############################
@@ -1015,11 +1015,16 @@ class Per_link_sequential_modification(tf.keras.layers.Layer):
         G_col_max = tf.matmul(self.Mm, G_col_max)
         G_col_min = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_min = tf.matmul(self.Mm, G_col_min)
-        # x = tf.reduce_sum(x, axis=2)
+        x = tf.reduce_sum(x, axis=2)
         x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
-
+        # self_decision = tf.keras.layers.Reshape((self.K * self.M, 1))(x)
+        # same_user_decision = tf.matmul(self.Mk, x)
+        # x = tf.reduce_sum(x, axis=2)
+        # # x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
+        # # x = tf.reduce_sum(x, axis=1, keepdims=True)
+        # x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         input_i = input_concatnator(
             [input_reshaper(input_mod),
              G_mean, G_max, G_min,
