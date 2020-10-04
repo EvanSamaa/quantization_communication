@@ -2710,12 +2710,12 @@ def dnn_per_link(input_shape, N_rf):
     return model
 def dnn_sequential(input_shape):
     inputs = Input(shape=input_shape)
-    x = Dense(64)(inputs)
+    x = Dense(512)(inputs)
     x = tf.keras.layers.BatchNormalization()(x)
     x = sigmoid(x)
-    x = Dense(64)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = sigmoid(x)
+    # x = Dense(64)(x)
+    # x = tf.keras.layers.BatchNormalization()(x)
+    # x = sigmoid(x)
     x = Dense(1)(x)
     # x = sigmoid(x)
     model = Model(inputs, x)

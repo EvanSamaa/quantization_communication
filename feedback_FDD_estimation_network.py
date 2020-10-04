@@ -108,7 +108,7 @@ if __name__ == "__main__":
             max_acc = 10000
             max_acc_loss = 10000
             # training Loop
-            valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+            valid_data = generate_link_channel_data(5, K, M, Nrf=N_rf)
             for epoch in range(EPOCHS):
                 # ======== ======== data recording features ======== ========
                 train_loss.reset_states()
@@ -134,7 +134,7 @@ if __name__ == "__main__":
                     max_acc_loss = train_hard_loss.result()
                     model.save(fname_template.format(i, "_max_train.h5"))
                 if epoch % check == 0:
-                    prediction = model.predict(valid_data, batch_size=5)[0]
+                    prediction = model.predict(valid_data, batch_size=5)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
