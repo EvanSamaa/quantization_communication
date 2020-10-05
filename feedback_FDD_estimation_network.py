@@ -12,7 +12,7 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape(persistent=True) as tape:
-        if epoch <= 1000:
+        if epoch <= 1:
             T = 1.0 - (epoch)/1000 * 0.9
         else:
             T = 0.1
