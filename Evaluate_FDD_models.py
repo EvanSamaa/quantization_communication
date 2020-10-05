@@ -107,18 +107,18 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
-    print("Testing Starts")
+    print("Testing Starts")4.
     for e in range(0, 1):
         ds = generate_link_channel_data(num_data, K, M, N_rf)
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model.predict(ds_load, batch_size=10)[0]
+        prediction = model.predict([tf.ones([num_data, 1])*0.1, ds_load], batch_size=10)[0]
         # prediction = model(ds_load)
         for k in range(0, 10):
             g_model = partial_feedback_pure_greedy_model(N_rf, 32, 5, M, K, sigma2_n)
-            plt.plot(np.arange(0, K*M), g_model(ds_load[k:k+1])[0])
+            # plt.plot(np.arange(0, K*M), g_model(ds_load[k:k+1])[0])
             for i in range(0, N_rf):
                 plt.plot(np.arange(0, K*M), prediction[k, i])
             plt.show()
@@ -170,7 +170,7 @@ def plot_data(arr, col=[], title="loss"):
 if __name__ == "__main__":
 
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/SEPT30th/Nrf=4/Nrf=4sequential+stronger_sequential+more_iteration+different_weighted_CE+less_X"
+    file = "trained_models/SEPT30th/Nrf=4/Nrf=4stronger_sequential+temperature+less_X"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
