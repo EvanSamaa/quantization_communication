@@ -12,7 +12,11 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape(persistent=True) as tape:
-        raw_output, scheduled_output = model(features)
+        if epoch <= 1000:
+            T = 1.0 - (epoch)/1000 * 0.9
+        else:
+            T = 0.1
+        raw_output, scheduled_output = model([T, features])
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = sum_rate(scheduled_output, features)
@@ -21,10 +25,6 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         loss_4 = 0
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
-        if epoch < 2000:
-            w = 0.1
-        else:
-            w = 1
         for i in range(0, raw_output.shape[1]):
             # sr = sum_rate(scheduled_output[:, i], features)
             # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
@@ -36,11 +36,11 @@ def train_step(features, labels, N=None, epoch=0):
             # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
             ce = tf.keras.losses.CategoricalCrossentropy()(raw_output[:, i], mask)
             # mse = tf.keras.losses.MeanSquaredError()(raw_output[:, i], mask)
-            loss_4 = loss_4 + 0.1*ce
+            loss_4 = loss_4 + ce
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + loss_4
+        loss = loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}stronger_sequential+CE+less_X{}"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}stronger_sequential+temperature+less_X{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2

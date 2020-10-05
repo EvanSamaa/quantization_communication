@@ -2874,6 +2874,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     return model
 def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
+    temp = Input(shape=(1, ), dtype=tf.float32)
     input_mod = tf.square(tf.abs(inputs))
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
@@ -2898,7 +2899,7 @@ def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
         output_final = output_final + out_put_i
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
     output.append(output_final)
-    model = Model(inputs, output)
+    model = Model([temp, inputs], output)
     return model
 
 def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
