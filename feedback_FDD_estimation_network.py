@@ -31,7 +31,7 @@ def train_step(features, labels, N=None, epoch=0):
             mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(raw_output[:, i]))
             # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
             # ce = tf.keras.losses.CategoricalCrossentropy()(raw_output[:, i], mask)
-            mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
+            mse = tf.keras.losses.MeanSquaredError()(raw_output[:, i], mask)
             loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-raw_output.shape[1]+1+i, dtype=tf.float32)) * mse
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
