@@ -987,6 +987,7 @@ class Per_link_sequential_modification(tf.keras.layers.Layer):
                     self.Mm[i*self.K+j, i] = 1.0
             # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
             # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+        original_x = x
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
@@ -1015,10 +1016,12 @@ class Per_link_sequential_modification(tf.keras.layers.Layer):
         G_col_max = tf.matmul(self.Mm, G_col_max)
         G_col_min = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_min = tf.matmul(self.Mm, G_col_min)
-        # x = tf.reduce_sum(x, axis=2)
+
         x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
+        #
+
         # self_decision = tf.keras.layers.Reshape((self.K * self.M, 1))(x)
         # same_user_decision = tf.matmul(self.Mk, x)
         # x = tf.reduce_sum(x, axis=2)
@@ -1026,7 +1029,7 @@ class Per_link_sequential_modification(tf.keras.layers.Layer):
         # # x = tf.reduce_sum(x, axis=1, keepdims=True)
         # x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         input_i = input_concatnator(
-            [input_reshaper(input_mod),
+            [input_reshaper(input_mod) * (1.0 - tf.keras.layers.Reshape((self.K*self.M, 1))(original_x)),
              G_mean, G_max, G_min,
              # G_mean,
              G_user_mean, G_user_min, G_user_max,
