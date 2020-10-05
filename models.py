@@ -884,9 +884,9 @@ class Per_link_Input_modification_more_G(tf.keras.layers.Layer):
             'Mm': None
         })
         return config
-class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
+class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
-        super(Per_link_Input_modification_most_G, self).__init__()
+        super(Per_link_Input_modification_most_G_raw_self, self).__init__()
         self.K = K
         self.M = M
         self.N_rf = N_rf
@@ -894,7 +894,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         self.Mk = None
         self.Mm = None
         # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
-    def call(self, x, input_mod, step):
+    def call(self, x, input_mod, step, prev_self):
         if self.Mk is None:
             self.Mk = np.zeros((self.K*self.M, self.K), dtype=np.float32)
             self.Mm = np.zeros((self.K*self.M, self.M), dtype=np.float32)
@@ -948,7 +948,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
              G_user_mean, G_user_min, G_user_max,
              G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f,
-             x,
+             x, prev_self,
              iteration_num])
         return input_i
 
@@ -959,7 +959,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
             'M': self.M,
             'N_rf': self.N_rf,
             'k': self.k,
-            'name': "Per_link_Input_modification_most_G",
+            'name': "Per_link_Input_modification_most_G_raw_self",
             'Mk': None,
             'Mm': None
         })
@@ -2865,12 +2865,15 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
     # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
-    input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
+    input_modder = Per_link_Input_modification_most_G_raw_self(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link_mutex((M * K ,13+ M*K), N_rf)
+    dnns = dnn_per_link((M * K ,13+ M*K + N_rf), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
-    input_i = input_modder(output_0, input_mod, k - 1.0)
+    raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
+    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
+    input_i = input_modder(output_0, input_mod, k - 1.0, raw_out_put_0)
     raw_out_put_i = dnns(input_i)
     raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
     # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
@@ -2881,7 +2884,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
-        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0, raw_out_put_i)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)
         # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)

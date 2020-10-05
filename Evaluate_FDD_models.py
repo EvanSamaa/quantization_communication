@@ -123,9 +123,9 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
             G_pred = g_model(ds_load[k:k+1])[0]
             for i in range(0, 6):
                 plt.plot(np.arange(0, K * M), G_pred)
-                for t in range(0, N_rf):
-                    plt.plot(np.arange(0, K * M), raw_pred[k, i, :, t])
-                # plt.plot(np.arange(0, K*M), prediction[k, i])
+                # for t in range(0, N_rf):
+                #     plt.plot(np.arange(0, K * M), raw_pred[k, i, :, t])
+                plt.plot(np.arange(0, K*M), prediction[k, i])
                 plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
@@ -175,7 +175,7 @@ def plot_data(arr, col=[], title="loss"):
 if __name__ == "__main__":
 
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/SEPT30th/Nrf=4/Nrf=4perlink+temperature"
+    file = "trained_models/SEPT30th/Nrf=4/Nrf=4perlink+mutex"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
