@@ -32,7 +32,7 @@ def train_step(features, labels, N=None, epoch=0):
             # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
             ce = tf.keras.losses.CategoricalCrossentropy()(raw_output[:, i], mask)
             # mse = tf.keras.losses.MeanSquaredError()(raw_output[:, i], mask)
-            loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-raw_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            loss_4 = loss_4 + ce
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
