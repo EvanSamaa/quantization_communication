@@ -2896,7 +2896,7 @@ def FDD_per_link_archetecture_more_G_temperature(M, K, k=2, N_rf=3, output_all=F
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
-        raw_out_put_i = tf.keras.layers.Softmax(axis=1)(tf.math.scalar_mul(1.0/(1.0-times/(k-1)*0.9), raw_out_put_i))
+        raw_out_put_i = tf.keras.layers.Softmax(axis=1)(tf.math.scalar_mul(1.0/(1.0-times/(k-1)*0.95), raw_out_put_i))
         # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
