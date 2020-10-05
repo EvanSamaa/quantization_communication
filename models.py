@@ -1077,7 +1077,7 @@ class Per_link_sequential_modification_compressedX(tf.keras.layers.Layer):
             # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
             # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
 
-        original_x = x # x is shaped [none, K, M]
+        # original_x = x # x is shaped [none, K, M]
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
