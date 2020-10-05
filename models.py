@@ -2831,13 +2831,14 @@ def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)[:, :, 0]  # (None, K*M)
     output = [tf.expand_dims(out_put_i, axis=1)]
     output_final = tf.keras.layers.Reshape((K * M,))(out_put_i)
+
     # begin the second - Nrf_th iteration
 
     for times in range(1, 2*N_rf):
         if times < N_rf:
             out_put_i = tf.keras.layers.Reshape((K, M))(output_final)
         else:
-            output_final = tf.reduce_sum(output[0][(-N_rf+1):], axis=1)
+            output_final = tf.reduce_sum(output[0][(:, -N_rf+1):], axis=1)
             out_put_i = tf.keras.layers.Reshape((K, M))(output_final)
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
