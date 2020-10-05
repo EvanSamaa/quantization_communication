@@ -2874,7 +2874,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
     raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
     input_i = input_modder(output_0, input_mod, k - 1.0, raw_out_put_0)
-    raw_out_put_i = dnns(input_i)
+    raw_out_put_i = dnn_per_link_mutex(input_i)
     raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
     # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
