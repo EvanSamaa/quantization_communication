@@ -2805,6 +2805,25 @@ def dnn_per_link(input_shape, N_rf):
     # x = sigmoid(x)
     model = Model(inputs, x)
     return model
+
+def dnn_per_link_mutex(input_shape, N_rf):
+    inputs = Input(shape=input_shape)
+    x = Dense(512)(inputs)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = sigmoid(x)
+    # x = Dense(256)(x)
+    # x = tf.keras.layers.BatchNormalization()(x)
+    # x = sigmoid(x)
+    x = Dense(N_rf)(x)
+    mutex = tf.eye(N_rf) - tf.ones((N_rf, N_rf))
+    mutex = tf.expand_dims(mutex, axis=0)
+    mutex = tf.expand_dims(mutex, axis=0)
+    x = tf.expand_dims(x, axis=3)
+    x = tf.multiply(x, sigmoid(tf.matmul(mutex, x)))[:, :, :, 0]
+    # x = sigmoid(x)
+    model = Model(inputs, x)
+    return model
+
 def dnn_sequential(input_shape):
     inputs = Input(shape=input_shape)
     x = Dense(512)(inputs)
@@ -2848,7 +2867,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
     input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,13+ M*K), N_rf)
+    dnns = dnn_per_link_mutex((M * K ,13+ M*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     input_i = input_modder(output_0, input_mod, k - 1.0)
@@ -2896,7 +2915,7 @@ def FDD_per_link_archetecture_more_G_temperature(M, K, k=2, N_rf=3, output_all=F
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
-        raw_out_put_i = tf.keras.layers.Softmax(axis=1)(tf.math.scalar_mul(1.0/(1.0-times/(k-1)*0.95), raw_out_put_i))
+        raw_out_put_i = tf.keras.layers.Softmax(axis=1)(tf.math.scalar_mul(1.0/(1.0-times/(k-1)*0.9), raw_out_put_i))
         # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
