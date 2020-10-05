@@ -170,7 +170,7 @@ def plot_data(arr, col=[], title="loss"):
 if __name__ == "__main__":
 
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/SEPT30th/Nrf=4/Nrf=4DEEP_RELU_sequential+stronger_sequential+more_iteration+CE+less_X"
+    file = "trained_models/SEPT30th/Nrf=4/Nrf=4sequential+stronger_sequential+more_iteration+different_weighted_CE+less_X"
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,

@@ -1090,7 +1090,6 @@ class Per_link_sequential_modification_compressedX(tf.keras.layers.Layer):
         interference_f = input_reshaper(interference_f)
         x_user_choice = tf.matmul(self.Mk, tf.reduce_sum(x, axis=2,keepdims=True))[:, :, 0]
         x_user_choice = tf.keras.layers.Reshape((self.K, self.M))(x_user_choice)
-        input_mod = input_mod * (1.0 - x_user_choice)
         G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
         G_max = tf.reduce_max(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
@@ -1109,12 +1108,10 @@ class Per_link_sequential_modification_compressedX(tf.keras.layers.Layer):
         G_col_max = tf.matmul(self.Mm, G_col_max)
         G_col_min = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_min = tf.matmul(self.Mm, G_col_min)
-        #
         # x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # # x = tf.reduce_sum(x, axis=1, keepdims=True)
         # x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
-        #
-
+        input_mod = input_mod * (1.0 - x_user_choice)
         # self_decision = tf.keras.layers.Reshape((self.K * self.M, 1))(x)
         same_user_decision = tf.matmul(self.Mk, x)
         # x = tf.reduce_sum(x, axis=2)
