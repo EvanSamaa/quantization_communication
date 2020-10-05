@@ -16,6 +16,7 @@ def train_step(features, labels, N=None, epoch=0):
             T = 1.0 - (epoch)/1000 * 0.9
         else:
             T = 0.1
+        T = tf.constant(T, dtype=tf.float32)
         raw_output, scheduled_output = model([T, features])
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
@@ -138,7 +139,7 @@ if __name__ == "__main__":
                     max_acc_loss = train_hard_loss.result()
                     model.save(fname_template.format(i, "_max_train.h5"))
                 if epoch % check == 0:
-                    prediction = model.predict(valid_data, batch_size=5)[1]
+                    prediction = model.predict([1.0, valid_data], batch_size=5)[1]
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
