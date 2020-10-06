@@ -49,8 +49,8 @@ def train_step(features, labels, N=None, epoch=0):
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             #
 
-            ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
-            loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
+            # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             #
             # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
             # # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}perlink+link_mutex+per_link_CE{}"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}perlink+link_mutex{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
