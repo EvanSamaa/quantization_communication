@@ -38,10 +38,17 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         loss_4 = 0
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
-        for i in range(0, raw_output.shape[1]):
-            sr = sum_rate(scheduled_output[:, i], features)
+        for i in range(0, scheduled_output.shape[1]):
+
+            mutex = tf.eye(3200) - tf.ones((3200, 3200))
+            mutex = tf.expand_dims(mutex, axis=0)
+            x = tf.expand_dims(scheduled_output[:, i], axis=2)
+            x = tf.multiply(x, sigmoid(10.0 * tf.matmul(mutex, x)))[:, :, 0]
+
+            sr = sum_rate(x, features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             #
+
             ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
             loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             #
@@ -68,7 +75,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}perlink+more_self_feedback+per_link_CE{}"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}perlink+link_mutex+per_link_CE{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
