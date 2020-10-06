@@ -43,12 +43,12 @@ def train_step(features, labels, N=None, epoch=0):
             mutex = tf.eye(3200) - tf.ones((3200, 3200))
             mutex = tf.expand_dims(mutex, axis=0)
             x = tf.expand_dims(x_raw[:, :, 0], axis=2)
-            x = tf.multiply(x, sigmoid(20.0 * tf.matmul(mutex, x) - 10.0))[:, :, 0]
+            x = tf.multiply(x, sigmoid(20.0 * tf.matmul(mutex, x) + 10.0))[:, :, 0]
             for raw in range(1, N_rf):
                 x_i = tf.expand_dims(x_raw[:, :, raw], axis=2)
                 x = x + tf.multiply(x_i, sigmoid(20.0 * tf.matmul(mutex, x_i) + 10.0))[:, :, 0]
             sr = sum_rate(x, features)
-            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+            loss_1 = loss_1 + tf.exp(3*tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             #
 
             # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
