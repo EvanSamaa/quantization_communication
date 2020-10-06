@@ -5,10 +5,22 @@ import numpy as np
 import scipy as sp
 from keras_adabound.optimizers import AdaBound
 # from matplotlib import pyplot as plt
-custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
-                   'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
-                   "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
-                   "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg}
+custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
+               'Interference_Input_modification': Interference_Input_modification,
+               'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
+               "Interference_Input_modification_per_user": Interference_Input_modification_per_user,
+               "Closest_embedding_layer_moving_avg": Closest_embedding_layer_moving_avg,
+               "Per_link_Input_modification_more_G": Per_link_Input_modification_more_G,
+               "Per_link_Input_modification_more_G_less_X": Per_link_Input_modification_more_G_less_X,
+               "Per_link_Input_modification_even_more_G": Per_link_Input_modification_even_more_G,
+               "Per_link_Input_modification_compress_XG": Per_link_Input_modification_compress_XG,
+               "Per_link_Input_modification_compress_XG_alt": Per_link_Input_modification_compress_XG_alt,
+               "Per_link_Input_modification_more_G_alt_2": Per_link_Input_modification_more_G_alt_2,
+               "Per_link_Input_modification_compress_XG_alt_2": Per_link_Input_modification_compress_XG_alt_2,
+               "Per_link_Input_modification_most_G": Per_link_Input_modification_most_G,
+               "Per_link_sequential_modification": Per_link_sequential_modification,
+               "Per_link_sequential_modification_compressedX": Per_link_sequential_modification_compressedX,
+               "Per_link_Input_modification_most_G_raw_self": Per_link_Input_modification_most_G_raw_self}
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape(persistent=True) as tape:
@@ -137,7 +149,9 @@ if __name__ == "__main__":
                 graphing_data[epoch, 3] = train_hard_loss.result()
                 if train_hard_loss.result() < max_acc_loss:
                     max_acc_loss = train_hard_loss.result()
-                    model.save(fname_template.format(i, "_max_train.h5"))
+                    model.save(fname_template.format(i, "_max_train2.h5"))
+                    tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
+
                 if epoch % check == 0:
                     prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(prediction), tf.abs(valid_data))
