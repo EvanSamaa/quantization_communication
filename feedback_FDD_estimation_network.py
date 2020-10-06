@@ -157,7 +157,7 @@ if __name__ == "__main__":
                 if train_hard_loss.result() < max_acc_loss:
                     max_acc_loss = train_hard_loss.result()
                     model.save(fname_template.format(i, "_max_train2.h5"))
-                    tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
+                    # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
 
                 if epoch % check == 0:
                     prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
