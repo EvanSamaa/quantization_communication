@@ -40,13 +40,14 @@ def train_step(features, labels, N=None, epoch=0):
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         mutex_loss = 0
         for i in range(0, scheduled_output.shape[1]):
-            x_raw = raw_output[:, i, :, :]
-            mutex = tf.eye(3200) - tf.ones((3200, 3200))
-            mutex = tf.expand_dims(mutex, axis=0)
-            for raw in range(0, N_rf):
-                x_i = tf.expand_dims(x_raw[:, :, raw], axis=2)
-                x_i = tf.multiply(x_i, sigmoid(20.0 * tf.matmul(mutex, x_i) + 10.0))[:, :, 0]
-                mutex_loss += tf.reduce_sum(x_i, axis=1)
+            if i == scheduled_output.shape[1] - 1:
+                x_raw = raw_output[:, i, :, :]
+                mutex = tf.eye(3200) - tf.ones((3200, 3200))
+                mutex = tf.expand_dims(mutex, axis=0)
+                for raw in range(0, N_rf):
+                    x_i = tf.expand_dims(x_raw[:, :, raw], axis=2)
+                    x_i = tf.multiply(x_i, sigmoid(20.0 * tf.matmul(mutex, x_i) + 10.0))[:, :, 0]
+                    mutex_loss += tf.reduce_sum(x_i, axis=1)
             sr = sum_rate(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(3*tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             #
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}perlink+mutex_loss{}"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}perlink+mutex_loss_pass{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
