@@ -40,7 +40,7 @@ def train_step(features, labels, N=None, epoch=0):
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         mutex_loss = 0
         for i in range(0, scheduled_output.shape[1]):
-            if i == scheduled_output.shape[1] - 1:
+            if i <= scheduled_output.shape[1] - 1:
                 x_raw = raw_output[:, i, :, :]
                 mutex = tf.eye(3200) - tf.ones((3200, 3200))
                 mutex = tf.expand_dims(mutex, axis=0)
@@ -63,7 +63,7 @@ def train_step(features, labels, N=None, epoch=0):
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 + mutex_loss
+        loss = loss_1 - mutex_loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}perlink+mutex_loss_pass{}"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}perlink+mutex_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
