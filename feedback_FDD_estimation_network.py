@@ -43,7 +43,7 @@ def train_step(features, labels, N=None, epoch=0):
             mutex = tf.eye(3200) - tf.ones((3200, 3200))
             mutex = tf.expand_dims(mutex, axis=0)
             x = tf.expand_dims(scheduled_output[:, i], axis=2)
-            x = tf.multiply(x, sigmoid(10.0 * tf.matmul(mutex, x)))[:, :, 0]
+            x = tf.multiply(x, sigmoid(20.0 * tf.matmul(mutex, x) - 10.0))[:, :, 0]
 
             sr = sum_rate(x, features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
