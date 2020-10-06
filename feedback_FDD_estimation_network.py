@@ -39,12 +39,14 @@ def train_step(features, labels, N=None, epoch=0):
         loss_4 = 0
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         for i in range(0, scheduled_output.shape[1]):
-
+            x_raw = raw_output[:, i, :, :]
             mutex = tf.eye(3200) - tf.ones((3200, 3200))
             mutex = tf.expand_dims(mutex, axis=0)
-            x = tf.expand_dims(scheduled_output[:, i], axis=2)
+            x = tf.expand_dims(x_raw[:, :, 0], axis=2)
             x = tf.multiply(x, sigmoid(20.0 * tf.matmul(mutex, x) - 10.0))[:, :, 0]
-
+            for raw in range(1, N_rf):
+                x_i = tf.expand_dims(x_raw[:, :, raw], axis=2)
+                x = x + tf.multiply(x_i, sigmoid(20.0 * tf.matmul(mutex, x_i) - 10.0))[:, :, 0]
             sr = sum_rate(x, features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             #
