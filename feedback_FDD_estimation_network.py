@@ -49,7 +49,7 @@ def train_step(features, labels, N=None, epoch=0):
                     x_i = tf.multiply(x_i, sigmoid(20.0 * tf.matmul(mutex, x_i) + 10.0))[:, :, 0]
                     mutex_loss += tf.reduce_sum(x_i, axis=1)
             sr = sum_rate(scheduled_output[:, i], features)
-            loss_1 = loss_1 + tf.exp(3*tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             #
 
             # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
@@ -63,7 +63,7 @@ def train_step(features, labels, N=None, epoch=0):
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 - mutex_loss
+        loss = loss_1 - 0.1 * mutex_loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
