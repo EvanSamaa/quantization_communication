@@ -997,6 +997,7 @@ class Per_link_Input_modification_most_G_sigmoid(tf.keras.layers.Layer):
         interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
         interference_t = input_reshaper(interference_t)
         interference_f = input_reshaper(interference_f)
+        input_mod = input_mod * 1.0 - x
         G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
         G_max = tf.reduce_max(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
@@ -1016,7 +1017,6 @@ class Per_link_Input_modification_most_G_sigmoid(tf.keras.layers.Layer):
         G_col_min = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_min = tf.matmul(self.Mm, G_col_min)
         # x = tf.reduce_sum(x, axis=2)
-        input_mod = input_mod * 1.0 - x
         x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
