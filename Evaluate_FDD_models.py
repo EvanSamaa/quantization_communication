@@ -115,6 +115,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         prediction = model.predict([tf.ones((10, 1)), ds_load], batch_size=10)
+        # prediction = model.predict(ds_load, batch_size=10)
+
         raw_pred = prediction[0]
         prediction = prediction[1]
         # prediction = model(ds_load)
@@ -122,6 +124,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
             g_model = partial_feedback_pure_greedy_model(N_rf, 32, 5, M, K, sigma2_n)
             G_pred = g_model(ds_load[k:k+1])[0]
             plt.plot(np.arange(0, K * M), G_pred)
+            # plt.plot(np.arange(0, K * M), prediction[k])
             # for i in range(0, 6):
             for t in range(0, N_rf):
                 plt.plot(np.arange(0, K * M), raw_pred[k, t, :])
