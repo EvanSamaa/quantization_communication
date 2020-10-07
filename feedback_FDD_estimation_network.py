@@ -24,32 +24,32 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape(persistent=True) as tape:
-        if epoch <= 1:
-            T = 1.0 - (epoch)/1000 * 0.9
-        else:
-            T = 0.1
-        T = tf.ones([3, 1]) * T
-        scheduled_output, raw_output= model(features)
+        # if epoch <= 1:
+        #     T = 1.0 - (epoch)/1000 * 0.9
+        # else:
+        #     T = 0.1
+        # T = tf.ones([3, 1]) * T
+        # scheduled_output, raw_output= model(features)
+        raw_output, scheduled_output = model([tf.ones([3, 1]), features])
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        loss_1 = 0
+        loss_1 = sum_rate(scheduled_output, features)
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         loss_4 = 0
+        print(raw_output.shape)
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         mutex_loss = 0
-        for i in range(0, scheduled_output.shape[1]):
-            if i <= scheduled_output.shape[1] - 1:
-                x_raw = raw_output[:, i, :, :]
-                mutex = tf.eye(3200) - tf.ones((3200, 3200))
-                mutex = tf.expand_dims(mutex, axis=0)
-                for raw in range(0, N_rf):
-                    x_i = tf.expand_dims(x_raw[:, :, raw], axis=2)
-                    x_i = tf.multiply(x_i, sigmoid(20.0 * tf.matmul(mutex, x_i) + 10.0))[:, :, 0]
-                    mutex_loss += tf.reduce_sum(x_i, axis=1)
-            sr = sum_rate(scheduled_output[:, i], features)
-            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+        for i in range(0, raw_output.shape[1]):
+            x_raw = raw_output[:, i, :]
+            mutex = tf.eye(3200) - tf.ones((3200, 3200))
+            mutex = tf.expand_dims(mutex, axis=0)
+            x_i = tf.expand_dims(x_raw, axis=2)
+            x_i = tf.multiply(x_i, sigmoid(20.0 * tf.matmul(mutex, x_i) + 10.0))[:, :, 0]
+            mutex_loss += tf.reduce_sum(x_i, axis=1)
+            # sr = sum_rate(scheduled_output[:, i], features)
+            # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             #
 
             # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
@@ -68,17 +68,17 @@ def train_step(features, labels, N=None, epoch=0):
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients2, model.get_layer("model_2").trainable_variables))
-    train_loss(sum_rate(scheduled_output[:, -1], features))
+    train_loss(sum_rate(scheduled_output, features))
     # train_loss(loss_3)
     # train_binarization_loss(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
+    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output), features))
     del tape
 if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}perlink+0p1mutex_loss{}"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}one_at_a_time+0p1mutex_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -115,7 +115,7 @@ if __name__ == "__main__":
             # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-            model =  FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            model =  FDD_one_at_a_time(M, K, 6, N_rf, output_all=True)
             # model = FDD_reduced_output_space(M, K, N_rf)
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
             # model = Feedbakk_FDD_mcodel_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
@@ -163,7 +163,7 @@ if __name__ == "__main__":
                     # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
 
                 if epoch % check == 0:
-                    prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
+                    prediction = model.predict([tf.ones([1000, 1]), valid_data], batch_size=5)[1]
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
