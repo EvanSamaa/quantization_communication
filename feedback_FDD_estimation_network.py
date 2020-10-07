@@ -33,12 +33,12 @@ def train_step(features, labels, N=None, epoch=0):
         raw_output, scheduled_output = model([tf.ones([3, 1]), features])
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        scheduled_output = tf.pow(scheduled_output, 4)
         loss_1 = sum_rate(scheduled_output, features)
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         loss_4 = 0
-        print(raw_output.shape)
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         mutex_loss = 0
         for i in range(0, raw_output.shape[1]):
@@ -63,7 +63,7 @@ def train_step(features, labels, N=None, epoch=0):
 
             # loss_2 = loss_2 + tf.exp(tf.constant(-predictions.shape[1]+1+i, dtype=tf.float32)) * vs
         # # print("==============================")
-        loss = loss_1 - 0.1 * mutex_loss
+        loss = loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}one_at_a_time+0p1mutex_loss{}"
+    fname_template = "trained_models/SEPT30th/Nrf=4/Nrf={}one_at_a_time+power_out{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
