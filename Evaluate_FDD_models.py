@@ -117,8 +117,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         prediction = model.predict(ds_load, batch_size=10)
         # prediction = model.predict(ds_load, batch_size=10)
 
-        raw_pred = prediction[1]
-        prediction = prediction[0]
+        raw_pred = prediction[0]
+        prediction = prediction[1]
         # prediction = model(ds_load)
         print(prediction.shape)
         for k in range(0, 10):
@@ -179,7 +179,10 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/SEPT30th/Nrf=4/Nrf=4perlink+link_mutex+per_link_CE"
+    file = "trained_models/Oct_7th/Nrf=4Greedy_supervised"
+
+    # plottt = np.load(file)
+    # plot_data(plottt, [0, 3], title="Sum Rate")
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
