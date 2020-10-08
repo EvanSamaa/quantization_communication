@@ -3124,7 +3124,6 @@ def FDD_per_link_archetecture_more_G_temperature(M, K, k=2, N_rf=3, output_all=F
     return model
 def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
-    T = Input(shape=(1, ), dtype=tf.float32)
     input_mod = tf.square(tf.abs(inputs))
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
@@ -3133,7 +3132,7 @@ def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
     output_final = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :])) # inital output/planning
     input_i = input_modder(output_final, input_mod, k - 1.0)
     raw_out_put_i = dnn_model(input_i)
-    out_put_i = tf.keras.layers.Softmax(axis=1)(tf.math.scalar_mul(1/T[0, 0], raw_out_put_i))[:, :, 0]  # (None, K*M)
+    out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)[:, :, 0]  # (None, K*M)
     output = [tf.expand_dims(out_put_i, axis=1)]
     output_final = tf.keras.layers.Reshape((K * M,))(out_put_i)
     # begin the second - Nrf_th iteration
@@ -3143,13 +3142,13 @@ def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnn_model(input_i)
-        out_put_i = tf.keras.layers.Softmax(axis=1)(tf.math.scalar_mul(1/T[0, 0], raw_out_put_i))[:, :, 0]
+        out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)[:, :, 0]
         # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         output_final = output_final + out_put_i
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
     output.append(output_final)
-    model = Model([T, inputs], output)
+    model = Model(inputs, output)
     return model
 
 def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
@@ -3157,7 +3156,7 @@ def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     input_mod = tf.square(tf.abs(inputs))
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
-    input_modder = Per_link_sequential_modification(K, M, N_rf, 1)
+    input_modder =  (K, M, N_rf, 1)
     dnn_model = dnn_sequential((K*M, K*M+12))
     output_final = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :])) # inital output/planning
     input_i = input_modder(output_final, input_mod, k - 1.0)
