@@ -30,7 +30,7 @@ def train_step(features, labels, N=None, epoch=0):
         #     T = 0.1
         # T = tf.ones([3, 1]) * T
         # scheduled_output, raw_output= model(features)
-        raw_output, scheduled_output = model(features)
+        scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = 0
@@ -40,10 +40,10 @@ def train_step(features, labels, N=None, epoch=0):
         loss_4 = 0
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         mutex_loss = 0
-        # print(raw_output.shape)
+        print(raw_output.shape)
         mask = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(features)
-        for i in range(0, raw_output.shape[1]):
-            x = raw_output[:, i, :]
+        for i in range(0, raw_output.shape[3]):
+            x = raw_output[:, -1, :, i]
             if i == 0:
                 mask_i = mask[i]
             else:
@@ -120,7 +120,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
-            model = FDD_one_at_a_time(M, K, 6, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_reduced_output_space(M, K, N_rf)
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
             # model = Feedbakk_FDD_mcodel_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
@@ -168,7 +168,7 @@ if __name__ == "__main__":
                     # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
 
                 if epoch % check == 0:
-                    prediction = model.predict(valid_data, batch_size=5)[1]
+                    prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
