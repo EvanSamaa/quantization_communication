@@ -131,6 +131,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
                 choice_i = raw_pred[k, i]
                 if choice_i[np.nonzero(mask_i)[0]] > 0.8:
                     stored[k, i] = 1
+                else:
+                    stored[k, i] = 0
             print(k, stored)
             np.save("trained_models/Oct_7th/greedy_probability_of_error.npy", stored)
             # plt.plot(np.arange(0, K * M), G_pred)
