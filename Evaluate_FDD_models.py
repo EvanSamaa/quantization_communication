@@ -120,8 +120,8 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         raw_pred = prediction[0]
         prediction = prediction[1]
         # prediction = model(ds_load)
-        stored = np.ones([1000, 4]) * -1
-        for k in range(0, 1000):
+        stored = np.ones([num_data, 4]) * -1
+        for k in range(0, num_data):
             G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
             for i in range(0, 4):
                 if i == 0:
