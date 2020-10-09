@@ -100,7 +100,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
 
-    num_data = 10
+    num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -120,18 +120,26 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         raw_pred = prediction[0]
         prediction = prediction[1]
         # prediction = model(ds_load)
-        print(prediction.shape)
-        for k in range(0, 10):
-            g_model = partial_feedback_pure_greedy_model(N_rf, 32, 5, M, K, sigma2_n)
-            G_pred = g_model(ds_load[k:k+1])[0]
-            plt.plot(np.arange(0, K * M), G_pred)
-            # plt.plot(np.arange(0, K * M), prediction[k])
-            # for i in range(0, 6):
-            for t in range(0, N_rf):
-                plt.plot(np.arange(0, K * M), raw_pred[k, t, :])
-                # plt.plot(np.arange(0, K*M), prediction[k, i])
-            plt.show()
-
+        stored = np.ones([1000, 4]) * -1
+        for k in range(0, 1000):
+            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+            for i in range(0, 4):
+                if i == 0:
+                    mask_i = G_pred[i][0]
+                else:
+                    mask_i = G_pred[i][0] - G_pred[i-1][0]
+                choice_i = raw_pred[k, i]
+                if choice_i[np.nonzero(mask_i)[0]] > 0.8:
+                    stored[k, i] = 1
+            print(k, stored)
+            np.save("trained_models/Oct_7th/greedy_probability_of_error.npy", stored)
+            # plt.plot(np.arange(0, K * M), G_pred)
+            # # plt.plot(np.arange(0, K * M), prediction[k])
+            # # for i in range(0, 6):
+            # for t in range(0, N_rf):
+            #     plt.plot(np.arange(0, K * M), raw_pred[k, t, :])
+            #     # plt.plot(np.arange(0, K*M), prediction[k, i])
+            # plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
@@ -179,7 +187,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/Oct_7th/Nrf=4Greedy_supervised"
+    file = "trained_models/Oct_7th/Nrf=4Greedy_supervised+fixed"
 
     # plottt = np.load(file)
     # plot_data(plottt, [0, 3], title="Sum Rate")
