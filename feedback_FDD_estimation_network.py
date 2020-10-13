@@ -36,8 +36,9 @@ def train_step(features, labels, N=None, epoch=0):
         loss_1 = sum_rate(scheduled_output, features)
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
-        # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
+        mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
+        loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output, mask)
         mutex_loss = 0
         # mask = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(features)
         # for i in range(0, raw_output.shape[3]):
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Oct13/Nrf={}seperatedX{}"
+    fname_template = "trained_models/Oct13/Nrf={}seperatedX+reg{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
