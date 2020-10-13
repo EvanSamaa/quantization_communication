@@ -189,9 +189,11 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/Oct_7th/Nrf=4Greedy_supervised+fixed"
+    file = "trained_models/Oct_7th/greedy_probability_of_error.npy"
 
-    # plottt = np.load(file)
+    plottt = np.load(file)
+    print(1-np.sum(plottt, axis=0)/1000.0)
+    A[2]
     # plot_data(plottt, [0, 3], title="Sum Rate")
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,

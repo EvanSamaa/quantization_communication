@@ -3150,7 +3150,6 @@ def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
     output.append(output_final)
     model = Model(inputs, output)
     return model
-
 def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
@@ -3184,7 +3183,6 @@ def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     output.append(output_final)
     model = Model(inputs, output)
     return model
-
 def FDD_per_link_archetecture_more_G_no_SM_between_passes(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
