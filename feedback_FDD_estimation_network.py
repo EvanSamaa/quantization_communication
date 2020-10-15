@@ -51,7 +51,7 @@ def train_step(features, labels, N=None, epoch=0):
             # x_i = tf.expand_dims(x_raw, axis=2)
             # x_i = tf.multiply(x_i, sigmoid(20.0 * tf.matmul(mutex, x_i) + 10.0))[:, :, 0]
             # mutex_loss += tf.reduce_sum(x_i, axis=1)
-            sr = sum_rate(scheduled_output[:, i], features)
+            sr = sum_rate_train(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
             # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Oct13/Nrf={}neg_mod{}"
+    fname_template = "trained_models/Oct13/Nrf={}neg_mod+high_noise{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -116,7 +116,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 8, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_reduced_output_space(M, K, N_rf)
 
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
@@ -124,6 +124,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+            sum_rate_train = Sum_rate_utility_WeiCui(K, M, 20)
             optimizer = tf.keras.optimizers.Adam(lr=0.001)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
@@ -137,7 +138,7 @@ if __name__ == "__main__":
             max_acc = 10000
             max_acc_loss = 10000
             # training Loop
-            valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+            valid_data = generate_link_channel_data(20, K, M, Nrf=N_rf)
             for epoch in range(EPOCHS):
                 # ======== ======== data recording features ======== ========
                 train_loss.reset_states()
