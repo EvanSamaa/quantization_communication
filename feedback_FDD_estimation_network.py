@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
                 if epoch % check == 0:
                     prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
-                    out = sum_rate(Harden_scheduling(N_rf, K, M, default_val=0)(prediction), tf.abs(valid_data))
+                    out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(prediction), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
