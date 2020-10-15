@@ -39,8 +39,9 @@ def train_step(features, labels, N=None, epoch=0):
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         loss_4 = 0
-        for i in range(0, raw_output.shape[3]):
-            x = raw_output[:, -1, :, i]
+        loss_3 = 0
+        for i in range(0, scheduled_output.shape[1]):
+            x = raw_output[:, -1, :]
             # if i == 0:
             #     mask_i = mask[i]
             # else:
@@ -62,8 +63,11 @@ def train_step(features, labels, N=None, epoch=0):
             # # mse = tf.keras.losses.MeanSquaredError()(raw_output[:, i], mask)
             loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
+            log_sum = tf.reduce_sum(tf.reduce_sum(tf.math.log(x), axis=2), axis=1)
+            loss_3 = loss_3 + log_sum
+
         # # print("==============================")
-        loss = loss_1 + loss_4
+        loss = loss_1 + loss_4 + loss_3
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
@@ -78,7 +82,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Oct13/Nrf={}neg_mod+Relu{}"
+    fname_template = "trained_models/Oct13/Nrf={}neg_mod+Relu+log_sum{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2

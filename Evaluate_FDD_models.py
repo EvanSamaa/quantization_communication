@@ -175,7 +175,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/Oct13/Nrf=4neg_mod+high_noise"
+    file = "trained_models/Oct13/Nrf=4neg_mod+Relu"
     #
     # plottt = np.load(file)
     # print(1-np.sum(plottt, axis=0)/1000.0)
