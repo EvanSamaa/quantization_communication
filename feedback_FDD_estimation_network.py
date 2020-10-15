@@ -124,7 +124,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            sum_rate_train = Sum_rate_utility_WeiCui(K, M, 50)
+            sum_rate_train = Sum_rate_utility_WeiCui_plusp5(K, M, 50)
             optimizer = tf.keras.optimizers.Adam(lr=0.001)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
@@ -138,7 +138,7 @@ if __name__ == "__main__":
             max_acc = 10000
             max_acc_loss = 10000
             # training Loop
-            valid_data = generate_link_channel_data(20, K, M, Nrf=N_rf)
+            valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
             for epoch in range(EPOCHS):
                 # ======== ======== data recording features ======== ========
                 train_loss.reset_states()
