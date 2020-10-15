@@ -100,7 +100,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
 
-    num_data = 1000
+    num_data = 10
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -117,13 +117,16 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         prediction = model.predict(ds_load, batch_size=10)
         # prediction = model.predict(ds_load, batch_size=10)
 
-        # raw_pred = prediction[0]
-        # prediction = prediction[1]
+        raw_pred = prediction[1]
+        prediction = prediction[0][:, -1]
         # prediction = model(ds_load)
         stored = np.ones([num_data, 4]) * -1
         for k in range(0, num_data):
-            # G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-            plt.imshow(tf.reshape(prediction[k], (K, M)))
+            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+            # plt.imshow(tf.reshape(prediction[k], (K, M)))
+            plt.plot(np.arange(0, K*M), G_pred[-1][0])
+            plt.plot(np.arange(0, K*M), prediction[k])
+
             plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
@@ -172,7 +175,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/Oct13/Nrf=4seperatedX+reg"
+    file = "trained_models/Oct13/Nrf=4neg_mod+high_noise"
     #
     # plottt = np.load(file)
     # print(1-np.sum(plottt, axis=0)/1000.0)
