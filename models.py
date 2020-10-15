@@ -942,7 +942,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
 
         input_i = input_concatnator(
-            [input_reshaper(input_mod),
+            [-input_reshaper(input_mod),
              G_mean, G_max, G_min,
              # G_mean,
              G_user_mean, G_user_min, G_user_max,
@@ -1840,6 +1840,55 @@ class Distributed_input_mod(tf.keras.layers.Layer):
             'Mm': None
         })
         return config
+class Reduced_output_precoder_input_mod(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Reduced_output_precoder_input_mod, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        self.Mk = None
+        self.Mm = None
+    def call(self, x, input_mod):
+        if self.Mk is None:
+            self.Mk = np.zeros((self.N_rf*self.M, self.N_rf), dtype=np.float32)
+            self.Mm = np.zeros((self.N_rf*self.M, self.M), dtype=np.float32)
+            for i in range(0, self.N_rf):
+                for j in range(0, self.M):
+                    self.Mk[i*self.M+j, i] = 1.0
+            for i in range(0, self.M):
+                for j in range(0, self.N_rf):
+                    self.Mm[i*self.N_rf+j, i] = 1.0
+            # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
+            # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.N_rf, 1))
+        G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.N_rf, ))(input_mod), axis=1, keepdims=True)
+        G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.N_rf * self.M, 1))
+        G_max = tf.reduce_max(tf.keras.layers.Reshape((self.M * self.N_rf,))(input_mod), axis=1, keepdims=True)
+        G_max = tf.tile(tf.expand_dims(G_max, axis=1), (1, self.N_rf * self.M, 1))
+        G_min = tf.reduce_mean(tf.keras.layers.Reshape((self.M * self.N_rf,))(input_mod), axis=1, keepdims=True)
+        G_min = tf.tile(tf.expand_dims(G_min, axis=1), (1, self.N_rf * self.M, 1))
+        G_user = tf.matmul(self.Mk, input_mod)
+        input_i = input_concatnator(
+            [input_reshaper(input_mod),
+             G_mean, G_max, G_min,
+             G_user
+             ])
+        return input_i
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'name': "Reduced_output_precoder_input_mod",
+            'Mk': None,
+            'Mm': None
+        })
+        return config
 class Reduced_output_input_mod(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Reduced_output_input_mod, self).__init__()
@@ -1868,10 +1917,14 @@ class Reduced_output_input_mod(tf.keras.layers.Layer):
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, num, 1))
         G_col_mean = tf.reduce_mean(input_mod, axis=1, keepdims=True)
         G_col_mean = tf.tile(G_col_mean, [1, num, 1])
+        G_col_max = tf.reduce_max(input_mod, axis=1, keepdims=True)
+        G_col_max = tf.tile(G_col_max, [1, num, 1])
+        G_col_min = tf.reduce_min(input_mod, axis=1, keepdims=True)
+        G_col_min = tf.tile(G_col_min, [1, num, 1])
         input_i = input_concatnator(
             [input_mod,
              G_mean,
-             G_col_mean])
+             G_col_mean, G_col_min, G_col_max])
         return input_i
 
     def get_config(self):
@@ -3026,16 +3079,17 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
     # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
-    input_modder = Per_link_Input_modification_most_G_raw_self(K, M, N_rf, k)
+    # input_modder = Per_link_Input_modification_most_G_raw_self(K, M, N_rf, k)
+    input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     sm = tf.keras.layers.Softmax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,13+ M*K + N_rf), N_rf)
+    dnns = dnn_per_link((M * K ,13+ M*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
-    raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
-    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
-    raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
-    input_i = input_modder(raw_out_put_0, input_mod, k - 1.0)
+    # raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
+    # raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    # raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
+    input_i = input_modder(output_0, input_mod, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
     raw_out_put_i = sm(raw_out_put_i) # (None, K*M, Nrf)
@@ -3047,7 +3101,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
-        input_i = input_modder(raw_out_put_i, input_mod, k - times - 1.0)
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = sm(raw_out_put_i)
@@ -3283,12 +3337,12 @@ def FDD_Dumb_model(M, K, k=2, N_rf=3):
     return model
 def per_row_DNN(input_shape, M, N_rf=1, name="dnn"):
     inputs = Input(shape=input_shape)
-    x = Dense(64)(inputs)
+    x = Dense(256)(inputs)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = Dense(64)(x)
-    x = sigmoid(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    # x = Dense(64)(x)
+    # x = sigmoid(x)
+    # x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(N_rf, bias_initializer="ones")(x)
     model = Model(inputs, x, name=name)
     return model
@@ -3605,17 +3659,23 @@ def FDD_reduced_output_space(M, K, N_rf=3):
     input_mod = tf.square(tf.abs(inputs))
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     input_modder = Reduced_output_input_mod(K, M, N_rf,3)
+    precoder_input_modder = Reduced_output_precoder_input_mod(K, M, N_rf,3)
     input_mod = tf.divide(input_mod, tf.tile(tf.expand_dims(norm, axis=1), (1, K, M)))
-    user_selection_dnn = per_row_DNN((K, M + M + 1), M, N_rf, name="per_user_dnn")
-    precoder_selection_dnn = per_row_DNN((M, K + K + 1), M, N_rf, name="per_precoder_dnn")
+    user_selection_dnn = per_row_DNN((K, 3*M + M + 1), M, N_rf, name="per_user_dnn")
+    precoder_selection_dnn = per_row_DNN((N_rf*M, 4+M), M, 1, name="per_precoder_dnn")
     user_selection = user_selection_dnn(input_modder(input_mod, K))
     user_selection = tf.keras.layers.Softmax(axis=1)(user_selection)
+    # user_selection = user_selection + tf.stop_gradient(user_selection / tf.reduce_max(user_selection, axis=1, keepdims=True) - user_selection)
     # user_selection = user_selection + tf.stop_gradient(tf.divide(user_selection, tf.tile(tf.reduce_max(user_selection, axis=1, keepdims=True), [1, K, 1]))-user_selection)
-    user_selection = tf.reduce_sum(user_selection, axis=2, keepdims=True)
-    precoder_selection = precoder_selection_dnn(input_modder(tf.transpose(input_mod, perm=[0,2,1]), M))
-    # precoder_selection = precoder_selection + tf.stop_gradient(tf.divide(precoder_selection, tf.tile(tf.reduce_max(precoder_selection, axis=1, keepdims=True), [1, M, 1]))-precoder_selection)
-    precoder_selection = tf.reduce_sum(precoder_selection, axis=2, keepdims=True)
-    precoder_selection = tf.transpose(precoder_selection, perm=[0, 2, 1])
+    user_selection = tf.transpose(user_selection, perm=[0, 2, 1])
+    input_mod = tf.matmul(user_selection, input_mod)
+    precoder_selection = precoder_selection_dnn(precoder_input_modder(None, input_mod))
+    precoder_selection = tf.keras.layers.Reshape((N_rf, M))(precoder_selection)
+    precoder_selection = tf.keras.layers.Softmax(axis=2)(precoder_selection)
+    user_selection = tf.reduce_sum(user_selection, axis=1, keepdims=True)
+    # precoder_selection = precoder_selection + tf.stop_gradient(tf.divide(precoder_selection, tf.reduce_max(precoder_selection, axis=1, keepdims=True))-precoder_selection)
+    precoder_selection = tf.reduce_sum(precoder_selection, axis=1, keepdims=True)
+    user_selection = tf.transpose(user_selection, perm=[0, 2, 1])
     out = tf.matmul(user_selection, precoder_selection)
     out = tf.keras.layers.Reshape((M*K, ))(out)
     model = Model(inputs, out)

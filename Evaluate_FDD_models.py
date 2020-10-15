@@ -3,7 +3,7 @@ from models import *
 import numpy as np
 # from scipy.io import savemat
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 1000
     config = tf.compat.v1.ConfigProto()
@@ -117,31 +117,14 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         prediction = model.predict(ds_load, batch_size=10)
         # prediction = model.predict(ds_load, batch_size=10)
 
-        raw_pred = prediction[0]
-        prediction = prediction[1]
+        # raw_pred = prediction[0]
+        # prediction = prediction[1]
         # prediction = model(ds_load)
         stored = np.ones([num_data, 4]) * -1
         for k in range(0, num_data):
-            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-            for i in range(0, 4):
-                if i == 0:
-                    mask_i = G_pred[i][0]
-                else:
-                    mask_i = G_pred[i][0] - G_pred[i-1][0]
-                choice_i = raw_pred[k, i]
-                if choice_i[np.nonzero(mask_i)[0]] > 0.8:
-                    stored[k, i] = 1
-                else:
-                    stored[k, i] = 0
-            print(k, stored)
-            np.save("trained_models/Oct_7th/greedy_probability_of_error.npy", stored)
-            # plt.plot(np.arange(0, K * M), G_pred)
-            # # plt.plot(np.arange(0, K * M), prediction[k])
-            # # for i in range(0, 6):
-            # for t in range(0, N_rf):
-            #     plt.plot(np.arange(0, K * M), raw_pred[k, t, :])
-            #     # plt.plot(np.arange(0, K*M), prediction[k, i])
-            # plt.show()
+            # G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+            plt.imshow(tf.reshape(prediction[k], (K, M)))
+            plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
@@ -189,11 +172,11 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/Oct_7th/greedy_probability_of_error.npy"
-
-    plottt = np.load(file)
-    print(1-np.sum(plottt, axis=0)/1000.0)
-    A[2]
+    file = "trained_models/Oct13/Nrf=4seperatedX+reg"
+    #
+    # plottt = np.load(file)
+    # print(1-np.sum(plottt, axis=0)/1000.0)
+    # A[2]
     # plot_data(plottt, [0, 3], title="Sum Rate")
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -209,7 +192,8 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G":Per_link_Input_modification_most_G,
                    "Per_link_sequential_modification": Per_link_sequential_modification,
                    "Per_link_sequential_modification_compressedX":Per_link_sequential_modification_compressedX,
-                   "Per_link_Input_modification_most_G_raw_self":Per_link_Input_modification_most_G_raw_self}
+                   "Per_link_Input_modification_most_G_raw_self":Per_link_Input_modification_most_G_raw_self,
+                   "Reduced_output_input_mod":Reduced_output_input_mod}
     N = 1
     M = 64
     K = 50
