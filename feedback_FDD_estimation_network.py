@@ -58,9 +58,9 @@ def train_step(features, labels, N=None, epoch=0):
             #
             mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
             # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
-            # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * mse
+            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+            # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
+            loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
         # # print("==============================")
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Oct13/Nrf={}neg_mod+relu+MSEreg+trainmore_beforeswap{}"
+    fname_template = "trained_models/Oct13/Nrf={}neg_mod+relu+trainmore_beforeswap+more_noise{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -123,7 +123,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            sum_rate_train = Sum_rate_utility_WeiCui(K, M, 0.0001)
+            sum_rate_train = Sum_rate_utility_WeiCui(K, M, 50)
             optimizer = tf.keras.optimizers.Adam(lr=0.001)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
