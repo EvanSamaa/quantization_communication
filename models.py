@@ -3012,7 +3012,7 @@ def dnn_per_link(input_shape, N_rf):
     inputs = Input(shape=input_shape)
     x = Dense(512)(inputs)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = LeakyReLU()(x)
+    x = sigmoid()(x)
     # x = Dense(256)(x)
     # x = tf.keras.layers.BatchNormalization()(x)
     # x = sigmoid(x)
