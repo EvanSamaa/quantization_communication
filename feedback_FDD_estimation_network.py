@@ -61,7 +61,7 @@ def train_step(features, labels, N=None, epoch=0):
         for i in range(0, scheduled_output.shape[1]):
             mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
+            loss_4 = loss_4 + 0.1*tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
     gradients = tape.gradient(loss_4, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Oct13/Nrf={}neg_mod+relu+later_CE{}"
+    fname_template = "trained_models/Oct13/Nrf={}neg_mod+relu+0.1*later_CE{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
