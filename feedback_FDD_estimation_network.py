@@ -40,31 +40,31 @@ def train_step(features, labels, N=None, epoch=0):
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         loss_4 = 0
         for i in range(0, scheduled_output.shape[1]):
-            x = raw_output[:, -1, :]
-            # if i == 0:
-            #     mask_i = mask[i]
-            # else:
-            #     mask_i = mask[i] - mask[i-1]
-            # loss_4 = loss_4 + tf.keras.losses.CategoricalCrossentropy()(x, mask_i)
-            # mutex = tf.eye(3200) - tf.ones((3200, 3200))
-            # mutex = tf.expand_dims(mutex, axis=0)
-            # x_i = tf.expand_dims(x_raw, axis=2)
-            # x_i = tf.multiply(x_i, sigmoid(20.0 * tf.matmul(mutex, x_i) + 10.0))[:, :, 0]
-            # mutex_loss += tf.reduce_sum(x_i, axis=1)
             sr = sum_rate_train(scheduled_output[:, i], features)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
             # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             #
-            mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
-            # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
-            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+            # # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
+            # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+            # # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
+            # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
         # # print("==============================")
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    del tape
+    with tf.GradientTape(persistent=True) as tape:
+        scheduled_output, raw_output = model(features)
+        loss_4 = 0
+        for i in range(0, scheduled_output.shape[1]):
+            mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
+    gradients = tape.gradient(loss_4, model.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients2, model.get_layer("model_2").trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
@@ -72,12 +72,13 @@ def train_step(features, labels, N=None, epoch=0):
     # train_binarization_loss(loss_3)
     train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
     del tape
+
 if __name__ == "__main__":
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Oct13/Nrf={}neg_mod+2xrelu+trainmore_beforeswap+more_noise{}"
+    fname_template = "trained_models/Oct13/Nrf={}neg_mod+relu+later_CE{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -115,7 +116,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 4, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_reduced_output_space(M, K, N_rf)
 
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
@@ -146,8 +147,8 @@ if __name__ == "__main__":
                 train_hard_loss.reset_states()
                 valid_sum_rate.reset_states()
                 # ======== ======== training step ======== ========
-                if epoch % 10 == 0:
-                    train_features = generate_link_channel_data(N, K, M, N_rf)
+                # if epoch % 20 == 0:
+                train_features = generate_link_channel_data(N, K, M, N_rf)
                 train_step(train_features, None, training_mode, epoch=epoch)
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
