@@ -54,16 +54,6 @@ def train_step(features, labels, N=None, epoch=0):
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    del tape
-    with tf.GradientTape(persistent=True) as tape:
-        scheduled_output, raw_output = model(features)
-        loss_4 = 0
-        for i in range(0, scheduled_output.shape[1]):
-            mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
-            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
-    gradients = tape.gradient(loss_4, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
     # gradients2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients2, model.get_layer("model_2").trainable_variables))
@@ -116,7 +106,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 4, N_rf, output_all=True)
             # model = FDD_reduced_output_space(M, K, N_rf)
 
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
@@ -125,8 +115,8 @@ if __name__ == "__main__":
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-            optimizer2 = tf.keras.optimizers.Adam(lr=0.0001)
+            optimizer = tf.keras.optimizers.Adam(lr=0.001)
+            optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
             graphing_data = np.zeros((EPOCHS, 4))
