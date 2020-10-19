@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
                 if epoch % check == 0:
                     compressed_G, position_matrix = G_compress(valid_data, 2)
-                    scheduled_output, raw_output = model([valid_data, compressed_G, position_matrix], batch_size=5)
+                    scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:,-1]), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
