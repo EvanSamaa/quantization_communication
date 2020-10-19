@@ -3832,7 +3832,7 @@ def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
     # input-modding layers
     csi_modder = MaskGen(filter)
-    input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
+    input_modder = Per_link_Input_modification_most_G_with_mask(K, M, N_rf, k)
 
     filtered_G = csi_modder(input_mod)
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
@@ -3841,7 +3841,7 @@ def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
     dnns = dnn_per_link((M * K ,13+ M*K + N_rf), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
-    input_i = input_modder(output_0, input_mod, k - 1.0)
+    input_i = input_modder(output_0, input_mod, filtered_G, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
     raw_out_put_i = sm(raw_out_put_i) # (None, K*M, Nrf)
@@ -3853,7 +3853,7 @@ def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
-        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        input_i = input_modder(out_put_i, input_mod, filtered_G, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = sm(raw_out_put_i)
