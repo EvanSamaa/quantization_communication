@@ -9,7 +9,7 @@ from tensorflow.keras import backend as KB
 from util import *
 # import tensorflow_addons as tfa
 # from sklearn.cluster import KMeans
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 ############################## Trained Loss Functions ##############################
 def MLP_loss_function(inputshape=[1000, 3]):
     inputs = Input(shape=inputshape)
