@@ -192,7 +192,9 @@ if __name__ == "__main__":
                    "Per_link_sequential_modification": Per_link_sequential_modification,
                    "Per_link_sequential_modification_compressedX":Per_link_sequential_modification_compressedX,
                    "Per_link_Input_modification_most_G_raw_self":Per_link_Input_modification_most_G_raw_self,
-                   "Reduced_output_input_mod":Reduced_output_input_mod}
+                   "Reduced_output_input_mod":Reduced_output_input_mod,
+                   "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
+                   "X_extends":X_extends}
     N = 1
     M = 64
     K = 50

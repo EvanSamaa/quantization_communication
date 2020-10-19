@@ -9,7 +9,7 @@ from tensorflow.keras import backend as KB
 from util import *
 # import tensorflow_addons as tfa
 # from sklearn.cluster import KMeans
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 ############################## Trained Loss Functions ##############################
 def MLP_loss_function(inputshape=[1000, 3]):
     inputs = Input(shape=inputshape)
@@ -2049,6 +2049,117 @@ class Per_link_Input_modification_most_G_with_mask(tf.keras.layers.Layer):
             'Mm': None
         })
         return config
+
+class TopPrecoderPerUserInputMod(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, top_l, **kwargs):
+        super(TopPrecoderPerUserInputMod, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        self.Mk = None
+        self.Mm = None
+        self.top_l = top_l
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x, smol_x, input_mod, smol_input_mod, step):
+        if self.Mk is None:
+            self.Mk = np.zeros((self.K*self.top_l, self.K), dtype=np.float32)
+            for i in range(0, self.K):
+                for j in range(0, self.top_l):
+                    self.Mk[i*self.top_l+j, i] = 1.0
+            self.Mk = tf.Variable(self.Mk, dtype=tf.float32, trainable=False)
+            # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.top_l * self.K, 1))
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        interference_f = tf.multiply(power, x)
+        interference_f = tf.reduce_sum(interference_f, axis=2, keepdims=True)
+        interference_f = tf.matmul(self.Mk, interference_f)
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, axis=2), (1, self.top_l, 1))
+        G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
+        G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.top_l, 1))
+        G_max = tf.reduce_max(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
+        G_max = tf.tile(tf.expand_dims(G_max, axis=1), (1, self.K * self.top_l, 1))
+        G_min = tf.reduce_min(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
+        G_min = tf.tile(tf.expand_dims(G_min, axis=1), (1, self.K * self.top_l, 1))
+        # G_col = tf.matmul(self.Mk, input_mod)
+        # x = tf.reduce_sum(x, axis=2)
+        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(smol_input_mod)) + tf.constant(step))
+        input_i = input_concatnator(
+            [-input_reshaper(smol_input_mod),
+             G_mean, G_max, G_min,
+             # G_mean,
+             interference_t, interference_f,
+             tf.tile(tf.expand_dims(smol_x, axis=1), (1, self.K*self.top_l, 1)),
+             iteration_num])
+        return input_i
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'top_l': self.top_l,
+            'name': "TopPrecoderPerUserInputMod",
+            'Mk': None,
+            'Mm': None
+        })
+        return config
+# for select the top l precoders and only consider those as the output
+def G_compress(G, top_l=2):
+    K = G.shape[1]
+    M = G.shape[2]
+    G = tf.abs(G)
+    compressed_G, top_indices = tf.math.top_k(G, k=top_l)
+    position_matrix = np.zeros((tf.shape(G)[0], top_l * K, M))
+    for n in range(0, G.shape[0]):
+        for i in range(0, K * top_l):
+            p_i = i % top_l
+            user_i = tf.floor(i * 1.0 / top_l)
+            position_matrix[n, i, int(top_indices[n, int(user_i.numpy()), p_i])] = 1.0
+    position_matrix = tf.Variable(position_matrix, dtype=tf.float32, trainable=False)
+    return compressed_G, position_matrix
+
+class X_extends(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, num, **kwargs):
+        super(X_extends, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.num = num # number of users considered for each choice
+        self.stretch = None
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x_filtered, position_matrix):
+        # x_filtered = [None, K*num]
+        x_filtered = tf.keras.layers.Reshape((self.K, self.num))(x_filtered)
+        if self.stretch is None:
+            self.stretch = np.zeros((self.K, self.num*self.K), dtype=np.float32)
+            for i in range(0, self.K):
+                for j in range(0, self.num):
+                    self.stretch[i, self.num*i+j] = 1.0
+            self.stretch = tf.Variable(self.stretch, dtype=tf.float32, trainable=False)
+        x_filtered = tf.tile(x_filtered, [1, 1, self.K])
+        x_filtered = tf.multiply(x_filtered, self.stretch)
+        rtv = tf.matmul(x_filtered, position_matrix)
+        return rtv
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'num': self.num,
+            'name': "X_extends",
+            'stretch': None,
+        })
+        return config
+
 ############################## MLP modes ##############################
 def create_MLP_model(input_shape, k):
     # outputs logit
@@ -3826,43 +3937,39 @@ def FDD_reduced_output_space(M, K, N_rf=3):
     return model
 
 def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
+    smol_input = Input(shape=(K, filter), dtype=tf.float32)
+    position_matrix = Input(shape=(filter*K, M), dtype=tf.float32)
     inputs = Input(shape=(K, M), dtype=tf.complex64)
-    input_mod = tf.square(tf.abs(inputs))
+    input_mod = tf.abs(inputs)
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
-    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
-    # input-modding layers
-    csi_modder = MaskGen(filter)
-    input_modder = Per_link_Input_modification_most_G_with_mask(K, M, N_rf, k)
-
-    filtered_G = csi_modder(input_mod)
-    # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
+    # utilized layers
     sm = tf.keras.layers.Softmax(axis=1)
-    # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,13+ M*K + N_rf), N_rf)
-    # compute interference from k,i
-    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
-    input_i = input_modder(output_0, input_mod, filtered_G, k - 1.0)
-    # input_i = input_modder(output_0, input_mod, k - 1.0)
+    input_modder = TopPrecoderPerUserInputMod(K, M, N_rf, k, filter)
+    output_stretcher = X_extends(K, M, N_rf, filter)
+    output_flatten = tf.keras.layers.Reshape((K*M, ))
+    dnns = dnn_per_link((filter * K, 7 + filter * K), N_rf)
+    # normalizing inputs
+    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
+    smol_input_mod = tf.divide(smol_input, tf.expand_dims(norm, axis=1))
+    # initial null input
+    output_0 = tf.multiply(tf.zeros((K, filter)), smol_input_mod) + 1.0 * N_rf / M / K
+    output_0 = tf.keras.layers.Reshape((K*filter, ))(output_0)
+    input_i = input_modder(output_stretcher(output_0, position_matrix), output_0, input_mod, smol_input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
-    raw_out_put_i = sm(raw_out_put_i) # (None, K*M, Nrf)
-    # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
-    # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
-    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
-    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    raw_out_put_i = sm(raw_out_put_i)  # (None, K*filter, Nrf)
+    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)  # (None, K*filter)
+    output = [tf.expand_dims(output_flatten(output_stretcher(out_put_i, position_matrix)), axis=1), tf.expand_dims(out_put_i, axis=1)]
     # begin the second - kth iteration
     for times in range(1, k):
-        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
-        # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
-        input_i = input_modder(out_put_i, input_mod, filtered_G, k - times - 1.0)
+        input_i = input_modder(output_stretcher(out_put_i, position_matrix), out_put_i, input_mod, smol_input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = sm(raw_out_put_i)
-        # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
-        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
-        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
-        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
-    model = Model(inputs, output)
+        output[0] = tf.concat([output[0], tf.expand_dims(output_flatten(output_stretcher(out_put_i, position_matrix)), axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(out_put_i, axis=1)], axis=1)
+    model = Model(inputs=[inputs, smol_input, position_matrix], outputs=output)
+    print(model.summary())
     return model
 
 
@@ -4141,6 +4248,7 @@ if __name__ == "__main__":
     seed = 200
     N_rf = 4
     Top2Precoder_model(M, K, N_rf)
+    print(2)
     G = generate_link_channel_data(N, K, M, N_rf)
     # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
     # model = CSI_reconstruction_VQVAE2(M, K, B, 30, N_rf, 1, more=1)
