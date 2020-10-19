@@ -29,7 +29,8 @@ def train_step(features, labels, N=None, epoch=0):
         # else:
         #     T = 0.1
         # T = tf.ones([3, 1]) * T
-        scheduled_output, raw_output= model(features)
+        compressed_G, position_matrix = G_compress(features, 2)
+        scheduled_output, raw_output= model([features, compressed_G, position_matrix])
         # scheduled_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
@@ -103,7 +104,8 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            model = Top2Precoder_model(M, K, 2, N_rf, 2)
             # model = FDD_reduced_output_space(M, K, N_rf)
 
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
@@ -154,8 +156,9 @@ if __name__ == "__main__":
                     # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
 
                 if epoch % check == 0:
-                    prediction = model.predict(valid_data, batch_size=5)[0][:, -1]
-                    out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(prediction), tf.abs(valid_data))
+                    compressed_G, position_matrix = G_compress(valid_data, 2)
+                    scheduled_output, raw_output = model.predict([valid_data, compressed_G, position_matrix])
+                    out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:,-1]), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
