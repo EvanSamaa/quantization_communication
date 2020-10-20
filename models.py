@@ -909,7 +909,6 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         up = tf.multiply(input_mod, x)
-        print(up.shape)
         interference_f = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
         # power = tf.tile(tf.reduce_sum(input_mod, axis=1, keepdims=True), (1, self.K, 1)) - input_mod
         # interference_f = tf.multiply(power, x)
