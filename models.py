@@ -2073,10 +2073,12 @@ class TopPrecoderPerUserInputMod(tf.keras.layers.Layer):
 
         input_concatnator = tf.keras.layers.Concatenate(axis=2, name="TopPrecoderPerUserInputMod_concat1")
         input_reshaper = tf.keras.layers.Reshape((self.top_l * self.K, 1), name="TopPrecoderPerUserInputMod_Reshape1")
-        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
-        interference_f = tf.multiply(power, x)
+        # power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        # interference_f = tf.multiply(power, x)
+        up = tf.multiply(input_mod, x)
+        interference_f = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
         interference_f = tf.reduce_sum(interference_f, axis=2, keepdims=True)
-        interference_f = tf.matmul(self.Mk, interference_f)
+        # interference_f = tf.matmul(self.Mk, interference_f)
         unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
         interference_t = tf.matmul(input_mod, unflattened_output_0)
         interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
