@@ -906,11 +906,13 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
                     self.Mm[i*self.K+j, i] = 1.0
             # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
             # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
-
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
-        interference_f = tf.tile(tf.expand_dims(tf.reduce_sum(tf.multiply(input_mod, x), axis=1), 1), (1, self.K, 1)) - tf.multiply(input_mod, x)
-        # interference_f = tf.multiply(input_mod, x)
+        up = tf.multiply(input_mod, x)
+        print(up.shape)
+        interference_f = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
+        # power = tf.tile(tf.reduce_sum(input_mod, axis=1, keepdims=True), (1, self.K, 1)) - input_mod
+        # interference_f = tf.multiply(power, x)
         unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
         interference_t = tf.matmul(input_mod, unflattened_output_0)
         interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
@@ -3291,17 +3293,17 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
     # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
-    input_modder = Per_link_Input_modification_most_G_raw_self(K, M, N_rf, k)
+    input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     sm = tf.keras.layers.Softmax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,13+ M*K + N_rf), N_rf)
+    dnns = dnn_per_link((M * K ,13+ M*K), N_rf)
     # compute interference from k,i
-    # output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
-    raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
-    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
-    raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
-    input_i = input_modder(raw_out_put_0, input_mod, k - 1.0)
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
+    # raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
+    # raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    # raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
+    input_i = input_modder(output_0, input_mod, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
     raw_out_put_i = sm(raw_out_put_i) # (None, K*M, Nrf)
@@ -3313,7 +3315,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     for times in range(1, k):
         out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
-        input_i = input_modder(raw_out_put_i, input_mod, k - times - 1.0)
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = sm(raw_out_put_i)
