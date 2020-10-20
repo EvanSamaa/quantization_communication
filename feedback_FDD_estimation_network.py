@@ -131,7 +131,7 @@ if __name__ == "__main__":
             max_acc = 10000
             max_acc_loss = 10000
             # training Loop
-            valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+            valid_data = generate_link_channel_data(20, K, M, Nrf=N_rf)
             for epoch in range(EPOCHS):
                 # ======== ======== data recording features ======== ========
                 train_loss.reset_states()
