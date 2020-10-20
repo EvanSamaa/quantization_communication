@@ -2073,10 +2073,12 @@ class TopPrecoderPerUserInputMod(tf.keras.layers.Layer):
 
         input_concatnator = tf.keras.layers.Concatenate(axis=2, name="TopPrecoderPerUserInputMod_concat1")
         input_reshaper = tf.keras.layers.Reshape((self.top_l * self.K, 1), name="TopPrecoderPerUserInputMod_Reshape1")
-        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
-        interference_f = tf.multiply(power, x)
+        # power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        # interference_f = tf.multiply(power, x)
+        up = tf.multiply(input_mod, x)
+        interference_f = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
         interference_f = tf.reduce_sum(interference_f, axis=2, keepdims=True)
-        interference_f = tf.matmul(self.Mk, interference_f)
+        # interference_f = tf.matmul(self.Mk, interference_f)
         unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
         interference_t = tf.matmul(input_mod, unflattened_output_0)
         interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
@@ -3942,31 +3944,37 @@ def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
     output_stretcher = X_extends(K, M, N_rf, filter)
     output_flatten = tf.keras.layers.Reshape((K*M, ), name="output_flatten")
     dnns = dnn_per_link((filter * K, 7 + filter * K), N_rf)
+    sm = tf.keras.layers.Softmax(axis=1, name="raw_output_i_softmax")
     # normalizing inputs
     input_mod = tf.abs(inputs, name="abs1")
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,), name="max1")(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1), name="div1")
     smol_input_mod = tf.divide(smol_input, tf.expand_dims(norm, axis=1), name="div2")
     # initial null input
-    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, filter), name="mul1"), smol_input_mod) + 1)
-    output_0 = tf.stop_gradient(tf.keras.layers.Reshape((K*filter, ))(output_0))
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, filter), name="mul1"), smol_input_mod) + 1.0*N_rf/K/filter)
+    output_0 = tf.stop_gradient(tf.keras.layers.Reshape((K*filter, ), name="smol_output_0_flatten")(output_0))
     input_i = input_modder(output_stretcher(output_0, position_matrix), output_0, input_mod, smol_input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
-    raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)  # (None, K*filter, Nrf)
-    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2, name="result_sum_{}".format(0))  # (None, K*filter)
-    full_output_i = output_flatten(output_stretcher(out_put_i, position_matrix))
-    output = [tf.expand_dims(full_output_i, axis=1), tf.expand_dims(out_put_i, axis=1)]
+    raw_out_put_i = sm(raw_out_put_i)  # (None, K*filter, Nrf)
+    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)  # (None, K*filter)
+    full_output_i = output_stretcher(out_put_i, position_matrix)
+    f_output_0 = tf.expand_dims(output_flatten(full_output_i), axis=1)
+    f_output_1 = tf.expand_dims(out_put_i, axis=1)
     # begin the second - kth iteration
     for times in range(1, k):
-        input_i = input_modder(output_stretcher(out_put_i, position_matrix), out_put_i, input_mod, smol_input_mod, k - times - 1.0)
+        input_i = input_modder(full_output_i, out_put_i, input_mod, smol_input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
-        raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)
-        out_put_i = tf.reduce_sum(raw_out_put_i, axis=2, name="result_sum_{}".format(times))
-        full_output_i = output_flatten(output_stretcher(out_put_i, position_matrix))
-        output[0] = tf.concat([output[0], tf.expand_dims(full_output_i, axis=1)], axis=1)
-        output[1] = tf.concat([output[1], tf.expand_dims(out_put_i, axis=1)], axis=1)
-    model = Model(inputs=[inputs, smol_input, position_matrix], outputs=output, name="Top2Precoder_model")
+        raw_out_put_i = sm(raw_out_put_i)
+        out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+        full_output_i = output_stretcher(out_put_i, position_matrix)
+        # output[0] = concatter1([output[0], tf.expand_dims(full_output_i, axis=1)])
+        # output[1] = concatter2([output[1], tf.expand_dims(out_put_i, axis=1)])
+        # f_output_0 = tf.expand_dims(output_flatten(full_output_i), axis=1)
+        # f_output_1 = tf.expand_dims(out_put_i, axis=1)
+    # output[0] = concatter(output[0])
+    # output[1] = concatter(output[1])
+    model = Model(inputs=[inputs, smol_input, position_matrix], outputs=[f_output_0, f_output_1], name="Top2Precoder_model")
     print(model.summary())
     return model
 
