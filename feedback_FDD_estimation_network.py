@@ -70,7 +70,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT20/Nrf={}fixed_interference_t{}"
+    fname_template = "trained_models/OCT20/Nrf={}fixed_interference{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -131,7 +131,7 @@ if __name__ == "__main__":
             max_acc = 10000
             max_acc_loss = 10000
             # training Loop
-            valid_data = generate_link_channel_data(20, K, M, Nrf=N_rf)
+            valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
             for epoch in range(EPOCHS):
                 # ======== ======== data recording features ======== ========
                 train_loss.reset_states()
@@ -157,7 +157,7 @@ if __name__ == "__main__":
                 if train_hard_loss.result() < max_acc_loss:
                     max_acc_loss = train_hard_loss.result()
                     model.save(fname_template.format(i, "_max_train2.h5"))
-                    # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
+                    tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
                     # A[2]
 
                 if epoch % check == 0:
