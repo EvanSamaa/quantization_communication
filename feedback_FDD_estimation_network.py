@@ -20,7 +20,10 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
                "Per_link_Input_modification_most_G": Per_link_Input_modification_most_G,
                "Per_link_sequential_modification": Per_link_sequential_modification,
                "Per_link_sequential_modification_compressedX": Per_link_sequential_modification_compressedX,
-               "Per_link_Input_modification_most_G_raw_self": Per_link_Input_modification_most_G_raw_self}
+               "Per_link_Input_modification_most_G_raw_self": Per_link_Input_modification_most_G_raw_self,
+               "Reduced_output_input_mod":Reduced_output_input_mod,
+               "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
+               "X_extends": X_extends}
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape(persistent=True) as tape:
@@ -29,9 +32,10 @@ def train_step(features, labels, N=None, epoch=0):
         # else:
         #     T = 0.1
         # T = tf.ones([3, 1]) * T
-        compressed_G, position_matrix = G_compress(features, 2)
-        scheduled_output, raw_output= model([features, compressed_G, position_matrix])
-        # scheduled_output = model(features)
+
+        # compressed_G, position_matrix = G_compress(features, 2)
+        # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
+        scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = 0
@@ -66,7 +70,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Oct13/Nrf={}filter_CSI+sigmoid+later_larger_CE+{}"
+    fname_template = "trained_models/Oct13/Nrf={}fixed_interference_t{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -104,8 +108,8 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
-            # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
-            model = Top2Precoder_model(M, K, 6, N_rf, 2)
+            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            # model = Top2Precoder_model(M, K, 6, N_rf, 2)
             # model = FDD_reduced_output_space(M, K, N_rf)
 
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
@@ -154,10 +158,12 @@ if __name__ == "__main__":
                     max_acc_loss = train_hard_loss.result()
                     model.save(fname_template.format(i, "_max_train2.h5"))
                     # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
+                    # A[2]
 
                 if epoch % check == 0:
-                    compressed_G, position_matrix = G_compress(valid_data, 2)
-                    scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
+                    # compressed_G, position_matrix = G_compress(valid_data, 2)
+                    # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
+                    scheduled_output, raw_output = model.predict_on_batch(valid_data)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:,-1]), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()

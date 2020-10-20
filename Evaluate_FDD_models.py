@@ -115,15 +115,17 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         # prediction = model.predict(ds_load, batch_size=10)
-        prediction = model(ds_load)
-        stored = np.ones([num_data, 4]) * -1
-        # for k in range(0, num_data):
-        #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-        #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
-        #     plt.plot(np.arange(0, K*M), G_pred[-1][0])
-        #     plt.plot(np.arange(0, K*M), prediction[k])
-        #
-        #     plt.show()
+        # prediction = model(ds_load)
+        compressed_G, position_matrix = G_compress(ds_load, 2)
+        scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
+        prediction = scheduled_output[:, -1]
+        for k in range(0, num_data):
+            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+            # plt.imshow(tf.reshape(prediction[k], (K, M)))
+            plt.plot(np.arange(0, K*M), G_pred[-1][0])
+            plt.plot(np.arange(0, K*M), prediction[k])
+
+            plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
@@ -171,12 +173,8 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/Oct13/Nrf=4neg_mod+sigmoid+later_larger_CE"
-    #
-    # plottt = np.load(file)
-    # print(1-np.sum(plottt, axis=0)/1000.0)
-    # A[2]
-    # plot_data(plottt, [0, 3], title="Sum Rate")
+    file = "trained_models/Oct13/Nrf=4filter_CSI+sigmoid+later_larger_CE+"
+
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -226,15 +224,15 @@ if __name__ == "__main__":
             np.random.seed(seed)
             N_rf = 8
             print("========================================== E =", j, "more = ", i)
-            # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-            # print(model.summary())
+            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+            print(model.summary())
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
             # model = NN_Clustering(N_rf, M, reduced_dim=8)
             # model = top_N_rf_user_model(M, K, N_rf)
             # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
-            model = partial_feedback_pure_greedy_model(N_rf, 32, i, M, K, sigma2_n)
+            # model = partial_feedback_pure_greedy_model(N_rf, 32, i, M, K, sigma2_n)
             test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
