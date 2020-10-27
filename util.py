@@ -1019,7 +1019,7 @@ def SPIGOT_argmax(x):
     top_val = tf.tile(tf.reduce_max(x, axis=1, keepdims=True), [1, x.shape[1], 1])
     result = tf.where(x == top_val, 1.0, 0.0)
     def grad(dy):
-        p_hat = x - 0.001 * dy
+        p_hat = x - 0.01 * dy
         top_val_p_hat = tf.tile(tf.reduce_max(p_hat, axis=1, keepdims=True), [1, x.shape[1], 1])
         z_tilde = tf.where(p_hat == top_val_p_hat, 1.0, 0.0)
         return z_tilde - result
