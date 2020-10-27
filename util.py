@@ -1001,9 +1001,9 @@ class SubtractLayer_with_noise(tf.keras.layers.Layer):
       return inputs - self.thre + tf.random.normal(shape=[2, 1], mean=0, stddev=self.noise)
 
 @tf.custom_gradient
-def STE_argmax(x, axis, tileformat):
+def STE_argmax(x):
     # assuming
-    top_val = tf.tile(tf.reduce_max(x, axis=axis, keepdims=True), tileformat)
+    top_val = tf.tile(tf.reduce_max(x, axis=1, keepdims=True), [1, x.shape[1], 1])
     result = tf.where(x == top_val, 1.0, 0.0)
     def grad(dy):
         return dy
@@ -1011,8 +1011,8 @@ def STE_argmax(x, axis, tileformat):
 class Argmax_STE_layer(tf.keras.layers.Layer):
     def __init__(self):
         super(Argmax_STE_layer, self).__init__()
-    def call(self, x, axis, titleformat):
-        return STE_argmax(x, axis, titleformat)
+    def call(self, x):
+        return STE_argmax(x)
 
 
 
