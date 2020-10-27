@@ -1000,6 +1000,23 @@ class SubtractLayer_with_noise(tf.keras.layers.Layer):
     def call(self, inputs):
       return inputs - self.thre + tf.random.normal(shape=[2, 1], mean=0, stddev=self.noise)
 
+@tf.custom_gradient
+def STE_argmax(x, axis, tileformat):
+    # assuming
+    top_val = tf.tile(tf.reduce_max(x, axis=axis, keepdims=True), tileformat)
+    out = tf.where(x == top_val, 1.0, 0.0)
+    return tf.constant(out, dtype=tf.float32)
+    def custom_grad(dy):
+        return dy
+    return result, custom_grad
+class Argmax_STE_layer(tf.keras.layers.Layer):
+    def __init__(self):
+        super(Argmax_STE_layer, self).__init__()
+    def call(self, x, axis, titleformat):
+        return STE_argmax(x, axis, titleformat)
+
+
+
 # ========================================== MISC ==========================================
 def random_complex(shape, sigma2):
     A_R = tf.random.normal(shape, 0, sigma2, dtype=tf.float32)
@@ -1174,15 +1191,15 @@ if __name__ == "__main__":
     data = generate_link_channel_data(1, K, M, Nrf=1)
     data = tf.square(tf.abs(data[0]))
 
+    tim = tf.random.normal((15, 5, 5))
+    print(tim)
+    print(STE_argmax(tim, -1, [1,1,5]))
+    A[1]
     data = data/tf.reduce_max(data)
     print(data.shape)
     for i in range(0, K):
         print(tf.reduce_mean(data[i]), tf.reduce_max(data[i]), tf.reduce_min(data[i]))
     A[2]
-
-    generate_supervised_link_channel_data(N, K, M, 3)
-    generate_link_channel_data(N, K, M)
-    nChoosek_bits(4, 2)
     # model = FDD_encoding_model_constraint_123_with_softmax_and_ranking(M, K, B)
     # features = generate_link_channel_data(N, K, M)
     # predictions = model(features)

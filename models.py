@@ -1049,7 +1049,6 @@ class Per_link_Input_modification_most_G_col(tf.keras.layers.Layer):
             'Mm': None
         })
         return config
-
 class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         def __init__(self, K, M, N_rf, k, **kwargs):
             super(Per_link_Input_modification_most_G_col, self).__init__()
@@ -3488,6 +3487,46 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = sm(raw_out_put_i)
+        # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+    model = Model(inputs, output)
+    return model
+def FDD_per_link_archetecture_more_G_with_argmax(M, K, k=2, N_rf=3, output_all=False):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    argmax_with_grad = Argmax_STE_layer()
+    norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
+    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
+    # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    input_modder = Per_link_Input_modification_most_G_col(K, M, N_rf, k)
+    # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
+    # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
+    dnns = dnn_per_link((M * K ,10+ M*K + K), N_rf)
+    # compute interference from k,i
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
+    # raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
+    # raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    # raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
+    input_i = input_modder(output_0, input_mod, k - 1.0)
+    # input_i = input_modder(output_0, input_mod, k - 1.0)
+    raw_out_put_i = dnns(input_i)
+    raw_out_put_i = argmax_with_grad(raw_out_put_i, 1, [1, K*M, 1]) # (None, K*M, Nrf)
+    # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
+    # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    # begin the second - kth iteration
+    for times in range(1, k):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
+        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        raw_out_put_i = dnns(input_i)
+        # raw_out_put_i = sm(raw_out_put_i)
+        raw_out_put_i = argmax_with_grad(raw_out_put_i, 1, [1, K*M, 1])
         # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)

@@ -70,7 +70,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT20/Nrf={}with_col{}"
+    fname_template = "trained_models/OCT20/Nrf={}with_col+argmaxSTE{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -108,7 +108,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G_with_argmax(M, K, 6, N_rf, output_all=True)
             # model = Top2Precoder_model(M, K, 1, N_rf, 2)
             # model = FDD_reduced_output_space(M, K, N_rf)
 
