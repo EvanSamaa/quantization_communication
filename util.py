@@ -1005,9 +1005,9 @@ def STE_argmax(x, axis, tileformat):
     # assuming
     top_val = tf.tile(tf.reduce_max(x, axis=axis, keepdims=True), tileformat)
     result = tf.where(x == top_val, 1.0, 0.0)
-    def custom_grad(dy):
+    def grad(dy):
         return dy
-    return result, custom_grad
+    return result, grad
 class Argmax_STE_layer(tf.keras.layers.Layer):
     def __init__(self):
         super(Argmax_STE_layer, self).__init__()
