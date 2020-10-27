@@ -173,7 +173,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/Oct13/Nrf=4filter_CSI+sigmoid+later_larger_CE+"
+    file = "trained_models/OCT20/Nrf=4filtered+fixed_interference+no_iter"
 
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     B = 32
     seed = 200
     check = 100
-    N_rf = 8
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 1
     tf.random.set_seed(seed)
@@ -222,7 +222,6 @@ if __name__ == "__main__":
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = 8
             print("========================================== E =", j, "more = ", i)
             model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             print(model.summary())
