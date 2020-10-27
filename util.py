@@ -1004,8 +1004,7 @@ class SubtractLayer_with_noise(tf.keras.layers.Layer):
 def STE_argmax(x, axis, tileformat):
     # assuming
     top_val = tf.tile(tf.reduce_max(x, axis=axis, keepdims=True), tileformat)
-    out = tf.where(x == top_val, 1.0, 0.0)
-    return tf.constant(out, dtype=tf.float32)
+    result = tf.where(x == top_val, 1.0, 0.0)
     def custom_grad(dy):
         return dy
     return result, custom_grad
