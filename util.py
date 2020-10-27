@@ -1013,6 +1013,22 @@ class Argmax_STE_layer(tf.keras.layers.Layer):
         super(Argmax_STE_layer, self).__init__()
     def call(self, x):
         return STE_argmax(x)
+@tf.custom_gradient
+def SPIGOT_argmax(x):
+    # assuming
+    top_val = tf.tile(tf.reduce_max(x, axis=1, keepdims=True), [1, x.shape[1], 1])
+    result = tf.where(x == top_val, 1.0, 0.0)
+    def grad(dy):
+        p_hat = x - 0.001 * dy
+        top_val_p_hat = tf.tile(tf.reduce_max(p_hat, axis=1, keepdims=True), [1, x.shape[1], 1])
+        z_tilde = tf.where(p_hat == top_val_p_hat, 1.0, 0.0)
+        return z_tilde - result
+    return result, grad
+class Argmax_SPIGOT_layer(tf.keras.layers.Layer):
+    def __init__(self):
+        super(Argmax_SPIGOT_layer, self).__init__()
+    def call(self, x):
+        return SPIGOT_argmax(x)
 
 
 
