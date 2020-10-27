@@ -3497,7 +3497,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
 def FDD_per_link_archetecture_more_G_with_argmax(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    argmax_with_grad = Argmax_SPIGOT_layer()
+    argmax_with_grad = Sparsemax(axis=1)
     norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
     # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
@@ -3513,7 +3513,7 @@ def FDD_per_link_archetecture_more_G_with_argmax(M, K, k=2, N_rf=3, output_all=F
     input_i = input_modder(output_0, input_mod, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
-    raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
+    raw_out_put_i = argmax_with_grad(raw_out_put_i) # (None, K*M, Nrf)
     # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
     out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
@@ -3525,11 +3525,11 @@ def FDD_per_link_archetecture_more_G_with_argmax(M, K, k=2, N_rf=3, output_all=F
         input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
-        # raw_out_put_i = sm(raw_out_put_i)
-        if times < k-1:
-            raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)
-        else:
-            raw_out_put_i = argmax_with_grad(raw_out_put_i)
+        raw_out_put_i = argmax_with_grad(raw_out_put_i)
+        # if times < k-1:
+        #     raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)
+        # else:
+        #     raw_out_put_i = argmax_with_grad(raw_out_put_i)
         # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
