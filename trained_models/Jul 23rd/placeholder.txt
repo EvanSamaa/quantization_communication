@@ -1,4 +1,0 @@
-trained_models/Jul 23rd/VAE quantization scheduling high lr_0.h5
-    2 user, 1 quantization bit case
-    trained with lr=0.0001
-    2 encoders, 2 encoding spaces of dimension 2 each
