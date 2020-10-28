@@ -116,8 +116,9 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         # prediction = model.predict(ds_load, batch_size=10)
         # prediction = model(ds_load)
-        compressed_G, position_matrix = G_compress(ds_load, 2)
-        scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
+        # compressed_G, position_matrix = G_compress(ds_load, 2)
+        # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
+        scheduled_output, raw_output = model.predict_on_batch(ds_load)
         prediction = scheduled_output[:, -1]
         for k in range(0, num_data):
             G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
@@ -173,7 +174,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.show()
 if __name__ == "__main__":
     file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/OCT20/Nrf=4filtered+fixed_interference+no_iter"
+    file = "trained_models/OCT20/Nrf=4with_col+argmaxSPIGOT"
 
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -192,7 +193,9 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self":Per_link_Input_modification_most_G_raw_self,
                    "Reduced_output_input_mod":Reduced_output_input_mod,
                    "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
-                   "X_extends":X_extends}
+                   "X_extends":X_extends,
+                   "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
+                   "Sparsemax":Sparsemax}
     N = 1
     M = 64
     K = 50

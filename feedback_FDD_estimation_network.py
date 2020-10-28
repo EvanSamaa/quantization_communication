@@ -108,7 +108,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G_with_argmax(M, K, 6, N_rf, output_all=True)
+            model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = Top2Precoder_model(M, K, 1, N_rf, 2)
             # model = FDD_reduced_output_space(M, K, N_rf)
 

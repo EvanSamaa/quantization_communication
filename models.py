@@ -1049,9 +1049,9 @@ class Per_link_Input_modification_most_G_col(tf.keras.layers.Layer):
             'Mm': None
         })
         return config
-class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
+class Per_link_Input_modification_most_G_no_x(tf.keras.layers.Layer):
         def __init__(self, K, M, N_rf, k, **kwargs):
-            super(Per_link_Input_modification_most_G_col, self).__init__()
+            super(Per_link_Input_modification_most_G_no_x, self).__init__()
             self.K = K
             self.M = M
             self.N_rf = N_rf
@@ -1096,29 +1096,14 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
             G_user_max = tf.matmul(self.Mk, G_user_max)
             G_user_min = tf.reduce_max(input_mod, axis=2, keepdims=True)
             G_user_min = tf.matmul(self.Mk, G_user_min)
-            G_col_mean = tf.transpose(tf.reduce_mean(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
-            G_col_mean = tf.matmul(self.Mm, G_col_mean)
-            G_col_max = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
-            G_col_max = tf.matmul(self.Mm, G_col_max)
-            G_col_min = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
-            G_col_min = tf.matmul(self.Mm, G_col_min)
-            # G_col = tf.matmul(self.Mk, input_mod)
-            # x = tf.reduce_sum(x, axis=2)
-            x = tf.keras.layers.Reshape((self.K * self.M,))(x)
-            # x = tf.reduce_sum(x, axis=1, keepdims=True)
-            x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
-            iteration_num = tf.stop_gradient(
-                tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
-
+            G_col = tf.matmul(self.Mm, tf.transpose(input_mod, perm=[0, 2, 1]))
             input_i = input_concatnator(
                 [-input_reshaper(input_mod),
                  G_mean, G_max, G_min,
                  # G_mean,
                  G_user_mean, G_user_min, G_user_max,
-                 G_col_max, G_col_min, G_col_mean,
-                 interference_t, interference_f,
-                 x,
-                 iteration_num])
+                 G_col,
+                 interference_t, interference_f])
             return input_i
 
         def get_config(self):
@@ -1128,7 +1113,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
                 'M': self.M,
                 'N_rf': self.N_rf,
                 'k': self.k,
-                'name': "Per_link_Input_modification_most_G",
+                'name': "Per_link_Input_modification_most_G_no_x",
                 'Mk': None,
                 'Mm': None
             })
@@ -3492,6 +3477,36 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
         out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+    model = Model(inputs, output)
+    return model
+def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
+    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
+    # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    input_modder = Per_link_Input_modification_most_G_no_x(K, M, N_rf, k)
+    layer2Modder = Per_link_Input_modification_most_G_col(K, M, N_rf, k)
+    # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
+    sm = tf.keras.layers.Softmax(axis=1)
+    # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
+    dnn1 = dnn_per_link((M * K ,9+K), N_rf)
+    dnn2 = dnn_per_link((M * K ,10+ M*K + K), N_rf)
+    # compute interference from k,i
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
+    # raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
+    # raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    # raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
+    input_i = input_modder(output_0, input_mod, k - 1.0)
+    raw_out_put_i = dnn1(input_i)
+    raw_out_put_i = sm(raw_out_put_i) # (None, K*M, Nrf)
+    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
+
+    input_i = layer2Modder(tf.keras.layers.Reshape((K, M))(out_put_i), input_mod, 0)
+    raw_out_put_i = dnn2(input_i)
+    raw_out_put_i = sm(raw_out_put_i)  # (None, K*M, Nrf)
+    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)  # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)] #(None, 1, K*M)
     model = Model(inputs, output)
     return model
 def FDD_per_link_archetecture_more_G_with_argmax(M, K, k=2, N_rf=3, output_all=False):
