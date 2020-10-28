@@ -3578,7 +3578,7 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
     dnn1 = dnn_per_link((M * K ,9+K), N_rf, 0)
-    dnn2 = dnn_per_link((M * K ,11+ M + K), N_rf, 1)
+    dnn2 = dnn_per_link((M * K ,11+ K + K), N_rf, 1)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     # raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
