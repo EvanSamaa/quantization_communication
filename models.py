@@ -3379,14 +3379,14 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
         x = dnn_model(input_pass_i)
     model = Model(inputs, x)
     return model
-def dnn_per_link(input_shape, N_rf):
-    inputs = Input(shape=input_shape, name="DNN_input_insideDNN")
-    x = Dense(512, name="Dense1_inside_DNN")(inputs)
-    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN")(x)
+def dnn_per_link(input_shape, N_rf, i=0):
+    inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
+    x = Dense(512, name="Dense1_inside_DNN{}".format(i))(inputs)
+    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
     x = sigmoid(x)
-    x = Dense(N_rf, name="Dense2_inside_DNN")(x)
+    x = Dense(N_rf, name="Dense2_inside_DNN{}".format(i))(x)
     # x = sigmoid(x)
-    model = Model(inputs, x, name="DNN_within_model")
+    model = Model(inputs, x, name="DNN_within_model{}".format(i))
     return model
 def dnn_per_link_mutex(input_shape, N_rf):
     inputs = Input(shape=input_shape)
@@ -3490,8 +3490,8 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     sm = tf.keras.layers.Softmax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnn1 = dnn_per_link((M * K ,9+K), N_rf)
-    dnn2 = dnn_per_link((M * K ,10+ M*K + K), N_rf)
+    dnn1 = dnn_per_link((M * K ,9+K), N_rf, 0)
+    dnn2 = dnn_per_link((M * K ,10+ M*K + K), N_rf, 1)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     # raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
