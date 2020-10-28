@@ -3488,7 +3488,7 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     input_modder = Per_link_Input_modification_most_G_no_x(K, M, N_rf, k)
     layer2Modder = Per_link_Input_modification_most_G_col(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
-    sm = tf.keras.layers.Softmax(axis=1)
+    sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
     dnn1 = dnn_per_link((M * K ,9+K), N_rf, 0)
     dnn2 = dnn_per_link((M * K ,10+ M*K + K), N_rf, 1)
