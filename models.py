@@ -3577,7 +3577,7 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnn1 = dnn_per_link((M * K ,9+K), N_rf, 0)
+    dnn1 = dnn_per_link((M * K ,9+K), 1, 0)
     dnn2 = dnn_per_link((M * K ,11+ K + K), N_rf, 1)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
@@ -3586,9 +3586,8 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     # raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
     input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnn1(input_i)
-    raw_out_put_i = sm(raw_out_put_i) # (None, K*M, Nrf)
-    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
-
+    raw_out_put_i = sigmoid(raw_out_put_i) # (None, K*M, Nrf)
+    raw_out_put_i = raw_out_put_i[:, :, 0]
     input_i = layer2Modder(tf.keras.layers.Reshape((K, M))(out_put_i), input_mod, 0.0)
     raw_out_put_i = dnn2(input_i)
     raw_out_put_i = sm(raw_out_put_i)  # (None, K*M, Nrf)
