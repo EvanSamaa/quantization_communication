@@ -1105,12 +1105,12 @@ class Per_link_Input_modification_most_G_col_lessX(tf.keras.layers.Layer):
         # G_col = tf.matmul(self.Mk, input_mod)
         # x = tf.reduce_sum(x, axis=2)
         # x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
-        x_current_user = tf.reduce_sum(x, axis=2, keepdims=True)
-        x_current_user = tf.transpose(x_current_user, perm = [0,2,1])
-        x = tf.tile(x_current_user, [1,self.K * self.M, 1])
-        x_current_user = tf.matmul(self.Mk, x_current_user)
+        x_temp = tf.reduce_sum(x, axis=2, keepdims=True)
+        x_current_user = tf.matmul(self.Mk, x_temp)
+        x_temp = tf.transpose(x_temp, perm = [0,2,1])
+        x = tf.tile(x_temp, [1,self.K * self.M, 1])
 
-        x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
+        # x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
 
         input_i = input_concatnator(
