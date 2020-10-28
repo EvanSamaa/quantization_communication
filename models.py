@@ -3502,7 +3502,7 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     raw_out_put_i = sm(raw_out_put_i) # (None, K*M, Nrf)
     out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
 
-    input_i = layer2Modder(tf.keras.layers.Reshape((K, M))(out_put_i), input_mod, 0)
+    input_i = layer2Modder(tf.keras.layers.Reshape((K, M))(out_put_i), input_mod, 0.0)
     raw_out_put_i = dnn2(input_i)
     raw_out_put_i = sm(raw_out_put_i)  # (None, K*M, Nrf)
     out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)  # (None, K*M)
