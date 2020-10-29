@@ -27,12 +27,6 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0):
     with tf.GradientTape(persistent=True) as tape:
-        # if epoch <= 1:
-        #     T = 1.0 - (epoch)/1000 * 0.9
-        # else:
-        #     T = 0.1
-        # T = tf.ones([3, 1]) * T
-
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
         scheduled_output, raw_output = model(features)
@@ -50,14 +44,24 @@ def train_step(features, labels, N=None, epoch=0):
             # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
             # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             #
-            mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
-            # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
-            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
-            # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
-            loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+            # # # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
+            # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+            # # mse = tf.keras.losses.MeanSquaredError()(scheduled_output[:, i], mask)
+            # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
         # # print("==============================")
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    del tape
+    with tf.GradientTape(persistent=True) as tape:
+        scheduled_output, raw_output = model(features)
+        loss_4 = 0
+        for i in range(0, scheduled_output.shape[1]):
+            mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
+    gradients = tape.gradient(loss_4, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
