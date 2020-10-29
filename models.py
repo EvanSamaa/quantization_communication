@@ -3581,8 +3581,8 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     input_modder = Per_link_Input_modification_most_G_no_x(K, M, N_rf, k)
     layer2Modder = Per_link_Input_modification_most_G_col_lessX(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
-    # sm = Sparsemax(axis=1)
-    sm = Argmax_SPIGOT_layer()
+    sm = Sparsemax(axis=1)
+    # sm = Argmax_SPIGOT_layer()
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
     dnn1 = dnn_per_link((M * K ,9+K), 1, 0)
     # dnn2 = dnn_per_link((M * K ,10 + K + K + K), N_rf, 1)
@@ -3598,10 +3598,10 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     input_i = layer2Modder(tf.keras.layers.Reshape((K, M))(out_put_i), input_mod, 0.0)
 
     x = Dense(64)(input_i)
-    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = sigmoid(x)
     x = Dense(64)(tf.matmul(matrix, x))
-    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = sigmoid(x)
     raw_out_put_i = Dense(N_rf)(x)
 
