@@ -3599,8 +3599,8 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
 
     x = Dense(64)(input_i)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = sigmoid(x)
-    x = Dense(64)(tf.matmul(matrix, x))
+    x = sigmoid(tf.matmul(matrix, x))
+    x = Dense(64)(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = sigmoid(x)
     raw_out_put_i = Dense(N_rf)(x)
