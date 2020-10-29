@@ -51,7 +51,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             loss_4 = loss_4 + 0.1*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
         # # print("==============================")
         loss = loss_1 + loss_4
-    gradients = tape.gradient(lr_boost*loss, model.trainable_variables)
+    gradients = lr_boost * tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
