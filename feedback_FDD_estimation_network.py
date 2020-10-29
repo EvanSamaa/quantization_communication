@@ -70,7 +70,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT20/Nrf={}2Layer+smaller+SPIGOT+reducedX+more_train{}"
+    fname_template = "trained_models/OCT20/Nrf={}2Layer+smaller+reducedX+crossfed_embedding{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -118,8 +118,8 @@ if __name__ == "__main__":
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            optimizer = tf.keras.optimizers.Adam(lr=0.01)
-            optimizer2 = tf.keras.optimizers.Adam(lr=0.01)
+            optimizer = tf.keras.optimizers.Adam(lr=0.001)
+            optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
             graphing_data = np.zeros((EPOCHS, 4))
@@ -140,8 +140,8 @@ if __name__ == "__main__":
                 train_hard_loss.reset_states()
                 valid_sum_rate.reset_states()
                 # ======== ======== training step ======== ========
-                if epoch % 20 == 0:
-                    train_features = generate_link_channel_data(N, K, M, N_rf)
+                # if epoch % 20 == 0:
+                train_features = generate_link_channel_data(N, K, M, N_rf)
                 train_step(train_features, None, training_mode, epoch=epoch)
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
