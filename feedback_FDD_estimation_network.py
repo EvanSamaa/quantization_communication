@@ -140,8 +140,8 @@ if __name__ == "__main__":
                 train_hard_loss.reset_states()
                 valid_sum_rate.reset_states()
                 # ======== ======== training step ======== ========
-                # if epoch % 20 == 0:
-                train_features = generate_link_channel_data(N, K, M, N_rf)
+                if epoch % 10 == 0:
+                    train_features = generate_link_channel_data(N, K, M, N_rf)
                 train_step(train_features, None, training_mode, epoch=epoch)
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
