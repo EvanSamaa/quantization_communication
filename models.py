@@ -1073,10 +1073,10 @@ class Per_link_Input_modification_most_G_col_lessX(tf.keras.layers.Layer):
             # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
-        # up = tf.multiply(input_mod, x)
-        # interference_f = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
-        power = tf.tile(tf.reduce_sum(input_mod, axis=1, keepdims=True), (1, self.K, 1)) - input_mod
-        interference_f = tf.multiply(power, x)
+        up = tf.multiply(input_mod, x)
+        interference_f = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
+        # power = tf.tile(tf.reduce_sum(input_mod, axis=1, keepdims=True), (1, self.K, 1)) - input_mod
+        # interference_f = tf.multiply(power, x)
         unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
         interference_t = tf.matmul(input_mod, unflattened_output_0)
         interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
@@ -3470,12 +3470,12 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
     return model
 def dnn_per_link(input_shape, N_rf, i=0):
     inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
-    x = Dense(512, name="Dense1_inside_DNN{}".format(i))(inputs)
+    x = Dense(128, name="Dense1_inside_DNN{}".format(i))(inputs)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
     x = sigmoid(x)
-    # x = Dense(128, name="Dense3_inside_DNN{}".format(i))(x)
-    # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
-    # x = sigmoid(x)
+    x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
+    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
+    x = sigmoid(x)
     x = Dense(N_rf, name="Dense2_inside_DNN{}".format(i))(x)
     # x = sigmoid(x)
     model = Model(inputs, x, name="DNN_within_model{}".format(i))
