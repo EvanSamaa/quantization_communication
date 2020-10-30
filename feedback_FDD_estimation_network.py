@@ -139,10 +139,12 @@ if __name__ == "__main__":
                 # if epoch % 20 == 0:
                 train_features = generate_link_channel_data(N, K, M, N_rf)
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
-                if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
-                    for m in range(0, 10):
+                # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
+                if True:
+                    for m in range(0, 1000):
                         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
                         print(current_result)
+                A[2]
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
                 print(template.format(epoch,
