@@ -4,7 +4,7 @@ from models import *
 import numpy as np
 import scipy as sp
 from keras_adabound.optimizers import AdaBound
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
                'Interference_Input_modification': Interference_Input_modification,
                'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -38,8 +38,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
         input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
         loss_1 = 0
-        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, input_mod)
-        loss_2 = vae_loss.call(z_qq, z_e)
+        loss_3 = 10*tf.keras.losses.MeanSquaredError()(reconstructed_input, input_mod)
+        loss_2 = 10*vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         loss_4 = 0
@@ -113,9 +113,6 @@ if __name__ == "__main__":
             # model = Top2Precoder_model(M, K, 4, N_rf, 2)
             # model = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, 6, N_rf, output_all=True, more=more)
             # model = FDD_reduced_output_space(M, K, N_rf)
-            # model.save(fname_template.format(i, "_max_train2.h5"))
-            # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
-            # A[2]
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
             # model = Feedbakk_FDD_mcodel_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
