@@ -147,7 +147,7 @@ if __name__ == "__main__":
                 # if epoch % 20 == 0:
                 train_features = generate_link_channel_data(N, K, M, N_rf)
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
-                out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
+                # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
                 # if True:
                 #     for m in range(0, 1000):
