@@ -103,7 +103,7 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 3, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = Top2Precoder_model(M, K, 1, N_rf, 2)
             # model = FDD_reduced_output_space(M, K, N_rf)
