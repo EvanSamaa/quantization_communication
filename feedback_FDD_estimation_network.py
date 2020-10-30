@@ -119,8 +119,8 @@ if __name__ == "__main__":
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            optimizer = tf.keras.optimizers.Adam(lr=0.001)
-            optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
+            optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+            optimizer2 = tf.keras.optimizers.Adam(lr=0.0001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
             graphing_data = np.zeros((EPOCHS, 4))
