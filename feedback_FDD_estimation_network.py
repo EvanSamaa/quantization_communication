@@ -48,7 +48,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
 
             mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
-            loss_4 = loss_4 + 0.1*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
+            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
         # # print("==============================")
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -107,7 +107,9 @@ if __name__ == "__main__":
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             model = Top2Precoder_model(M, K, 4, N_rf, 2)
             # model = FDD_reduced_output_space(M, K, N_rf)
-
+            model.save(fname_template.format(i, "_max_train2.h5"))
+            tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
+            A[2]
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
             # model = Feedbakk_FDD_mcodel_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)

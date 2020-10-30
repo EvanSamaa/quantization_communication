@@ -4324,7 +4324,7 @@ def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
     f_output_1 = tf.expand_dims(out_put_i, axis=1)
     # begin the second - kth iteration
     for times in range(1, k):
-        # input_i = input_modder(full_output_i, out_put_i, input_mod, smol_input_mod, k - times - 1.0)
+        input_i = input_modder(full_output_i, out_put_i, input_mod, smol_input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = sm(raw_out_put_i)
