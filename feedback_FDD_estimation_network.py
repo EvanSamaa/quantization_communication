@@ -105,7 +105,7 @@ if __name__ == "__main__":
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            # model = Top2Precoder_model(M, K, 1, N_rf, 2)
+            model = Top2Precoder_model(M, K, 1, N_rf, 2)
             # model = FDD_reduced_output_space(M, K, N_rf)
 
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
@@ -139,10 +139,12 @@ if __name__ == "__main__":
                 # if epoch % 20 == 0:
                 train_features = generate_link_channel_data(N, K, M, N_rf)
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
+                out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
+                print(sum_rate(out, train_features))
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
                 if True:
                     for m in range(0, 1000):
-                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
+                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=1)
                         print(current_result)
                 A[2]
                 # train_step(features=train_features, labels=None)
