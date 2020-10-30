@@ -577,6 +577,43 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
 ############################## Misc Models ##############################
 
 ############################## Layers ##############################
+class iterative_NN_scheduler():
+    def __init__(self, model, iteration, loss1, lr, loss2=None):
+        self.model = model
+        self.iter = iteration
+        self.loss1 = loss1
+        self.loss2 = loss2
+        self.optimizer = tf.keras.optimizers.Adam(lr=lr)
+    def __call__(self, features, *args, **kwargs):
+        return self.model(features)
+    def call_with_gradient(self, features):
+        scheduled_output = None
+        raw_output = None
+        for iter in range(self.iter):
+            with tf.GradientTape(persistent=True) as tape:
+                scheduled_output, raw_output = self.model(features)
+                loss_1 = 0
+                loss_4 = 0
+                for i in range(0, scheduled_output.shape[1]):
+                    sr = self.loss1(scheduled_output[:, i], features)
+                    loss_1 = loss_1 + tf.exp(
+                        tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * sr
+                    # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
+                    # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+                    # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+                    # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
+
+                    mask = tf.stop_gradient(
+                        Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+                    ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i] / N_rf, mask / N_rf)
+                    loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
+                # # print("==============================")
+                loss = loss_1 + loss_4
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+            self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+            del tape
+        return scheduled_output, raw_output
+
 class Closest_embedding_layer(tf.keras.layers.Layer):
     def __init__(self, user_count=2, embedding_count=8, bit_count=15, i=0, **kwargs):
         super(Closest_embedding_layer, self).__init__()

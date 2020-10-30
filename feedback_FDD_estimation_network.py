@@ -103,7 +103,8 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = Top2Precoder_model(M, K, 1, N_rf, 2)
             # model = FDD_reduced_output_space(M, K, N_rf)
 
@@ -140,7 +141,7 @@ if __name__ == "__main__":
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
                 if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
                     for i in range(0, 10):
-                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
+                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=100)
                         print(current_result)
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
