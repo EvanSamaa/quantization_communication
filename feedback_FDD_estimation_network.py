@@ -145,7 +145,7 @@ if __name__ == "__main__":
                 if True:
                     for m in range(0, 1000):
                         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=5)
-                        print(train_loss, current_result)
+                        print(train_loss.result(), current_result)
                 A[2]
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
