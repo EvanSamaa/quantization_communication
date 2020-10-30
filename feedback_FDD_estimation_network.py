@@ -27,14 +27,19 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
     with tf.GradientTape(persistent=True) as tape:
-        compressed_G, position_matrix = G_compress(features, 2)
-        scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        # scheduled_output, raw_output = model(features)
+        # compressed_G, position_matrix = G_compress(features, 2)
+        # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
+        # scheduled_output, raw_output =
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
+        scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+
+        input_mod = tf.abs(features)
+        norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
+        input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
         loss_1 = 0
-        # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
+        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, input_mod)
+        loss_2 = vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
                 # factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         loss_4 = 0
@@ -48,9 +53,9 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
 
             mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
-            loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
+            loss_4 = loss_4 + 0.1*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
         # # print("==============================")
-        loss = loss_1 + loss_4
+        loss = loss_1 + loss_2 + loss_3 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
@@ -64,7 +69,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT20/Nrf={}feedback2+sparsemax+weakness_training+lrboost{}"
+    fname_template = "trained_models/OCT30/Nrf={}with_feedback{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -75,7 +80,7 @@ if __name__ == "__main__":
     K = 50
     B = 1
     E = 1
-    more = 32
+    more = 16
     seed = 100
     N_rf = 4
     sigma2_h = 6.3
@@ -103,13 +108,14 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = Top2Precoder_model(M, K, 4, N_rf, 2)
+            # model = Top2Precoder_model(M, K, 4, N_rf, 2)
+            model = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, 6, N_rf, output_all=True, more=more)
             # model = FDD_reduced_output_space(M, K, N_rf)
-            model.save(fname_template.format(i, "_max_train2.h5"))
-            tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
-            A[2]
+            # model.save(fname_template.format(i, "_max_train2.h5"))
+            # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
+            # A[2]
             # model = FDD_distributed_then_general_architecture(M, K, k=2, N_rf=N_rf, output_all=False)
             # model = Feedbakk_FDD_mcodel_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
@@ -142,13 +148,12 @@ if __name__ == "__main__":
                 train_features = generate_link_channel_data(N, K, M, N_rf)
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
                 out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
-                print(sum_rate(out, train_features))
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
-                if True:
-                    for m in range(0, 1000):
-                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
-                        print(train_loss.result(), current_result)
-                A[2]
+                # if True:
+                #     for m in range(0, 1000):
+                #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
+                #         print(train_loss.result(), current_result)
+                # A[2]
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
                 print(template.format(epoch,
