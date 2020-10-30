@@ -1159,8 +1159,9 @@ class Per_link_Input_modification_most_G_col_lessX(tf.keras.layers.Layer):
              G_user_mean, G_user_min, G_user_max,
              G_col,
              interference_t, interference_f,
-             x, x_current_user, num,
-             iteration_num])
+             x, x_current_user, num
+             # iteration_num
+             ])
         return input_i
 
     def get_config(self):
@@ -3625,7 +3626,7 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     # sm = Argmax_SPIGOT_layer()
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
     dnn1 = dnn_per_link((M * K ,9+K), 1, 0)
-    dnn2 = dnn_per_link((M * K ,10 + K + K + K), N_rf, 1)
+    dnn2 = dnn_per_link((M * K ,12 + K + K + K), N_rf, 1)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     # raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
@@ -3636,6 +3637,7 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
     out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
     input_i = layer2Modder(tf.keras.layers.Reshape((K, M))(out_put_i), input_mod, 0.0)
+
     raw_out_put_i = dnn2(input_i)
     raw_out_put_i = sm(raw_out_put_i)  # (None, K*M, Nrf)
     out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)  # (None, K*M)
