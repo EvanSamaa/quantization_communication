@@ -3576,14 +3576,14 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
     # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
-    # input_modder = Per_link_Input_modification_most_G_col(K, M, N_rf, k)
-    input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
+    input_modder = Per_link_Input_modification_most_G_col(K, M, N_rf, k)
+    # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G_col_lessX(K, M, N_rf, k)
 
     sm = tf.keras.layers.Softmax(axis=1)
     # sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,10+ M*K + 3), N_rf)
+    dnns = dnn_per_link((M * K ,10+ M*K + K), N_rf)
     # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
