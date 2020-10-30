@@ -3615,7 +3615,6 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
 def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    matrix = tf.eye(M*K) * 1.01 + tf.ones((M*K, (M*K))) * -0.01
 
     norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
     input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
@@ -3626,7 +3625,7 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     # sm = Argmax_SPIGOT_layer()
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
     dnn1 = dnn_per_link((M * K ,9+K), 1, 0)
-    # dnn2 = dnn_per_link((M * K ,10 + K + K + K), N_rf, 1)
+    dnn2 = dnn_per_link((M * K ,10 + K + K + K), N_rf, 1)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     # raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 / M / K)
@@ -3637,15 +3636,7 @@ def FDD_per_link_2Fold(M, K, k=2, N_rf=3, output_all=False):
     raw_out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i) # (None, K*M, Nrf)
     out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
     input_i = layer2Modder(tf.keras.layers.Reshape((K, M))(out_put_i), input_mod, 0.0)
-
-    x = Dense(256)(input_i)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = sigmoid(x)
-    x = Dense(64)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = sigmoid(tf.matmul(matrix, x))
-    raw_out_put_i = Dense(N_rf)(x)
-
+    raw_out_put_i = dnn2(input_i)
     raw_out_put_i = sm(raw_out_put_i)  # (None, K*M, Nrf)
     out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)  # (None, K*M)
     output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)] #(None, 1, K*M)
