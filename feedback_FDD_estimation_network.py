@@ -4,7 +4,7 @@ from models import *
 import numpy as np
 import scipy as sp
 from keras_adabound.optimizers import AdaBound
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
                'Interference_Input_modification': Interference_Input_modification,
                'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf={}_64bit_with_feedback{}"
+    fname_template = "trained_models/OCT30/Nrf={}_16bit_with_feedback{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     K = 50
     B = 1
     E = 5
-    more = 64
+    more = 16
     seed = 100
     N_rf = 4
     sigma2_h = 6.3
