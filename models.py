@@ -3580,8 +3580,8 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G_col_lessX(K, M, N_rf, k)
 
-    # sm = tf.keras.layers.Softmax(axis=1)
-    sm = Sparsemax(axis=1)
+    sm = tf.keras.layers.Softmax(axis=1)
+    # sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
     dnns = dnn_per_link((M * K ,10+ M*K + 3), N_rf)
     # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
