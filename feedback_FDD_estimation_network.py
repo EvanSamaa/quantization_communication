@@ -27,9 +27,9 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
     with tf.GradientTape(persistent=True) as tape:
-        # compressed_G, position_matrix = G_compress(features, 2)
-        # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        scheduled_output, raw_output = model(features)
+        compressed_G, position_matrix = G_compress(features, 2)
+        scheduled_output, raw_output = model([features, compressed_G, position_matrix])
+        # scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = 0
