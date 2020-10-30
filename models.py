@@ -2368,7 +2368,7 @@ class TopPrecoderPerUserInputMod(tf.keras.layers.Layer):
         G_max = tf.tile(tf.expand_dims(G_max, axis=1), (1, self.K * self.top_l, 1))
         G_min = tf.reduce_min(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
         G_min = tf.tile(tf.expand_dims(G_min, axis=1), (1, self.K * self.top_l, 1))
-        iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(smol_input_mod)) + tf.constant(step))
+        iteration_num = tf.multiply(tf.constant(0.0), input_reshaper(smol_input_mod)) + tf.constant(step)
         input_i = input_concatnator(
             [-input_reshaper(smol_input_mod),
              G_mean, G_max, G_min,
@@ -4324,7 +4324,7 @@ def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
     f_output_1 = tf.expand_dims(out_put_i, axis=1)
     # begin the second - kth iteration
     for times in range(1, k):
-        input_i = input_modder(full_output_i, out_put_i, input_mod, smol_input_mod, k - times - 1.0)
+        # input_i = input_modder(full_output_i, out_put_i, input_mod, smol_input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         raw_out_put_i = sm(raw_out_put_i)
@@ -4332,8 +4332,8 @@ def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
         full_output_i = output_stretcher(out_put_i, position_matrix)
         # output[0] = concatter1([output[0], tf.expand_dims(full_output_i, axis=1)])
         # output[1] = concatter2([output[1], tf.expand_dims(out_put_i, axis=1)])
-        # f_output_0 = tf.expand_dims(output_flatten(full_output_i), axis=1)
-        # f_output_1 = tf.expand_dims(out_put_i, axis=1)
+        f_output_0 = tf.expand_dims(output_flatten(full_output_i), axis=1)
+        f_output_1 = tf.expand_dims(out_put_i, axis=1)
     # output[0] = concatter(output[0])
     # output[1] = concatter(output[1])
     model = Model(inputs=[inputs, smol_input, position_matrix], outputs=[f_output_0, f_output_1], name="Top2Precoder_model")
