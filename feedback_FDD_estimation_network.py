@@ -60,7 +60,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
-    # train_binarization_loss(loss_3)
+    train_binarization_loss(loss_3)
     train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
     del tape
     return train_hard_loss.result()
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf={}_16bitx10_with_feedback{}"
+    fname_template = "trained_models/OCT30/Nrf={}_16bitx4_with_feedback{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     M = 64
     K = 50
     B = 1
-    E = 10
+    E = 4
     more = 16
     seed = 100
     N_rf = 4
