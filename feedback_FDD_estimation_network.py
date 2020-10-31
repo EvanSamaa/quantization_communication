@@ -34,12 +34,12 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
 
-        input_mod = tf.abs(features)
-        norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
-        input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
+        # input_mod = tf.abs(features)
+        # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
+        # input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
         loss_1 = 0
-        loss_3 = 10*tf.keras.losses.MeanSquaredError()(reconstructed_input, input_mod)
-        loss_2 = 10*vae_loss.call(z_qq, z_e)
+        loss_3 = 20*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        loss_2 = 20*vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         loss_4 = 0
@@ -99,7 +99,7 @@ if __name__ == "__main__":
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
             # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-            model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
+            model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 5, more=more, qbit=0, output_all=False)
             # model = FDD_per_user_architecture_return_all_softmaxes(M, K, 6, N_rf)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
             # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)

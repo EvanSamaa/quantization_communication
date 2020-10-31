@@ -2657,7 +2657,7 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     else:
         x = inputs
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_1".format(i))(x)
-    x = LeakyReLU()(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
@@ -2684,7 +2684,7 @@ def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalizatio
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
-    x = LeakyReLU()(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="decoder_{}".format(i))
@@ -3573,8 +3573,8 @@ def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False)
 def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
-    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
+    # norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
+    # input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
     # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
     input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
