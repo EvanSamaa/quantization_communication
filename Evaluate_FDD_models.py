@@ -173,7 +173,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/OCT30/Nrf=4/B=16xemb_size={}feedback+sparsemax}"
+    file = "trained_models/OCT30/Nrf=4/B=16xemb_size={}feedback+sparsemax"
     # file = "trained_models/OCT20/Nrf=4with_col+argmaxSPIGOT"
 
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
