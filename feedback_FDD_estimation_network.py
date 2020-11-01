@@ -79,7 +79,7 @@ if __name__ == "__main__":
     M = 64
     K = 50
     B = 1
-    E = 10
+    E = 4
     more = 16
     seed = 100
     N_rf = 4
