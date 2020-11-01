@@ -3,7 +3,7 @@ from models import *
 import numpy as np
 # from scipy.io import savemat
 import tensorflow as tf
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 1000
     config = tf.compat.v1.ConfigProto()
@@ -120,13 +120,13 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
         scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(ds_load, batch_size=5)
         prediction = scheduled_output[:, -1]
-        for k in range(0, num_data):
-            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-            # plt.imshow(tf.reshape(prediction[k], (K, M)))
-            plt.plot(np.arange(0, K*M), G_pred[-1][0])
-            plt.plot(np.arange(0, K*M), prediction[k])
-
-            plt.show()
+        # for k in range(0, num_data):
+        #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+        #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
+        #     plt.plot(np.arange(0, K*M), G_pred[-1][0])
+        #     plt.plot(np.arange(0, K*M), prediction[k])
+        #
+        #     plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
