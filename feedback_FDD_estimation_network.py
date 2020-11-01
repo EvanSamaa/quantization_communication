@@ -38,10 +38,10 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
         # input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
         loss_1 = 0
-        loss_3 = 20*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        loss_2 = 20*vae_loss.call(z_qq, z_e)
+        loss_3 = 10*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        loss_2 = 10*vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
-        factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
+        factor = {1:1.0, 2:1.0, 3:1.0, 4:0.1, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         loss_4 = 0
         for i in range(0, scheduled_output.shape[1]):
             sr = sum_rate_train(scheduled_output[:, i], features)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf=4/B=16xemb_size={}feedback+sparsemax{}"
+    fname_template = "trained_models/OCT30/Nrf=4/B=16xemb_size={}feedback{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
