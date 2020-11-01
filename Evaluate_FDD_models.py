@@ -3,7 +3,7 @@ from models import *
 import numpy as np
 # from scipy.io import savemat
 import tensorflow as tf
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 1000
     config = tf.compat.v1.ConfigProto()
@@ -120,13 +120,13 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
         scheduled_output, raw_output = model.predict_on_batch(ds_load)
         prediction = scheduled_output[:, -1]
-        for k in range(0, num_data):
-            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-            # plt.imshow(tf.reshape(prediction[k], (K, M)))
-            plt.plot(np.arange(0, K*M), G_pred[-1][0])
-            plt.plot(np.arange(0, K*M), prediction[k])
-
-            plt.show()
+        # for k in range(0, num_data):
+        #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+        #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
+        #     plt.plot(np.arange(0, K*M), G_pred[-1][0])
+        #     plt.plot(np.arange(0, K*M), prediction[k])
+        #
+        #     plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
@@ -173,8 +173,8 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/OCT20/Nrf=4with_col+argmaxSPIGOT"
+    file = "trained_models/OCT30/Nrf=4/B=16xemb_size={}feedback+sparsemax}"
+    # file = "trained_models/OCT20/Nrf=4with_col+argmaxSPIGOT"
 
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -217,7 +217,7 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [1,2,3,4,5]
+    mores = [1,4,8,16]
     Es = [0]
     # model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
@@ -226,8 +226,7 @@ if __name__ == "__main__":
             tf.random.set_seed(seed)
             np.random.seed(seed)
             print("========================================== E =", j, "more = ", i)
-            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-            print(model.summary())
+            model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
