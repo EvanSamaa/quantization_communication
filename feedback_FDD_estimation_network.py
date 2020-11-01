@@ -69,7 +69,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT20/Nrf={}feedback+sparsemax+weakness_training+lrboost{}"
+    fname_template = "trained_models/OCT30/Nrf=4/B=16xemb_size={}feedback{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [4]
+    mores = [1,4,8,16]
     Es = [1]
     for j in Es:
         for i in mores:
@@ -99,7 +99,7 @@ if __name__ == "__main__":
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
             # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-            model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
+            model = Feedbakk_FDD_model_scheduler(M, K, B, i, N_rf, 6, more=more, qbit=0, output_all=False)
             # model = FDD_per_user_architecture_return_all_softmaxes(M, K, 6, N_rf)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
             # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
