@@ -162,9 +162,9 @@ if __name__ == "__main__":
                 graphing_data[epoch, 1] = train_binarization_loss.result()
                 # graphing_data[epoch, 2] = train_VS.result()
                 graphing_data[epoch, 3] = train_hard_loss.result()
-                if train_hard_loss.result() < max_acc_loss:
-                    max_acc_loss = train_hard_loss.result()
-                    model.save(fname_template.format(i, "_max_train2.h5"))
+                # if train_hard_loss.result() < max_acc_loss:
+                #     max_acc_loss = train_hard_loss.result()
+                    # model.save(fname_template.format(i, "_max_train2.h5"))
                     # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
 
                 if epoch % check == 0:
