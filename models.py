@@ -4432,6 +4432,7 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
     scheduled_output, raw_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, raw_output, z_qq, z_e, reconstructed_input])
+    print(model.summary())
     return model
 def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))

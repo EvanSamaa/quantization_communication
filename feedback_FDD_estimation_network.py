@@ -55,9 +55,12 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
             loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
         # # print("==============================")
-        loss = loss_1 + loss_2 + loss_3 + loss_4
+        loss = loss_1 + loss_2 + loss_3
+    A[2]
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
+    optimizer.apply_gradients(zip(gradients_2, model.get_layer("model_1").trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
     train_binarization_loss(loss_3)
