@@ -29,17 +29,17 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        # scheduled_output, raw_output =
+        scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
-        scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
+        # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
 
         # input_mod = tf.abs(features)
         # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
         # input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
         loss_1 = 0
-        loss_3 = 10*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        loss_2 = 30*vae_loss.call(z_qq, z_e)
+        # loss_3 = 10*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
+        # loss_2 = 30*vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         loss_4 = 0
@@ -51,18 +51,21 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
 
-            mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
-            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
+            # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+            # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
+            # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
+
+            ce = tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])
             loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
         # # print("==============================")
-        loss = loss_1 + loss_2 + loss_3
+        loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
-    optimizer.apply_gradients(zip(gradients_2, model.get_layer("model_1").trainable_variables))
+    # gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
+    # optimizer.apply_gradients(zip(gradients_2, model.get_layer("model_1").trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
-    train_binarization_loss(loss_3)
+    # train_binarization_loss(loss_3)
     train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
     del tape
     return train_hard_loss.result()
@@ -71,7 +74,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf=4/seeding={}B=32xemb_size=1feedback{}"
+    fname_template = "trained_models/OCT30/Nrf=4/seeding={}crisp_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -90,7 +93,7 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [1,4,8,16]
+    mores = [1]
     Es = [1]
     for j in Es:
         for i in mores:
@@ -101,7 +104,7 @@ if __name__ == "__main__":
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
             # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-            model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
+            # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
             # model = FDD_per_user_architecture_return_all_softmaxes(M, K, 6, N_rf)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
             # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
@@ -110,7 +113,7 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = Top2Precoder_model(M, K, 4, N_rf, 2)
             # model = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, 6, N_rf, output_all=True, more=more)
