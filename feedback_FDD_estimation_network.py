@@ -56,7 +56,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
 
             ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
-            loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
+            loss_4 = loss_4 + 10.0*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
         # # print("==============================")
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf=4/seeding={}crisp_loss+train_on_the_go{}"
+    fname_template = "trained_models/OCT30/Nrf=4/seeding={}10xcrisp_loss{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -150,11 +150,11 @@ if __name__ == "__main__":
                 train_features = generate_link_channel_data(N, K, M, N_rf)
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
-                if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
+                # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
                 # if True:
-                    for m in range(0, 10):
-                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
-                        print(train_loss.result(), current_result)
+                #     for m in range(0, 10):
+                #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
+                #         print(train_loss.result(), current_result)
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
                 print(template.format(epoch,

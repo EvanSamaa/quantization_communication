@@ -3,7 +3,7 @@ from models import *
 import numpy as np
 # from scipy.io import savemat
 import tensorflow as tf
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 1000
     config = tf.compat.v1.ConfigProto()
@@ -118,15 +118,16 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = model(ds_load)
         # compressed_G, position_matrix = G_compress(ds_load, 2)
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
-        scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(ds_load, batch_size=5)
+        scheduled_output, raw_output = model.predict_on_batch(ds_load)
+        # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(ds_load, batch_size=5)
         prediction = scheduled_output[:, -1]
-        # for k in range(0, num_data):
-        #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-        #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
-        #     plt.plot(np.arange(0, K*M), G_pred[-1][0])
-        #     plt.plot(np.arange(0, K*M), prediction[k])
-        #
-        #     plt.show()
+        for k in range(0, num_data):
+            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+            # plt.imshow(tf.reshape(prediction[k], (K, M)))
+            plt.plot(np.arange(0, K*M), G_pred[-1][0])
+            plt.plot(np.arange(0, K*M), prediction[k])
+
+            plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
@@ -173,7 +174,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/OCT30/Nrf=4/B=32xemb_size={}feedback"
+    file = "trained_models/OCT30/Nrf=4/seeding=1crisp_loss"
     # file = "trained_models/OCT20/Nrf=4with_col+argmaxSPIGOT"
 
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
@@ -226,7 +227,7 @@ if __name__ == "__main__":
             tf.random.set_seed(seed)
             np.random.seed(seed)
             print("========================================== E =", j, "more = ", i)
-            model = tf.keras.models.load_model(model_path.format(i), custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             print(model.summary())
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
