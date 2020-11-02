@@ -4299,7 +4299,7 @@ def FDD_reduced_output_space(M, K, N_rf=3):
 def FDD_RNN_model(M, K, N_rf=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    emb_size = 256
+    emb_size = K+M
     # lstm_1 = tf.keras.layers.LSTM(256, return_state=True)
     lstm_1 = tf.keras.layers.RNN(tf.keras.layers.GRUCell(emb_size), return_state=True)
     lstm_2 = tf.keras.layers.RNN(tf.keras.layers.GRUCell(emb_size), return_state=True)

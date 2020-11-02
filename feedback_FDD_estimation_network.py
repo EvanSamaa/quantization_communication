@@ -43,7 +43,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # loss_2 = 30*vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
-        # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
+        loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
 
         # for i in range(0, scheduled_output.shape[1]):
         #     sr = sum_rate_train(scheduled_output[:, i], features)
@@ -61,7 +61,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         #     loss_4 = loss_4 + 10.0*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
         # # print("==============================")
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
-        loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
+        loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 5
+    N = 1000
     M = 64
     K = 50
     B = 1
@@ -157,10 +157,10 @@ if __name__ == "__main__":
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
-                # if True:
-                #     for m in range(0, 10000):
-                #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
-                #         print(train_loss.result(), current_result)
+                if True:
+                    for m in range(0, 10000):
+                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
+                        print(train_loss.result(), current_result)
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
                 print(template.format(epoch,
