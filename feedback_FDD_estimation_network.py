@@ -76,13 +76,13 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf=4/seeding={}LSTM_model_overhaaul+iterable{}"
+    fname_template = "trained_models/OCT30/Nrf=4/seeding={}LSTM_model_overhaaul+large_batch{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 50
+    N = 1000
     M = 64
     K = 50
     B = 1
@@ -156,7 +156,7 @@ if __name__ == "__main__":
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
                 if True:
-                    for m in range(0, 100):
+                    for m in range(0, 10000):
                         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
                         print(train_loss.result(), current_result)
                 # train_step(features=train_features, labels=None)
