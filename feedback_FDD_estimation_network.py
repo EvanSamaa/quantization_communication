@@ -82,7 +82,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 3
+    N = 50
     M = 64
     K = 50
     B = 1
@@ -117,6 +117,7 @@ if __name__ == "__main__":
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             model = FDD_RNN_model(M, K, N_rf)
+
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = Top2Precoder_model(M, K, 4, N_rf, 2)
             # model = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, 6, N_rf, output_all=True, more=more)
@@ -154,11 +155,10 @@ if __name__ == "__main__":
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
-                if True:
-                    for m in range(0, 10000):
-                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
-                        print(train_loss.result(), current_result)
-                A[2]
+                # if True:
+                #     for m in range(0, 10000):
+                #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
+                #         print(train_loss.result(), current_result)
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
                 print(template.format(epoch,
@@ -178,8 +178,8 @@ if __name__ == "__main__":
                 if epoch % check == 0:
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
-                    scheduled_output, raw_output = model.predict(valid_data, batch_size=5)
-                    out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:,-1]), tf.abs(valid_data))
+                    scheduled_output= model.predict(valid_data, batch_size=N)
+                    out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:

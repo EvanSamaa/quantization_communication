@@ -4310,7 +4310,6 @@ def FDD_RNN_model(M, K, N_rf=3):
     out_2_re = lstm_2(tf.transpose(input_mod, perm=[0,2,1]), initial_state=out_1_re[1])
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((N_rf, N_rf)), input_mod[:, :N_rf, :N_rf]) + tf.eye(N_rf))
     out = lstm_out(output_0, initial_state = out_2_re[1])
-    print(out.shape)
     x = Dense(512)(out)
     x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
