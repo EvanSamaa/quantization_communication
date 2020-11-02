@@ -3508,9 +3508,9 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
     return model
 def dnn_per_link(input_shape, N_rf, i=0):
     inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
-    # x = Dense(512, name="Dense1_inside_DNN{}".format(i))(inputs)
-    # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
-    # x = sigmoid(x)
+    x = Dense(512, name="Dense1_inside_DNN{}".format(i))(inputs)
+    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
+    x = sigmoid(x)
     # x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
     # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
     # x = sigmoid(x)
@@ -4296,6 +4296,29 @@ def FDD_reduced_output_space(M, K, N_rf=3):
     out = tf.keras.layers.Reshape((M*K, ))(out)
     model = Model(inputs, out)
     return model
+def FDD_RNN_model(M, K, N_rf=3):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.square(tf.abs(inputs))
+    emb_size = 256
+    # lstm_1 = tf.keras.layers.LSTM(256, return_state=True)
+    lstm_1 = tf.keras.layers.RNN(tf.keras.layers.GRUCell(emb_size), return_state=True)
+    lstm_2 = tf.keras.layers.RNN(tf.keras.layers.GRUCell(emb_size), return_state=True)
+    lstm_out = tf.keras.layers.RNN(tf.keras.layers.GRUCell(emb_size), return_sequences=True)
+    out_1 = lstm_1(input_mod)
+    out_2 = lstm_2(tf.transpose(input_mod, perm=[0,2,1]), initial_state=out_1[1])
+    out_1_re = lstm_1(input_mod, initial_state=out_2[1])
+    out_2_re = lstm_2(tf.transpose(input_mod, perm=[0,2,1]), initial_state=out_1_re[1])
+    output_0 = tf.stop_gradient(tf.multiply(tf.zeros((N_rf, N_rf)), input_mod[:, :N_rf, :N_rf]) + tf.eye(N_rf))
+    out = lstm_out(output_0, initial_state = out_2_re[1])
+    print(out.shape)
+    x = Dense(512)(out)
+    x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(M*K)(x)
+    x = tf.keras.layers.Softmax(axis=-1)(x)
+    output = tf.reduce_sum(x, axis=1)
+    return Model(inputs, output, name="LSTM_MODEL")
+
 
 def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
     smol_input = Input(shape=(K, filter), dtype=tf.float32, name="smol_input")
@@ -4615,6 +4638,7 @@ if __name__ == "__main__":
     B = 3
     seed = 200
     N_rf = 4
+    FDD_RNN_model(M, K, N_rf)
     Top2Precoder_model(M, K, N_rf)
     G = generate_link_channel_data(N, K, M, N_rf)
     # mod = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, 0.1)
