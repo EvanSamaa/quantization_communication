@@ -76,7 +76,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf=4/seeding={}LSTM_model_overhaaul{}"
+    fname_template = "trained_models/OCT30/Nrf=4/seeding={}LSTM_model_overhaaul+iterable{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -128,8 +128,8 @@ if __name__ == "__main__":
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            optimizer = tf.keras.optimizers.Adam(lr=0.01)
-            optimizer2 = tf.keras.optimizers.Adam(lr=0.01)
+            optimizer = tf.keras.optimizers.Adam(lr=0.001)
+            optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
             graphing_data = np.zeros((EPOCHS, 4))
@@ -155,10 +155,10 @@ if __name__ == "__main__":
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
-                # if True:
-                #     for m in range(0, 10000):
-                #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
-                #         print(train_loss.result(), current_result)
+                if True:
+                    for m in range(0, 100):
+                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
+                        print(train_loss.result(), current_result)
                 # train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
                 print(template.format(epoch,
