@@ -71,7 +71,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf=4/B=32xemb_size={}feedback{}"
+    fname_template = "trained_models/OCT30/Nrf=4/seeding={}B=32xemb_size=1feedback{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     M = 64
     K = 50
     B = 1
-    E = 4
+    E = 1
     more = 32
     seed = 100
     N_rf = 4
@@ -95,13 +95,13 @@ if __name__ == "__main__":
     for j in Es:
         for i in mores:
             train_VS = tf.keras.metrics.Mean(name='test_loss')
-            tf.random.set_seed(seed)
-            np.random.seed(seed)
+            tf.random.set_seed(i)
+            np.random.seed(i)
             N_rf = 4
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
             # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-            model = Feedbakk_FDD_model_scheduler(M, K, B, i, N_rf, 6, more=more, qbit=0, output_all=False)
+            model = Feedbakk_FDD_model_scheduler(M, K, B, i, N_rf, 6, more=E, qbit=0, output_all=False)
             # model = FDD_per_user_architecture_return_all_softmaxes(M, K, 6, N_rf)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
             # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
