@@ -1392,7 +1392,7 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         # x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         row_choice = tf.reduce_sum(x, axis=2, keepdims=True)
         row_choice = tf.matmul(self.Mk, row_choice)
-        row_choice = row_choice - tf.keras.layers.Reshape((M*K, 1))(x)
+        row_choice = row_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
 
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
