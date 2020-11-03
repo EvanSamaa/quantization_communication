@@ -979,7 +979,8 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)))
-        iteration_num = tf.tile(tf.expand_dims(iteration_num, axis=2), (1, 1, self.k))
+        # print(iteration_num.shape)
+        iteration_num = tf.tile(iteration_num, (1, 1, self.k))
         iteration_num[:, :, step] = iteration_num[:, :, step] + 1.0
 
         input_i = input_concatnator(
