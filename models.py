@@ -1357,6 +1357,8 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
         interference_f = tf.multiply(power, x)
+        up = tf.multiply(input_mod, x)
+        interference_f_2 = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
         unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
         interference_t = tf.matmul(input_mod, unflattened_output_0)
         interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
@@ -1404,7 +1406,7 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
              # G_mean,
              G_user_mean, G_user_min, G_user_max,
              G_col_max, G_col_min, G_col_mean,
-             interference_t, interference_f,
+             interference_t, interference_f, interference_f_2,
              row_choice,
              col_choice,
              x_raw,
@@ -3606,7 +3608,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     # sm = Argmax_STE_layer()
     # sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,12 + 2 + k + N_rf), N_rf)
+    dnns = dnn_per_link((M * K ,13 + 2 + k + N_rf), N_rf)
     # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
     # compute interference from k,i
     # output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
