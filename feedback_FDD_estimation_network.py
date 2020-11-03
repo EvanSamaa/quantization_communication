@@ -120,7 +120,7 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 4, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 3, N_rf, output_all=True)
             # model = FDD_RNN_model(M, K, N_rf)
 
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)

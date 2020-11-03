@@ -1406,7 +1406,7 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
              G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f,
              row_choice,
-             # col_choice,
+             col_choice,
              x_raw,
              iteration_num])
         return input_i
