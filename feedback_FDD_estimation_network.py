@@ -63,13 +63,13 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
                 reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
                 user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
                 user_constraint = tf.reduce_mean(user_constraint, axis=1)
-                loss_4 = ce * lr_boost + user_constraint
+                loss_4 = lambda_var_1 * ce * lr_boost + lambda_var_2 * user_constraint
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
         loss = loss_1 + loss_4
-    gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    gradients = tape.gradient(loss, model.trainable_variables + [lambda_var_1, lambda_var_2])
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables + [lambda_var_1, lambda_var_2]))
     # gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
     # optimizer.apply_gradients(zip(gradients_2, model.get_layer("model_1").trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
@@ -123,6 +123,10 @@ if __name__ == "__main__":
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             model = FDD_per_link_archetecture_more_G(M, K, 3, N_rf, output_all=True)
+            lambda_var_1 = tf.Variable(1.0, trainable=True)
+            lambda_var_2 = tf.Variable(1.0, trainable=True)
+            lambda_var_3 = tf.Variable(1.0, trainable=True)
+
             # model = FDD_RNN_model(M, K, N_rf)
 
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
