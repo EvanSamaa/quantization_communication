@@ -1400,12 +1400,11 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         col_choice = tf.transpose(tf.reduce_sum(x, axis=1, keepdims=True), perm=[0,2,1])
         col_choice = tf.matmul(self.Mm, col_choice)
         col_choice = col_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
-
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
             [input_reshaper(input_mod),
              G_max,
-             G_user_mean, input_reshaper(input_mod)-G_user_max,
+             G_user_mean, G_user_max,
              G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f, interference_f_2,
              row_choice,
@@ -3534,9 +3533,9 @@ def dnn_per_link(input_shape, N_rf, i=0):
     x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
     x = sigmoid(x)
-    x = Dense(32, name="Dense4_inside_DNN{}".format(i))(x)
-    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_4{}".format(i))(x)
-    x = sigmoid(x)
+    # x = Dense(32, name="Dense4_inside_DNN{}".format(i))(x)
+    # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_4{}".format(i))(x)
+    # x = sigmoid(x)
     x = Dense(N_rf, name="Dense2_inside_DNN{}".format(i))(x)
     # x = sigmoid(x)
     model = Model(inputs, x, name="DNN_within_model{}".format(i))
@@ -3595,8 +3594,8 @@ def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False)
     return model
 def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
-    # input_mod = tf.keras.layers.BatchNormalization()(tf.abs(inputs))
     input_mod = tf.abs(inputs)
+    input_mod = tf.keras.layers.BatchNormalization()(input_mod)
     input_mod = tf.square(input_mod)
     # norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
     # input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
