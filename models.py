@@ -1403,8 +1403,8 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
             [input_reshaper(input_mod),
-             G_max,
-             G_user_mean, G_user_max,
+             G_max, G_min, G_mean,
+             G_user_mean, G_user_max, G_user_min,
              G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f, interference_f_2,
              row_choice,
@@ -3609,7 +3609,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     # sm = Argmax_STE_layer()
     # sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,10 + 2 + k + N_rf), N_rf)
+    dnns = dnn_per_link((M * K ,15 + k + N_rf), N_rf)
     # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
     # compute interference from k,i
     # output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)

@@ -65,7 +65,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
                 user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
                 user_constraint = tf.reduce_mean(user_constraint, axis=1)
                 # user_constraint_lambda = tf.reduce_mean(user_constraint_lambda, axis=1)
-                loss_4 = ce
+                loss_4 = ce + user_constraint
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
