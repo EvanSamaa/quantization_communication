@@ -29,8 +29,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        # scheduled_output, raw_output = model(features)
-        scheduled_output = model(features)
+        scheduled_output, raw_output = model(features)
+        # scheduled_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
@@ -38,30 +38,30 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # input_mod = tf.abs(features)
         # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
         # input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
-        loss_1 = sum_rate_train(scheduled_output, features)
+        loss_1 = 0
         # loss_3 = 10*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 30*vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
-        loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
+        # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
+        loss_4 = 0
+        for i in range(0, scheduled_output.shape[1]):
+            sr = sum_rate_train(scheduled_output[:, i], features)
+            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr * lr_boost
+            # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
+            # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+            # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
 
-        # for i in range(0, scheduled_output.shape[1]):
-        #     sr = sum_rate_train(scheduled_output[:, i], features)
-        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr * lr_boost
-        #     # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
-        #     # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-        #     # loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-        #     # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
-        #
-        #     # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
-        #     # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
-        #     # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
-        #
-        #     ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
-        #     loss_4 = loss_4 + 10.0*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
+            # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+            # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
+            # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
+
+            ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+            loss_4 = loss_4 + 0.1*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
         # # print("==============================")
-        mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
-        loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
+        # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
+        # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
         loss = loss_1 + loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -78,13 +78,13 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf=4/seeding={}LSTM_model_overhaaul+large_batch{}"
+    fname_template = "trained_models/OCT30/Nrf=4/seeding={}moreG_model_onehot_iter{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 1000
+    N = 4
     M = 64
     K = 50
     B = 1
@@ -117,8 +117,8 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
-            model = FDD_RNN_model(M, K, N_rf)
+            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
+            # model = FDD_RNN_model(M, K, N_rf)
 
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = Top2Precoder_model(M, K, 4, N_rf, 2)
@@ -180,7 +180,7 @@ if __name__ == "__main__":
                 if epoch % check == 0:
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
-                    scheduled_output= model.predict(valid_data, batch_size=N)
+                    scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
