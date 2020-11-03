@@ -3518,7 +3518,7 @@ def dnn_per_link(input_shape, N_rf, i=0):
     # x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
     # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
     # x = sigmoid(x)
-    x = Dense(N_rf, name="Dense2_inside_DNN{}".format(i))(inputs)
+    x = Dense(N_rf, name="Dense2_inside_DNN{}".format(i))(x)
     # x = sigmoid(x)
     model = Model(inputs, x, name="DNN_within_model{}".format(i))
     return model
