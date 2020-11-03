@@ -66,13 +66,13 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
                 user_constraint_lambda = tf.minimum(lambda_var_2 * (tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
                 user_constraint = tf.reduce_mean(user_constraint, axis=1)
                 user_constraint_lambda = tf.reduce_mean(user_constraint_lambda, axis=1)
-                loss_4 = ce_lambda + user_constraint_lambda
+                loss_4 = user_constraint + ce
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
         loss = loss_1 + loss_4
-    gradients = tape.gradient(loss, model.trainable_variables + [lambda_var_1, lambda_var_2])
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables + [lambda_var_1, lambda_var_2]))
+    gradients = tape.gradient(loss, model.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
     # optimizer.apply_gradients(zip(gradients_2, model.get_layer("model_1").trainable_variables))
     train_loss(sum_rate(scheduled_output[:, -1], features))
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 4
+    N = 1
     M = 64
     K = 50
     B = 1
@@ -125,7 +125,7 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 3, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 4, N_rf, output_all=True)
             lambda_var_1 = tf.Variable(1.0, trainable=True)
             lambda_var_2 = tf.Variable(1.0, trainable=True)
             lambda_var_3 = tf.Variable(1.0, trainable=True)
@@ -142,8 +142,8 @@ if __name__ == "__main__":
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-            optimizer2 = tf.keras.optimizers.Adam(lr=0.0001)
+            optimizer = tf.keras.optimizers.Adam(lr=0.001)
+            optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
             graphing_data = np.zeros((EPOCHS, 4))
@@ -169,11 +169,11 @@ if __name__ == "__main__":
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
-                # if True:
-                #     for m in range(0, 10):
-                #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
-                #         print(train_loss.result(), current_result)
-                # train_step(features=train_features, labels=None)
+                if True:
+                    for m in range(0, 10000):
+                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
+                        print(train_loss.result(), current_result)
+                train_step(features=train_features, labels=None)
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
                 print(template.format(epoch,
                                       train_loss.result(),
