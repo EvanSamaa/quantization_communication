@@ -932,6 +932,7 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         self.Mm = None
         # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
     def call(self, x, input_mod, step):
+        step = int(step)
         if self.Mk is None:
             self.Mk = np.zeros((self.K*self.M, self.K), dtype=np.float32)
             self.Mm = np.zeros((self.K*self.M, self.M), dtype=np.float32)
