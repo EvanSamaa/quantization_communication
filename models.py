@@ -1393,6 +1393,9 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         row_choice = tf.reduce_sum(x, axis=2, keepdims=True)
         row_choice = tf.matmul(self.Mk, row_choice)
         row_choice = row_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
+        col_choice = tf.transpose(tf.reduce_sum(x, axis=1, keepdims=True), perm=[0,2,1])
+        col_choice = tf.matmul(self.Mm, row_choice)
+        col_choice = col_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
 
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
@@ -1402,7 +1405,7 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
              G_user_mean, G_user_min, G_user_max,
              G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f,
-             row_choice, x_raw,
+             row_choice, col_choice, x_raw,
              iteration_num])
         return input_i
 
@@ -3520,7 +3523,7 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
     return model
 def dnn_per_link(input_shape, N_rf, i=0):
     inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
-    x = Dense(128, name="Dense1_inside_DNN{}".format(i))(inputs)
+    x = Dense(256, name="Dense1_inside_DNN{}".format(i))(inputs)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
     x = sigmoid(x)
     # x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
@@ -3598,7 +3601,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     # sm = Argmax_STE_layer()
     # sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,12 + 1 + k + N_rf), N_rf)
+    dnns = dnn_per_link((M * K ,12 + 2 + k + N_rf), N_rf)
     # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
     # compute interference from k,i
     # output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
