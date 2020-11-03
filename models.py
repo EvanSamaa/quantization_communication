@@ -981,9 +981,9 @@ class Per_link_Input_modification_most_G(tf.keras.layers.Layer):
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)))
         # print(iteration_num.shape)
-        iteration_num = tf.tile(iteration_num, (1, 1, self.k))
-        iteration_num[:, :, step] = iteration_num[:, :, step] + 1.0
-
+        num = np.zeros((1, self.k))
+        num[0, step] = 1
+        iteration_num = tf.tile(iteration_num, (1, 1, self.k)) + num
         input_i = input_concatnator(
             [-input_reshaper(input_mod),
              G_mean, G_max, G_min,
@@ -3589,7 +3589,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     # sm = Argmax_STE_layer()
     # sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,10+ M*K + k - 1), N_rf)
+    dnns = dnn_per_link((M * K ,12+ M*K + k), N_rf)
     # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
     # compute interference from k,i
     output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
