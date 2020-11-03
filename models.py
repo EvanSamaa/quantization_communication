@@ -1405,7 +1405,9 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
              G_user_mean, G_user_min, G_user_max,
              G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f,
-             row_choice, col_choice, x_raw,
+             row_choice,
+             # col_choice,
+             x_raw,
              iteration_num])
         return input_i
 
@@ -3526,9 +3528,9 @@ def dnn_per_link(input_shape, N_rf, i=0):
     x = Dense(128, name="Dense1_inside_DNN{}".format(i))(inputs)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
     x = sigmoid(x)
-    # x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
-    # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
-    # x = sigmoid(x)
+    x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
+    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
+    x = sigmoid(x)
     x = Dense(N_rf, name="Dense2_inside_DNN{}".format(i))(x)
     # x = sigmoid(x)
     model = Model(inputs, x, name="DNN_within_model{}".format(i))
