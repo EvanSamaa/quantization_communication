@@ -56,9 +56,9 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
             # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
             # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
-
-            ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
-            loss_4 = loss_4 + 0.1*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
+            if i == scheduled_output.shape[1]-1:
+                ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+                loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
