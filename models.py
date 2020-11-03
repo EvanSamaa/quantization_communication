@@ -1391,7 +1391,6 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
-        print(x_raw.shape)
         input_i = input_concatnator(
             [input_reshaper(input_mod),
              G_mean, G_max, G_min,
