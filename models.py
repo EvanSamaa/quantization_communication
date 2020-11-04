@@ -1389,9 +1389,12 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         G_col_min = tf.reduce_min(G_col_tiled, axis=2, keepdims=True)
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)))
         # print(iteration_num.shape)
-        num = np.zeros((1, self.k))
-        num[0, int(step)] = 1
-        iteration_num = tf.tile(iteration_num, (1, 1, self.k)) + num
+        num = np.zeros((1, 2))
+        if step == 1:
+            num[0, 1] = 1
+        else:
+            num[0, 0] = 1
+        iteration_num = tf.tile(iteration_num, (1, 1, 2)) + num
         # x = tf.reduce_sum(x, axis=2)
         # x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
@@ -3540,7 +3543,7 @@ def dnn_per_link(input_shape, N_rf, i=0):
     x = Dense(256, name="Dense1_inside_DNN{}".format(i))(inputs)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
     x = sigmoid(x)
-    x = Dense(128 , name="Dense3_inside_DNN{}".format(i))(x)
+    x = Dense(128, name="Dense3_inside_DNN{}".format(i))(x)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
     x = sigmoid(x)
     # x = Dense(32, name="Dense4_inside_DNN{}".format(i))(x)
@@ -3619,7 +3622,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
     # sm = Argmax_STE_layer()
     # sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,17 + k + N_rf), N_rf)
+    dnns = dnn_per_link((M * K ,17 + 2 + N_rf), N_rf)
     # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
     # compute interference from k,i
     # output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
