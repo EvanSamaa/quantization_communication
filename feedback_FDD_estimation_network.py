@@ -64,7 +64,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
                 reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
                 user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
                 user_constraint = tf.reduce_mean(user_constraint, axis=1)
-                user_constraint_lambda = tf.reduce_mean(user_constraint_lambda, axis=1)
+                # user_constraint_lambda = tf.reduce_mean(user_constraint_lambda, axis=1)
                 loss_4 = ce
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 20
+    N = 50
     M = 64
     K = 50
     B = 1
