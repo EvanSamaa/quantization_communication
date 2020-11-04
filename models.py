@@ -1379,7 +1379,7 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         GX_user_mean = tf.matmul(self.Mk, GX_user_mean) - selected
         G_user_max = tf.reduce_max(input_mod, axis=2, keepdims=True)
         G_user_max = tf.matmul(self.Mk, G_user_max)
-        G_user_min = tf.reduce_max(input_mod, axis=2, keepdims=True)
+        G_user_min = tf.reduce_min(input_mod, axis=2, keepdims=True)
         G_user_min = tf.matmul(self.Mk, G_user_min)
         GX_col_mean = tf.transpose(tf.reduce_mean(tf.multiply(input_mod, x), axis=1, keepdims=True), perm=[0, 2, 1])
         GX_col_mean = tf.matmul(self.Mm, GX_col_mean) - selected
@@ -1387,7 +1387,7 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         G_col_mean = tf.matmul(self.Mm, G_col_mean)
         G_col_max = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_max = tf.matmul(self.Mm, G_col_max)
-        G_col_min = tf.transpose(tf.reduce_max(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
+        G_col_min = tf.transpose(tf.reduce_min(input_mod, axis=1, keepdims=True), perm=[0, 2, 1])
         G_col_min = tf.matmul(self.Mm, G_col_min)
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)))
         # print(iteration_num.shape)
@@ -1416,7 +1416,13 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
              -col_choice,
              x_raw,
              iteration_num])
-        # print(input_i)
+        print(input_i[:, 0, 4])
+        print(input_i[:, 0, 5])
+        print(input_i[:, 0, 6])
+        print(input_i[:, 0, 10])
+        print(input_i[:, 0, 11])
+        print(input_i[:, 0, 12])
+
         return input_i
 
     def get_config(self):
