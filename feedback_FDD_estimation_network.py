@@ -50,28 +50,26 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr * lr_boost
             # ce = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, i])
             # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-            # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
             # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
+            # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
+            # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
             if i == scheduled_output.shape[1]-1:
                 sr = sum_rate_train(scheduled_output[:, i], features)
                 loss_1_soft = sr * lr_boost
-                mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
-                hard_decision = scheduled_output[:, i] + tf.stop_gradient(tf.multiply(scheduled_output[:, i], mask) - scheduled_output[:, i])
-                loss_1_hard = sum_rate_train(hard_decision, features)
-                # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
-                ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+                # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+                ce = tf.reduce_sum(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
                 # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
                 # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
-                reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
-                user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
-                user_constraint = tf.reduce_mean(user_constraint, axis=1)
+                # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
+                # user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
+                # user_constraint = tf.reduce_mean(user_constraint, axis=1)
                 # user_constraint_lambda = tf.reduce_mean(user_constraint_lambda, axis=1)
-                loss_4 = loss_4 + ce + user_constraint
+                loss_4 = loss_4 + ce
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = tf.maximum(loss_1_soft, loss_1_hard) + loss_4
+        loss = loss_1_soft + 0.01 * loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
@@ -93,7 +91,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 50
+    N = 1
     M = 64
     K = 50
     B = 1
@@ -143,8 +141,8 @@ if __name__ == "__main__":
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            optimizer = tf.keras.optimizers.Adam(lr=0.001)
-            optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
+            optimizer = tf.keras.optimizers.Adam(lr=0.1)
+            optimizer2 = tf.keras.optimizers.Adam(lr=0.1)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
             graphing_data = np.zeros((EPOCHS, 4))
@@ -170,11 +168,11 @@ if __name__ == "__main__":
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
-                # if True:
-                #     for m in range(0, 10000):
-                #         train_hard_loss.reset_states()
-                #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=1)
-                #         print(train_loss.result(), current_result)
+                if True:
+                    for m in range(0, 10000):
+                        train_hard_loss.reset_states()
+                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=1)
+                        print(train_loss.result(), current_result)
                 train_step(features=train_features, labels=None)
                 # A[2]
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
@@ -189,8 +187,8 @@ if __name__ == "__main__":
                 graphing_data[epoch, 3] = train_hard_loss.result()
                 # if train_hard_loss.result() < max_acc_loss:
                 #     max_acc_loss = train_hard_loss.result()
-                    # model.save(fname_template.format(i, "_max_train2.h5"))
-                    # tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
+                #     model.save(fname_template.format(i, "_max_train2.h5"))
+                #     tim = tf.keras.models.load_model(fname_template.format(i, "_max_train2.h5"), custom_objects=custome_obj)
 
                 if epoch % check == 0:
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
