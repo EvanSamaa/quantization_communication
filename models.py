@@ -1378,8 +1378,6 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         G_user_mean = tf.reduce_mean(G_user_tiled, axis=2, keepdims=True)
         G_user_max = tf.reduce_max(G_user_tiled, axis=2, keepdims=True)
         G_user_min = tf.reduce_min(G_user_tiled, axis=2, keepdims=True)
-        # G_user_mean = tf.reduce_mean(input_mod, axis=2, keepdims=True)
-        # G_user_mean = tf.matmul(self.Mk, G_user_mean)
         GX_user_mean = tf.reduce_mean(tf.multiply(input_mod, x), axis=2, keepdims=True)
         GX_user_mean = tf.matmul(self.Mk, GX_user_mean) - selected
         GX_col_mean = tf.transpose(tf.reduce_mean(tf.multiply(input_mod, x), axis=1, keepdims=True), perm=[0, 2, 1])
