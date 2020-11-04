@@ -54,12 +54,12 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # mask = partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n)(features)
 
             if i == scheduled_output.shape[1]-1:
-                # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
-                # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
-                # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
                 sr = sum_rate_train(scheduled_output[:, i], features)
                 loss_1 = sr * lr_boost
+                # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+                # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
                 ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+                # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
                 # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
                 reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
                 user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
     fname_template = "trained_models/OCT30/Nrf=4/seeding={}moreG_model_onehot_iter+raw_self+minimal_x{}"
-    check = 500
+    check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
@@ -124,7 +124,7 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 5, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             lambda_var_1 = tf.Variable(1.0, trainable=True)
             lambda_var_2 = tf.Variable(1.0, trainable=True)
             lambda_var_3 = tf.Variable(1.0, trainable=True)
