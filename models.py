@@ -1416,12 +1416,12 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
              -col_choice,
              x_raw,
              iteration_num])
-        print(input_i[:, 0, 4])
-        print(input_i[:, 0, 5])
-        print(input_i[:, 0, 6])
-        print(input_i[:, 0, 10])
-        print(input_i[:, 0, 11])
-        print(input_i[:, 0, 12])
+        # print(input_i[:, 0, 4])
+        # print(input_i[:, 0, 5])
+        # print(input_i[:, 0, 6])
+        # print(input_i[:, 0, 10])
+        # print(input_i[:, 0, 11])
+        # print(input_i[:, 0, 12])
 
         return input_i
 
