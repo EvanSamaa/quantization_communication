@@ -173,6 +173,7 @@ if __name__ == "__main__":
                 #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=10)
                 #         print(train_loss.result(), current_result)
                 train_step(features=train_features, labels=None)
+                A[2]
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
                 print(template.format(epoch,
                                       train_loss.result(),
