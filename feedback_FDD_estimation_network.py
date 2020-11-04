@@ -91,7 +91,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 1
+    N = 50
     M = 64
     K = 50
     B = 1
@@ -168,11 +168,11 @@ if __name__ == "__main__":
                 current_result = train_step(train_features, None, training_mode, epoch=epoch)
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
-                if True:
-                    for m in range(0, 10000):
-                        train_hard_loss.reset_states()
-                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=1)
-                        print(train_loss.result(), current_result)
+                # if True:
+                #     for m in range(0, 10000):
+                #         train_hard_loss.reset_states()
+                #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=1)
+                #         print(train_loss.result(), current_result)
                 train_step(features=train_features, labels=None)
                 # A[2]
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
