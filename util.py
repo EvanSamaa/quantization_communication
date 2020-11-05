@@ -539,6 +539,27 @@ def Sum_rate_utility_WeiCui(K, M, sigma2):
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
+def Sum_rate_interference(K, M, sigma2):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
+    def sum_rate_utility(y_pred, G, display=False):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, M)
+        G = tf.square(tf.abs(G))
+        unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
+        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        denominator = tf.matmul(G, unflattened_X)
+        if display:
+            plt.imshow(denominator[0])
+            plt.show(block=False)
+            plt.pause(0.0001)
+            plt.close()
+        numerator = tf.multiply(denominator, tf.eye(K))
+        denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
+        utility = tf.math.log(1 / denominator) / log_2
+        utility = tf.reduce_mean(utility, axis=1)
+        return utility
+    return sum_rate_utility
 def Sum_rate_utility(K, M, sigma2):
     # sigma2 here is the variance of the noise
     def sum_rate_utility(y_pred, G):

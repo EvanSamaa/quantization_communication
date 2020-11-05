@@ -54,12 +54,13 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
             # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
-            if i == scheduled_output.shape[1]-1:
+            if i <= scheduled_output.shape[1]-1:
                 mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
                 sr = sum_rate_hard(scheduled_output[:, i], mask, features)
                 sr2 = sum_rate_train(scheduled_output[:, i], features)
-                loss_1_soft = sr * lr_boost
-                # ce = tf.reduce_sum(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+                sr_i = sum_rate_interference(scheduled_output[:, i], features)
+                ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+                loss_1_soft = 0.01 * sr_i + sr2 + ce
                 # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
                 # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
                 # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
@@ -70,7 +71,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = 0.01*loss_1_soft + sr2
+        loss = loss_1_soft
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/Nrf=4/seeding={}moreG_model_onehot_iter+raw_self+minimal_x{}"
+    fname_template = "trained_models/OCT30/Nrf=4/seeding={}moreG_model_onehot_iter+raw_self+minimal_x+min_interference{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -125,7 +126,7 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 4, N_rf, output_all=True)
+            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             lambda_var_1 = tf.Variable(1.0, trainable=True)
             lambda_var_2 = tf.Variable(1.0, trainable=True)
             lambda_var_3 = tf.Variable(1.0, trainable=True)
@@ -143,7 +144,8 @@ if __name__ == "__main__":
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_hard = Sum_rate_utility_hard(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            optimizer = tf.keras.optimizers.Adam(lr=0.001)
+            sum_rate_interference = Sum_rate_interference(K, M, sigma2_n)
+            optimizer = tf.keras.optimizers.Adam(lr=0.01)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
