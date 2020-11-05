@@ -56,10 +56,10 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
 
             if i < scheduled_output.shape[1]-1:
                 mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
-                sr = sum_rate_hard(scheduled_output[:, i], mask, features)
-                sr2 = sum_rate_train(scheduled_output[:, i], features)
+                # sr = sum_rate_hard(scheduled_output[:, i], mask, features)
+                # sr2 = sum_rate_train(scheduled_output[:, i], features)
                 sr_i = sum_rate_interference(scheduled_output[:, i], features)
-                ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+                # ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
                 loss_1 = loss_1 + 0.01 * sr_i
                 # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
                 # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
@@ -149,7 +149,7 @@ if __name__ == "__main__":
             sum_rate_hard = Sum_rate_utility_hard(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_interference = Sum_rate_interference(K, M, sigma2_n)
-            optimizer = tf.keras.optimizers.Adam(lr=0.01)
+            optimizer = tf.keras.optimizers.Adam(lr=0.001)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
