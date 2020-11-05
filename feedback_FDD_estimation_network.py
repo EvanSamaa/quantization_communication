@@ -70,6 +70,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
                 # loss_4 = loss_4 + ce
             else:
                 loss_1 = loss_1 + sum_rate_train(scheduled_output[:, i], features)
+                ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+                loss_1 = loss_1 + ce
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
