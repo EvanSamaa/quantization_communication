@@ -42,7 +42,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # loss_3 = 10*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 30*vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
-        loss_4 = 0.1 * tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:,-1]/N_rf, mask/N_rf)
+        loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:,-1]/N_rf, mask/N_rf)
         factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, -1], 1.0-scheduled_output[:, -1])), axis=1)
@@ -53,7 +53,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i] / N_rf, mask / N_rf)
             # ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
             loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-            loss_4 = loss_4 + 5 * factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
+            loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
             # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
             # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
             # user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
@@ -63,7 +63,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = loss_1 + loss_4
+        loss = loss_1 + 5.0 * loss_4
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
