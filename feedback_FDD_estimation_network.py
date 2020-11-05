@@ -50,7 +50,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # sr = sum_rate_hard(scheduled_output[:, i], mask, features)
             # sr2 = sum_rate_train(scheduled_output[:, i], features)
             # ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
-            loss_1 = loss_1 + 0.01 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr_i
+            loss_1 = loss_1 + 0.01 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
             # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
             # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
