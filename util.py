@@ -400,7 +400,7 @@ def Harden_scheduling_user_constrained(N_rf=3, K=0, M=0, sigma2=0, default_val =
                 y_pred_copy[n, k*M+y_pred_argmax[n]] = y_pred_np[n, k*M+y_pred_argmax[n]]
         values, index = tf.math.top_k(y_pred_copy, k=N_rf)
         for i in range(0, y_pred.shape[0]):
-            base_mask[i, index[i]] = 1
+            base_mask[i, index[i]] = 1.0
         return tf.constant(base_mask, dtype=tf.float32)
     return masking
 def Harden_scheduling_neg(k=3, K=0, M=0, sigma2=0):
@@ -552,6 +552,26 @@ def Sum_rate_utility(K, M, sigma2):
         utility = tf.math.log(numerator/denominator+0.00000001 + 1)/tf.math.log(10)
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
+    return sum_rate_utility
+def Sum_rate_utility_hard(K, M, sigma2):
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
+    def sum_rate_utility(y_pred, mask, G, display=False):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, M)
+        G = tf.square(tf.abs(G))
+        unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
+        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        denominator = tf.matmul(G, unflattened_X)
+        mask = tf.reduce_sum(tf.keras.layers.Reshape((K, M))(mask), axis=2)
+        numerator = tf.multiply(denominator, tf.eye(K))
+        denominator = tf.reduce_sum(denominator - numerator, axis=2) + sigma2
+        numerator = tf.matmul(numerator, tf.ones((K, 1)))
+        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
+        numerator = tf.multiply(mask, numerator)
+        utility = tf.math.log(numerator / denominator + 1) / log_2
+        utility = tf.reduce_sum(utility, axis=1)
+        return -utility
+
     return sum_rate_utility
 def Sum_rate_matrix_CE(K, M, sigma2):
     # sigma2 here is the variance of the noise

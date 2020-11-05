@@ -55,9 +55,9 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
             if i == scheduled_output.shape[1]-1:
-                sr = sum_rate_train(scheduled_output[:, i], features)
+                mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
+                sr = sum_rate_hard(scheduled_output[:, i], mask, features)
                 loss_1_soft = sr * lr_boost
-                # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
                 ce = tf.reduce_sum(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
                 # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
                 # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 50
+    N = 1
     M = 64
     K = 50
     B = 1
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     seed = 100
     N_rf = 4
     sigma2_h = 6.3
-    sigma2_n = 1
+    sigma2_n = 1.0
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
@@ -140,6 +140,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+            sum_rate_hard = Sum_rate_utility_hard(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             optimizer = tf.keras.optimizers.Adam(lr=0.1)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.1)
