@@ -49,7 +49,6 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
             # sr = sum_rate_hard(scheduled_output[:, i], mask, features)
             sr = sum_rate_train(scheduled_output[:, i], features)
-            print(tf.reduce_mean(sr))
             # ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
             loss_1 = loss_1 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
@@ -168,7 +167,6 @@ if __name__ == "__main__":
                 #         train_hard_loss.reset_states()
                 #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=1)
                 #         print(train_loss.result(), current_result)
-                train_step(features=train_features, labels=None)
                 # A[2]
                 template = 'Epoch {}, Loss: {}, binarization_lost:{}, VS Loss: {}, Hard Loss: {}'
                 print(template.format(epoch,
