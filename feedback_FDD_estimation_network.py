@@ -54,13 +54,13 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
             # loss_4 = loss_4 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
 
-            if i <= scheduled_output.shape[1]-1:
+            if i < scheduled_output.shape[1]-1:
                 mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output[:, i]))
                 sr = sum_rate_hard(scheduled_output[:, i], mask, features)
                 sr2 = sum_rate_train(scheduled_output[:, i], features)
                 sr_i = sum_rate_interference(scheduled_output[:, i], features)
                 ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
-                loss_1_soft = 0.01 * sr_i + sr2 + ce
+                loss_1 = loss_1 + 0.01 * sr_i
                 # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
                 # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
                 # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
@@ -68,10 +68,12 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
                 # user_constraint = tf.reduce_mean(user_constraint, axis=1)
                 # user_constraint_lambda = tf.reduce_mean(user_constraint_lambda, axis=1)
                 # loss_4 = loss_4 + ce
+            else:
+                loss_1 = loss_1 + sum_rate_train(scheduled_output[:, i], features)
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = loss_1_soft
+        loss = loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
@@ -93,7 +95,7 @@ if __name__ == "__main__":
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 50
+    N = 1
     M = 64
     K = 50
     B = 1
