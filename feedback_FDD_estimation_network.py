@@ -29,7 +29,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        scheduled_output, raw_output = model(features)
+        raw_output, scheduled_output = model(features)
         # scheduled_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
@@ -38,21 +38,22 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # input_mod = tf.abs(features)
         # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
         # input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
-        loss_1 = sum_rate_train(scheduled_output[:, -1], features)
+        loss_1 = sum_rate_train(scheduled_output, features)
         # loss_3 = 10*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_2 = 30*vae_loss.call(z_qq, z_e)
-        mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
-        loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:,-1]/N_rf, mask/N_rf)
+        mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
+        # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:,-1]/N_rf, mask/N_rf)
         factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
-        # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, -1], 1.0-scheduled_output[:, -1])), axis=1)
-        for i in range(0, scheduled_output.shape[1]-1):
+        loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
+        for i in range(0, raw_output.shape[1]-1):
+            out_i = tf.reduce_sum(raw_output[:, max(0, i-N_rf):i+1], axis=1)
             dec = min(i+1, N_rf)
-            mask = tf.stop_gradient(Harden_scheduling_user_constrained(dec, K, M, default_val=0)(scheduled_output[:, i]))
+            mask = tf.stop_gradient(Harden_scheduling_user_constrained(dec, K, M, default_val=0)(out_i))
             # sr = sum_rate_hard(scheduled_output[:, i], mask, features)
-            sr = sum_rate_train(scheduled_output[:, i], features)
+            sr = sum_rate_train(out_i, features)
             # ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i] / dec, mask / dec)
-            ce = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+            ce = tf.reduce_mean(tf.square(tf.multiply(out_i, 1.0-out_i)), axis=1)
             # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             loss_1 = loss_1 + sr
             loss_4 = loss_4 + ce
@@ -71,10 +72,10 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients_2 = tape.gradient(loss_4, model.get_layer("model_1").trainable_variables)
     # optimizer.apply_gradients(zip(gradients_2, model.get_layer("model_1").trainable_variables))
-    train_loss(sum_rate(scheduled_output[:, -1], features))
+    train_loss(sum_rate(scheduled_output, features))
     # train_loss(loss_3)
     # train_binarization_loss(loss_3)
-    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
+    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output), features))
     del tape
     return train_hard_loss.result()
 if __name__ == "__main__":
@@ -192,8 +193,8 @@ if __name__ == "__main__":
                 if epoch % check == 0:
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
-                    scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
-                    out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]), tf.abs(valid_data))
+                    raw_output, scheduled_output= model.predict(valid_data, batch_size=N)
+                    out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
