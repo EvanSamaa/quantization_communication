@@ -176,7 +176,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/OCT30/Nrf=4/seeding=1moreG_model_onehot_iter+raw_self"
+    file = "trained_models/OCT30/Nrf=4/seeding=1one_hot_with_new_input_mod+2_times"
     # file = "trained_models/OCT20/Nrf=4with_col+argmaxSPIGOT"
 
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
