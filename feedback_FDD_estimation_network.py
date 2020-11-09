@@ -67,7 +67,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # # print("==============================")
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = loss_1 + loss_3 + loss_2
+        loss = loss_3 + loss_2
+        loss_4 = loss_4 + loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     gradients_2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
