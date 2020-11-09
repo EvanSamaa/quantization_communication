@@ -4596,6 +4596,8 @@ def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
 def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
+    norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
+    inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
     encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit)
     # scheduling_module = FDD_per_link_archetecture_more_G(M, K, k=k, N_rf=N_rf, output_all=output_all)
     scheduling_module = FDD_one_at_a_time_iterable(M, K, k=k, N_rf=N_rf, output_all=output_all)
