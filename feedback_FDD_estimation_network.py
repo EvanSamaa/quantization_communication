@@ -125,9 +125,6 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_one_at_a_time_iterable(M, K, 6, N_rf, output_all=True)
             model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
-            print(model.get_layer("model_2").summary())
-            print(model.get_layer("model").summary())
-            A[2]
             lambda_var_1 = tf.Variable(1.0, trainable=True)
             lambda_var_2 = tf.Variable(1.0, trainable=True)
             lambda_var_3 = tf.Variable(1.0, trainable=True)
