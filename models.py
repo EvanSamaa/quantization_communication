@@ -3677,7 +3677,7 @@ def dnn_per_link_mutex(input_shape, N_rf):
     return model
 def dnn_sequential(input_shape):
     inputs = Input(shape=input_shape)
-    x = Dense(512)(inputs)
+    x = Dense(128)(inputs)
     x = tf.keras.layers.BatchNormalization()(x)
     x = sigmoid(x)
     x = Dense(1)(x)
