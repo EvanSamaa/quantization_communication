@@ -220,7 +220,7 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [1,2,3,4,5,6,7,8]
+    mores = [2,3,4,5,6,7,8]
     Es = [64, 8, 16, 32]
     # model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
