@@ -106,8 +106,8 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [1,2,3,4,5,6,7,8]
-    Es = [4, 8, 16, 32, 64]
+    mores = [8,2,3,4,5,6,7]
+    Es = [64, 8, 16, 32, 4]
     for j in Es:
         for i in mores:
             train_VS = tf.keras.metrics.Mean(name='test_loss')
