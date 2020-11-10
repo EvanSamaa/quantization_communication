@@ -3970,7 +3970,7 @@ def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     input_modder = Sequential_Per_link_Input_modification_most_G_raw_self(K, M, N_rf, 2*N_rf)
     dnn_model = dnn_sequential((K*M, 17 + 2*N_rf))
     output_final = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0) # inital output/planning
-    input_i = input_modder(output_final, input_mod, k - 1.0)
+    input_i = input_modder(output_final, input_mod, 2*N_rf - 1.0)
     raw_out_put_i = dnn_model(input_i)
     out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)[:, :, 0]  # (None, K*M)
     output = [tf.expand_dims(out_put_i, axis=1)]
@@ -3984,7 +3984,7 @@ def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
             output_final = tf.reduce_sum(output[0][:, (-N_rf+1):], axis=1)
             out_put_i = tf.keras.layers.Reshape((K, M))(output_final)
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
-        input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        input_i = input_modder(out_put_i, input_mod, 2*N_rf - times - 1.0)
         raw_out_put_i = dnn_model(input_i)
         out_put_i = tf.keras.layers.Softmax(axis=1)(raw_out_put_i)[:, :, 0]
         # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
