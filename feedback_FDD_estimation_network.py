@@ -56,7 +56,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             # ce = tf.reduce_mean(tf.square(tf.multiply(out_i, 1.0-out_i)), axis=1)
             # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
             loss_1 = loss_1 + 0.1 * sr
-            loss_4 = loss_4 + ce
+            loss_4 = loss_4 + 0.1 * ce
             # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
             # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
             # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
