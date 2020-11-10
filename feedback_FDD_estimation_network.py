@@ -96,7 +96,7 @@ if __name__ == "__main__":
     N = 25
     M = 64
     K = 50
-    B = 4
+    B = 1
     E = 4
     more = 16
     seed = 100
