@@ -67,10 +67,10 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # # print("==============================")
         # mask = tf.stop_gradient(Hanrden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = loss_3 + loss_2
+        loss = loss_3 + loss_2 + 0.01 * loss_1
         loss_4 = 0.1*loss_4 + loss_1
-    gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
+    gradients = tape.gradient(loss, model.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     gradients_2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
     optimizer2.apply_gradients(zip(gradients_2, model.get_layer("model_2").trainable_variables))
     train_loss(sum_rate(scheduled_output, features))
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/vary_Nrf+weighted_loss1/NRF={}_more={}{}"
+    fname_template = "trained_models/OCT30/vary_NRF+loss11/NRF={}_more={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
