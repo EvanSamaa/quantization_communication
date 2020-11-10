@@ -4598,7 +4598,7 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
     inputs_mod = tf.abs(inputs)
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
     inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
-    encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit)
+    encoding_module = CSI_reconstruction_model_seperate_decoders_DFT_matrix(M, K, B, E, N_rf, k, more=more, qbit=qbit)
     # scheduling_module = FDD_per_link_archetecture_more_G(M, K, k=k, N_rf=N_rf, output_all=output_all)
     scheduling_module = FDD_one_at_a_time_iterable(M, K, k=k, N_rf=N_rf, output_all=output_all)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
@@ -4716,6 +4716,34 @@ def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, mo
     if qbit > 0:
         z_fed_forward = tf.multiply(z_fed_forward, z_val)
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
+    model = Model(inputs, [reconstructed_input, z_qq, z_e])
+    return model
+def CSI_reconstruction_model_seperate_decoders_DFT_matrix(M, K, B, E, N_rf, k, more=1, qbit=0):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    dft_matrix = tf.abs(tf.constant(sp.linalg.dft(M), dtype=tf.complex64))
+    norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
+    inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
+    # inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
+    # inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
+    # inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))
+    find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2**1, bit_count=E, i=0)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
+    decoder = Autoencoder_Decoding_module(M, (K, E * more))
+    z_e_all = encoder(inputs_mod)
+    z_e = z_e_all[:, :, :E * more]
+    if qbit > 0:
+        z_val = z_e_all[:, :, E * more:E * more + qbit]
+        z_val = sigmoid(z_val) + tf.stop_gradient(binary_activation(z_val) - sigmoid(z_val)) + 0.1
+    z_qq = find_nearest_e(z_e[:, :, :E])
+    for i in range(1, more):
+        z_qq = tf.concat((z_qq, find_nearest_e(z_e[:, :, E * i:E * (i + 1)])), axis=2)
+    z_fed_forward = z_e + tf.stop_gradient(z_qq - z_e)
+    if qbit > 0:
+        z_fed_forward = tf.multiply(z_fed_forward, z_val)
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
+    reconstructed_input = tf.matmul(dft_matrix, tf.transpose(reconstructed_input, perm=[0,2,1]))
+    reconstructed_input = tf.transpose(reconstructed_input, perm=[0,2,1])
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
 def CSI_reconstruction_model_seperate_decoders_moving_avg_update(M, K, B, E, N_rf, k, more=1, qbit=0):
