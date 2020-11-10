@@ -4721,7 +4721,7 @@ def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, mo
 def CSI_reconstruction_model_seperate_decoders_DFT_matrix(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    dft_matrix = tf.abs(tf.constant(sp.linalg.dft(M), dtype=tf.complex64))
+    dft_matrix = tf.transpose(tf.abs(tf.constant(sp.linalg.dft(M), dtype=tf.complex64)), [1,0])
     norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
     inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
     # inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
