@@ -198,7 +198,8 @@ if __name__ == "__main__":
                    "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
                    "X_extends":X_extends,
                    "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
-                   "Sparsemax":Sparsemax}
+                   "Sparsemax":Sparsemax,
+                   "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self}
     N = 1
     M = 64
     K = 50
