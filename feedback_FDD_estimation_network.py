@@ -39,7 +39,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
         input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
         loss_1 = sum_rate_train(scheduled_output, features)
-        loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(input_mod))
+        # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(input_mod)) # with vqvae
+        loss_3 = 0.1 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(input_mod))
         # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
@@ -67,7 +68,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # # print("==============================")
         # mask = tf.stop_gradient(Hanrden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = loss_3
+        loss = loss_3 + 0.01 * loss_1
         loss_4 = 0.1*loss_4 + loss_1
     print(scheduled_output)
     gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
