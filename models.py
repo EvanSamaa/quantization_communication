@@ -4611,6 +4611,8 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
 def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
+    norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
+    inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
     encoding_module = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=more, qbit=qbit)
     # scheduling_module = FDD_per_link_archetecture_more_granular(M, K, k=k, N_rf=N_rf, output_all=output_all)
     scheduling_module = FDD_one_at_a_time_iterable(M, K, k=k, N_rf=N_rf, output_all=output_all)
@@ -4683,9 +4685,9 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
 def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
-    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
-    inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))
+    # inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
+    # inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
+    # inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))
     encoder = Autoencoder_Encoding_module((K, M*M), i=0, code_size=more, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, more))
     z = encoder(inputs_mod)
