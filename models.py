@@ -4688,7 +4688,7 @@ def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=1
     # inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
     # inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
     # inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))
-    encoder = Autoencoder_Encoding_module((K, M*M), i=0, code_size=more, normalization=False)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, more))
     z = encoder(inputs_mod)
     print(z.shape)
