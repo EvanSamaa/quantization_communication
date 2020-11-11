@@ -29,7 +29,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
+        scheduled_output, raw_output, reconstructed_input = model(features)
         # scheduled_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
@@ -40,7 +40,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
         loss_1 = sum_rate_train(scheduled_output, features)
         loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(input_mod))
-        loss_2 = 10.0*vae_loss.call(z_qq, z_e)
+        # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
         factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
@@ -67,7 +67,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # # print("==============================")
         # mask = tf.stop_gradient(Hanrden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = loss_3 + loss_2
+        loss = loss_3
         loss_4 = 0.1*loss_4 + loss_1
     gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/vary_NRF+loss1+dft_decoder/NRF={}_more={}{}"
+    fname_template = "trained_models/OCT30/naive_encoder+loss1/NRF={}_more={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -130,6 +130,7 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
             # model = FDD_one_at_a_time_iterable(M, K, 6, N_rf, output_all=True)
             model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
+            model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
             lambda_var_1 = tf.Variable(1.0, trainable=True)
             lambda_var_2 = tf.Variable(1.0, trainable=True)
             lambda_var_3 = tf.Variable(1.0, trainable=True)
@@ -199,7 +200,7 @@ if __name__ == "__main__":
                 if epoch % check == 0:
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
-                    scheduled_output, raw_output, z_qq, z_e, reconstructed_input= model.predict(valid_data, batch_size=N)
+                    scheduled_output, raw_output, reconstructed_input= model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
