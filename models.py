@@ -546,10 +546,18 @@ def DP_partial_feedback_semi_exhaustive_model(N_rf, B, p, M, K, sigma2):
             out.append(prev_out)
         return out
     return model
-def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=False):
+def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=False, pick_top=2):
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
         G = (tf.abs(G))
+        # quantization ===
+        mean = tf.reduce_mean(tf.keras.layers.Reshape((K * M, 1))(G), axis=1, keepdims=True)
+        std = tf.math.reduce_std(tf.keras.layers.Reshape((K * M, 1))(G), axis=1, keepdims=True)
+        mean = tf.tile(mean, (1, K, M))
+        std = tf.tile(std, (1, K, M))
+        G = tf.divide(G - mean, std)
+        G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
+        # quantization ===
         top_values, top_indices = tf.math.top_k(G, k=p)
         if perfect_CSI == False:
             G_copy = np.zeros((top_indices.shape[0], K, M))
@@ -561,15 +569,16 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
                     G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
             G_copy = tf.constant(G_copy, dtype=tf.float32)
             G = G_copy
-        if p > 10:
-            top_values, top_indices = tf.math.top_k(G, k=10)
+        if p > pick_top:
+            top_values, top_indices = tf.math.top_k(G, k=pick_top)
         # top_values_quantized = top_values
         out = []
         prev_out = None
         G_original = G
         for i in range(1, N_rf+1):
             G = G_original/tf.sqrt(i * 1.0)
-            prev_out = DP_sparse_pure_greedy_hueristic(i, sigma2, K, M, p, G, i-1, prev_out)(top_values, top_indices)
+            pp = min(p, pick_top)
+            prev_out = DP_sparse_pure_greedy_hueristic(i, sigma2, K, M, pp, G, i-1, prev_out)(top_values, top_indices)
             # print(prev_out)
             out.append(prev_out)
         return out
@@ -3965,8 +3974,9 @@ def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
 def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
-    norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
-    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
+    # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
+    norm = tf.reduce_max(input_mod, axis=2, keepdims=True)
+    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1)) * 10.0
     input_modder = Sequential_Per_link_Input_modification_most_G_raw_self(K, M, N_rf, 2*N_rf)
     dnn_model = dnn_sequential((K*M, 17 + 2*N_rf))
     output_final = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0) # inital output/planning
