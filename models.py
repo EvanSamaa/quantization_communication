@@ -3976,7 +3976,7 @@ def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     input_mod = tf.square(tf.abs(inputs))
     # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     norm = tf.reduce_max(input_mod, axis=2, keepdims=True)
-    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1)) * 10.0
+    input_mod = tf.divide(input_mod, norm) * 10.0
     input_modder = Sequential_Per_link_Input_modification_most_G_raw_self(K, M, N_rf, 2*N_rf)
     dnn_model = dnn_sequential((K*M, 17 + 2*N_rf))
     output_final = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0) # inital output/planning
