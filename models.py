@@ -3976,7 +3976,7 @@ def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     input_mod = tf.square(tf.abs(inputs))
     # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     norm = tf.reduce_max(input_mod, axis=2, keepdims=True)
-    input_mod = tf.divide(input_mod, norm) * 10.0
+    input_mod = tf.divide(input_mod, norm)
     input_modder = Sequential_Per_link_Input_modification_most_G_raw_self(K, M, N_rf, 2*N_rf)
     dnn_model = dnn_sequential((K*M, 17 + 2*N_rf))
     output_final = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0) # inital output/planning
@@ -4606,8 +4606,8 @@ def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
 def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
-    inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
+    norm = tf.reduce_max(inputs_mod, axis=2, keepdims=True)
+    input_mod = tf.divide(inputs_mod, norm)
     encoding_module = CSI_reconstruction_model_seperate_decoders_DFT_matrix(M, K, B, E, N_rf, k, more=more, qbit=qbit)
     # scheduling_module = FDD_per_link_archetecture_more_G(M, K, k=k, N_rf=N_rf, output_all=output_all)
     scheduling_module = FDD_one_at_a_time_iterable(M, K, k=k, N_rf=N_rf, output_all=output_all)

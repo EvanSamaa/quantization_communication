@@ -68,7 +68,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # # print("==============================")
         # mask = tf.stop_gradient(Hanrden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = 0.1*loss_4 + loss_1
+        loss = loss_4 + loss_1
 
         # loss_4 = 0.1*loss_4 + loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     M = 64
     K = 50
     B = 1
-    E = 4
+    E = 10
     more = 16
     seed = 100
     N_rf = 8
@@ -110,8 +110,8 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    # mores = [8,2,3,4,5,6,7]
-    # Es = [64, 8, 16, 32]
+    mores = [8,1,2,3,4,5,6,7]
+    Es = [128, 64, 16, 32]
     mores = [4]
     Es = [64]
     for j in Es:
