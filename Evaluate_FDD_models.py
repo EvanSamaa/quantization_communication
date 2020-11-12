@@ -176,7 +176,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/OCT30/vary_Nrf+weighted_loss1/NRF={}_more={}"
+    file = "trained_models/OCT30/new_normalization/NRF={}_more={}"
     # file = "trained_models/OCT20/Nrf=4with_col+argmaxSPIGOT"
 
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
@@ -221,24 +221,23 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [2,3,4,5,6,7,8]
-    Es = [64, 8, 16, 32]
-    model = DP_partial_feedback_pure_greedy_model(8, 32, 5, M, K, sigma2_n, perfect_CSI=True)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 32, 2, M, K, sigma2_n, perfect_CSI=True)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 8, 5, M, K, sigma2_n, perfect_CSI=True)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=True)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 16, 5, M, K, sigma2_n, perfect_CSI=True)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 16, 2, M, K, sigma2_n, perfect_CSI=True)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    mores = [1,2,3,4,5,6,7,8]
+    Es = [128, 64, 16, 32]
+    # model = DP_partial_feedback_pure_greedy_model(8, 32, 5, M, K, sigma2_n, perfect_CSI=True)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    # model = DP_partial_feedback_pure_greedy_model(8, 32, 2, M, K, sigma2_n, perfect_CSI=True)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    # model = DP_partial_feedback_pure_greedy_model(8, 8, 5, M, K, sigma2_n, perfect_CSI=True)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=True)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    # model = DP_partial_feedback_pure_greedy_model(8, 16, 5, M, K, sigma2_n, perfect_CSI=True)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    # model = DP_partial_feedback_pure_greedy_model(8, 16, 2, M, K, sigma2_n, perfect_CSI=True)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
 
     # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    A[2]
     for j in Es:
         for i in mores:
             tf.random.set_seed(seed)
