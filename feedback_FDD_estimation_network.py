@@ -30,18 +30,14 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
         # scheduled_output, raw_output, reconstructed_input = model(features)
-        raw_output, scheduled_output = model(features)
+        # raw_output, scheduled_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
-        # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
+        scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-
-        input_mod = tf.abs(features)
-        norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
-        input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
         loss_1 = sum_rate_train(scheduled_output, features)
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(input_mod)) # with vqvae
-        # loss_3 = 0.1 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(input_mod))
-        # loss_2 = 10.0*vae_loss.call(z_qq, z_e)
+        loss_3 = 10.0 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/100.0)
+        loss_2 = 10.0 * vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output))
         loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
         factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
@@ -68,15 +64,15 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # # print("==============================")
         # mask = tf.stop_gradient(Hanrden_scheduling_user_constrained(1, K, M, default_val=0)(scheduled_output))
         # loss_4 += tf.keras.losses.CategoricalCrossentropy()(scheduled_output/N_rf, mask/N_rf)
-        loss = factor[N_rf] * loss_4 + 10 * loss_1
+        loss = loss_2 + loss_3
 
-        # loss_4 = 0.1*loss_4 + loss_1
-    gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    # gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
-    # optimizer.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
-    # gradients_2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
-    # optimizer2.apply_gradients(zip(gradients_2, model.get_layer("model_2").trainable_variables))
+        loss_4 = factor[N_rf] * loss_4 + loss_1
+    # gradients = tape.gradient(loss, model.trainable_variables)
+    # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
+    gradients_2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
+    optimizer2.apply_gradients(zip(gradients_2, model.get_layer("model_2").trainable_variables))
     train_loss(sum_rate(scheduled_output, features))
     # train_loss(loss_3)
     try:
@@ -91,7 +87,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/OCT30/fixed_normalization_NRF={}_more={}{}"
+    fname_template = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -112,8 +108,8 @@ if __name__ == "__main__":
     # EPOCHS = 1
     mores = [8,1,2,3,4,5,6,7]
     Es = [128, 64, 16, 32]
-    mores = [4]
-    Es = [64]
+    # mores = [4]
+    # Es = [64]
     for j in Es:
         for i in mores:
             train_VS = tf.keras.metrics.Mean(name='test_loss')
@@ -208,7 +204,7 @@ if __name__ == "__main__":
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output, reconstructed_input= model.predict(valid_data, batch_size=N)
-                    raw_output, scheduled_output = model.predict(valid_data, batch_size=N)
+                    scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output), tf.abs(valid_data))
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
