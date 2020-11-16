@@ -555,6 +555,7 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
         std = tf.math.reduce_std(tf.keras.layers.Reshape((K * M, 1))(G), axis=1, keepdims=True)
         mean = tf.tile(mean, (1, K, M))
         std = tf.tile(std, (1, K, M))
+
         G = tf.divide(G - mean, std)
         G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
         # quantization ===
