@@ -3979,7 +3979,7 @@ def Input_normalization_all(raw_input):
     return input_mod
 def Input_normalization_per_user(raw_input):
     mean = tf.reduce_mean(raw_input, axis=2, keepdims=True)
-    std = tf.reduce_std(raw_input, axis=2, keepdims=True)
+    std = tf.math.reduce_std(raw_input, axis=2, keepdims=True)
     input_mod = tf.divide(raw_input - mean, std)
     return input_mod
 def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
