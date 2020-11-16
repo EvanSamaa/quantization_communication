@@ -3972,9 +3972,20 @@ def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
     output.append(output_final)
     model = Model(inputs, output)
     return model
+def Input_normalization_all(raw_input):
+    mean = tf.reduce_mean(tf.keras.layers.Reshape((K * M,))(raw_input), axis=1, keepdims=True)
+    std = tf.math.reduce_std(tf.keras.layers.Reshape((K * M,))(raw_input), axis=1, keepdims=True)
+    input_mod = tf.divide(raw_input - tf.expand_dims(mean, axis=1), tf.expand_dims(std, axis=1))
+    return input_mod
+def Input_normalization_per_user(raw_input):
+    mean = tf.reduce_mean(raw_input, axis=2, keepdims=True)
+    std = tf.reduce_std(raw_input, axis=2, keepdims=True)
+    input_mod = tf.divide(raw_input - mean, std)
+    return input_mod
 def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
+    input_mod = Input_normalization_per_user(input_mod)
     # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     mean = tf.reduce_mean(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
     std = tf.math.reduce_std(tf.keras.layers.Reshape((K * M,))(input_mod), axis=1, keepdims=True)
