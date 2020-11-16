@@ -179,7 +179,8 @@ def plot_data(arr, col=[], title="loss"):
 if __name__ == "__main__":
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
 
-    file = "trained_models/OCT30/seeding=1one_hot+feedback"
+    file = "trained_models/OCT30/Nrf=8/seeding=1one_hot+feedback"
+
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
