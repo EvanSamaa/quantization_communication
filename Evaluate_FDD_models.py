@@ -119,7 +119,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # compressed_G, position_matrix = G_compress(ds_load, 2)
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict_on_batch(ds_load)
-        scheduled_output = model(ds_load)
+        raw_output, scheduled_output = model(ds_load)
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(ds_load, batch_size=5)
         prediction = scheduled_output
         # for k in range(0, num_data):
@@ -247,7 +247,7 @@ if __name__ == "__main__":
             N_rf = 8
             print("========================================== bits =", j, "Nrf = ", i)
             # model = tf.keras.models.load_model(model_path.format(i, j), custom_objects=custome_obj)
-            model = tf.keras.models.load_model(model_path.format, custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
