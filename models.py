@@ -1496,12 +1496,6 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         # G_col_min = tf.reduce_min(G_col_tiled, axis=2, keepdims=True)
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)))
         # print(iteration_num.shape)
-        num = np.zeros((1, 2))
-        if step == 1:
-            num[0, 1] = 1
-        else:
-            num[0, 0] = 1
-        iteration_num = tf.tile(iteration_num, (1, 1, 2)) + num
         # x = tf.reduce_sum(x, axis=2)
         # x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
