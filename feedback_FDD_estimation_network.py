@@ -86,7 +86,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_15/new_normalization+original_model_k=6_N_RF{}_{}"
+    fname_template = "trained_models/Nov_15/new_normalization+original_model_k=4_N_RF{}_512hidden{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -131,7 +131,7 @@ if __name__ == "__main__":
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, True, max_val)
+            model = FDD_per_link_archetecture_more_G(M, K, 4, N_rf, True, max_val)
             # model = FDD_one_at_a_time_iterable(M, K, 6, N_rf, normalization=True, avg_max=max_val)
             # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
