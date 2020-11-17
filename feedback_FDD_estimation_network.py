@@ -68,7 +68,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # ================================= middle iterations =================================
 
         # loss = loss_2 + loss_3
-        loss = loss_4 + loss_1
+        loss = 5.0 * loss_4 + loss_1
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
