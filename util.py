@@ -126,6 +126,18 @@ def nChoosek_bits(N, k):
             results[i, bit] = 1
         i = i + 1
     return count, tf.constant(results, dtype=tf.float32)
+def obtain_channel_distributions(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
+    from matplotlib import pyplot as plt
+    G = generate_link_channel_data(N, K, M, Nrf)
+    plt.hist(tf.abs(G[:, 0, 0]).numpy(), bins=100)
+    plt.show()
+    max_G = tf.reduce_max(tf.abs(G), axis=0)
+    mean_G = tf.reduce_mean(tf.abs(G), axis=0)
+    std_G = tf.math.reduce_std(tf.abs(G), axis=0)
+    print(max_G)
+    upper = mean_G + 2 * std_G
+    print(upper)
+    return max_G
 
 # ============================  Metrics  ============================
 def quantizaton_evaluation_numbers(model, granuality=0.0001, k=2):

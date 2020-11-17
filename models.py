@@ -551,13 +551,10 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
     def model(G):
         G = (tf.abs(G))
         # quantization ===
-        mean = tf.reduce_mean(tf.keras.layers.Reshape((K * M, 1))(G), axis=1, keepdims=True)
-        std = tf.math.reduce_std(tf.keras.layers.Reshape((K * M, 1))(G), axis=1, keepdims=True)
-        mean = tf.tile(mean, (1, K, M))
-        std = tf.tile(std, (1, K, M))
-
-        G = tf.divide(G - mean, std)
+        G, G_max= Input_normalization_per_user(G)
+        G = tf.where(G > G_max, G_max, G)
         G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
+        G = tf.multiply(G, G_max)
         # quantization ===
         top_values, top_indices = tf.math.top_k(G, k=p)
         if perfect_CSI == False:
@@ -3973,15 +3970,24 @@ def FDD_one_at_a_time(M, K, k=2, N_rf=3, output_all=False):
     model = Model(inputs, output)
     return model
 def Input_normalization_all(raw_input):
-    mean = tf.reduce_mean(tf.keras.layers.Reshape((K * M,))(raw_input), axis=1, keepdims=True)
-    std = tf.math.reduce_std(tf.keras.layers.Reshape((K * M,))(raw_input), axis=1, keepdims=True)
-    input_mod = tf.divide(raw_input - tf.expand_dims(mean, axis=1), tf.expand_dims(std, axis=1))
-    return input_mod
-def Input_normalization_per_user(raw_input):
-    mean = tf.reduce_mean(raw_input, axis=2, keepdims=True)
-    std = tf.math.reduce_std(raw_input, axis=2, keepdims=True)
-    input_mod = tf.divide(raw_input - mean, std)
-    return input_mod
+    K = raw_input.shape[1]
+    M = raw_input.shape[2]
+    # mean = tf.reduce_mean(tf.keras.layers.Reshape((K * M,))(raw_input), axis=1, keepdims=True)
+    # std = tf.math.reduce_std(tf.keras.layers.Reshape((K * M,))(raw_input), axis=1, keepdims=True)
+    # input_mod = tf.divide(raw_input - tf.expand_dims(mean, axis=1), tf.expand_dims(std, axis=1))
+    max = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(raw_input), axis=1, keepdims=True)
+    input_mod = tf.divide(raw_input, tf.expand_dims(max, axis=1))
+    avg_max = tf.reduce_mean(max)
+    return input_mod, avg_max
+def Input_normalization_per_user(raw_input, avg_max=None):
+    # mean = tf.reduce_mean(raw_input, axis=2, keepdims=True)
+    # std = tf.math.reduce_std(raw_input, axis=2, keepdims=True)
+    # input_mod = tf.divide(raw_input - mean, std)
+    max = tf.reduce_max(raw_input, axis=2, keepdims=True)
+    if avg_max is None:
+        avg_max = tf.reduce_mean(max)
+    input_mod = tf.divide(raw_input, avg_max)
+    return input_mod, avg_max
 def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
