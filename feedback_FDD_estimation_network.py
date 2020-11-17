@@ -43,26 +43,30 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
-        for i in range(0, raw_output.shape[1]-1):
-            # out_i = tf.reduce_sum(raw_output[:, max(0, i-N_rf):i+1], axis=1)
-            # dec = min(i+1, N_rf)
-            out_i = scheduled_output[:, i]
-            dec = N_rf
-            mask = tf.stop_gradient(Harden_scheduling_user_constrained(dec, K, M, default_val=0)(out_i))
-            # sr = sum_rate_hard(scheduled_output[:, i], mask, features)
-            sr = sum_rate_train(out_i, features)
-            ce = tf.keras.losses.CategoricalCrossentropy()(out_i / dec, mask / dec)
-            # ce = tf.reduce_mean(tf.square(tf.multiply(out_i, 1.0-out_i)), axis=1)
-            # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-            loss_1 = loss_1 + 0.1 * sr
-            loss_4 = loss_4 + 0.1 * ce
-            # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
-            # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
-            # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
-            # user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
-            # user_constraint = tf.reduce_mean(user_constraint, axis=1)
-            # user_constraint_lambda = tf.reduce_mean(user_constraint_lambda, axis=1)
-            # loss_4 = loss_4 + ce
+
+        # ================================= middle iterations =================================
+        # for i in range(0, raw_output.shape[1]-1):
+        #     # out_i = tf.reduce_sum(raw_output[:, max(0, i-N_rf):i+1], axis=1)
+        #     # dec = min(i+1, N_rf)
+        #     out_i = scheduled_output[:, i]
+        #     dec = N_rf
+        #     mask = tf.stop_gradient(Harden_scheduling_user_constrained(dec, K, M, default_val=0)(out_i))
+        #     # sr = sum_rate_hard(scheduled_output[:, i], mask, features)
+        #     sr = sum_rate_train(out_i, features)
+        #     ce = tf.keras.losses.CategoricalCrossentropy()(out_i / dec, mask / dec)
+        #     # ce = tf.reduce_mean(tf.square(tf.multiply(out_i, 1.0-out_i)), axis=1)
+        #     # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+        #     loss_1 = loss_1 + 0.1 * sr
+        #     loss_4 = loss_4 + 0.1 * ce
+        #     # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
+        #     # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
+        #     # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
+        #     # user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
+        #     # user_constraint = tf.reduce_mean(user_constraint, axis=1)
+        #     # user_constraint_lambda = tf.reduce_mean(user_constraint_lambda, axis=1)
+        #     # loss_4 = loss_4 + ce
+        # ================================= middle iterations =================================
+
         # loss = loss_2 + loss_3
         loss = loss_4 + loss_1
         # loss_4 = factor[N_rf] * loss_4 + loss_1
@@ -86,7 +90,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_15/new_normalization+less_G_k=12_N_RF{}_3layer{}"
+    fname_template = "trained_models/Nov_15/new_normalization+less_G_k=12_N_RF{}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
