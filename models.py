@@ -1520,9 +1520,10 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
             [input_reshaper(input_mod), selected,
-             # G_min, G_mean,
+             G_min, G_mean,
              # G_user_mean, G_user_max, G_user_min,
-             # G_col_max, G_col_min, G_col_mean,
+             G_user_max, G_user_min,
+             G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f, interference_f_2,
              GX_user_mean, GX_col_mean,
              row_choice,
