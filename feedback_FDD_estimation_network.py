@@ -110,7 +110,7 @@ if __name__ == "__main__":
     for j in Es:
         for i in mores:
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
-            garbage, max_val = Input_normalization_per_user(valid_data)
+            garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             train_VS = tf.keras.metrics.Mean(name='test_loss')
             tf.random.set_seed(i)
             np.random.seed(i)
