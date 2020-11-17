@@ -54,8 +54,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
             ce = tf.keras.losses.CategoricalCrossentropy()(out_i / dec, mask / dec)
             # ce = tf.reduce_mean(tf.square(tf.multiply(out_i, 1.0-out_i)), axis=1)
             # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-            loss_1 = loss_1 + 0.1 * sr
-            loss_4 = loss_4 + 0.1 * ce
+            loss_1 = loss_1 + 0.01 * sr
+            loss_4 = loss_4 + ce
             # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
             # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
             # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_15/new_normalization+original_model_k=8_N_RF{}_{}"
+    fname_template = "trained_models/Nov_15/new_normalization+original_model_k=4_N_RF{}_{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -131,7 +131,7 @@ if __name__ == "__main__":
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G(M, K, 8, N_rf, True, max_val)
+            model = FDD_per_link_archetecture_more_G(M, K, 4, N_rf, True, max_val)
             # model = FDD_one_at_a_time_iterable(M, K, 6, N_rf, normalization=True, avg_max=max_val)
             # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
