@@ -1506,9 +1506,9 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         # x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         # x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
-        row_choice = tf.reduce_sum(x, axis=2, keepdims=True)
-        row_choice = tf.matmul(self.Mk, row_choice)
-        row_choice = row_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
+        # row_choice = tf.reduce_sum(x, axis=2, keepdims=True)
+        # row_choice = tf.matmul(self.Mk, row_choice)
+        # row_choice = row_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
         col_choice = tf.transpose(tf.reduce_sum(x, axis=1, keepdims=True), perm=[0,2,1])
         col_choice = tf.matmul(self.Mm, col_choice)
         col_choice = col_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
@@ -1521,7 +1521,6 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
              G_col_mean,
              interference_t, interference_f, interference_f_2,
              GX_user_mean, GX_col_mean,
-             row_choice,
              col_choice,
              x_raw,
              iteration_num])
