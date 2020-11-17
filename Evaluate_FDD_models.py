@@ -178,7 +178,6 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 def garsons_method(model_path):
-    from matplotlib import pyplot as plt
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     dnn = model.get_layer("DNN_within_model0")
     weights = dnn.get_layer("Dense1_inside_DNN0")
@@ -186,9 +185,8 @@ def garsons_method(model_path):
     garson_importance = tf.reduce_sum(tf.abs(kernel), axis=1)
     norm = tf.reduce_sum(garson_importance, keepdims=True)
     garson_importance = tf.divide(garson_importance, norm)
-    plt.plot(garson_importance.numpy(), 'r+')
+    plt.plot(garson_importance.numpy(), '+')
     plt.show()
-    A[2]
 if __name__ == "__main__":
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -211,10 +209,11 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self}
+    from matplotlib import pyplot as plt
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
-    file = "trained_models/Nov_15/new_normalization+less_G_k=12_N_RF4_3layer+different_reg.h5"
-    garsons_method(file)
-
+    file = "trained_models/Nov_15/hyperparameters/k=12_N_RF4_lambda={}2layer+no_iternum}"
+    # for item in [0.01, 0.1, 1, 5, 10]:
+    #     garsons_method(file.format(item))
     # obtain_channel_distributions(10000, 50, 64, 5)
     # A[2]
     N = 1
@@ -240,7 +239,7 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     mores = [1,2,3,4,5,6,7,8]
-    Es = [128, 64, 16, 32]
+    Es = [0.01, 0.1, 1, 5, 10]
     # model = DP_partial_feedback_pure_greedy_model(8, 16, 1, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=True)
@@ -249,10 +248,10 @@ if __name__ == "__main__":
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = 8
-            print("========================================== bits =", j, "Nrf = ", i)
+            N_rf = 4
+            print("========================================== lambda =", j, "Nrf = ", i)
             # model = tf.keras.models.load_model(model_path.format(i, j), custom_objects=custome_obj)
-            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path.format(j), custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
