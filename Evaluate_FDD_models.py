@@ -213,7 +213,7 @@ if __name__ == "__main__":
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self}
     # from matplotlib import pyplot as plt
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
-    file = "trained_models/Nov_15/hyperparameters/k=12_N_RF4_lambda={}2layer+no_iternum"
+    file = "trained_models/Nov_15/constrain_sat+no_iternum"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
     # obtain_channel_distributions(10000, 50, 64, 5)
@@ -253,7 +253,7 @@ if __name__ == "__main__":
             N_rf = 4
             print("========================================== lambda =", j, "Nrf = ", i)
             # model = tf.keras.models.load_model(model_path.format(i, j), custom_objects=custome_obj)
-            model = tf.keras.models.load_model(model_path.format(j), custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
