@@ -1481,10 +1481,6 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         interference_f_2 = input_reshaper(interference_f_2)
         G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
-        G_max = tf.reduce_max(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
-        G_max = tf.tile(tf.expand_dims(G_max, axis=1), (1, self.K * self.M, 1))
-        G_min = tf.reduce_min(tf.keras.layers.Reshape((self.M * self.K,))(input_mod), axis=1, keepdims=True)
-        G_min = tf.tile(tf.expand_dims(G_min, axis=1), (1, self.K * self.M, 1))
         G_user_tiled = tf.matmul(self.Mk, input_mod)
         G_user_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.M), (self.K, 1)), G_user_tiled)
         G_user_mean = tf.reduce_mean(G_user_tiled, axis=2, keepdims=True)
@@ -1497,7 +1493,6 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         G_col_tiled = tf.matmul(self.Mm, tf.transpose(input_mod, perm=[0, 2, 1]))
         G_col_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.K), (self.M, 1)), G_col_tiled)
         G_col_mean = tf.reduce_mean(G_col_tiled, axis=2, keepdims=True)
-        G_col_max = tf.reduce_max(G_col_tiled, axis=2, keepdims=True)
         G_col_min = tf.reduce_min(G_col_tiled, axis=2, keepdims=True)
         iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)))
         # print(iteration_num.shape)
@@ -1520,10 +1515,10 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
             [input_reshaper(input_mod), selected,
-             G_min, G_mean,
-             # G_user_mean, G_user_max, G_user_min,
-             G_user_max, G_user_min,
-             G_col_max, G_col_min, G_col_mean,
+             G_mean,
+             G_user_mean, G_user_max, G_user_min,
+             # G_user_max, G_user_min,
+             G_col_min, G_col_mean,
              interference_t, interference_f, interference_f_2,
              GX_user_mean, GX_col_mean,
              row_choice,
@@ -3656,12 +3651,15 @@ def dnn_per_link(input_shape, N_rf, i=0):
     x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
     x = tf.tanh(x)
-    x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
+    x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
+    x = tf.tanh(x)
+    x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
+    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_3{}".format(i))(x)
     x = tf.tanh(x)
     # x = Dense(32, name="Dense4_inside_DNN{}".format(i))(x)
     # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_4{}".format(i))(x)
-    x = Dense(N_rf, name="Dense2_inside_DNN{}".format(i))(x)
+    x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)
     # x = sigmoid(x)
     model = Model(inputs, x, name="DNN_within_model{}".format(i))
     return model
@@ -3734,7 +3732,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
     # sm = Argmax_STE_layer()
     # sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,16 + 2 + N_rf), N_rf)
+    dnns = dnn_per_link((M * K ,17 + 2 + N_rf), N_rf)
     # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
     # compute interference from k,i
     # output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
