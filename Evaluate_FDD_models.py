@@ -238,7 +238,7 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [1,2,3,4,5,6,7,8]
+    mores = [1]
     Es = [0.01, 0.1, 1, 5, 10]
     # model = DP_partial_feedback_pure_greedy_model(8, 16, 1, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
@@ -264,4 +264,3 @@ if __name__ == "__main__":
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
             # test_greedy(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-        A[2]
