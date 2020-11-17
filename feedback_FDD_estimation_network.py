@@ -84,7 +84,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_15/per_user_mode_N_RF{}_{}"
+    fname_template = "trained_models/Nov_15/new_normalization_N_RF{}_{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -109,6 +109,8 @@ if __name__ == "__main__":
     # Es = [64]
     for j in Es:
         for i in mores:
+            valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+            garbage, max_val = Input_normalization_per_user(valid_data)
             train_VS = tf.keras.metrics.Mean(name='test_loss')
             tf.random.set_seed(i)
             np.random.seed(i)
@@ -127,7 +129,8 @@ if __name__ == "__main__":
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_archetecture_more_G(M, K, 6, N_rf, output_all=True)
-            model = FDD_one_at_a_time_iterable(M, K, 6, N_rf, output_all=True)
+
+            model = FDD_one_at_a_time_iterable(M, K, 6, N_rf, output_all=True, avg_max=max_val)
             # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
             # print(model.summary())
@@ -162,7 +165,7 @@ if __name__ == "__main__":
             max_acc = 10000
             max_acc_loss = 10000
             # training Loop
-            valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+
             for epoch in range(EPOCHS):
                 # ======== ======== data recording features ======== ========
                 train_loss.reset_states()
