@@ -3654,7 +3654,7 @@ def dnn_per_link(input_shape, N_rf, i=0):
     inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
     x = Dense(128, name="Dense1_inside_DNN{}".format(i))(inputs)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
-    x = sigmoid(x)
+    x = LeakyReLU()(x)
     x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
     # x = sigmoid(x)
