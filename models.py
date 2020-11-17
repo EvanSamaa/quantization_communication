@@ -1523,10 +1523,10 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
              G_min, G_mean,
              G_user_mean, G_user_max, G_user_min,
              G_col_max, G_col_min, G_col_mean,
-             -interference_t, -interference_f, -interference_f_2,
-             -GX_user_mean, -GX_col_mean,
-             -row_choice,
-             -col_choice,
+             interference_t, interference_f, interference_f_2,
+             GX_user_mean, GX_col_mean,
+             row_choice,
+             col_choice,
              x_raw,
              iteration_num])
         # print(input_i[:, 0, 4])
