@@ -25,7 +25,7 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
                "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
                "X_extends": X_extends}
 # from matplotlib import pyplot as plt
-def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
+def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1.0):
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
@@ -40,7 +40,6 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # loss_2 = 10.0 * vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
         loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1]/N_rf, mask/N_rf)
-        factor = {1:1.0, 2:1.0, 3:1.0, 4:0.5, 5:0.5, 6:0.25, 7:0.25, 8:0.25}
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, -1], 1.0-scheduled_output[:, -1])), axis=1)
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
 
@@ -68,7 +67,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
         # ================================= middle iterations =================================
 
         # loss = loss_2 + loss_3
-        loss = 0.5 * loss_4 + loss_1
+        loss = reg_strength * loss_4 + loss_1
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -90,7 +89,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_15/new_normalization+less_G_k=12_N_RF{}_3layer+no_iternum{}"
+    fname_template = "trained_models/Nov_15/k=12_N_RF{}_lambda={}2layer+no_iternum{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -110,7 +109,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [4]
-    Es = [128]
+    Es = [0.01, 0.1, 1, 5, 10]
     # mores = [4]
     # Es = [64]
     for j in Es:
@@ -121,7 +120,8 @@ if __name__ == "__main__":
             tf.random.set_seed(i)
             np.random.seed(i)
             N_rf = i
-            more = j
+            # more = reg_strength
+            reg_strength = j
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
             # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
@@ -182,7 +182,7 @@ if __name__ == "__main__":
                 # ======== ======== training step ======== ========
                 # if epoch % 20 == 0:
                 train_features = generate_link_channel_data(N, K, M, N_rf)
-                current_result = train_step(train_features, None, training_mode, epoch=epoch)
+                current_result = train_step(train_features, None, training_mode, epoch=epoch, reg_strength=reg_strength)
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
                 # if True:
@@ -216,7 +216,7 @@ if __name__ == "__main__":
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
                         max_acc = valid_sum_rate.result()
-                        model.save(fname_template.format(N_rf, ".h5"))
+                        model.save(fname_template.format(N_rf, reg_strength, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                         improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
@@ -230,7 +230,7 @@ if __name__ == "__main__":
                         print("the validation SR is: ", valid_sum_rate.result())
                         if improvement <= 0.0001:
                             break
-            np.save(fname_template.format(N_rf, ".npy"), graphing_data)
+            np.save(fname_template.format(N_rf, reg_strength, ".npy"), graphing_data)
             tf.keras.backend.clear_session()
             print("Training end")
 
