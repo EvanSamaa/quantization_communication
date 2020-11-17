@@ -3983,8 +3983,8 @@ def Input_normalization_per_user(raw_input, avg_max=None):
     # mean = tf.reduce_mean(raw_input, axis=2, keepdims=True)
     # std = tf.math.reduce_std(raw_input, axis=2, keepdims=True)
     # input_mod = tf.divide(raw_input - mean, std)
-    max = tf.reduce_max(raw_input, axis=2, keepdims=True)
     if avg_max is None:
+        max = tf.reduce_max(raw_input, axis=2, keepdims=True)
         avg_max = tf.reduce_mean(max)
     input_mod = tf.divide(raw_input, avg_max)
     return input_mod, avg_max
@@ -3992,7 +3992,7 @@ def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, normalization=True, avg_max=No
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
     if normalization:
-        input_mod = tf.square(Input_normalization_per_user(input_mod, tf.expand_dims(avg_max, axis=0)))
+        input_mod = tf.square(tf.divide(input_mod, avg_max))
     else:
         input_mod = tf.square(input_mod)
     input_modder = Sequential_Per_link_Input_modification_most_G_raw_self(K, M, N_rf, 2*N_rf)
