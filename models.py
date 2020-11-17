@@ -3717,13 +3717,13 @@ def FDD_per_link_archetecture_more_granular(M, K, k=2, N_rf=3, output_all=False)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     model = Model(inputs, output)
     return model
-def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, output_all=False):
+def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
     # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    if normalization:
+        input_mod = tf.divide(input_mod, avg_max)
     input_mod = tf.square(input_mod)
-    norm = tf.reduce_max(tf.keras.layers.Reshape((K*M, ))(input_mod), axis=1, keepdims=True)
-    input_mod = tf.divide(input_mod, tf.expand_dims(norm, axis=1))
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     input_modder = Per_link_Input_modification_most_G_raw_self(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
