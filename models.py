@@ -3586,6 +3586,28 @@ def FDD_softmax_with_soft_mask(M, K, B, k=3):
     model = Model(inputs, output)
     print(model.summary())
     return model
+def Stochastic_softmax_selectior_and_loss(M, K, N_rf, N=1000):
+    def select(y_raw_pred_i, scheduled_output_i, G, lossfn):
+        # y_raw_pred = shape(Batchsize, M*K, Nrf)
+        # scheduled_output_i = shape(bathsize, M*K)
+        mask = np.zeros((y_raw_pred_i.shape[0], N, M*K, N_rf))
+        y_raw_pred_np = y_raw_pred_i.numpy()
+        for i in range(0, N_rf):
+            sam = tf.random.categorical(y_raw_pred_i[:, :, i], N)
+            for batch in range(y_raw_pred_i.shape[0]):
+                for n in range(N):
+                    mask[batch, n, sam[batch, n], i] = 1.0
+        mask = tf.constant(np.sum(mask, axis=3), dtype=tf.float32)
+        scheduled_output_i = tf.expand_dims(scheduled_output_i, axis=1)
+        scheduled_output_i = tf.multiply(scheduled_output_i, mask)
+        G = tf.tile(tf.expand_dims(G, axis=1), [1,N,1])
+        G = tf.reshape(G, (G.shape[0] * N, M*K))
+        scheduled_output_i = tf.reshape(scheduled_output_i, (scheduled_output_i.shape[0] * N, M*K))
+        return lossfn(scheduled_output_i, G)
+    return select
+
+
+
 def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     mod_input = tf.abs(inputs)
@@ -4837,6 +4859,12 @@ if __name__ == "__main__":
     B = 3
     seed = 200
     N_rf = 4
+    outputer = Stochastic_softmax_selectior(M, K, N_rf)
+    tim = tf.random.normal((10, M*K, N_rf), 0, 1)
+    G = tf.random.normal((10, M*K), 0, 1)
+    outputer(tim, tf.ones((10, M*K)), G)
+
+    A[2]
     FDD_RNN_model(M, K, N_rf)
     Top2Precoder_model(M, K, N_rf)
     G = generate_link_channel_data(N, K, M, N_rf)
