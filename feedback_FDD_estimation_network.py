@@ -72,13 +72,13 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0):
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients_2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients_2, model.get_layer("model_2").trainable_variables))
-    train_loss(sum_rate(scheduled_output, features))
+    train_loss(sum_rate(scheduled_output[:, -1], features))
     # train_loss(loss_3)
     try:
         train_binarization_loss(loss_3)
     except:
         timmer = 0
-    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output), features))
+    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
     del tape
     return train_hard_loss.result()
 if __name__ == "__main__":
