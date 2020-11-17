@@ -78,7 +78,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Oct13/Nrf={}neg_mod+high_noise{}"
+    fname_template = "trained_models/Oct13/Nrf={}neg_mod+no1{}"
     check = 500
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -124,7 +124,7 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=True)
             vae_loss = VAE_loss_general(False)
             sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-            sum_rate_train = Sum_rate_utility_WeiCui(K, M, 20)
+            sum_rate_train = Sum_rate_utility_WeiCui_add1(K, M, 20)
             optimizer = tf.keras.optimizers.Adam(lr=0.001)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
