@@ -1520,9 +1520,9 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         input_i = input_concatnator(
             [input_reshaper(input_mod), selected,
-             G_min, G_mean,
-             G_user_mean, G_user_max, G_user_min,
-             G_col_max, G_col_min, G_col_mean,
+             # G_min, G_mean,
+             # G_user_mean, G_user_max, G_user_min,
+             # G_col_max, G_col_min, G_col_mean,
              interference_t, interference_f, interference_f_2,
              GX_user_mean, GX_col_mean,
              row_choice,
@@ -3652,12 +3652,12 @@ def FDD_k_times_with_sigmoid_and_penalty(M, K, k=3):
     return model
 def dnn_per_link(input_shape, N_rf, i=0):
     inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
-    x = Dense(512, name="Dense1_inside_DNN{}".format(i))(inputs)
+    x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
     x = tf.tanh(x)
-    # x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
-    # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
-    # x = tf.tanh(x)
+    x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
+    x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
+    x = tf.tanh(x)
     # x = Dense(32, name="Dense4_inside_DNN{}".format(i))(x)
     # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_4{}".format(i))(x)
     x = Dense(N_rf, name="Dense2_inside_DNN{}".format(i))(x)
@@ -3995,7 +3995,7 @@ def FDD_one_at_a_time_iterable(M, K, k=2, N_rf=3, normalization=True, avg_max=No
     else:
         input_mod = tf.square(input_mod)
     input_modder = Sequential_Per_link_Input_modification_most_G_raw_self(K, M, N_rf, 2*N_rf)
-    dnn_model = dnn_sequential((K*M, 17 + 2*N_rf))
+    dnn_model = dnn_sequential((K*M, 9 + 2*N_rf))
     output_final = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0) # inital output/planning
     input_i = input_modder(output_final, input_mod, 2*N_rf - 1.0)
     raw_out_put_i = dnn_model(input_i)
