@@ -38,9 +38,9 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(input_mod)) # with vqvae
         # loss_3 = 10.0 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/100.0)
         # loss_2 = 10.0 * vae_loss.call(z_qq, z_e)
-        mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
-        loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1]/N_rf, mask/N_rf)
-        # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, -1], 1.0-scheduled_output[:, -1])), axis=1)
+        # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
+        # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1]/N_rf, mask/N_rf)
+        loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, -1], 1.0-scheduled_output[:, -1])), axis=1)
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
 
         # ================================= middle iterations =================================
@@ -67,7 +67,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # ================================= middle iterations =================================
 
         # loss = loss_2 + loss_3
-        loss = reg_strength * loss_4 + loss_1
+        loss = reg_strength * loss_4 + 0.01 * loss_1
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_15/hyperparameters/k=12_N_RF{}_lambda={}2layer+no_iternum{}"
+    fname_template = "trained_models/Nov_15/constrain_sat+no_iternum{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [4]
-    Es = [0.01, 0.1, 1, 5, 10]
+    Es = [1]
     # mores = [4]
     # Es = [64]
     for j in Es:
@@ -216,7 +216,7 @@ if __name__ == "__main__":
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
                         max_acc = valid_sum_rate.result()
-                        model.save(fname_template.format(N_rf, reg_strength, ".h5"))
+                        model.save(fname_template.format(".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                         improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
@@ -230,7 +230,7 @@ if __name__ == "__main__":
                         print("the validation SR is: ", valid_sum_rate.result())
                         if improvement <= 0.0001:
                             break
-            np.save(fname_template.format(N_rf, reg_strength, ".npy"), graphing_data)
+            np.save(fname_template.format(".npy"), graphing_data)
             tf.keras.backend.clear_session()
             print("Training end")
 

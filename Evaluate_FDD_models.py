@@ -100,7 +100,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
 
-    num_data = 1000
+    num_data = 5
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -122,15 +122,17 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         scheduled_output, raw_output = model(ds_load)
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(ds_load, batch_size=5)
         prediction = scheduled_output[:, -1]
-        # for k in range(0, num_data):
-            # G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-            # for i in range(0,4):
-            #     prediction = scheduled_output[:, i]
-            #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
-            #     plt.plot(np.arange(0, K*M), G_pred[-1][0])
-            #     plt.plot(np.arange(0, K*M), prediction[k])
-            #
-            #     plt.show()
+        from matplotlib import pyplot as plt
+        for k in range(0, num_data):
+            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+            for i in range(0,12):
+                prediction = scheduled_output[:, i]
+                # plt.imshow(tf.reshape(prediction[k], (K, M)))
+                plt.plot(np.arange(0, K*M), G_pred[-1][0])
+                plt.plot(np.arange(0, K*M), prediction[k])
+
+                plt.show()
+        A[2]
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
@@ -239,7 +241,7 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     mores = [1]
-    Es = [0.01, 0.1, 1, 5, 10]
+    Es = [10]
     # model = DP_partial_feedback_pure_greedy_model(8, 16, 1, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=True)
