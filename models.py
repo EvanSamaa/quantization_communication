@@ -3600,7 +3600,7 @@ def Stochastic_softmax_selectior_and_loss(M, K, N_rf, N=1000):
         mask = tf.constant(np.sum(mask, axis=3), dtype=tf.float32)
         scheduled_output_i = tf.expand_dims(scheduled_output_i, axis=1)
         scheduled_output_i = tf.multiply(scheduled_output_i, mask)
-        G = tf.tile(tf.expand_dims(G, axis=1), [1,N,1])
+        G = tf.tile(tf.expand_dims(G, axis=1), [1,N,1,1])
         G = tf.reshape(G, (G.shape[0] * N, M*K))
         scheduled_output_i = tf.reshape(scheduled_output_i, (scheduled_output_i.shape[0] * N, M*K))
         return lossfn(scheduled_output_i, G)
