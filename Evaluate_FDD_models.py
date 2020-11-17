@@ -212,7 +212,7 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self}
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
-    file = "trained_models/Nov_15/N_RF8_.h5"
+    file = "trained_models/Nov_15/new_normalization+original_model_k=4_N_RF8_.h5"
     garsons_method(file)
 
     # obtain_channel_distributions(10000, 50, 64, 5)
