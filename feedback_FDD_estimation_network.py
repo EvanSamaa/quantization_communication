@@ -80,7 +80,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_B=16_E={}{}"
+    fname_template = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_B=64_E={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     K = 50
     B = 1
     E = 20
-    more = 16
+    more = 64
     seed = 100
     N_rf = 8
     sigma2_h = 6.3
