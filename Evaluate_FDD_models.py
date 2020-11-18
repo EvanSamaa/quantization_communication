@@ -213,11 +213,11 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
-    file = "trained_models/Nov_18/VQVAE_hyperparm.npy"
-    training = np.load(file)
-    plot_data(training, [1])
-    file = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001.npy"
-    training = np.load(file)
+    file = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_E={}.npy"
+    for i in [1,5,10,15,20,30]:
+        name = file.format(i)
+        training = np.load(name)
+        print("dim = {} gives MSE of {} ".format(i, training[499:501, 1]))
     plot_data(training, [1])
     A[2]
     # from matplotlib import pyplot as plt
