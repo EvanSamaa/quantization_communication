@@ -80,7 +80,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_18/STE_bit={}{}"
+    fname_template = "trained_models/Nov_18/STE_lr=0.01_bit={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -150,8 +150,8 @@ if __name__ == "__main__":
             sum_rate_hard = Sum_rate_utility_hard(K, M, sigma2_n)
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_interference = Sum_rate_interference(K, M, sigma2_n)
-            optimizer = tf.keras.optimizers.Adam(lr=0.01)
-            optimizer2 = tf.keras.optimizers.Adam(lr=0.001)
+            optimizer = tf.keras.optimizers.Adam(lr=0.001)
+            optimizer2 = tf.keras.optimizers.Adam(lr=0.01)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
             graphing_data = np.zeros((EPOCHS, 4))
