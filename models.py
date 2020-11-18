@@ -3702,7 +3702,6 @@ def Stochastic_softmax_selectior_and_loss(M, K, N_rf, N=1000):
         mask = np.zeros((y_raw_pred_i.shape[0], N, M*K, N_rf))
         for i in range(0, N_rf):
             sam = tf.random.categorical(y_raw_pred_i[:, :, i], N)
-            mask = np.mask
             for batch in range(y_raw_pred_i.shape[0]):
                 mask[batch, :, :, i] = tf.one_hot(sam[batch], M*K)
             # for batch in range(y_raw_pred_i.shape[0]):
