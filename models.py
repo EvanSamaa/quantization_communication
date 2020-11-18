@@ -3843,7 +3843,7 @@ def FDD_per_link_archetecture_more_G_sigmoid(M, K, k=2, N_rf=3, normalization=Tr
     # compute interference from k,i
     # output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
     raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
-    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, 1))
     raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
     input_i = input_modder(raw_out_put_0, input_mod, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
