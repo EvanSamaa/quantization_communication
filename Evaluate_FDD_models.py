@@ -169,7 +169,7 @@ def plot_data(arr, col=[], title="loss"):
     from matplotlib import pyplot as plt
     cut = 0
     for i in range(arr.shape[0]-1, 0, -1):
-        if arr[i, 0] != 0:
+        if arr[i, 0] != 0 or arr[i, 1] != 0 or arr[i, 2] != 0 or arr[i, 3] != 0:
             cut = i
             break
     arr = arr[:i, :]
@@ -180,6 +180,7 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 def garsons_method(model_path):
+    from matplotlib import pyplot as plt
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     dnn = model.get_layer("DNN_within_model0")
     weights = dnn.get_layer("Dense1_inside_DNN0")
@@ -212,6 +213,13 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
+    file = "trained_models/Nov_18/VQVAE_hyperparm.npy"
+    training = np.load(file)
+    plot_data(training, [1])
+    file = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001.npy"
+    training = np.load(file)
+    plot_data(training, [1])
+    A[2]
     # from matplotlib import pyplot as plt
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
     file = "trained_models/Nov_15/sigmoid+smol_user_reg+Nrf_reg"
