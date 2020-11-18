@@ -330,7 +330,7 @@ def Mix_loss():
     return mixloss
 def user_constraint(pred_i, K, M):
     unflattened_X = tf.reshape(pred_i, (pred_i.shape[0], K, M))
-    loss = tf.square(tf.maximum(tf.reduce_sum(unflattened_X, axis=2), 1.0)-1.0)
+    loss = tf.reduce_mean(tf.square(tf.maximum(tf.reduce_sum(unflattened_X, axis=2), 1.0)-1.0))
     return loss
 def Negative_shove():
     def negative_shove(y_pred, x=None):
