@@ -80,7 +80,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_E=5{}"
+    fname_template = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_E={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     M = 64
     K = 50
     B = 1
-    E = 5
+    E = 20
     more = 16
     seed = 100
     N_rf = 8
@@ -100,9 +100,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [4]
-    Es = [1]
-    # mores = [4]
-    # Es = [64]
+    Es = [1, 5, 10, 15, 20, 30]
     for j in Es:
         for i in mores:
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
@@ -111,6 +109,7 @@ if __name__ == "__main__":
             tf.random.set_seed(i)
             np.random.seed(i)
             N_rf = i
+            E = j
             # more = reg_strength
             reg_strength = j
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
@@ -210,7 +209,7 @@ if __name__ == "__main__":
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
                         max_acc = valid_sum_rate.result()
-                        model.save(fname_template.format(".h5"))
+                        model.save(fname_template.format(E, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                         improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
@@ -224,7 +223,7 @@ if __name__ == "__main__":
                         print("the validation SR is: ", valid_sum_rate.result())
                         if improvement <= 0.0001:
                             break
-            np.save(fname_template.format(".npy"), graphing_data)
+            np.save(fname_template.format(E, ".npy"), graphing_data)
             tf.keras.backend.clear_session()
             print("Training end")
 
