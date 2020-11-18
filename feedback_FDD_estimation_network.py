@@ -55,26 +55,6 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
 
         # ================================= middle iterations =================================
-        # for i in range(0, raw_output.shape[1]-1):
-        #     # out_i = tf.reduce_sum(raw_output[:, max(0, i-N_rf):i+1], axis=1)
-        #     # dec = min(i+1, N_rf)
-        #     out_i = scheduled_output[:, i]
-        #     dec = N_rf
-        #     mask = tf.stop_gradient(Harden_scheduling_user_constrained(dec, K, M, default_val=0)(out_i))
-        #     # sr = sum_rate_hard(scheduled_output[:, i], mask, features)
-        #     sr = sum_rate_train(out_i, features)
-        #     ce = tf.keras.losses.CategoricalCrossentropy()(out_i / dec, mask / dec)
-        #     # ce = tf.reduce_mean(tf.square(tf.multiply(out_i, 1.0-out_i)), axis=1)
-        #     # loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-        #     loss_1 = loss_1 + 0.1 * sr
-        #     loss_4 = loss_4 + 0.1 * ce
-        #     # loss_4 = loss_4 + factor[N_rf]*tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce * lr_boost
-        #     # ce_lambda = tf.reduce_mean(lambda_var_1 * (tf.multiply(scheduled_output[:, i], 1.0-scheduled_output[:, i])), axis=1)
-        #     # reshaped_X = tf.keras.layers.Reshape((K, M))(scheduled_output[:, i])
-        #     # user_constraint = tf.minimum(tf.square(tf.reduce_sum(reshaped_X, axis=1) - 1), tf.square(tf.reduce_sum(reshaped_X, axis=1)))
-        #     # user_constraint = tf.reduce_mean(user_constraint, axis=1)
-        #     # user_constraint_lambda = tf.reduce_mean(user_constraint_lambda, axis=1)
-        #     # loss_4 = loss_4 + ce
         # ================================= middle iterations =================================
 
         loss = loss_2 + loss_3
@@ -83,16 +63,16 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    optimizer2.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients_2 = tape.gradient(loss_4, model.get_layer("model_2").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients_2, model.get_layer("model_2").trainable_variables))
-    train_loss(sum_rate(scheduled_output[:, -1], features))
-    # train_loss(loss_3)
+
+    # train_loss(sum_rate(scheduled_output[:, -1], features))
+    # train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
     try:
         train_binarization_loss(loss_3)
     except:
         timmer = 0
-    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
     del tape
     return train_hard_loss.result()
 if __name__ == "__main__":
