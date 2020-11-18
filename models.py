@@ -4931,7 +4931,7 @@ def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=1
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
     model = Model(inputs, reconstructed_input)
     return model
-def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max):
+def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
