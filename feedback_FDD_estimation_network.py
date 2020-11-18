@@ -38,6 +38,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
 
         # loss_1 = tf.maximum(Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train), loss_1)
         loss_1 = Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
+        loss_4 = user_constraint(scheduled_output[:, -1], K, M)
+        loss_4 = loss_4 + tf.square(tf.reduce_sum(raw_output[:, -1], axis=1) - N_rf)
         # loss_1 = 0.001 * loss_1 + Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
         # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(input_mod)) # with vqvae
         # loss_3 = 10.0 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/100.0)
@@ -72,7 +74,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # ================================= middle iterations =================================
 
         # loss = loss_2 + loss_3
-        loss = loss_1
+        loss = loss_1 + loss_4
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -94,7 +96,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_15/stochastic_loss+fixed_logit{}"
+    fname_template = "trained_models/Nov_15/sigmoid+user_reg+Nrf_reg{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -139,8 +141,8 @@ if __name__ == "__main__":
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G_logit(M, K, 12, N_rf, normalization=True, avg_max=max_val)
-            # model = FDD_per_link_archetecture_more_G_sigmoid(M, K, 12, N_rf, True, max_val)
+            # model = FDD_per_link_archetecture_more_G_logit(M, K, 12, N_rf, normalization=True, avg_max=max_val)
+            model = FDD_per_link_archetecture_more_G_sigmoid(M, K, 12, N_rf, True, max_val)
             # model = FDD_one_at_a_time_iterable(M, K, 6, N_rf, normalization=True, avg_max=max_val)
             # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
