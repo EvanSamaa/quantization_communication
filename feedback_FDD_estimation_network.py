@@ -38,6 +38,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
 
         # loss_1 = tf.maximum(Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train), loss_1)
         loss_1 = Stochastic_softmax_selectior_and_loss(M, K, N_rf, 1000)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
+        loss_4 = tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(raw_output[:, -1])), axis=2)
+        loss_4 = loss_4 + tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(raw_output[:, -1])), axis=1)
         # loss_4 = user_constraint(scheduled_output[:, -1], K, M)
         # loss_4 = loss_4 + tf.reduce_sum(scheduled_output[:, -1], axis=1) - N_rf
         # reshaped = tf.reshape(scheduled_output[:, -1], (scheduled_output[:, -1].shape[0], K, M))
@@ -76,7 +78,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # ================================= middle iterations =================================
 
         # loss = loss_2 + loss_3
-        loss = loss_1
+        loss = loss_1 + loss_4
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -98,7 +100,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_15/faster_stochastic{}"
+    fname_template = "trained_models/Nov_15/faster_stochastic+prob_reg{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
