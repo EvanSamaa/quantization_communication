@@ -34,10 +34,10 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        # loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
+        loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
 
         # loss_1 = tf.maximum(Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train), loss_1)
-        loss_1 = Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
+        # loss_1 = Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
         loss_4 = user_constraint(scheduled_output[:, -1], K, M)
         loss_4 = loss_4 + tf.square(tf.reduce_sum(raw_output[:, -1], axis=1) - N_rf)
         # loss_1 = 0.001 * loss_1 + Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
