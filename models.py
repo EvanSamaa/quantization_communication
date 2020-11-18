@@ -584,6 +584,18 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
 ############################## Misc Models ##############################
 
 ############################## Layers ##############################
+def relaxation_based_solver(M, K, N_rf, sigma=1.0):
+    def solver(G):
+        G = tf.abs(G)
+        g_top = tf.tile(tf.reduce_max(G, axis=1, keepdims=True), (1, K, 1))
+        g_second_top = tf.tile(tf.reduce_max(tf.where(G >= g_top, 0.0, G), axis=1, keepdims=True), (1, K, 1))
+        g_max = tf.where(G >= g_top, g_second_top, g_top)
+        score = tf.math.log(1.0 + tf.divide(G, g_max * (N_rf-1) + sigma))
+        score = tf.keras.layers.Reshape((K*M,))(score)
+        decision = Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(score)
+        return decision
+    return solver
+
 class iterative_NN_scheduler():
     def __init__(self, model, iteration, loss1, lr, loss2=None):
         self.model = model
