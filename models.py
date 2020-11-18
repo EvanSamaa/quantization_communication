@@ -4917,16 +4917,16 @@ def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e])
     return model
-def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=1, qbit=0):
+def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
     # inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
     # inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
     # inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))
     encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, more))
     z = encoder(inputs_mod)
-    print(z.shape)
     z = sigmoid(z) + tf.stop_gradient(binary_activation(z) - sigmoid(z))
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
     model = Model(inputs, reconstructed_input)

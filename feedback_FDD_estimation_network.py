@@ -29,7 +29,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        reconstructed_input, z_qq, z_e = model(features)
+        reconstructed_input = model(features)
         # scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.01_B=64_E={}{}"
+    fname_template = "trained_models/Nov_18/STE_bit={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [4]
-    Es = [1, 5, 10, 15, 20, 30]
+    Es = [16, 32, 64]
     for j in Es:
         for i in mores:
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
@@ -109,9 +109,8 @@ if __name__ == "__main__":
             tf.random.set_seed(i)
             np.random.seed(i)
             N_rf = i
-            E = j
+            more = j
             # more = reg_strength
-            reg_strength = j
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
             # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
@@ -120,7 +119,8 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
             # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
             # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
-            model = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, 1, E, N_rf, 12, more=more, qbit=0, avg_max=max_val)
+            model = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=more, avg_max=max_val)
+            # model = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, 1, E, N_rf, 12, more=more, qbit=0, avg_max=max_val)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
@@ -201,7 +201,7 @@ if __name__ == "__main__":
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
-                    reconstructed_input, z_qq, z_e = model.predict(valid_data, batch_size=N)
+                    reconstructed_input = model.predict(valid_data, batch_size=N)
                     # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
                     # out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]), tf.abs(valid_data))
                     out = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(valid_data)/max_val) # with vqvae
@@ -209,7 +209,7 @@ if __name__ == "__main__":
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
                         max_acc = valid_sum_rate.result()
-                        model.save(fname_template.format(E, ".h5"))
+                        model.save(fname_template.format(more, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                         # improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
                         #                                                                             epoch - check + 1: epoch + 1,
@@ -227,7 +227,7 @@ if __name__ == "__main__":
                         print("the validation SR is: ", valid_sum_rate.result())
                         if improvement <= 0.0001:
                             break
-            np.save(fname_template.format(E, ".npy"), graphing_data)
+            np.save(fname_template.format(more, ".npy"), graphing_data)
             tf.keras.backend.clear_session()
             print("Training end")
 
