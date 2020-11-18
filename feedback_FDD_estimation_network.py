@@ -110,6 +110,7 @@ if __name__ == "__main__":
             np.random.seed(i)
             N_rf = i
             more = j
+            reg_strength = 1.0
             # more = reg_strength
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
