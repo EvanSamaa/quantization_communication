@@ -3587,7 +3587,7 @@ def FDD_softmax_with_soft_mask(M, K, B, k=3):
     print(model.summary())
     return model
 def Stochastic_softmax_selectior_and_loss(M, K, N_rf, N=1000):
-    def select(y_raw_pred_i, scheduled_output_i, G, lossfn):
+    def select(y_raw_pred_i, scheduled_output_i, G, lossfn, reg=user_constraint):
         # y_raw_pred = shape(Batchsize, M*K, Nrf)
         # scheduled_output_i = shape(bathsize, M*K)
         mask = np.zeros((y_raw_pred_i.shape[0], N, M*K, N_rf))
@@ -3606,7 +3606,7 @@ def Stochastic_softmax_selectior_and_loss(M, K, N_rf, N=1000):
         G = tf.reshape(G, (G.shape[0] * N, K, M))
         scheduled_output_i = scheduled_output_i + tf.stop_gradient(mask - scheduled_output_i)
         scheduled_output_i = tf.reshape(scheduled_output_i, (scheduled_output_i.shape[0] * N, M*K))
-        return lossfn(scheduled_output_i, G)
+        return lossfn(scheduled_output_i, G) + reg(scheduled_output_i)
     return select
 
 

@@ -328,6 +328,10 @@ def Mix_loss():
         loss2 = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(y_true, y_pred)
         return loss2 + loss1/100
     return mixloss
+def user_constraint(pred_i):
+    unflattened_X = tf.reshape(pred_i, (pred_i.shape[0], K, M))
+    loss = tf.square(tf.maximum(tf.reduce_sum(unflattened_X, axis=2), 1.0)-1.0)
+    return loss
 def Negative_shove():
     def negative_shove(y_pred, x=None):
         values, indices = tf.nn.top_k(y_pred, 2)
