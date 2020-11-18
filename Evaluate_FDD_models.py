@@ -222,7 +222,7 @@ if __name__ == "__main__":
                 cut = i
                 break
         training = training[:i, :]
-        print("dim = {} gives MSE of {} ".format(i, training[-1, 1]))
+        print("dim = {} gives MSE of {} ".format(i, training[-1, 2]))
     A[2]
     # from matplotlib import pyplot as plt
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
