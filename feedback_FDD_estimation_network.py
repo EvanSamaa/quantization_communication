@@ -38,8 +38,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
 
         # loss_1 = tf.maximum(Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train), loss_1)
         loss_1 = Stochastic_softmax_selectior_and_loss(M, K, N_rf, 1000)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
-        loss_4 = tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(scheduled_output[:, -1])), axis=2)
-        loss_4 = loss_4 + tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(scheduled_output[:, -1])), axis=1)
+        loss_4 = tf.reduce_mean(tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(scheduled_output[:, -1])), axis=2))
+        loss_4 = loss_4 + tf.reduce_mean(tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(scheduled_output[:, -1])), axis=1))
         # loss_4 = user_constraint(scheduled_output[:, -1], K, M)
         # loss_4 = loss_4 + tf.reduce_sum(scheduled_output[:, -1], axis=1) - N_rf
         # reshaped = tf.reshape(scheduled_output[:, -1], (scheduled_output[:, -1].shape[0], K, M))
