@@ -3716,9 +3716,6 @@ def Stochastic_softmax_selectior_and_loss(M, K, N_rf, N=1000):
         scheduled_output_i = tf.reshape(scheduled_output_i, (scheduled_output_i.shape[0] * N, M*K))
         return lossfn(scheduled_output_i, G) + reg(scheduled_output_i, K, M)
     return select
-
-
-
 def FDD_softmax_with_unconstraint_soft_masks(M, K, B, k=3):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     mod_input = tf.abs(inputs)
@@ -4934,11 +4931,12 @@ def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=1
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
     model = Model(inputs, reconstructed_input)
     return model
-def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=1, qbit=0):
+def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
-    inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
+    # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
+    # inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
+    inputs_mod = tf.divide(inputs_mod, avg_max)
     # inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
     # inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
     # inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))

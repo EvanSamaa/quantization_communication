@@ -29,25 +29,25 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        # scheduled_output, raw_output, reconstructed_input = model(features)
-        scheduled_output, raw_output = model(features)
+        reconstructed_input, z_qq, z_e = model(features)
+        # scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
 
         # loss_1 = tf.maximum(Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train), loss_1)
-        loss_1 = Stochastic_softmax_selectior_and_loss(M, K, N_rf, 1000)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
-        loss_4 = tf.reduce_mean(tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(scheduled_output[:, -1])), axis=2))
-        loss_4 = loss_4 + tf.reduce_mean(tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(scheduled_output[:, -1])), axis=1))
+        # loss_1 = Stochastic_softmax_selectior_and_loss(M, K, N_rf, 1000)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
+        # loss_4 = tf.reduce_mean(tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(scheduled_output[:, -1])), axis=2))
+        # loss_4 = loss_4 + tf.reduce_mean(tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(scheduled_output[:, -1])), axis=1))
         # loss_4 = user_constraint(scheduled_output[:, -1], K, M)
         # loss_4 = loss_4 + tf.reduce_sum(scheduled_output[:, -1], axis=1) - N_rf
         # reshaped = tf.reshape(scheduled_output[:, -1], (scheduled_output[:, -1].shape[0], K, M))
         # loss_4 = loss_4 + tf.reduce_mean(tf.square(tf.maximum(tf.reduce_sum(reshaped, axis=1), 1.0) - 1.0))
         # loss_1 = 0.001 * loss_1 + Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
-        # loss_3 = 10.0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(input_mod)) # with vqvae
+        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/max_val) # with vqvae
         # loss_3 = 10.0 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/100.0)
-        # loss_2 = 10.0 * vae_loss.call(z_qq, z_e)
+        loss_2 = vae_loss.call(z_qq, z_e)
         # mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
         # loss_4 = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1]/N_rf, mask/N_rf)
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, -1], 1.0-scheduled_output[:, -1])), axis=1)
@@ -77,8 +77,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         #     # loss_4 = loss_4 + ce
         # ================================= middle iterations =================================
 
-        # loss = loss_2 + loss_3
-        loss = loss_1 + loss_4
+        loss = loss_2 + loss_3
+        # loss = loss_1 + loss_4
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_15/faster_stochastic+prob_reg{}"
+    fname_template = "trained_models/Nov_18/VQVAE_hyperparm{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -141,11 +141,12 @@ if __name__ == "__main__":
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
             # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
             # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
+            model = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, 1, E, N_rf, 12, more=more, qbit=0, avg_max=max_val)
             # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
             # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
             # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
             # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            model = FDD_per_link_archetecture_more_G_logit(M, K, 12, N_rf, normalization=True, avg_max=max_val)
+            # model = FDD_per_link_archetecture_more_G_logit(M, K, 12, N_rf, normalization=True, avg_max=max_val)
             # model = FDD_per_link_archetecture_more_G_sigmoid(M, K, 12, N_rf, True, max_val)
             # model = FDD_one_at_a_time_iterable(M, K, 6, N_rf, normalization=True, avg_max=max_val)
             # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
