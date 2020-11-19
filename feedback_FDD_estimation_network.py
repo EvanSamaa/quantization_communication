@@ -171,7 +171,6 @@ if __name__ == "__main__":
                 # ======== ======== data recording features ======== ========
                 train_loss.reset_states()
                 train_binarization_loss.reset_states()
-                train_VS.reset_states()
                 train_hard_loss.reset_states()
                 valid_sum_rate.reset_states()
                 # ======== ======== training step ======== ========
