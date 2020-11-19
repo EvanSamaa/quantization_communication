@@ -100,7 +100,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [8,1,2,3,4,5,6,7]
-    Es = [64]
+    Es = [32]
     for j in Es:
         for i in mores:
             N_rf = i
