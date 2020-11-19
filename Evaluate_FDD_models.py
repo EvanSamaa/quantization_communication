@@ -119,9 +119,9 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # compressed_G, position_matrix = G_compress(ds_load, 2)
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict_on_batch(ds_load)
-        # scheduled_output, raw_output = model(ds_load)
-        # prediction = scheduled_output[:, -1]
-        prediction = model(ds_load)
+        scheduled_output, raw_output, recon = model(ds_load)
+        prediction = scheduled_output[:, -1]
+        # prediction = model(ds_load)
         # from matplotlib import pyplot as plt
         # for k in range(0, num_data):
         #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
@@ -226,7 +226,7 @@ if __name__ == "__main__":
     # A[2]
     # from matplotlib import pyplot as plt
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
-    file = "trained_models/Nov_15/full_pip_ste_Bit={}NRF={}"
+    file = "trained_models/Nov_19/full_pip_ste_Bit={}NRF={}"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
     # obtain_channel_distributions(10000, 50, 64, 5)
