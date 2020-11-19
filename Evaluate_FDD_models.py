@@ -226,7 +226,7 @@ if __name__ == "__main__":
     A[2]
     # from matplotlib import pyplot as plt
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
-    file = "trained_models/Nov_15/sigmoid+smol_user_reg+Nrf_reg"
+    file = "trained_models/Nov_15/full_pip_ste_Bit={}NRF={}"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
     # obtain_channel_distributions(10000, 50, 64, 5)
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     mores = [1,2,3,4,5,6,7,8]
-    Es = [10]
+    Es = [16]
     # model = DP_partial_feedback_pure_greedy_model(8, 16, 1, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=True)
@@ -265,7 +265,7 @@ if __name__ == "__main__":
             np.random.seed(seed)
             N_rf = i
             print("========================================== lambda =", j, "Nrf = ", i)
-            # model = tf.keras.models.load_model(model_path.format(i, j), custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path.format(i, j), custom_objects=custome_obj)
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
@@ -274,7 +274,7 @@ if __name__ == "__main__":
             # model = top_N_rf_user_model(M, K, N_rf)
             # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
             # model = partial_feedback_pure_greedy_model(N_rf, 32, i, M, K, sigma2_n)
-            model = relaxation_based_solver(M, K, N_rf)
+            # model = relaxation_based_solver(M, K, N_rf)
             test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
