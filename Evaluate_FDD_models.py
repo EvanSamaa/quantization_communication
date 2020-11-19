@@ -213,17 +213,17 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
-    file = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_B=32_E={}.npy"
-    for i in [1,5,10,15,20,30]:
-        name = file.format(i)
-        training = np.load(name)
-        for i in range(training.shape[0] - 1, 0, -1):
-            if training[i, 0] != 0 or training[i, 1] != 0 or training[i, 2] != 0 or training[i, 3] != 0:
-                cut = i
-                break
-        training = training[:i, :]
-        print("dim = {} gives MSE of {} ".format(i, training[-1, 1]))
-    A[2]
+    # file = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_B=32_E={}.npy"
+    # for i in [1,5,10,15,20,30]:
+    #     name = file.format(i)
+    #     training = np.load(name)
+    #     for i in range(training.shape[0] - 1, 0, -1):
+    #         if training[i, 0] != 0 or training[i, 1] != 0 or training[i, 2] != 0 or training[i, 3] != 0:
+    #             cut = i
+    #             break
+    #     training = training[:i, :]
+    #     print("dim = {} gives MSE of {} ".format(i, training[-1, 1]))
+    # A[2]
     # from matplotlib import pyplot as plt
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
     file = "trained_models/Nov_15/full_pip_ste_Bit={}NRF={}"
