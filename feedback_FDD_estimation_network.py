@@ -57,13 +57,13 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # ================================= middle iterations =================================
         # ================================= middle iterations =================================
 
-        loss = loss_3 + loss_1
-        loss_4 = 0.1 * loss_4
+        loss = loss_3
+        loss_4 = 0.1 * loss_4 + loss_1
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer2.apply_gradients(zip(gradients, model.trainable_variables))
+    gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
+    optimizer2.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
     gradients_2 = tape.gradient(loss_4, model.get_layer("scheduler").trainable_variables)
     optimizer.apply_gradients(zip(gradients_2, model.get_layer("scheduler").trainable_variables))
 
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_19/full_pip_ste_sigmoid+end_to_end_loss_1_Bit={}NRF={}{}"
+    fname_template = "trained_models/Nov_19/full_pip_ste_Bit={}NRF={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -100,15 +100,13 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [8,1,2,3,4,5,6,7]
-    Es = [64]
+    Es = [32]
     for j in Es:
         for i in mores:
             N_rf = i
             more = j
             tf.random.set_seed(i)
             np.random.seed(i)
-
-
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             reg_strength = 1.0
