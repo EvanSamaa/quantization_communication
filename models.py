@@ -4766,7 +4766,6 @@ def Top2Precoder_model(M, K, k=2, N_rf=3, filter=2):
     return model
 
 
-
 def FDD_distributed_then_general_architecture(M, K, k=2, N_rf=3, output_all=False):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.square(tf.abs(inputs))
