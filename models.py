@@ -2902,6 +2902,19 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_Encoding_module_sig(input_shape, i=0, code_size=15, normalization=False):
+    inputs = Input(input_shape, dtype=tf.float32)
+    if normalization:
+        min = tf.tile(tf.expand_dims(tf.reduce_min(inputs, axis=2), axis=2), (1, 1, inputs.shape[2]))
+        max = tf.tile(tf.expand_dims(tf.reduce_max(inputs, axis=2), axis=2), (1, 1, inputs.shape[2]))
+        x = (inputs - min) / (max - min)
+    else:
+        x = inputs
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_1".format(i))(x)
+    x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
+    return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
     inputs = Input(input_shape, dtype=tf.float32)
     K = input_shape[0]
@@ -2926,6 +2939,13 @@ def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
     x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
+    return Model(inputs, x, name="decoder_{}".format(i))
+def Autoencoder_Decoding_module_sig(output_size, input_shape, i=0):
+    inputs = Input(input_shape)
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="decoder_{}".format(i))
@@ -4828,24 +4848,23 @@ def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
     # the output_all shape would look like
     model = Model(inputs, output_all, name="DiscreteVAE")
     return model
-def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
+def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False, avg_max=None):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     norm = tf.reduce_max(inputs_mod, axis=2, keepdims=True)
     input_mod = tf.divide(inputs_mod, norm)
-    encoding_module = CSI_reconstruction_model_seperate_decoders_DFT_matrix(M, K, B, E, N_rf, k, more=more, qbit=qbit)
-    # scheduling_module = FDD_per_link_archetecture_more_G(M, K, k=k, N_rf=N_rf, output_all=output_all)
-    scheduling_module = FDD_one_at_a_time_iterable(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit, avg_max=avg_max)
+    scheduling_module = FDD_per_link_archetecture_more_G(M, K, k=k, N_rf=N_rf, normalization=False, avg_max=avg_max)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
     # scheduled_output, raw_output = scheduling_module(reconstructed_input)
-    raw_output, scheduled_output= scheduling_module(reconstructed_input)
+    scheduled_output, raw_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, raw_output, z_qq, z_e, reconstructed_input])
     print(model.summary())
     return model
 def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
     inputs = Input((K, M))
-    encoding_module = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=more, qbit=qbit, avg_max=avg_max)
+    encoding_module = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=more, qbit=qbit, avg_max=avg_max)
     scheduling_module = FDD_per_link_archetecture_more_G(M, K, k, N_rf, normalization=False, avg_max=avg_max)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input= encoding_module(inputs)
