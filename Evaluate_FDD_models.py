@@ -254,7 +254,7 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     mores = [1,2,3,4,5,6,7,8]
-    Es = [16]
+    Es = [64]
     # model = DP_partial_feedback_pure_greedy_model(8, 16, 1, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=True)
