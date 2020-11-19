@@ -57,8 +57,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # ================================= middle iterations =================================
         # ================================= middle iterations =================================
 
-        loss = loss_3
-        loss_4 = loss_1 + 0.1 * loss_4
+        loss = loss_3 + loss_1
+        loss_4 = 0.1 * loss_4
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_19/full_pip_ste_Bit={}NRF={}{}"
+    fname_template = "trained_models/Nov_19/full_pip_ste+end_to_end_loss_1_Bit={}NRF={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [8,1,2,3,4,5,6,7]
-    Es = [16]
+    Es = [64]
     for j in Es:
         for i in mores:
             N_rf = i
