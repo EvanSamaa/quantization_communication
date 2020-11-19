@@ -135,12 +135,12 @@ if __name__ == "__main__":
                 current_result = train_step(train_features, None, training_mode, epoch=epoch, reg_strength=reg_strength)
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
-                if True:
-                    for m in range(0, 100000):
-                        train_hard_loss.reset_states()
-                        current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=1)
-                        print(train_loss.result(), current_result)
-                # A[2]
+                # if True:
+                #     for m in range(0, 100000):
+                #         train_hard_loss.reset_states()
+                #         current_result = train_step(train_features, None, training_mode, epoch=epoch, lr_boost=1)
+                #         print(train_loss.result(), current_result)
+                # # A[2]
                 template = 'Epoch {}, Loss: {}, reconstruction_loss:{}, Hard Loss: {}'
                 print(template.format(epoch,
                                       train_loss.result(),
