@@ -37,7 +37,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
         loss_1 = nrf2expected_loss(N_rf, M, K, sigma2_n)(features, scheduled_output[:, -1])
         out = tf.keras.layers.Reshape((K, M, 1))(scheduled_output[:, -1])
-        loss_4 = tf.reduce_sum(tf.reduce_mean(tf.matmul(out, tf.transpose(out, [0, 1, 3, 2])), axis=0))
+        loss_4 = tf.reduce_sum(tf.reduce_mean(tf.matmul(out, tf.transpose(out, [0, 1, 3, 2])), axis=0)) - 2.0 * tf.multiply(out, out)
         loss_4 = loss_4 + tf.reduce_sum(tf.reduce_mean(tf.matmul(tf.transpose(out, [0, 2, 1, 3]), tf.transpose(out, [0, 2, 3, 1])), axis=0))
         # loss_4 = tf.reduce_mean(tf.reduce_sum(logged_out, axis=1)) + tf.reduce_mean(tf.reduce_sum(logged_out, axis=2))
         # loss_4 = factor[N_rf] * loss_4 + loss_1
