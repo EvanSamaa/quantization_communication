@@ -62,8 +62,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     # gradients = tape.gradient(loss, model.trainable_variables)
     # optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer2.apply_gradients(zip(gradients, model.trainable_variables))
+    gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
+    optimizer2.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
     gradients_2 = tape.gradient(loss_4, model.get_layer("scheduler").trainable_variables)
     optimizer.apply_gradients(zip(gradients_2, model.get_layer("scheduler").trainable_variables))
 
@@ -113,7 +113,6 @@ if __name__ == "__main__":
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             reg_strength = 1.0
             model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 12, more=more, avg_max=max_val)
-
             # more = reg_strength
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
