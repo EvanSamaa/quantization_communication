@@ -532,6 +532,13 @@ def Sum_rate_utility_WeiCui_plusp5(K, M, sigma2):
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
+def sinkhorn(X, n):
+    X = tf.exp(X)
+    for i in range(n):
+        X = tf.divide(X, tf.reduce_sum(X, axis=2, keepdims=True))
+        X = tf.divide(X, tf.reduce_sum(X, axis=1, keepdims=True))
+    decision = tf.reduce_sum(X, axis=2)
+    return decision
 def Sum_rate_utility_WeiCui(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
