@@ -35,7 +35,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
-        pred = sinkhorn(raw_output[:, -1], 10)
+        pred = sinkhorn(raw_output[:, -1], 4)
         loss = tf.reduce_mean(sum_rate_train(pred, features))
 
     gradients = tape.gradient(loss, model.trainable_variables)
