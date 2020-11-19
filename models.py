@@ -2902,6 +2902,19 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_Encoding_module_sig(input_shape, i=0, code_size=15, normalization=False):
+    inputs = Input(input_shape, dtype=tf.float32)
+    if normalization:
+        min = tf.tile(tf.expand_dims(tf.reduce_min(inputs, axis=2), axis=2), (1, 1, inputs.shape[2]))
+        max = tf.tile(tf.expand_dims(tf.reduce_max(inputs, axis=2), axis=2), (1, 1, inputs.shape[2]))
+        x = (inputs - min) / (max - min)
+    else:
+        x = inputs
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_1".format(i))(x)
+    x = sigmoid(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
+    return Model(inputs, x, name="encoder_{}".format(i))
 def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
     inputs = Input(input_shape, dtype=tf.float32)
     K = input_shape[0]
@@ -2926,6 +2939,13 @@ def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
     x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
+    return Model(inputs, x, name="decoder_{}".format(i))
+def Autoencoder_Decoding_module_sig(output_size, input_shape, i=0):
+    inputs = Input(input_shape)
+    x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="decoder_{}".format(i))
@@ -4920,8 +4940,8 @@ def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=1, q
     # inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
     # inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
     # inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
-    decoder = Autoencoder_Decoding_module(M, (K, more))
+    encoder = Autoencoder_Encoding_module_sig((K, M), i=0, code_size=more, normalization=False)
+    decoder = Autoencoder_Decoding_module_sig(M, (K, more))
     z = encoder(inputs_mod)
     z = sigmoid(z) + tf.stop_gradient(binary_activation(z) - sigmoid(z))
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
