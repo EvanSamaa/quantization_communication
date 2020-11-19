@@ -729,10 +729,10 @@ def nrf2expected_loss(N_rf, M, K, sigma):
         Gp1 = tf.square(tf.abs(G)) + 1.0
         M_Gp1 = tf.keras.layers.Reshape((K*M, 1))(Gp1)
         M_y_pred = tf.keras.layers.Reshape((K*M, 1))(y_pred)
-        tim = tf.multiply(tf.matmul(M_Gp1, tf.transpose(M_Gp1, (0, 2, 1))), -tf.math.log(tf.matmul(M_y_pred, tf.transpose(M_y_pred, (0, 2, 1)))))
+        tim = tf.multiply(tf.matmul(M_Gp1, tf.transpose(M_Gp1, (0, 2, 1))), tf.math.log(tf.matmul(M_y_pred, tf.transpose(M_y_pred, (0, 2, 1)))))
         tim = tf.reduce_sum(tf.reduce_sum(tim, axis=1), axis=1)
         loss = tf.reduce_mean(tim)
-        return loss
+        return -loss
     return loss_fn
 
 
