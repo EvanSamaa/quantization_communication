@@ -112,7 +112,7 @@ if __name__ == "__main__":
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             reg_strength = 1.0
-            model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, more=more, avg_max=max_val)
+            model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 12, more=more, avg_max=max_val)
 
             # more = reg_strength
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
