@@ -3924,7 +3924,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
-    model = Model(inputs, output)
+    model = Model(inputs, output, name="scheduler")
     return model
 def FDD_per_link_archetecture_more_G_logit(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
@@ -4843,17 +4843,13 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
     model = Model(inputs, [scheduled_output, raw_output, z_qq, z_e, reconstructed_input])
     print(model.summary())
     return model
-def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False):
+def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
     inputs = Input((K, M))
-    inputs_mod = tf.abs(inputs)
-    norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
-    inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
-    encoding_module = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=more, qbit=qbit)
-    # scheduling_module = FDD_per_link_archetecture_more_granular(M, K, k=k, N_rf=N_rf, output_all=output_all)
-    scheduling_module = FDD_one_at_a_time_iterable(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    encoding_module = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, k, more=more, qbit=qbit, avg_max=avg_max)
+    scheduling_module = FDD_per_link_archetecture_more_G(M, K, k, N_rf, normalization=False, avg_max=avg_max)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
-    reconstructed_input= encoding_module(inputs_mod)
-    raw_output, scheduled_output = scheduling_module(reconstructed_input)
+    reconstructed_input= encoding_module(inputs)
+    scheduled_output, raw_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
     return model
 def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1, qbit=0, output_all=False):
