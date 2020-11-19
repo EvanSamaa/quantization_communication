@@ -35,13 +35,9 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
-        loss_1 = nrf2expected_loss(N_rf, M, K, sigma2_n)(features, scheduled_output[:, -1])
-        out = tf.keras.layers.Reshape((K, M, 1))(scheduled_output[:, -1])
-        loss_4 = tf.reduce_sum(tf.reduce_mean(tf.matmul(out, tf.transpose(out, [0, 1, 3, 2])), axis=0)) - 2.0 * tf.multiply(out, out)
-        loss_4 = loss_4 + tf.reduce_sum(tf.reduce_mean(tf.matmul(tf.transpose(out, [0, 2, 1, 3]), tf.transpose(out, [0, 2, 3, 1])), axis=0))
-        # loss_4 = tf.reduce_mean(tf.reduce_sum(logged_out, axis=1)) + tf.reduce_mean(tf.reduce_sum(logged_out, axis=2))
-        # loss_4 = factor[N_rf] * loss_4 + loss_1
-        loss = loss_1 + loss_4
+        pred = sinkhorn(raw_output[:, -1])
+        loss = nrf2expected_loss(N_rf, M, K, sigma2_n)(features, pred)
+
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
@@ -49,8 +45,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
     # gradients_2 = tape.gradient(loss_4, model.get_layer("scheduler").trainable_variables)
     # optimizer.apply_gradients(zip(gradients_2, model.get_layer("scheduler").trainable_variables))
 
-    train_loss(loss_1)
-    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
+    train_loss(loss)
+    train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(pred), features))
     try:
         train_binarization_loss(loss_3)
     except:
@@ -62,7 +58,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_19/probab_method_proof_of_concept{}"
+    fname_template = "trained_models/Nov_19/sinkhorn_Nrf={}{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -81,8 +77,8 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [2]
-    Es = [32]
+    mores = [4]
+    Es = [1]
     for j in Es:
         for i in mores:
             N_rf = i
@@ -92,26 +88,7 @@ if __name__ == "__main__":
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             reg_strength = 1.0
-            # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 12, more=more, avg_max=max_val)
-            # more = reg_strength
-            # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
-            # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
-            # model = Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1, output_all=True)
-            # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
-            # model = FDD_per_user_architecture_return_all_softmaxes(M, K, 6, N_rf)
-            # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 3, more=32, qbit=0, output_all=True)
-            # model = tf.keras.models.load_model("trained_models/Aug27th/B4x8E10code_stacking+input_mod.h5", custom_objects=custome_obj)
-            # model = CSI_reconstruction_model(M, K, B, E, N_rf, 6, more=32)
-            # model = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, 1, E, N_rf, 12, more=more, qbit=0, avg_max=max_val)
-            # model = Feedbakk_FDD_model_scheduler_per_user(M, K, B, E, N_rf, 6, 32, output_all=True)
-            # model = FDD_per_link_archetecture_more_granular(M, K, 6, N_rf, output_all=True)
-            # model =  FDD_per_link_archetecture_more_G_distillation(M, K, 6, N_rf, output_all=True)
-            # model = FDD_per_link_2Fold(M, K, 6, N_rf, output_all=True)
-            # model = FDD_per_link_archetecture_more_G_logit(M, K, 12, N_rf, normalization=True, avg_max=max_val)
-            model = FDD_per_link_archetecture_more_G_sigmoid(M, K, 12, N_rf, True, max_val)
-            # model = FDD_one_at_a_time_iterable(M, K, 6, N_rf, normalization=True, avg_max=max_val)
-            # model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
-            # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, qbit=0, output_all=False)
+            model = FDD_per_link_archetecture_more_G_logit(M, K, 12, N_rf, True, max_val)
             # print(model.summary())
             lambda_var_1 = tf.Variable(1.0, trainable=True)
             lambda_var_2 = tf.Variable(1.0, trainable=True)
@@ -189,7 +166,7 @@ if __name__ == "__main__":
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
                         max_acc = valid_sum_rate.result()
-                        model.save(fname_template.format(more, N_rf, ".h5"))
+                        model.save(fname_template.format(N_rf, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                         improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
@@ -207,7 +184,7 @@ if __name__ == "__main__":
                         print("the validation SR is: ", valid_sum_rate.result())
                         if improvement <= 0.0001:
                             break
-            np.save(fname_template.format(more, N_rf, ".npy"), graphing_data)
+            np.save(fname_template.format(N_rf, ".npy"), graphing_data)
             tf.keras.backend.clear_session()
             print("Training end")
 
