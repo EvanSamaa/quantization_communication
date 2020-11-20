@@ -1475,7 +1475,7 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
                     self.Mm[i*self.K+j, i] = 1.0
             # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
             # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
-        x = tf.reduce_sum(x_raw, axis=2)
+        x = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(x_raw), axis=2)
         x = tf.keras.layers.Reshape((self.K, self.M))(x)
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
