@@ -109,7 +109,7 @@ if __name__ == "__main__":
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_interference = Sum_rate_interference(K, M, sigma2_n)
 
-            optimizer = tf.keras.optimizers.Adam(lr=0.01)
+            optimizer = tf.keras.optimizers.Adam(lr=0.0001)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.01)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
@@ -159,8 +159,9 @@ if __name__ == "__main__":
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
                     scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
+                    pred = sinkhorn(raw_output[:, -1], 4)
                     # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
-                    out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]), tf.abs(valid_data))
+                    out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(pred), tf.abs(valid_data))
                     # out = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(valid_data)/max_val) # with vqvae
                     valid_sum_rate(out)
                     graphing_data[epoch, 2] = valid_sum_rate.result()
