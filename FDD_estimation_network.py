@@ -36,6 +36,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
         pred = sinkhorn(raw_output[:, -1], 2)
+        print(tf.reduce_sum(pred, axis=1))
         loss = tf.reduce_mean(sum_rate_train(pred, features))
 
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -109,7 +110,7 @@ if __name__ == "__main__":
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_interference = Sum_rate_interference(K, M, sigma2_n)
 
-            optimizer = tf.keras.optimizers.Adam(lr=0.01)
+            optimizer = tf.keras.optimizers.Adam(lr=0.001)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.01)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization

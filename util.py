@@ -537,6 +537,7 @@ def sinkhorn(X, n):
     for i in range(n):
         X = tf.divide(X, tf.reduce_sum(X, axis=1, keepdims=True))
         X = tf.divide(X, tf.reduce_sum(X, axis=2, keepdims=True))
+    X = tf.divide(X, tf.reduce_sum(X, axis=1, keepdims=True))
     decision = tf.reduce_sum(X, axis=2)
     return decision
 def Sum_rate_utility_WeiCui(K, M, sigma2):
