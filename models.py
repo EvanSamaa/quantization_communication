@@ -601,7 +601,7 @@ def k_link_feedback_model(N_rf, B, p, M, K, g_max):
         G = tf.where(G > g_max, g_max, G)
         G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
         G = tf.multiply(G, g_max)
-        return tf.constant(G, dtype=tf.float32)
+        return tf.constant(G, dtype=tf.complex64)
     return model
 class iterative_NN_scheduler():
     def __init__(self, model, iteration, loss1, lr, loss2=None):
