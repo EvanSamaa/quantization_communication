@@ -602,7 +602,16 @@ def k_link_feedback_model(N_rf, B, p, M, K, g_max):
         G = tf.where(G > g_max, g_max, G)
         G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
         G = tf.multiply(G, g_max)
-        return tf.constant(G, dtype=tf.float32)
+        top_values, top_indices = tf.math.top_k(G, k=p)
+        G_copy = np.zeros((top_indices.shape[0], K, M))
+        for n in range(0, top_indices.shape[0]):
+            for i in range(0, K * p):
+                p_i = int(i % p)
+                user_i = int(tf.floor(i / p))
+                G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
+        G_copy = tf.constant(G_copy, dtype=tf.float32)
+        G = G_copy
+        return G
     return model
 class iterative_NN_scheduler():
     def __init__(self, model, iteration, loss1, lr, loss2=None):
