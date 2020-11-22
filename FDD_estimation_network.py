@@ -102,7 +102,7 @@ if __name__ == "__main__":
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             # ==================== hieristic feedback ====================
             feedback_model = k_link_feedback_model(N_rf, 32, links, M, K, max_val)
-            valid_data = feedback_model(valid_data)
+            valid_data_in = feedback_model(valid_data)
             # ==================== hieristic feedback ====================
             reg_strength = 1.0
             model = FDD_per_link_archetecture_more_G(M, K, 12, N_rf, True, max_val)
@@ -167,7 +167,7 @@ if __name__ == "__main__":
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
-                    scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
+                    scheduled_output, raw_output = model.predict(valid_data_in, batch_size=N)
                     pred = sinkhorn(raw_output[:, -1], 4)
                     # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(pred), tf.abs(valid_data))
