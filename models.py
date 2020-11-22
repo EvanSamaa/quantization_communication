@@ -596,7 +596,7 @@ def relaxation_based_solver(M, K, N_rf, sigma=1.0):
         return decision
     return solver
 def k_link_feedback_model(N_rf, B, p, M, K, g_max):
-    def model(G):
+    def model(G, g_max=g_max):
         G, g_max= Input_normalization_per_user(G, g_max)
         G = tf.where(G > g_max, g_max, G)
         G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
