@@ -595,7 +595,14 @@ def relaxation_based_solver(M, K, N_rf, sigma=1.0):
         decision = Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(score)
         return decision
     return solver
-
+def k_link_feedback_model(N_rf, B, p, M, K, g_max):
+    def model(G):
+        G, g_max= Input_normalization_per_user(G, g_max)
+        G = tf.where(G > g_max, g_max, G)
+        G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
+        G = tf.multiply(G, g_max)
+        return tf.constant(G, dtype=tf.float32)
+    return model
 class iterative_NN_scheduler():
     def __init__(self, model, iteration, loss1, lr, loss2=None):
         self.model = model

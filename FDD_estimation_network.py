@@ -25,19 +25,30 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
                "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
                "X_extends": X_extends}
 # from matplotlib import pyplot as plt
+def train_prev_outs(scheduled_output, features):
+    for i in range(0, scheduled_output.shape[1]):
+        sr = sum_rate(scheduled_output[:, i], features)
+        loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * sr
+        # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+        # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+        ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i], mask)
+        loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1] + 1 + i, dtype=tf.float32)) * ce
 def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1.0):
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        scheduled_output, raw_output = model(features)
-        # scheduled_output, raw_output = model(features)
+        limited_features = feedback_model(features)
+        scheduled_output, raw_output = model(limited_features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
-        pred = sinkhorn(raw_output[:, -1], 2)
+        pred = scheduled_output[:, -1]
         loss = tf.reduce_mean(sum_rate_train(pred, features))
-
+        mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]))
+        ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1], mask)
+        loss = loss + 0.1 * ce
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
@@ -58,11 +69,12 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_19/corrected_input_mode+sinkhorn_Nrf={}{}"
+    fname_template = "trained_models/Nov_22/Nrf={}_top_{}_feedback_with_{}bits_{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
+
     # problem Definition
     N = 50
     M = 64
@@ -77,18 +89,23 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [4]
-    Es = [1]
+    mores = [1, 2, 5]
+    Es = [8,1,2,3,4,5,6,7]
     for j in Es:
         for i in mores:
-            N_rf = i
-            more = j
+            N_rf = j
+            bits = 32
+            links = i
             tf.random.set_seed(i)
             np.random.seed(i)
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+            # ==================== hieristic feedback ====================
+            feedback_model = k_link_feedback_model(N_rf, 32, links, M, K, max_val)
+            valid_data = feedback_model(valid_data)
+            # ==================== hieristic feedback ====================
             reg_strength = 1.0
-            model = FDD_per_link_archetecture_more_G_logit(M, K, 12, N_rf, True, max_val)
+            model = FDD_per_link_archetecture_more_G(M, K, 12, N_rf, True, max_val)
             # print(model.summary())
             lambda_var_1 = tf.Variable(1.0, trainable=True)
             lambda_var_2 = tf.Variable(1.0, trainable=True)
@@ -159,7 +176,7 @@ if __name__ == "__main__":
                     graphing_data[epoch, 2] = valid_sum_rate.result()
                     if valid_sum_rate.result() < max_acc:
                         max_acc = valid_sum_rate.result()
-                        model.save(fname_template.format(N_rf, ".h5"))
+                        model.save(fname_template.format(N_rf, links, bits, ".h5"))
                     if epoch >= (SUPERVISE_TIME) and epoch >= (check * 2):
                         improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
@@ -177,7 +194,7 @@ if __name__ == "__main__":
                         print("the validation SR is: ", valid_sum_rate.result())
                         if improvement <= 0.0001:
                             break
-            np.save(fname_template.format(N_rf, ".npy"), graphing_data)
+            np.save(fname_template.format(N_rf, links, bits, ".npy"), graphing_data)
             tf.keras.backend.clear_session()
             print("Training end")
 
