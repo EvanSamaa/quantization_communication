@@ -101,7 +101,7 @@ if __name__ == "__main__":
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             # ==================== hieristic feedback ====================
-            feedback_model = k_link_feedback_model(N_rf, 32, links, M, K, max_val)
+            feedback_model = k_link_feedback_model(N_rf, bits, links, M, K, max_val)
             valid_data_in = feedback_model(valid_data)
             # ==================== hieristic feedback ====================
             reg_strength = 1.0
