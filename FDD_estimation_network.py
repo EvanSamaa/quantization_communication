@@ -94,7 +94,7 @@ if __name__ == "__main__":
     for j in Es:
         for i in mores:
             N_rf = j
-            bits = 32
+            bits = 8
             links = i
             tf.random.set_seed(i)
             np.random.seed(i)
