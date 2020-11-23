@@ -44,7 +44,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_1 = 0.001 * loss_1 + Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
         loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/max_val) # with vqvae
         # loss_3 = 10.0 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/100.0)
-        loss_2 = 10.0 * vae_loss.call(z_qq, z_e)
+        loss_2 = vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
         loss_4 = 0.1 * tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1]/N_rf, mask/N_rf)
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, -1], 1.0-scheduled_output[:, -1])), axis=1)
@@ -52,25 +52,25 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
 
         # ================================= middle iterations =================================
-        # for i in range(0, scheduled_output.shape[1]-1):
-        #     sr = sum_rate(scheduled_output[:, i], features)
-        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-        #     # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-        #     # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-        #     mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
-        #     ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
-        #     loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        for i in range(0, scheduled_output.shape[1]-1):
+            sr = sum_rate(scheduled_output[:, i], features)
+            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+            # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+            # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+            mask = tf.stop_gradient(Harden_scheduling_user_constrained(k=N_rf)(scheduled_output[:, i]))
+            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
+            loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
         # ================================= middle iterations =================================
 
         loss = loss_3 + loss_2 + loss_1
-        # loss_4 = 0.1 * loss_4
+        loss_4 = loss_4
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
-    # gradients_2 = tape.gradient(loss_4, model.get_layer("scheduler").trainable_variables)
-    # optimizer.apply_gradients(zip(gradients_2, model.get_layer("scheduler").trainable_variables))
+    gradients_2 = tape.gradient(loss_4, model.get_layer("scheduler").trainable_variables)
+    optimizer.apply_gradients(zip(gradients_2, model.get_layer("scheduler").trainable_variables))
 
     train_loss(sum_rate(scheduled_output[:, -1], features))
     train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_22/no_reg_Nrf={}B={}more={}VAE{}"
+    fname_template = "trained_models/Nov_22/old_design_Nrf={}B={}more={}VAE{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
