@@ -96,8 +96,8 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [8,1,2,3,4,5,6,7]
-    Es = [128, 64, 32, 16]
+    mores = [8]
+    Es = [64]
     for j in Es:
         for i in mores:
             N_rf = i
