@@ -4881,7 +4881,7 @@ def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, avg_
     encoding_module = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=more, qbit=qbit, avg_max=avg_max)
     scheduling_module = FDD_per_link_archetecture_more_G(M, K, k, N_rf, normalization=False, avg_max=avg_max)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
-    reconstructed_input= encoding_module(inputs)
+    reconstructed_input = encoding_module(inputs)
     scheduled_output, raw_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
     return model
