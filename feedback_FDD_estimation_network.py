@@ -54,7 +54,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # ================================= middle iterations =================================
         # ================================= middle iterations =================================
 
-        loss = loss_3 + loss_2 + loss_1
+        loss = reg_strength * loss_3 + loss_2 + loss_1
         loss_4 = 0.1 * loss_4
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -172,7 +172,7 @@ if __name__ == "__main__":
                 # ======== ======== training step ======== ========
                 # if epoch % 20 == 0:
                 train_features = generate_link_channel_data(N, K, M, N_rf)
-                current_result = train_step(train_features, None, training_mode, epoch=epoch, reg_strength=reg_strength)
+                current_result = train_step(train_features, None, training_mode, epoch=epoch, reg_strength=max(0.0, (epoch - 500.0)/500.0))
                 # out = partial_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n)(train_features)
                 # if current_result >= graphing_data[max(epoch - check, 0):max(0, epoch-1), 3].mean():
                 # if True:
