@@ -77,7 +77,7 @@ if __name__ == "__main__":
     swap_delay = check / 2
 
     # problem Definition
-    N = 50
+    N = 10
     M = 64
     K = 50
     B = 4
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [1, 2, 5]
-    Es = [8, 7]
+    Es = [8, 7, 6, 5, 4, 3, 2, 1]
     for j in Es:
         for i in mores:
             N_rf = j
