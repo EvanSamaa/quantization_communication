@@ -85,13 +85,13 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_22/10xloss1_Nrf={}B={}more={}VAE{}"
+    fname_template = "trained_models/Nov_22/loss1_Nrf={}B={}more={}VAE{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
     # problem Definition
-    N = 25
+    N = 50
     M = 64
     K = 50
     B = 4

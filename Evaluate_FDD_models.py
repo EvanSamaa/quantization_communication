@@ -100,7 +100,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
 
-    num_data = 1000
+    num_data = 5
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -119,8 +119,18 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # compressed_G, position_matrix = G_compress(ds_load, 2)
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict_on_batch(ds_load)
-        scheduled_output, raw_output, recon = model(ds_load)
-        prediction = scheduled_output[:, -1]
+        reconstructed_input, z_qq, z_e = model.predict_on_batch(ds_load)
+
+        # scheduled_output, raw_output, recon = model(ds_load)
+        valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+        garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+        for i in range(0, num_data):
+            from matplotlib import pyplot as plt
+            plt.imshow(np.concatenate([np.abs(ds_load[i]), np.abs(reconstructed_input[i]) * max_val], axis=0))
+            plt.show()
+            plt.imshow(np.concatenate([np.abs(ds_load[i]), np.abs(ds_load[i]) - np.abs(reconstructed_input[i])*max_val], axis=0))
+            plt.show()
+
         # prediction = model(ds_load)
         # from matplotlib import pyplot as plt
         # for k in range(0, num_data):
@@ -226,7 +236,7 @@ if __name__ == "__main__":
     # A[2]
     # from matplotlib import pyplot as plt
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
-    file = "trained_models/Nov_19/full_pip_ste_Bit={}NRF={}"
+    file = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_B=64_E=20"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
     # obtain_channel_distributions(10000, 50, 64, 5)
@@ -265,7 +275,7 @@ if __name__ == "__main__":
             np.random.seed(seed)
             N_rf = i
             print("========================================== lambda =", j, "Nrf = ", i)
-            model = tf.keras.models.load_model(model_path.format(j, i), custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
