@@ -62,8 +62,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         #     loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
         # ================================= middle iterations =================================
 
-        loss = loss_3 + loss_2 + loss_1 + 0.1 * loss_4
-        loss_4 = 0
+        loss = loss_3 + loss_2 + loss_1
+        # loss_4 = 0.1 * loss_4
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_22/All_loss_Nrf={}B={}more={}VAE{}"
+    fname_template = "trained_models/Nov_22/no_reg_Nrf={}B={}more={}VAE{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
