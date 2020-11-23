@@ -70,7 +70,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
     # gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
     gradients_2 = tape.gradient(loss_4, model.get_layer("scheduler").trainable_variables)
-    optimizer2.apply_gradients(zip(gradients_2, model.get_layer("scheduler").trainable_variables))
+    optimizer.apply_gradients(zip(gradients_2, model.get_layer("scheduler").trainable_variables))
 
     train_loss(sum_rate(scheduled_output[:, -1], features))
     train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), features))
