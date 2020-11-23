@@ -102,7 +102,7 @@ if __name__ == "__main__":
         for i in mores:
             N_rf = i
             more = j
-            B=4
+            B=8
             tf.random.set_seed(i)
             np.random.seed(i)
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
