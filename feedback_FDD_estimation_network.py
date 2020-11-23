@@ -27,7 +27,7 @@ custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
 # from matplotlib import pyplot as plt
 def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1.0):
     with tf.GradientTape(persistent=True) as tape:
-        scheduled_output, raw_output, reconstructed_input = model(features)
+        # scheduled_output, raw_output, reconstructed_input = model(features)
         # scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
@@ -198,8 +198,8 @@ if __name__ == "__main__":
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
-                    scheduled_output, raw_output, reconstructed_input = model.predict(valid_data, batch_size=N)
-                    # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
+                    # scheduled_output, raw_output, reconstructed_input = model.predict(valid_data, batch_size=N)
+                    scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]), tf.abs(valid_data))
                     # out = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(valid_data)/max_val) # with vqvae
                     valid_sum_rate(out)
