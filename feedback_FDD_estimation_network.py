@@ -97,7 +97,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [8,1,2,3,4,5,6,7]
-    Es = [64, 32, 16]
+    Es = [128, 64, 32, 16]
     for j in Es:
         for i in mores:
             N_rf = i
@@ -109,7 +109,7 @@ if __name__ == "__main__":
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             reg_strength = 1.0
             # model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 12, more=more, avg_max=max_val)
-            model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 12, more=more/B, avg_max=max_val)
+            model = Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, 12, more=int(more/B), avg_max=max_val)
             # more = reg_strength
             # model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=3, qbit=0)
             # model = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, 6, B_t=B_t, E_t=E_t, more=1)
