@@ -595,7 +595,24 @@ def relaxation_based_solver(M, K, N_rf, sigma=1.0):
         decision = Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(score)
         return decision
     return solver
-
+def k_link_feedback_model(N_rf, B, p, M, K, g_max):
+    def model(G, g_max=g_max):
+        G = (tf.abs(G))
+        G, g_max= Input_normalization_per_user(G, g_max)
+        G = tf.where(G > g_max, g_max, G)
+        G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
+        G = tf.multiply(G, g_max)
+        top_values, top_indices = tf.math.top_k(G, k=p)
+        G_copy = np.zeros((top_indices.shape[0], K, M))
+        for n in range(0, top_indices.shape[0]):
+            for i in range(0, K * p):
+                p_i = int(i % p)
+                user_i = int(tf.floor(i / p))
+                G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
+        G_copy = tf.constant(G_copy, dtype=tf.float32)
+        G = G_copy
+        return G
+    return model
 class iterative_NN_scheduler():
     def __init__(self, model, iteration, loss1, lr, loss2=None):
         self.model = model
@@ -1475,7 +1492,7 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
                     self.Mm[i*self.K+j, i] = 1.0
             # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
             # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
-        x = tf.reduce_sum(x_raw, axis=2)
+        x = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(x_raw), axis=2)
         x = tf.keras.layers.Reshape((self.K, self.M))(x)
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
@@ -4850,8 +4867,6 @@ def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
 def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False, avg_max=None):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    norm = tf.reduce_max(inputs_mod, axis=2, keepdims=True)
-    input_mod = tf.divide(inputs_mod, norm)
     encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit, avg_max=avg_max)
     scheduling_module = FDD_per_link_archetecture_more_G(M, K, k=k, N_rf=N_rf, normalization=False, avg_max=avg_max)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
