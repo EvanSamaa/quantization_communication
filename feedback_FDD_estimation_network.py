@@ -52,21 +52,21 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
 
         # ================================= middle iterations =================================
-        for i in range(0, scheduled_output.shape[1]-1):
-            sr = sum_rate(scheduled_output[:, i], features)
-            loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
-            # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
-            # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
-            mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
-            ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
-            loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        # for i in range(0, scheduled_output.shape[1]-1):
+        #     sr = sum_rate(scheduled_output[:, i], features)
+        #     loss_1 = loss_1 + tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * sr
+        #     # ce = All_softmaxes_CE_general(N_rf, K, M)(raw_output[:, i])
+        #     # loss_4 = loss_4 + factor[N_rf] * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
+        #     mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, i]))
+        #     ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, i]/N_rf, mask/N_rf)
+        #     loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
         # ================================= middle iterations =================================
 
-        loss = reg_strength * loss_3 + loss_2 + loss_1
+        loss = loss_3 + loss_2 + 0.1 * loss_1
         loss_4 = 0.1 * loss_4
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    optimizer2.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
     # optimizer2.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
     gradients_2 = tape.gradient(loss_4, model.get_layer("scheduler").trainable_variables)
