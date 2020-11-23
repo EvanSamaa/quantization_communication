@@ -38,8 +38,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        limited_features = feedback_model(features)
-        scheduled_output, raw_output = model(limited_features)
+        # limited_features = feedback_model(features)
+        scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_22/Nrf={}_top_{}_feedback_with_{}bits_{}"
+    fname_template = "trained_models/Nov_22/Nrf={}B={}more={}VAE{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -79,9 +79,9 @@ if __name__ == "__main__":
     N = 50
     M = 64
     K = 50
-    B = 1
+    B = 4
     E = 30
-    more = 32
+    more = 64
     seed = 100
     N_rf = 8
     sigma2_h = 6.3
@@ -101,8 +101,8 @@ if __name__ == "__main__":
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             # ==================== hieristic feedback ====================
-            feedback_model = k_link_feedback_model(N_rf, bits, links, M, K, max_val)
-            valid_data_in = feedback_model(valid_data)
+            # feedback_model = k_link_feedback_model(N_rf, bits, links, M, K, max_val)
+            # valid_data_in = feedback_model(valid_data)
             # ==================== hieristic feedback ====================
             reg_strength = 1.0
             model = FDD_per_link_archetecture_more_G(M, K, 12, N_rf, True, max_val)
@@ -167,7 +167,7 @@ if __name__ == "__main__":
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
-                    scheduled_output, raw_output = model.predict(valid_data_in, batch_size=N)
+                    scheduled_output, raw_output = model.predict(valid_data , batch_size=N)
                     pred = scheduled_output[:, -1]
                     # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(pred), tf.abs(valid_data))

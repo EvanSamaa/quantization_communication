@@ -4867,8 +4867,6 @@ def Feedbakk_FDD_model_encoder_decoder(M, K, B, E, mul=1):
 def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all=False, avg_max=None):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
-    norm = tf.reduce_max(inputs_mod, axis=2, keepdims=True)
-    input_mod = tf.divide(inputs_mod, norm)
     encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit, avg_max=avg_max)
     scheduling_module = FDD_per_link_archetecture_more_G(M, K, k=k, N_rf=N_rf, normalization=False, avg_max=avg_max)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
