@@ -38,8 +38,9 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
     with tf.GradientTape(persistent=True) as tape:
         # compressed_G, position_matrix = G_compress(features, 2)
         # scheduled_output, raw_output = model([features, compressed_G, position_matrix])
-        # limited_features = feedback_model(features)
-        scheduled_output, raw_output = model(features)
+        limited_features = feedback_model(features)
+
+        scheduled_output, raw_output = model(limited_features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
@@ -90,7 +91,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     mores = [1, 2, 5]
-    Es = [8,1,2,3,4,5,6,7]
+    Es = [8, 7]
     for j in Es:
         for i in mores:
             N_rf = j
@@ -101,8 +102,8 @@ if __name__ == "__main__":
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             # ==================== hieristic feedback ====================
-            # feedback_model = k_link_feedback_model(N_rf, bits, links, M, K, max_val)
-            # valid_data_in = feedback_model(valid_data)
+            feedback_model = k_link_feedback_model(N_rf, bits, links, M, K, max_val)
+            valid_data_in = feedback_model(valid_data)
             # ==================== hieristic feedback ====================
             reg_strength = 1.0
             model = FDD_per_link_archetecture_more_G(M, K, 12, N_rf, True, max_val)
