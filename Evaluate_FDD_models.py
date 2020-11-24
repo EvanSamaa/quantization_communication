@@ -119,13 +119,13 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # compressed_G, position_matrix = G_compress(ds_load, 2)
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict_on_batch(ds_load)
-        reconstructed_input, z_qq, z_e = model.predict_on_batch(ds_load)
+        scheduled_output, raw_output, reconstructed_input = model.predict_on_batch(ds_load)
 
         # scheduled_output, raw_output, recon = model(ds_load)
         valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
         garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
-        for i in range(0, num_data):
-        scheduled_output, raw_output, reconstructed_input = model(ds_load)
+
+        # for i in range(0, num_data):
         # from matplotlib import pyplot as plt
         # for k in range(0, num_data):
         #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
