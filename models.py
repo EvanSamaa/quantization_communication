@@ -4013,9 +4013,9 @@ def FDD_per_link_archetecture_more_G_return_input_mod(M, K, k=2, N_rf=3, normali
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
-        output.append(input_0)
-        output.append(inputs_original_mod)
-    model = Model([inputs, inputs_reconstructed], output, name="scheduler")
+    output.append(input_0)
+    output.append(inputs_original_mod)
+    model = Model([inputs, inputs_original], output, name="scheduler")
     return model
 def FDD_per_link_archetecture_more_G_logit(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
@@ -4936,8 +4936,8 @@ def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, avg_
     scheduling_module = FDD_per_link_archetecture_more_G_return_input_mod(M, K, k, N_rf, normalization=False, avg_max=avg_max)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input = encoding_module(inputs)
-    scheduled_output, raw_output, input_mod, input_reconstructed_mod = scheduling_module([reconstructed_input, inputs/avg_max])
-    model = Model(inputs, [scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input])
+    scheduled_output, raw_output, input_mod, input_orignal_mod = scheduling_module([reconstructed_input, inputs/avg_max])
+    model = Model(inputs, [scheduled_output, raw_output, input_mod, input_orignal_mod, reconstructed_input])
     return model
 def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
