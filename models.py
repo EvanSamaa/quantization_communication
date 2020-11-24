@@ -3923,6 +3923,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
     if normalization:
         input_mod = tf.divide(input_mod, avg_max)
     input_mod = tf.square(input_mod)
+
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     input_modder = Per_link_Input_modification_most_G_raw_self(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
@@ -3962,6 +3963,59 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     model = Model(inputs, output, name="scheduler")
+    return model
+def FDD_per_link_archetecture_more_G_return_input_mod(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.abs(inputs)
+    inputs_original = Input((K, M))
+    inputs_original_mod = tf.abs(inputs_original)
+    # input_mod = tf.keras.layers.BatchNormalization()(input_mod)
+    if normalization:
+        input_mod = tf.divide(input_mod, avg_max)
+    input_mod = tf.square(input_mod)
+    inputs_original_mod = tf.square(inputs_original_mod)
+    # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
+    input_modder = Per_link_Input_modification_most_G_raw_self(K, M, N_rf, k)
+    # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
+    # input_modder = Per_link_Input_modification_most_G_col_lessX(K, M, N_rf, k)
+
+    sm = tf.keras.layers.Softmax(axis=1)
+    # sm = Argmax_SPIGOT_layer()
+    # sm = Argmax_STE_layer()
+    # sm = Sparsemax(axis=1)
+    # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
+    dnns = dnn_per_link((M * K ,13 + N_rf), N_rf)
+    # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
+    # compute interference from k,i
+    # output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
+    raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
+    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
+    input_0 = input_modder(raw_out_put_0, input_mod, k - 1.0)
+    input_r_0 = input_modder(raw_out_put_0, inputs_original_mod, k-1.0)
+    # input_i = input_modder(output_0, input_mod, k - 1.0)
+    raw_out_put_i = dnns(input_0)
+    raw_out_put_i = sm(raw_out_put_i) # (None, K*M, Nrf)
+    # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
+    # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    # begin the second - kth iteration
+    for times in range(1, k):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
+        input_i = input_modder(raw_out_put_i, input_mod, k - times - 1.0)
+        # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        raw_out_put_i = dnns(input_i)
+        raw_out_put_i = sm(raw_out_put_i)
+        out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+        # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+        output = output.append(input_0)
+        output = output.append(inputs_original_mod)
+    model = Model([inputs, inputs_reconstructed], output, name="scheduler")
     return model
 def FDD_per_link_archetecture_more_G_logit(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
@@ -4879,11 +4933,11 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
 def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
     inputs = Input((K, M))
     encoding_module = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=more, qbit=qbit, avg_max=avg_max)
-    scheduling_module = FDD_per_link_archetecture_more_G(M, K, k, N_rf, normalization=False, avg_max=avg_max)
+    scheduling_module = FDD_per_link_archetecture_more_G_return_input_mod(M, K, k, N_rf, normalization=False, avg_max=avg_max)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input = encoding_module(inputs)
-    scheduled_output, raw_output = scheduling_module(reconstructed_input)
-    model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
+    scheduled_output, raw_output, input_mod, input_reconstructed_mod = scheduling_module([reconstructed_input, inputs/avg_max])
+    model = Model(inputs, [scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input])
     return model
 def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1, qbit=0, output_all=False):
     inputs = Input((K, M))
