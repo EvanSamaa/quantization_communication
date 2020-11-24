@@ -230,7 +230,7 @@ if __name__ == "__main__":
     # A[2]
     # from matplotlib import pyplot as plt
     file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
-    file = "trained_models/Nov_23/Nrf={}more=64naive+NEWLOSS+MSELOSS"
+    file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
     # obtain_channel_distributions(10000, 50, 64, 5)
@@ -269,7 +269,10 @@ if __name__ == "__main__":
             np.random.seed(seed)
             N_rf = i
             print("========================================== lambda =", j, "Nrf = ", i)
-            model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+            print(model.get_layer("model").summary())
+            print(model.get_layer("model_2").get_layer("model_1").summary())
+            A[2]
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
