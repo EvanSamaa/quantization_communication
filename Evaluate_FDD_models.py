@@ -270,8 +270,8 @@ if __name__ == "__main__":
             N_rf = i
             print("========================================== lambda =", j, "Nrf = ", i)
             model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-            print(model.get_layer("model").summary())
-            print(model.get_layer("model_2").get_layer("model_1").summary())
+            print(model.get_layer("model").get_layer("encoder_0").summary())
+            # print(model.get_layer("model_2").get_layer("model_1").summary())
             A[2]
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)

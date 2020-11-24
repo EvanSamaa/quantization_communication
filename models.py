@@ -4939,32 +4939,6 @@ def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, avg_
     scheduled_output, raw_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
     return model
-def Feedbakk_FDD_model_scheduler_VAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1, qbit=0, output_all=False):
-    inputs = Input((K, M))
-    inputs_mod = tf.abs(inputs)
-    encoding_module = CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t, E_t)
-    scheduling_module = FDD_per_link_archetecture(M, K, k=k, N_rf=N_rf, output_all=output_all)
-    reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t = encoding_module(inputs_mod)
-    scheduled_output = scheduling_module(reconstructed_input)
-    model = Model(inputs, [scheduled_output, z_q_b, z_e_b, z_q_t, z_e_t, reconstructed_input])
-    return model
-def Feedbakk_FDD_model_scheduler_morebit(M, K, B, E, N_rf, k, more=1, output_all=False):
-    inputs = Input((K, M))
-    inputs_mod = tf.abs(inputs)
-    scheduling_module = FDD_per_link_archetecture(M, K, k=k, N_rf=N_rf, output_all=output_all)
-    find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more, normalization=False)
-    decoder = Autoencoder_Decoding_module(M * K, (K * E * more))
-    z_e_all = encoder(inputs_mod)
-    z_qq = find_nearest_e(z_e_all[:, :, :E])
-    for i in range(1, more):
-        z_qq = tf.concat((z_qq, find_nearest_e(z_e_all[:, :, E * i:E * (i + 1)])), axis=2)
-    z_fed_forward = z_e_all + tf.stop_gradient(z_qq - z_e_all)
-    z_fed_forward = tf.keras.layers.Reshape((K * E * more,))(z_fed_forward)
-    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_fed_forward))
-    scheduled_output = scheduling_module(reconstructed_input)
-    model = Model(inputs, [scheduled_output, z_qq, z_e_all, reconstructed_input])
-    return model
 def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -5023,11 +4997,11 @@ def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, mo
     # norm = tf.reduce_max(tf.keras.layers.Reshape((K * M,))(inputs_mod), axis=1, keepdims=True)
     # inputs_mod = tf.divide(inputs_mod, tf.expand_dims(norm, axis=1))
     inputs_mod = tf.divide(inputs_mod, avg_max)
-    # inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
-    # inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
-    # inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))
-    find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2**1, bit_count=E, i=0)
-    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
+    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs_mod)
+    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
+    inputs_mod = tf.keras.layers.Reshape((K, M * M))(tf.matmul(inputs_mod, inputs_mod2))
+    find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=B, bit_count=E, i=0)
+    encoder = Autoencoder_Encoding_module((K, M * M), i=0, code_size=E * more + qbit, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, E * more))
     z_e_all = encoder(inputs_mod)
     z_e = z_e_all[:, :, :E * more]
