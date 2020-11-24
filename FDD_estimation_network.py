@@ -46,7 +46,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         # loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
         pred = scheduled_output[:, -1]
-        loss = tf.reduce_mean(sum_rate_train(pred, features))
+        loss = tf.reduce_mean(sum_rate_train(pred, limited_features))
         mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(scheduled_output[:, -1]))
         ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1], mask)
         loss = loss + 0.1 * ce
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_22/Nrf={}B={}more={}VAE{}"
+    fname_template = "trained_models/Nov_22/Nrf={}links={}bits={}no_vae{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -90,12 +90,12 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
-    mores = [1, 2, 5]
+    mores = [2, 1]
     Es = [8, 7, 6, 5, 4, 3, 2, 1]
     for j in Es:
         for i in mores:
             N_rf = j
-            bits = 32
+            bits = 8
             links = i
             tf.random.set_seed(1)
             np.random.seed(1)
