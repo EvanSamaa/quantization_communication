@@ -4014,7 +4014,7 @@ def FDD_per_link_archetecture_more_G_return_input_mod(M, K, k=2, N_rf=3, normali
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     output.append(input_0)
-    output.append(inputs_original_mod)
+    output.append(input_r_0)
     model = Model([inputs, inputs_original], output, name="scheduler")
     return model
 def FDD_per_link_archetecture_more_G_logit(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
