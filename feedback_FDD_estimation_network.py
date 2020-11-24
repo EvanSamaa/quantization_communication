@@ -208,8 +208,8 @@ if __name__ == "__main__":
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
-                    # scheduled_output, raw_output, reconstructed_input = model.predict(valid_data, batch_size=N)
-                    scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
+                    scheduled_output, raw_output, reconstructed_input = model.predict(valid_data, batch_size=N)
+                    # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]), tf.abs(valid_data))
                     # out = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(valid_data)/max_val) # with vqvae
                     valid_sum_rate(out)
