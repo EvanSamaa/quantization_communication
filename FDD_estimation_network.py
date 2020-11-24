@@ -77,7 +77,7 @@ if __name__ == "__main__":
     swap_delay = check / 2
 
     # problem Definition
-    N = 10
+    N = 50
     M = 64
     K = 50
     B = 4
@@ -128,7 +128,7 @@ if __name__ == "__main__":
             sum_rate_train = Sum_rate_utility_WeiCui(K, M, sigma2_n)
             sum_rate_interference = Sum_rate_interference(K, M, sigma2_n)
 
-            optimizer = tf.keras.optimizers.Adam(lr=0.001)
+            optimizer = tf.keras.optimizers.Adam(lr=0.01)
             optimizer2 = tf.keras.optimizers.Adam(lr=0.01)
             # optimizer = tf.keras.optimizers.SGD(lr=0.001)
             # for data visualization
@@ -169,7 +169,7 @@ if __name__ == "__main__":
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
-                    scheduled_output, raw_output = model.predict(valid_data , batch_size=N)
+                    scheduled_output, raw_output = model.predict(valid_data_in , batch_size=N)
                     pred = scheduled_output[:, -1]
                     # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(pred), tf.abs(valid_data))
