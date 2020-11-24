@@ -4013,8 +4013,8 @@ def FDD_per_link_archetecture_more_G_return_input_mod(M, K, k=2, N_rf=3, normali
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
-        output = output.append(input_0)
-        output = output.append(inputs_original_mod)
+        output.append(input_0)
+        output.append(inputs_original_mod)
     model = Model([inputs, inputs_reconstructed], output, name="scheduler")
     return model
 def FDD_per_link_archetecture_more_G_logit(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
