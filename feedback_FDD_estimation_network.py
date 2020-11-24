@@ -33,7 +33,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
         scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
-        loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], reconstructed_input * max_val))
+        loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features * max_val))
         # loss_1 = tf.maximum(Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train), loss_1)
         # loss_1 = Stochastic_softmax_selectior_and_loss(M, K, N_rf, 1000)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
         # loss_4 = tf.reduce_mean(tf.reduce_sum(tf.math.log(tf.keras.layers.Reshape((K, M))(scheduled_output[:, -1])), axis=2))
@@ -43,8 +43,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # reshaped = tf.reshape(scheduled_output[:, -1], (scheduled_output[:, -1].shape[0], K, M))
         # loss_4 = loss_4 + tf.reduce_mean(tf.square(tf.maximum(tf.reduce_sum(reshaped, axis=1), 1.0) - 1.0))
         # loss_1 = 0.001 * loss_1 + Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
-        # loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/max_val) # with vqvae
-        loss_3 = tf.keras.losses.MeanSquaredError()(input_reconstructed_mod, input_mod) * M * K
+        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/max_val) # with vqvae
+        loss_3 = loss_3 + tf.keras.losses.MeanSquaredError()(input_reconstructed_mod, input_mod)
         # loss_3 = tf.keras.losses.CosineSimilarity()(reconstructed_input, tf.abs(features) / max_val)  # with vqvae
         # loss_3 = 10.0 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/100.0)
         # loss_2 = vae_loss.call(z_qq, z_e)
