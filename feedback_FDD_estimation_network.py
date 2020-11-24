@@ -31,7 +31,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # scheduled_output, raw_output = model(features)
         # mask = tf.stop_gradient(Harden_scheduling(k=N_rf)(overall_softmax))
         # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model(features)
-        scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model(features)
+        scheduled_output, raw_output, reconstructed_input = model(features)
         # loss_1 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features))
         loss_1 = tf.reduce_mean(sum_rate_train(scheduled_output[:, -1], features))
         # loss_1 = tf.maximum(Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train), loss_1)
@@ -44,12 +44,12 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_4 = loss_4 + tf.reduce_mean(tf.square(tf.maximum(tf.reduce_sum(reshaped, axis=1), 1.0) - 1.0))
         # loss_1 = 0.001 * loss_1 + Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
         loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/max_val) # with vqvae
-        loss_3 = loss_3 + 5 * tf.keras.losses.MeanSquaredError()(input_reconstructed_mod, input_mod)
+        # loss_3 = loss_3 + 5 * tf.keras.losses.MeanSquaredError()(input_reconstructed_mod, input_mod)
         # loss_3 = tf.keras.losses.CosineSimilarity()(reconstructed_input, tf.abs(features) / max_val)  # with vqvae
         # loss_3 = 10.0 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/100.0)
         # loss_2 = vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
-        loss_4 = 0.5 * tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1]/N_rf, mask/N_rf)
+        loss_4 = 1 * tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1]/N_rf, mask/N_rf)
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, -1], 1.0-scheduled_output[:, -1])), axis=1)
         # loss_4 = All_softmaxes_MSE_general(N_rf, K, M)(raw_output[:, -1])
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output, 1.0-scheduled_output)), axis=1)
@@ -65,8 +65,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         #     loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
         # ================================= middle iterations =================================
 
-        loss = loss_3
-        loss_4 = 0.1 * loss_4 + loss_1
+        loss = loss_3 + loss_1
+        loss_4 = 0.1 * loss_4
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.get_layer("model").trainable_variables))
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_23/Nrf={}more={}naive+NEWLOSS+MSELOSS{}"
+    fname_template = "trained_models/Nov_23/Nrf={}more={}naive512{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -209,7 +209,7 @@ if __name__ == "__main__":
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
-                    scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict(valid_data, batch_size=N)
+                    scheduled_output, raw_output, reconstructed_input = model.predict(valid_data, batch_size=N)
                     # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]), tf.abs(valid_data))
                     # out = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(valid_data)/max_val) # with vqvae
