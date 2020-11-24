@@ -5035,7 +5035,7 @@ def Feedbakk_FDD_model_scheduler(M, K, B, E, N_rf, k, more=1, qbit=0, output_all
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     encoding_module = CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=more, qbit=qbit, avg_max=avg_max)
-    scheduling_module = FDD_per_link_archetecture_more_G_original(M, K, k=k, N_rf=N_rf, normalization=False, avg_max=avg_max)
+    scheduling_module = FDD_per_link_archetecture_more_G(M, K, k=k, N_rf=N_rf, normalization=False, avg_max=avg_max)
     # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
     reconstructed_input, z_qq, z_e = encoding_module(inputs_mod)
     # scheduled_output, raw_output = scheduling_module(reconstructed_input)
