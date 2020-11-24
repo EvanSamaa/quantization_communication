@@ -43,8 +43,8 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # reshaped = tf.reshape(scheduled_output[:, -1], (scheduled_output[:, -1].shape[0], K, M))
         # loss_4 = loss_4 + tf.reduce_mean(tf.square(tf.maximum(tf.reduce_sum(reshaped, axis=1), 1.0) - 1.0))
         # loss_1 = 0.001 * loss_1 + Stochastic_softmax_selectior_and_loss(M, K, N_rf, 100)(raw_output[:, -1], scheduled_output[:, -1], features, sum_rate_train)
-        # loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/max_val) # with vqvae
-        loss_3 = tf.keras.losses.CosineSimilarity()(reconstructed_input, tf.abs(features) / max_val)  # with vqvae
+        loss_3 = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/max_val) # with vqvae
+        # loss_3 = tf.keras.losses.CosineSimilarity()(reconstructed_input, tf.abs(features) / max_val)  # with vqvae
         # loss_3 = 10.0 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/100.0)
         # loss_2 = vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_22/Nrf={}more={}naive+cos_loss{}"
+    fname_template = "trained_models/Nov_22/Nrf={}more={}naive+inputMOD{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
