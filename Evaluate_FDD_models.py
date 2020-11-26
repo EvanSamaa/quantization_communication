@@ -229,7 +229,7 @@ if __name__ == "__main__":
     #     print("dim = {} gives MSE of {} ".format(i, training[-1, 1]))
     # A[2]
     # from matplotlib import pyplot as plt
-    file = "trained_models/Nov_23/Nrf={}more={}naive_512"
+    file = "trained_models/Nov_23/SNR=2_Nrf={}more={}naive_64x2"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
