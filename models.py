@@ -3996,7 +3996,6 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
     input_modder = Per_link_Input_modification_most_G_raw_self(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G(K, M, N_rf, k)
     # input_modder = Per_link_Input_modification_most_G_col_lessX(K, M, N_rf, k)
-
     sm = tf.keras.layers.Softmax(axis=1)
     # sm = Argmax_SPIGOT_layer()
     # sm = Argmax_STE_layer()

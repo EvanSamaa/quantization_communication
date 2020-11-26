@@ -47,7 +47,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         # loss_3 = loss_3 + 5 * tf.keras.losses.MeanSquaredError()(input_reconstructed_mod, input_mod)
         # loss_3 = 10.0 * tf.keras.losses.CosineSimilarity()(reconstructed_input, tf.abs(features) / max_val)  # with vqvae
         # loss_3 = 10.0 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(features)/100.0)
-        loss_2 = vae_loss.call(z_qq, z_e)
+        # loss_2 = vae_loss.call(z_qq, z_e)
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
         loss_4 = 0.1 * tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1]/N_rf, mask/N_rf)
         # loss_4 = tf.reduce_mean(tf.square(tf.multiply(scheduled_output[:, -1], 1.0-scheduled_output[:, -1])), axis=1)
@@ -65,7 +65,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
             loss_4 = loss_4 + 0.1 * tf.exp(tf.constant(-scheduled_output.shape[1]+1+i, dtype=tf.float32)) * ce
         # ================================= middle iterations =================================
 
-        loss = loss_3 + loss_2
+        loss = loss_3
         loss_4 = loss_4 + loss_1
         # loss_4 = factor[N_rf] * loss_4 + loss_1
     gradients = tape.gradient(loss, model.trainable_variables)
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_23/SNR=2_Nrf={}more={}naive_512{}"
+    fname_template = "trained_models/Nov_23/SNR=2_Nrf={}more={}naive_64x2{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2

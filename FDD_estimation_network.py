@@ -50,6 +50,7 @@ def train_step(features, labels, N=None, epoch=0, lr_boost=1.0, reg_strength = 1
         mask = tf.stop_gradient(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(scheduled_output[:, -1]))
         ce = tf.keras.losses.CategoricalCrossentropy()(scheduled_output[:, -1], mask)
         loss = loss + 0.1 * ce
+
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     # gradients = tape.gradient(loss, model.get_layer("model").trainable_variables)
@@ -90,6 +91,37 @@ if __name__ == "__main__":
     # hyperparameters
     EPOCHS = 100000
     # EPOCHS = 1
+    valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+    for i in range(0, 1000):
+        sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+        train_loss = tf.keras.metrics.Mean(name='train_loss')
+        train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
+        optimizer = tf.keras.optimizers.Adam(lr=0.01)
+        ans = tf.Variable(tf.random.normal((1, K * M, N_rf)), trainable=True)
+        for e in range(0, 2000):
+            train_loss.reset_states()
+            train_hard_loss.reset_states()
+            with tf.GradientTape(persistent=True) as tape:
+                # out_raw = tf.keras.layers.Softmax(axis=1)(ans)
+                # out = tf.reduce_sum(out_raw, axis=2)
+                out = sinkhorn(ans, 2)
+                loss = sum_rate(out, valid_data[i:i+1])
+                # mask = tf.stop_gradient(
+                #     Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(out))
+                # ce = tf.keras.losses.CategoricalCrossentropy()(mask, out)
+            gradients = tape.gradient(loss, ans)
+            optimizer.apply_gradients(zip([gradients],[ans]))
+            # optimizer.minimize(loss, ans)
+            train_loss(loss)
+            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), valid_data[e:e+1]))
+            print(train_hard_loss.result(),train_loss.result())
+            del tape
+        from matplotlib import pyplot as plt
+        plt.plot(out[0].numpy())
+        plt.show()
+    A[2]
+
+
     mores = [2, 1]
     Es = [8, 7, 6, 5, 4, 3, 2, 1]
     for j in Es:
@@ -100,11 +132,12 @@ if __name__ == "__main__":
             tf.random.set_seed(1)
             np.random.seed(1)
             valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+
             garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
             mean_val = tf.reduce_mean(tf.abs(valid_data))
             # ==================== hieristic feedback ====================
-            feedback_model = k_link_feedback_model(N_rf, bits, links, M, K, max_val)
-            valid_data_in = feedback_model(valid_data)
+            # feedback_model = k_link_feedback_model(N_rf, bits, links, M, K, max_val)
+            # valid_data_in = feedback_model(valid_data)
             # ==================== hieristic feedback ====================
             reg_strength = 1.0
             model = FDD_per_link_archetecture_more_G(M, K, 12, N_rf, True, max_val)
@@ -169,7 +202,7 @@ if __name__ == "__main__":
                     # compressed_G, position_matrix = G_compress(valid_data, 2)
                     # scheduled_output, raw_output = model.predict_on_batch([valid_data, compressed_G, position_matrix])
                     # scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
-                    scheduled_output, raw_output = model.predict(valid_data_in , batch_size=N)
+                    scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
                     pred = scheduled_output[:, -1]
                     # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(valid_data, batch_size=N)
                     out = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(pred), tf.abs(valid_data))
