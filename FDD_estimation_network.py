@@ -93,27 +93,37 @@ if __name__ == "__main__":
     # EPOCHS = 1
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     for i in range(0, 1000):
-        sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+        sum_rate = Sum_rate_utility_WeiCui(K, M, 1)
+        train_sum_rate = Sum_rate_utility_WeiCui(K, M, 0)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
         optimizer = tf.keras.optimizers.Adam(lr=0.01)
         ans = tf.Variable(tf.random.normal((1, K * M, N_rf)), trainable=True)
+        ans_user = tf.Variable(tf.random.normal((1, K, N_rf)), trainable=True)
+        ans_link = tf.Variable(tf.random.normal((1, K, M)), trainable=True)
         for e in range(0, 2000):
             train_loss.reset_states()
             train_hard_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
-                # out_raw = tf.keras.layers.Softmax(axis=1)(ans)
-                # out = tf.reduce_sum(out_raw, axis=2)
-                out = sinkhorn(ans, 2)
-                loss = sum_rate(out, valid_data[i:i+1])
-                # mask = tf.stop_gradient(
-                #     Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(out))
-                # ce = tf.keras.losses.CategoricalCrossentropy()(mask, out)
+                out_raw = tf.keras.layers.Softmax(axis=1)(ans)
+                out = tf.reduce_sum(out_raw, axis=2)
+                # out_user = tf.keras.layers.Softmax(axis=1)(ans_user)
+                # out_user = tf.reduce_sum(out_user, axis=2, keepdims=True)
+                # out_link = tf.keras.layers.Softmax(axis=2)(ans_link)
+                # out = tf.multiply(out_user, out_link)
+                # out = tf.keras.layers.Reshape((M*K, ))(out)
+                loss = train_sum_rate(out, valid_data[i:i+1])
+                mask = tf.stop_gradient(
+                    Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(out))
+                ce = tf.keras.losses.CategoricalCrossentropy()(mask, out)
+                # ce = ce + tf.keras.losses.MSE(mask, out)
+                # ce = All_softmaxes_MSE_general(N_rf, K, M)(out_raw)
+                loss = loss + ce
             gradients = tape.gradient(loss, ans)
             optimizer.apply_gradients(zip([gradients],[ans]))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
-            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), valid_data[e:e+1]))
+            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), valid_data[i:i+1]))
             print(train_hard_loss.result(),train_loss.result())
             del tape
         from matplotlib import pyplot as plt
