@@ -3,7 +3,7 @@ from models import *
 import numpy as np
 # from scipy.io import savemat
 import tensorflow as tf
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 1000
     config = tf.compat.v1.ConfigProto()
@@ -100,7 +100,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
 
-    num_data = 1000
+    num_data = 1
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -114,17 +114,23 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # print(ds)
         ds_load = ds
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        prediction = model.predict(ds_load, batch_size=10)
         # prediction = model.predict(ds_load, batch_size=10)
-
-        # raw_pred = prediction[0]
-        # prediction = prediction[1]
         # prediction = model(ds_load)
-        stored = np.ones([num_data, 4]) * -1
-        for k in range(0, num_data):
+        # compressed_G, position_matrix = G_compress(ds_load, 2)
+        # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
+        # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict_on_batch(ds_load)
+        scheduled_output = model(ds_load)
+        # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(ds_load, batch_size=5)
+        prediction = scheduled_output
+        # for k in range(0, num_data):
             # G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-            plt.imshow(tf.reshape(prediction[k], (K, M)))
-            plt.show()
+            # for i in range(0,4):
+            #     prediction = scheduled_output[:, i]
+            #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
+            #     plt.plot(np.arange(0, K*M), G_pred[-1][0])
+            #     plt.plot(np.arange(0, K*M), prediction[k])
+            #
+            #     plt.show()
         # prediction = model(ds_load)
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
@@ -171,13 +177,10 @@ def plot_data(arr, col=[], title="loss"):
     plt.title(title)
     plt.show()
 if __name__ == "__main__":
-    file = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p05CE"
-    file = "trained_models/Oct13/Nrf=4seperatedX+reg"
-    #
-    # plottt = np.load(file)
-    # print(1-np.sum(plottt, axis=0)/1000.0)
-    # A[2]
-    # plot_data(plottt, [0, 3], title="Sum Rate")
+    file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
+
+    file = "trained_models/OCT30/Nrf=8/seeding=1one_hot+feedback"
+
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -193,14 +196,21 @@ if __name__ == "__main__":
                    "Per_link_sequential_modification": Per_link_sequential_modification,
                    "Per_link_sequential_modification_compressedX":Per_link_sequential_modification_compressedX,
                    "Per_link_Input_modification_most_G_raw_self":Per_link_Input_modification_most_G_raw_self,
-                   "Reduced_output_input_mod":Reduced_output_input_mod}
+                   "Reduced_output_input_mod":Reduced_output_input_mod,
+                   "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
+                   "X_extends":X_extends,
+                   "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
+                   "Sparsemax":Sparsemax,
+                   "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self}
+    # obtain_channel_distributions(10000, 50, 64, 5)
+    # A[2]
     N = 1
     M = 64
     K = 50
     B = 32
     seed = 200
     check = 100
-    N_rf = 8
+    N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 1
     tf.random.set_seed(seed)
@@ -213,29 +223,49 @@ if __name__ == "__main__":
     # plot_data(training_data, 0)
     # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
     # N_rfs = [2, 3, 4, 5, 6]
-    model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [4]
-    Es = [0]
-    # model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, sigma2_n, perfect_CSI=True)
+    # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+    mores = [1,2,3,4,5,6,7,8]
+    Es = [128, 64, 16, 32]
+    model = DP_partial_feedback_pure_greedy_model(8, 16, 1, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 8, 1, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 8, 5, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 16, 5, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 16, 2, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 2, 1, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 2, 5, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    A[2]
+    # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     for j in Es:
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = 4
-            print("========================================== E =", j, "more = ", i)
+            N_rf = 8
+            print("========================================== bits =", j, "Nrf = ", i)
+            # model = tf.keras.models.load_model(model_path.format(i, j), custom_objects=custome_obj)
             model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-            print(model.summary())
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
             # model = NN_Clustering(N_rf, M, reduced_dim=8)
             # model = top_N_rf_user_model(M, K, N_rf)
             # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
-            # model = partial_feedback_pure_greedy_model(N_rf, 32, 1, M, K, sigma2_n)
+            # model = partial_feedback_pure_greedy_model(N_rf, 32, i, M, K, sigma2_n)
             test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
             # test_greedy(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+        A[2]
