@@ -3,6 +3,7 @@ from util import *
 from models import *
 import numpy as np
 import scipy as sp
+from tf_agents.distributions import gumbel_softmax
 from keras_adabound.optimizers import AdaBound
 # from matplotlib import pyplot as plt
 custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
@@ -97,28 +98,28 @@ if __name__ == "__main__":
         train_sum_rate = Sum_rate_utility_WeiCui(K, M, 0)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
-        optimizer = tf.keras.optimizers.Adam(lr=0.01)
+        optimizer = tf.keras.optimizers.Adam(lr=0.1)
         ans = tf.Variable(tf.random.normal((1, K * M, N_rf)), trainable=True)
         ans_user = tf.Variable(tf.random.normal((1, K, N_rf)), trainable=True)
         ans_link = tf.Variable(tf.random.normal((1, K, M)), trainable=True)
-        for e in range(0, 2000):
+        for e in range(0, 300):
             train_loss.reset_states()
             train_hard_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
-                out_raw = tf.keras.layers.Softmax(axis=1)(ans)
-                out = tf.reduce_sum(out_raw, axis=2)
+                temp = 0.05
+                sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=tf.transpose(ans[0], [1,0]))
+                out_raw = sm.sample(100)
                 # out_user = tf.keras.layers.Softmax(axis=1)(ans_user)
                 # out_user = tf.reduce_sum(out_user, axis=2, keepdims=True)
                 # out_link = tf.keras.layers.Softmax(axis=2)(ans_link)
                 # out = tf.multiply(out_user, out_link)
-                # out = tf.keras.layers.Reshape((M*K, ))(out)
+                out = tf.reduce_sum(out_raw, axis=1)
                 loss = train_sum_rate(out, valid_data[i:i+1])
-                mask = tf.stop_gradient(
-                    Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(out))
-                ce = tf.keras.losses.CategoricalCrossentropy()(mask, out)
+                # mask = tf.stop_gradient(
+                #     Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(out))
                 # ce = ce + tf.keras.losses.MSE(mask, out)
                 # ce = All_softmaxes_MSE_general(N_rf, K, M)(out_raw)
-                loss = loss + ce
+                loss = loss
             gradients = tape.gradient(loss, ans)
             optimizer.apply_gradients(zip([gradients],[ans]))
             # optimizer.minimize(loss, ans)
