@@ -1,5 +1,4 @@
-FROM tensorflow-probability
-MAINTAINER Datmo devs <dev@datmo.io>
+FROM custom-tf:latest
 
 # Pick up some TF dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -33,6 +32,7 @@ RUN pip --no-cache-dir install --upgrade ipython && \
         pandas \
         Pillow \
         tf_agents \
+        tensorflow probability \
         && \
     python -m ipykernel.kernelspec
 
