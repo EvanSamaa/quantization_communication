@@ -1,6 +1,6 @@
 FROM rocker/cuda:3.6.0
 
-ENV CUDA=11.0
+ENV CUDA
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cuda-command-line-tools \
