@@ -42,10 +42,4 @@ RUN pip install \
 # Jupyter has issues with being run directly:
 #   https://github.com/ipython/ipython/issues/7062
 # We just add a little wrapper script.
-COPY run_jupyter.sh /
-# TensorBoard
-EXPOSE 6006
-# IPython
-EXPOSE 8888
-WORKDIR "/notebooks"
-CMD ["/run_jupyter.sh"]
+CMD ["python3", "python"]
