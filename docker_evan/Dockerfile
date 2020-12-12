@@ -1,45 +1,37 @@
-FROM tfp/tensorflow-probability
-MAINTAINER Datmo devs <dev@datmo.io>
+FROM rocker/cuda:3.6.0
 
-# Pick up some TF dependencies
+ENV CUDA=9.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
+        cuda-command-line-tools-9.0 \
+        cuda-cublas-9.0 \
+        cuda-cufft-9.0 \
+        cuda-curand-9.0 \
+        cuda-cusolver-9.0 \
+        cuda-cusparse-9.0 \
         curl \
         libfreetype6-dev \
-        libpng12-dev \
+        libhdf5-serial-dev \
         libzmq3-dev \
         pkg-config \
-        python \
-        python-dev \
-        rsync \
         software-properties-common \
-        unzip \
-        && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+        unzip
 
-RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
-    python get-pip.py && \
-    rm get-pip.py
-
-RUN pip --no-cache-dir install --upgrade ipython && \
-    pip --no-cache-dir install \
-        ipykernel \
-        jupyter \
-        matplotlib \
-        numpy \
-        scipy \
-        sklearn \
-        pandas \
-        Pillow \
-        tf_agents \
-        && \
-    python -m ipykernel.kernelspec
-
-# Install OpenCV
-RUN apt-get update && apt-get install -y libopencv-dev python-opencv && \
-    echo 'ln /dev/null /dev/raw1394' >> ~/.bashrc
-
-
-WORKDIR /workspace
-RUN chmod -R a+w /workspace
+## install as user to avoid venv issues later
+USER rstudio
+RUN pip3 install \
+    h5py==2.9.0 \
+    pyyaml==3.13 \
+    requests==2.21.0 \
+    Pillow==5.4.1 \
+    tensorflow-gpu \
+    tensorflow-probability \
+    tf_agents \
+    scipy \
+    numpy \
+    pandas \
+    matplotlib \
+    keras==2.2.4 \
+    --no-cache-dir
+USER root
+RUN install2.r reticulate tensorflow keras
