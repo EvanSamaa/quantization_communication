@@ -1522,16 +1522,17 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         G_col_tiled = tf.matmul(self.Mm, tf.transpose(input_mod, perm=[0, 2, 1]))
         G_col_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.K), (self.M, 1)), G_col_tiled)
         G_col_mean = tf.reduce_mean(G_col_tiled, axis=2, keepdims=True)
-        # G_col_min = tf.reduce_min(G_col_tiled, axis=2, keepdims=True)
+        G_col_min = tf.reduce_min(G_col_tiled, axis=2, keepdims=True)
+        G_col_max = tf.reduce_max(G_col_tiled, axis=2, keepdims=True)
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)))
         # print(iteration_num.shape)
         # x = tf.reduce_sum(x, axis=2)
         # x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
         # x = tf.reduce_sum(x, axis=1, keepdims=True)
         # x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
-        # row_choice = tf.reduce_sum(x, axis=2, keepdims=True)
-        # row_choice = tf.matmul(self.Mk, row_choice)
-        # row_choice = row_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
+        row_choice = tf.reduce_sum(x, axis=2, keepdims=True)
+        row_choice = tf.matmul(self.Mk, row_choice)
+        row_choice = row_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
         col_choice = tf.transpose(tf.reduce_sum(x, axis=1, keepdims=True), perm=[0,2,1])
         col_choice = tf.matmul(self.Mm, col_choice)
         col_choice = col_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
@@ -1541,10 +1542,10 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
              G_mean,
              G_user_mean, G_user_max, G_user_min,
              # G_user_max, G_user_min,
-             G_col_mean,
+             G_col_mean, G_col_max, G_col_min,
              interference_t, interference_f, interference_f_2,
              GX_user_mean, GX_col_mean,
-             col_choice,
+             col_choice, row_choice,
              x_raw])
         # print(input_i[:, 0, 4])
         # print(input_i[:, 0, 5])
@@ -3881,8 +3882,9 @@ def dnn_per_link(input_shape, N_rf, i=0):
     x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
     x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
     x = sigmoid(x)
-    # x = Dense(32, name="Dense4_inside_DNN{}".format(i))(x)
+    # x = Dense(32, name="Dense3_inside_DNN{}".format(i))(x)
     # x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_4{}".format(i))(x)
+    # x = sigmoid(x)
     x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)
     # x = sigmoid(x)
     model = Model(inputs, x, name="DNN_within_model{}".format(i))
@@ -4001,7 +4003,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
     # sm = Argmax_STE_layer()
     # sm = Sparsemax(axis=1)
     # input_modder = Per_link_Input_modification_learnable_G(K, M, N_rf, k)
-    dnns = dnn_per_link((M * K ,13 + N_rf), N_rf)
+    dnns = dnn_per_link((M * K ,16 + N_rf), N_rf)
     # dnns = dnn_per_link((M * K, 13 + 3*K), N_rf)
     # compute interference from k,i
     # output_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0 * N_rf / M / K)
@@ -4011,10 +4013,9 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
     input_i = input_modder(raw_out_put_0, input_mod, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
-    raw_out_put_i = sm(raw_out_put_i) # (None, K*M, Nrf)
     # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
     # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
-    out_put_i = tf.reduce_sum(raw_out_put_i, axis=2) # (None, K*M)
+    out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2) # (None, K*M)
     output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
     # begin the second - kth iteration
     for times in range(1, k):
@@ -4023,8 +4024,7 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
         input_i = input_modder(raw_out_put_i, input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
-        raw_out_put_i = sm(raw_out_put_i)
-        out_put_i = tf.reduce_sum(raw_out_put_i, axis=2)
+        out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
         # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
