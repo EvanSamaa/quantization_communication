@@ -1,9 +1,9 @@
 import tensorflow as tf
+from tf_agents.distributions import gumbel_softmax
 from util import *
 from models import *
 import numpy as np
 import scipy as sp
-from tf_agents.distributions import gumbel_softmax
 from keras_adabound.optimizers import AdaBound
 # from matplotlib import pyplot as plt
 custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
