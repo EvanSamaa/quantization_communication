@@ -1,12 +1,8 @@
-FROM nvidia/cuda:8.0-cudnn5-devel
-MAINTAINER Craig Citro <craigcitro@google.com>
+FROM tensorflow/tensorflow
 # Pick up some TF dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         curl \
-        libfreetype6-dev \
-        libpng12-dev \
-        libzmq3-dev \
         libtcmalloc-minimal4 \
         pkg-config \
         python \
@@ -41,14 +37,9 @@ RUN pip --no-cache-dir install \
 # RUN pip --no-cache-dir install /_PIP_FILE_
 # RUN rm -f /_PIP_FILE_
 # Install TensorFlow GPU version.
-RUN pip --no-cache-dir install \
-    http://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-0.0.0-cp27-none-linux_x86_64.whl
 # --- ~ DO NOT EDIT OR DELETE BETWEEN THE LINES --- #
 # RUN ln -s /usr/bin/python3 /usr/bin/python#
-# Set up our notebook config.
-COPY jupyter_notebook_config.py /root/.jupyter/
-# Copy sample notebooks.
-COPY notebooks /notebooks
+# Set up our notebook config.s
 # Jupyter has issues with being run directly:
 #   https://github.com/ipython/ipython/issues/7062
 # We just add a little wrapper script.
