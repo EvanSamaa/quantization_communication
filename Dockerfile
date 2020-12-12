@@ -1,4 +1,4 @@
-FROM tfp/tensorflow-probability
+FROM tensorflow-probability
 MAINTAINER Datmo devs <dev@datmo.io>
 
 # Pick up some TF dependencies
