@@ -1,4 +1,4 @@
-FROM rocker/cuda:3.7.0
+FROM rocker/cuda:3.6.0
 
 ENV CUDA=11.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
