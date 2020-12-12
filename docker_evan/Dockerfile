@@ -3,12 +3,12 @@ FROM rocker/cuda:3.6.0
 ENV CUDA=11.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
-        cuda-command-line-tools-11.0 \
-        cuda-cublas-11.0 \
-        cuda-cufft-11.0 \
-        cuda-curand-11.0 \
-        cuda-cusolver-11.0 \
-        cuda-cusparse-11.0 \
+        cuda-command-line-tools \
+        cuda-cublas \
+        cuda-cufft \
+        cuda-curand \
+        cuda-cusolver \
+        cuda-cusparse \
         curl \
         libfreetype6-dev \
         libhdf5-serial-dev \
