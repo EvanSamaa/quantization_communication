@@ -30,7 +30,6 @@ RUN pip install \
         matplotlib \
         keras \
         && \
-    python -m ipykernel.kernelspec
 # --- DO NOT EDIT OR DELETE BETWEEN THE LINES --- #
 # These lines will be edited automatically by parameterized_docker_build.sh. #
 # COPY _PIP_FILE_ /
