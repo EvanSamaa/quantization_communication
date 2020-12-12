@@ -42,4 +42,3 @@ RUN pip install \
 # Jupyter has issues with being run directly:
 #   https://github.com/ipython/ipython/issues/7062
 # We just add a little wrapper script.
-CMD ["python3", "python"]
