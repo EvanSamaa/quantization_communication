@@ -102,12 +102,13 @@ if __name__ == "__main__":
         train_sum_rate = Sum_rate_utility_WeiCui(K, M, 0)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
-        optimizer = tf.keras.optimizers.Adam(lr=0.01)
+        optimizer = tf.keras.optimizers.Adam(lr=0.001)
         for e in range(0, 200):
             train_loss.reset_states()
             train_hard_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
                 ans, raw_ans = model(train_data)
+                raw_ans = tf.transpose(raw_ans, [0, 1, 3, 2])
                 ###################### shape flatten ######################
                 out_raw = tf.reshape(raw_ans[:,-1], [N * N_rf, K*M])
                 temp = 0.1
@@ -129,13 +130,13 @@ if __name__ == "__main__":
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
-            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), valid_data[i:i+1]))
+            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), train_label))
             print(train_hard_loss.result(),train_loss.result())
             del tape
         print("====================\n", train_hard_loss.result(), train_loss.result())
         from matplotlib import pyplot as plt
-        plt.plot(out[0].numpy())
-        plt.show()
+        # plt.plot(out[0].numpy())
+        # plt.show()
     A[2]
 
 
