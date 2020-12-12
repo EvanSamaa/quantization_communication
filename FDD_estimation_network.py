@@ -94,8 +94,8 @@ if __name__ == "__main__":
     # EPOCHS = 1
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
-    model = FDD_per_link_archetecture_more_G(M, K, 3, N_rf, True, max_val)
-    N = 10
+    model = FDD_per_link_archetecture_more_G(M, K, 5, N_rf, True, max_val)
+    N = 50
     for i in range(0, 1000):
         train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
         sum_rate = Sum_rate_utility_WeiCui(K, M, 1)
