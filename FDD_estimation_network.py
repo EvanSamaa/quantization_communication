@@ -95,7 +95,6 @@ if __name__ == "__main__":
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     model = FDD_per_link_archetecture_more_G(M, K, 5, N_rf, True, max_val)
-    N = 1
     for i in range(0, 1000):
         train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
         sum_rate = Sum_rate_utility_WeiCui(K, M, 1)
@@ -103,9 +102,10 @@ if __name__ == "__main__":
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
         optimizer = tf.keras.optimizers.Adam(lr=0.001)
+        train_hard_loss.reset_states()
+        train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), train_label))
         for e in range(0, 200):
             train_loss.reset_states()
-            train_hard_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
                 ans, raw_ans = model(train_data)
                 raw_ans = tf.transpose(raw_ans, [0, 1, 3, 2])
@@ -131,6 +131,7 @@ if __name__ == "__main__":
             # optimizer.minimize(loss, ans)
             train_loss(loss)
             train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), train_label))
+
             print(train_hard_loss.result(),train_loss.result())
             del tape
         print("====================\n", train_hard_loss.result(), train_loss.result())
