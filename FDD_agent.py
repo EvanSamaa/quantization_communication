@@ -75,12 +75,12 @@ def grid_search(temp = 0.1):
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
-            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), train_label))
+            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_label))
             print(train_hard_loss.result(),train_loss.result())
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:
-            scheduled_output, raw_output = model.predict(valid_data, batch_size=50)
+            scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
             print("============================================================\n")
