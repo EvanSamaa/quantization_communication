@@ -235,10 +235,6 @@ if __name__ == "__main__":
                         improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
                                                                                                     2].min()
-                        # improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1,
-                        #               1].min() - graphing_data[
-                        #                          epoch - check + 1: epoch + 1,
-                        #                          1].min()
                         counter = 0
                         for asldk in graphing_data[0:epoch+1, 2]:
                             if asldk != 0:

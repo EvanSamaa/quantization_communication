@@ -11,7 +11,7 @@ if __name__ == "__main__":
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template = "trained_models/Nov_22/Nrf={}links={}bits={}no_vae{}"
+    fname_template = "trained_models/Dec_13/GNN_model_test{}"
     check = 250
     SUPERVISE_TIME = 0
     training_mode = 2
@@ -34,10 +34,11 @@ if __name__ == "__main__":
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 1 # number of
-    rounds = 30
+    N = 100 # number of
+    rounds = 1
     sample_size = 100
     temp = 0.1
+    check = 10
     model = FDD_per_link_archetecture_more_G(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
@@ -45,12 +46,16 @@ if __name__ == "__main__":
     train_sum_rate = Sum_rate_utility_WeiCui(K, M, 0)
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
-
+    ################################ storing train data in npy file  ##############################
+    # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
+    max_val = 0
+    np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=3, epoch=EPOCHS)
     # training loop
     for i in range(0, EPOCHS):
         train_hard_loss.reset_states()
         # generate training data
         train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
+        ###################### training happens here ######################
         for e in range(0, rounds):
             train_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
@@ -73,8 +78,28 @@ if __name__ == "__main__":
             train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), train_label))
             print(train_hard_loss.result(),train_loss.result())
             del tape
-        scheduled_output, raw_output = model.predict(valid_data, batch_size=50)
-        valid_loss = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data)
-        # print("====================\n", train_hard_loss.result(), train_loss.result())
-        print("============================================================\n")
-        print(tf.reduce_mean(valid_loss))
+        ###################### testing with validation set ######################
+        if i%check == 0:
+            scheduled_output, raw_output = model.predict(valid_data, batch_size=50)
+            valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
+            np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
+            print("============================================================\n" + valid_loss)
+            if valid_loss < max_acc:
+                max_acc = valid_loss
+                model.save(fname_template.format(".h5"))
+            if i >= (check * 2):
+                graphing_data = np_data.data
+                improvement = graphing_data[i + 1 - (check * 2): i - check + 1, -1].min() - graphing_data[
+                                                                                                   i - check + 1: i + 1,
+                                                                                                   -1].min()
+                counter = 0
+                for asldk in graphing_data[0:i + 1, -1]:
+                    if asldk != 0:
+                        print(counter, asldk)
+                    counter = counter + 1
+                print("the improvement in the past 500 epochs is: ", improvement)
+                print("the validation SR is: ", valid_loss)
+                if improvement <= 0.0001:
+                    break
+        else:
+            np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
