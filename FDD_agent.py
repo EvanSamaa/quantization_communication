@@ -48,7 +48,7 @@ if __name__ == "__main__":
     train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
     ################################ storing train data in npy file  ##############################
     # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
-    max_val = 0
+    max_acc = 0
     np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=3, epoch=EPOCHS)
     # training loop
     for i in range(0, EPOCHS):
