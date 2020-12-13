@@ -83,7 +83,8 @@ if __name__ == "__main__":
             scheduled_output, raw_output = model.predict(valid_data, batch_size=50)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
-            print("============================================================\n" + valid_loss)
+            print("============================================================\n")
+            print(valid_loss)
             if valid_loss < max_acc:
                 max_acc = valid_loss
                 model.save(fname_template.format(".h5"))
