@@ -74,6 +74,7 @@ if __name__ == "__main__":
             print(train_hard_loss.result(),train_loss.result())
             del tape
         scheduled_output, raw_output = model.predict(valid_data, batch_size=50)
-        valid_loss = Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1], valid_data)
-        print("====================\n", train_hard_loss.result(), train_loss.result())
+        valid_loss = sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data)
+        # print("====================\n", train_hard_loss.result(), train_loss.result())
+        print("============================================================\n")
         print(tf.reduce_mean(valid_loss))
