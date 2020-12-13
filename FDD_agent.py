@@ -104,3 +104,4 @@ if __name__ == "__main__":
                     break
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
+    np_data.save()
