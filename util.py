@@ -342,6 +342,10 @@ def user_constraint(pred_i, K, M):
     unflattened_X = tf.reshape(pred_i, (pred_i.shape[0], K, M))
     loss = tf.reduce_mean(tf.square(tf.maximum(tf.reduce_sum(unflattened_X, axis=2), 1.0)-1.0))
     return loss
+def non_double_count_loss(pred_i, K, M):
+    unflattened_X = tf.reshape(pred_i, (pred_i.shape[0], K, M))
+    loss = tf.reduce_mean(tf.square(tf.multiply(unflattened_X, 1.0-unflattened_X)))
+    return loss
 def Negative_shove():
     def negative_shove(y_pred, x=None):
         values, indices = tf.nn.top_k(y_pred, 2)

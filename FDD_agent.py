@@ -10,7 +10,7 @@ def grid_search(temp = 0.1):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/GNN_grid_search_temp={}".format(temp)
+    fname_template_template = "trained_models/Dec_13/GNN_fixed_loss".format(temp)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -43,7 +43,7 @@ def grid_search(temp = 0.1):
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, 1)
-    train_sum_rate = Sum_rate_utility_WeiCui(K, M, 0)
+    train_sum_rate = Sum_rate_utility_WeiCui(K, M, 1)
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
     ################################ storing train data in npy file  ##############################
@@ -106,5 +106,5 @@ def grid_search(temp = 0.1):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for temp_to_search in [0.2, 0.3, 0.4, 0.5]:
+    for temp_to_search in [0.3]:
         grid_search(temp_to_search)

@@ -173,10 +173,10 @@ def plot_data(arr, col=[], title="loss"):
     from matplotlib import pyplot as plt
     cut = 0
     for i in range(arr.shape[0]-1, 0, -1):
-        if arr[i, 0] != 0 or arr[i, 1] != 0 or arr[i, 2] != 0 or arr[i, 3] != 0:
+        if arr[i].any != 0:
             cut = i
             break
-    arr = arr[:i, :]
+    arr = arr[:cut, :]
     x = np.arange(0, arr.shape[0])
     for i in col:
         plt.plot(x, arr[:, i])
@@ -217,17 +217,9 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
-    # file = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_B=32_E={}.npy"
-    # for i in [1,5,10,15,20,30]:
-    #     name = file.format(i)
-    #     training = np.load(name)
-    #     for i in range(training.shape[0] - 1, 0, -1):
-    #         if training[i, 0] != 0 or training[i, 1] != 0 or training[i, 2] != 0 or training[i, 3] != 0:
-    #             cut = i
-    #             break
-    #     training = training[:i, :]
-    #     print("dim = {} gives MSE of {} ".format(i, training[-1, 1]))
-    # A[2]
+    training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
+    plot_data(training_data, [2], "sum rate")
+
     file = "trained_models/Nov_23/SNR=2_Nrf={}more={}naive_64x2_withgradient_flowall"
 
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
