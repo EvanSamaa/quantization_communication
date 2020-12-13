@@ -106,5 +106,5 @@ def grid_search(temp = 0.1):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for temp_to_search in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
+    for temp_to_search in [0.2, 0.3, 0.4, 0.5]:
         grid_search(temp_to_search)
