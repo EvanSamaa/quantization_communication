@@ -34,7 +34,7 @@ if __name__ == "__main__":
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 100 # number of
+    N = 50 # number of
     rounds = 1
     sample_size = 100
     temp = 0.1
