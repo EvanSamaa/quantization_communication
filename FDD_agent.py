@@ -35,7 +35,7 @@ if __name__ == "__main__":
     EPOCHS = 100000
     lr = 0.001
     N = 50 # number of
-    rounds = 1
+    rounds = 10
     sample_size = 100
     temp = 0.1
     check = 10
