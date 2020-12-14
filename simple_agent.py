@@ -4,7 +4,8 @@ from util import *
 from models import *
 import numpy as np
 import scipy as sp
-from relaxflow.relax import Re
+from relaxflow.relax import RELAX
+from relaxflow.reparam import CategoricalReparam
 from keras_adabound.optimizers import AdaBound
 
 if __name__ == "__main__":
@@ -87,6 +88,8 @@ if __name__ == "__main__":
                 out = tf.reshape(out, [sample_size*N, K*M])
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
                 ###################### model post-processing ######################
+                rep = CategoricalReparam(out, temperature=temp)
+
                 loss = train_sum_rate(out, train_label)
                 # if tf.reduce_mean(loss) <= -31:
                 #     from matplotlib import pyplot as plt

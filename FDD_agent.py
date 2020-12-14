@@ -5,12 +5,12 @@ from models import *
 import numpy as np
 import scipy as sp
 from keras_adabound.optimizers import AdaBound
-def grid_search(temp = 0.1):
+def grid_search(N_rf = 8):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/GNN_annealing_temp"
+    fname_template_template = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}"
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -24,7 +24,7 @@ def grid_search(temp = 0.1):
     E = 30
     more = 64
     seed = 100
-    N_rf = 8
+    # N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1.0
 
@@ -37,7 +37,7 @@ def grid_search(temp = 0.1):
     N = 50 # number of
     rounds = 50
     sample_size = 100
-    # temp = 0.1
+    temp = 0.1
     check = 50
     model = FDD_per_link_archetecture_more_G(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
@@ -109,5 +109,5 @@ def grid_search(temp = 0.1):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for temp_to_search in [0.3]:
-        grid_search(temp_to_search)
+    for N_rf_to_search in [1,2,3,4,5,6,7]:
+        grid_search(N_rf_to_search)
