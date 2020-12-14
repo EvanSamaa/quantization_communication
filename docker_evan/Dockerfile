@@ -29,6 +29,7 @@ RUN pip install \
         pandas \
         matplotlib \
         keras \
+        tqdm \ 
 # --- DO NOT EDIT OR DELETE BETWEEN THE LINES --- #
 # These lines will be edited automatically by parameterized_docker_build.sh. #
 # COPY _PIP_FILE_ /
