@@ -33,7 +33,7 @@ def grid_search(N_rf = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.01
+    lr = 0.1
     N = 30 # number of
     rounds = 50
     sample_size = 100
