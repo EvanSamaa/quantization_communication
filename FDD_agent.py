@@ -57,6 +57,7 @@ def grid_search(temp = 0.1):
         train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         for e in range(0, rounds):
+            train_hard_loss.reset_states()
             train_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
                 ###################### model post-processing ######################
@@ -75,7 +76,7 @@ def grid_search(temp = 0.1):
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
-            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_label))
+            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_data))
             print(train_hard_loss.result(),train_loss.result())
             del tape
         ###################### testing with validation set ######################
