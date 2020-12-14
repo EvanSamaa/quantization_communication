@@ -10,7 +10,7 @@ def grid_search(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}+deeperDNN".format(N_rf)
+    fname_template_template = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}+more_iter".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -33,13 +33,13 @@ def grid_search(N_rf = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.1
+    lr = 0.001
     N = 30 # number of
     rounds = 50
     sample_size = 100
     temp = 0.1
     check = 50
-    model = FDD_per_link_archetecture_more_G(M, K, 5, N_rf, True, max_val)
+    model = FDD_per_link_archetecture_more_G(M, K, 7, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
