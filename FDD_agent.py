@@ -109,5 +109,5 @@ def grid_search(N_rf = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for N_rf_to_search in [1,2,3,4,5,6,7]:
+    for N_rf_to_search in [8]:
         grid_search(N_rf_to_search)
