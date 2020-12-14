@@ -34,7 +34,7 @@ def grid_search(N_rf = 8):
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.01
-    N = 50 # number of
+    N = 30 # number of
     rounds = 50
     sample_size = 100
     temp = 0.1
