@@ -35,11 +35,11 @@ if __name__ == "__main__":
     ################################ hyperparameters ###############################
 
     EPOCHS = 100000
-    lr = 0.03
+    lr = 0.1
     N = 1 # number of
-    rounds = 400
+    rounds = 200
     sample_size = 100
-    temp = 0.3
+    temp = 0.2
     check = 10
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
@@ -59,12 +59,11 @@ if __name__ == "__main__":
         ###################### training happens here ######################
         model = tf.Variable(tf.random.normal((1, 1, K*M, N_rf)))
         ###################### training happens here ######################
-        temp = 0.3
         for e in range(0, rounds):
-            # if e >= 2*rounds/3:
-            #     temp = 0.3
             train_loss.reset_states()
             train_hard_loss.reset_states()
+            temp = 0.5 * np.exp(-4.5/rounds * e) + 0.1
+            temp = np.float32(temp)
             with tf.GradientTape(persistent=True) as tape:
                 ###################### model post-processing #####################
                 # raw_ans = tf.transpose(model, [0, 1, 3, 2])
@@ -78,12 +77,6 @@ if __name__ == "__main__":
                 ###################### model post-processing ######################
 
                 ###################### model post-processing #####################
-                # if e >= 4 * rounds / 8:
-                #     temp = 0.1
-                # elif e >= 3 * rounds / 8:
-                #     temp = 0.2
-                # elif e >= 2 * rounds / 8:
-                #     temp = 0.25
                 raw_ans_user = tf.transpose(model, [0, 1, 3, 2])
                 out_raw_user = tf.reshape(raw_ans_user[:,-1], [N * N_rf, K*M])
                 sm_user = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw_user)
@@ -91,9 +84,16 @@ if __name__ == "__main__":
                 out_raw = tf.reshape(out_raw_user, [sample_size, N, N_rf, K*M])
                 out = tf.reduce_sum(out_raw, axis=2)
                 out = tf.reshape(out, [sample_size*N, K*M])
-                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
+                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
                 ###################### model post-processing ######################
-                loss = train_sum_rate(out, train_label) + 0.1 * train_sum_rate(tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(model)[0], train_data))
+                loss = train_sum_rate(out, train_label)
+                # if tf.reduce_mean(loss) <= -31:
+                #     from matplotlib import pyplot as plt
+                #     for i in range(0, sample_size):
+                #         plt.plot(tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(model), axis=3)[0,0].numpy(), label="soft")
+                #         plt.plot(out[N], label="out")
+                #         plt.legend()
+                #         plt.show()
             gradients = tape.gradient(loss, model)
             optimizer.apply_gradients(zip([gradients], [model]))
             train_loss(loss)
