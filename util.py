@@ -30,6 +30,22 @@ class ModelTrainer():
         self.data
         np.save(self.save_dir, self.data)
 
+def rebar_loss(logits, Nrf, M, K):
+    # logit shape = (N, passes, M*K, N_rf)
+    epsilon = 1E-12
+    u = tf.random.uniform(z.shape.as_list(), dtype=z.dtype)
+    gumbel = - tf.math.log(-tf.math.log(u + epsilon) + epsilon, name="gumbel")
+    z = gumbel + u
+
+    def truncated_gumbel(gumbel, truncation):
+        return -tf.math.log(epsilon + tf.exp(-gumbel) + tf.exp(-truncation))
+    v = tf.random.uniform(logits.shape.as_list(), dtype=logits.dtype)
+    gumbel = -tf.math.log(-tf.math.log(v + epsilon) + epsilon, name="gumbel")
+    topgumbels = gumbel + tf.reduce_logsumexp(logits, axis=-1, keepdims=True)
+    topgumbel = tf.reduce_sum(s*topgumbels, axis=-1, keepdims=True)
+    z_hat = truncated_gumbel(gumbel + logits, topgumbel)
+
+
 
 def generate_link_channel_data(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 2  # Number of Paths

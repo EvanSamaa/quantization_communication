@@ -55,17 +55,24 @@ if __name__ == "__main__":
     np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=3, epoch=EPOCHS)
     # training loop
     for i in range(0, EPOCHS):
+        optimizer = tf.keras.optimizers.Adam(lr=lr)
         train_hard_loss.reset_states()
         # generate training data
         train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         model = tf.Variable(tf.random.normal((1, 1, K*M, N_rf)))
+        nu = tf.Variable(1)
         ###################### training happens here ######################
         for e in range(0, rounds):
             train_loss.reset_states()
             train_hard_loss.reset_states()
             temp = 0.5 * np.exp(-4.5/rounds * e) + 0.1
             temp = np.float32(temp)
+            def post_pross(model):
+                print(model.shape)
+                out = tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(model), axis=3)[0]
+                loss = train_sum_rate(out, train_data)
+                return loss
             with tf.GradientTape(persistent=True) as tape:
                 ###################### model post-processing #####################
                 # raw_ans = tf.transpose(model, [0, 1, 3, 2])
@@ -88,16 +95,13 @@ if __name__ == "__main__":
                 out = tf.reshape(out, [sample_size*N, K*M])
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
                 ###################### model post-processing ######################
-                rep = CategoricalReparam(out, temperature=temp)
-
                 loss = train_sum_rate(out, train_label)
-                # if tf.reduce_mean(loss) <= -31:
-                #     from matplotlib import pyplot as plt
-                #     for i in range(0, sample_size):
-                #         plt.plot(tf.reduce_sum(tf.keras.layers.Softmax(axis=2)(model), axis=3)[0,0].numpy(), label="soft")
-                #         plt.plot(out[N], label="out")
-                #         plt.legend()
-                #         plt.show()
+                ###################### REBAR ######################
+                rep = CategoricalReparam(model)
+                # calculate REBAR and dynamic REBAR gradients for loss f with control variate parameter nu
+                grad, var_grad = RELAX(tape, post_pross, *rep.rebar_params(post_pross, weight=nu), [model], var_params=[nu])
+            ###################### REBAR ######################
+
             gradients = tape.gradient(loss, model)
             optimizer.apply_gradients(zip([gradients], [model]))
             train_loss(loss)

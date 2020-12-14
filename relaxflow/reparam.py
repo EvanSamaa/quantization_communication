@@ -48,7 +48,7 @@ class DiscreteReparam:
                 assert(noise.shape.as_list() == self.noise_shape)
                 self.u = noise
             else:
-                self.u = tf.random_uniform(self.noise_shape, dtype=param.dtype)
+                self.u = tf.random.uniform(self.noise_shape, dtype=param.dtype)
             self.u = tf.stop_gradient(self.u)
             
             #sample random variable b by discretizing random z
@@ -71,7 +71,7 @@ class DiscreteReparam:
                     assert(cond_noise.shape.as_list() == self.noise_shape)
                     self.v = cond_noise
                 else:
-                    self.v = tf.random_uniform(self.noise_shape,
+                    self.v = tf.random.uniform(self.noise_shape,
                                                dtype=param.dtype)
                 self.v = tf.stop_gradient(self.v)
             
@@ -101,8 +101,8 @@ class DiscreteReparam:
                 RELAX function.
         """
         return (f_loss(self.b),
-                weight*f_loss(self.gatedz),
-                weight*f_loss(self.gatedzb),
+                np.float32(weight)*f_loss(self.gatedz),
+                np.float32(weight)*f_loss(self.gatedzb),
                 self.logp)
 
     @staticmethod
@@ -162,8 +162,8 @@ def binary_forward(param, noise=None):
     if noise is not None:
         u = noise
     else:
-        u = tf.random_uniform(param.shape.as_list(), dtype=param.dtype)
-    z = param + tf.log(u) - tf.log(1. - u)
+        u = tf.random.uniform(param.shape.as_list(), dtype=param.dtype)
+    z = param + tf.math.log(u) - tf.math.log(1. - u)
     return z
 
 
@@ -172,11 +172,11 @@ def binary_backward(param, b, noise=None):
     if noise is not None:
         v = noise
     else:
-        v = tf.random_uniform(param.shape.as_list(), dtype=param.dtype)
+        v = tf.random.uniform(param.shape.as_list(), dtype=param.dtype)
     uprime = tf.nn.sigmoid(-param)
     ub = b * (uprime + (1. - uprime) * v) + (1. - b) * uprime * v
     ub = tf.clip_by_value(ub, 0., 1.)
-    zb = param + tf.log(ub) - tf.log(1. - ub)
+    zb = param + tf.math.log(ub) - tf.math.log(1. - ub)
     return zb
 
 
@@ -211,7 +211,7 @@ class CategoricalReparam(DiscreteReparam):
         def robustgumbelcdf(g, K):
             return tf.exp(EPSILON - tf.exp(-g)*tf.exp(-K)) - EPSILON
 
-        z = param - tf.log(-tf.log(u + EPSILON) + EPSILON,
+        z = param - tf.math.log(-tf.math.log(u + EPSILON) + EPSILON,
                        name="gumbel")
         vtop = robustgumbelcdf(z, -tf.reduce_logsumexp(param, axis=-1,
                                keepdims=True))
@@ -225,21 +225,21 @@ def categorical_forward(param, noise=None):
     if noise is not None:
         u = noise
     else:
-        u = tf.random_uniform(param.shape.as_list(), dtype=param.dtype)
-    gumbel = - tf.log(-tf.log(u + EPSILON) + EPSILON, name="gumbel")
+        u = tf.random.uniform(param.shape.as_list(), dtype=param.dtype)
+    gumbel = - tf.math.log(-tf.math.log(u + EPSILON) + EPSILON, name="gumbel")
     return param + gumbel
 
 
 def categorical_backward(param, s, noise=None):
     """draw reparameterization z of categorical variable b from p(z|b)."""
     def truncated_gumbel(gumbel, truncation):
-        return -tf.log(EPSILON + tf.exp(-gumbel) + tf.exp(-truncation))
+        return -tf.math.log(EPSILON + tf.exp(-gumbel) + tf.exp(-truncation))
     if noise is not None:
         v = noise
     else:
-        v = tf.random_uniform(param.shape.as_list(), dtype=param.dtype)
+        v = tf.random.uniform(param.shape.as_list(), dtype=param.dtype)
 
-    gumbel = -tf.log(-tf.log(v + EPSILON) + EPSILON, name="gumbel")
+    gumbel = -tf.math.log(-tf.math.log(v + EPSILON) + EPSILON, name="gumbel")
     topgumbels = gumbel + tf.reduce_logsumexp(param, axis=-1, keepdims=True)
     topgumbel = tf.reduce_sum(s*topgumbels, axis=-1, keepdims=True)
 
