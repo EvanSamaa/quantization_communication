@@ -40,7 +40,7 @@ def grid_search(N_rf = 8):
     temp = 0.1
     check = 200
     # model = FDD_per_link_archetecture_more_G(M, K, 7, N_rf, True, max_val)
-    model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 6, more=more, avg_max=max_val)
+    model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 4, more=more, avg_max=max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
