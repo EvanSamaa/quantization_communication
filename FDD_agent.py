@@ -20,9 +20,6 @@ def grid_search(N_rf = 8):
     # problem Definition
     M = 64
     K = 50
-    B = 4
-    E = 30
-    more = 64
     seed = 100
     # N_rf = 8
     sigma2_h = 6.3
