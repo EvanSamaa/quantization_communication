@@ -118,7 +118,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = model(ds_load)
         # compressed_G, position_matrix = G_compress(ds_load, 2)
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
-        scheduled_output, raw_output = model.predict(ds_load, batch_size=5)
+        scheduled_output, raw_output, were = model.predict(ds_load, batch_size=50)
         # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
 
         # scheduled_output, raw_output, recon = model(ds_load)
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data(training_data, [2], "sum rate")
 
-    file = "trained_models\Dec_13\GNN_annealing_temp_Nrf={}"
+    file = "trained_models\Dec_13\with_feedback\GNN_annealing_temp_Nrf={}"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
@@ -248,7 +248,7 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [7]
+    mores = [8,7,6,5,4]
     Es = [1]
     # model = DP_partial_feedback_pure_greedy_model(8, 8, 1, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
