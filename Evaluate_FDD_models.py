@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 # from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
-    num_data = 1000
+    num_data = 100
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -100,7 +100,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
 
-    num_data = 1
+    num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -118,20 +118,26 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = model(ds_load)
         # compressed_G, position_matrix = G_compress(ds_load, 2)
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
-        # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict_on_batch(ds_load)
-        scheduled_output = model(ds_load)
-        # scheduled_output, raw_output, z_qq, z_e, reconstructed_input = model.predict(ds_load, batch_size=5)
-        prediction = scheduled_output
+        scheduled_output, raw_output, reconstructed_input = model.predict(ds_load, batch_size=5)
+        # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
+
+        # scheduled_output, raw_output, recon = model(ds_load)
+        valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+        garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+
+        # for i in range(0, num_data):
+        # from matplotlib import pyplot as plt
         # for k in range(0, num_data):
-            # G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-            # for i in range(0,4):
-            #     prediction = scheduled_output[:, i]
-            #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
-            #     plt.plot(np.arange(0, K*M), G_pred[-1][0])
-            #     plt.plot(np.arange(0, K*M), prediction[k])
-            #
-            #     plt.show()
-        # prediction = model(ds_load)
+        #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+        #     for i in range(0,12):
+        #         prediction = scheduled_output[:, i]
+        #         # plt.imshow(tf.reshape(prediction[k], (K, M)))
+        #         plt.plot(np.arange(0, K*M), G_pred[-1][0])
+        #         plt.plot(np.arange(0, K*M), prediction[k])
+        #
+        #         plt.show()
+        # A[2]
+        prediction = scheduled_output[:, -1]
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
@@ -164,9 +170,10 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
 def plot_data(arr, col=[], title="loss"):
+    from matplotlib import pyplot as plt
     cut = 0
     for i in range(arr.shape[0]-1, 0, -1):
-        if arr[i, 0] != 0:
+        if arr[i, 0] != 0 or arr[i, 1] != 0 or arr[i, 2] != 0 or arr[i, 3] != 0:
             cut = i
             break
     arr = arr[:i, :]
@@ -176,11 +183,18 @@ def plot_data(arr, col=[], title="loss"):
     # plt.plot(x, arr[:, 3])
     plt.title(title)
     plt.show()
+def garsons_method(model_path):
+    from matplotlib import pyplot as plt
+    model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    dnn = model.get_layer("DNN_within_model0")
+    weights = dnn.get_layer("Dense1_inside_DNN0")
+    kernel = weights.kernel
+    garson_importance = tf.reduce_sum(tf.abs(kernel), axis=1)
+    norm = tf.reduce_sum(garson_importance, keepdims=True)
+    garson_importance = tf.divide(garson_importance, norm)
+    plt.plot(garson_importance.numpy(), '+')
+    plt.show()
 if __name__ == "__main__":
-    file = "trained_models/OCT30/new_normalization/fixed_normalization_NRF={}_more={}"
-
-    file = "trained_models/OCT30/Nrf=8/seeding=1one_hot+feedback"
-
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -201,7 +215,24 @@ if __name__ == "__main__":
                    "X_extends":X_extends,
                    "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
                    "Sparsemax":Sparsemax,
-                   "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self}
+                   "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
+                   "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
+    # file = "trained_models/Nov_18/VQVAE_hyperparm_lr=0.001_B=32_E={}.npy"
+    # for i in [1,5,10,15,20,30]:
+    #     name = file.format(i)
+    #     training = np.load(name)
+    #     for i in range(training.shape[0] - 1, 0, -1):
+    #         if training[i, 0] != 0 or training[i, 1] != 0 or training[i, 2] != 0 or training[i, 3] != 0:
+    #             cut = i
+    #             break
+    #     training = training[:i, :]
+    #     print("dim = {} gives MSE of {} ".format(i, training[-1, 1]))
+    # A[2]
+    file = "trained_models/Nov_23/SNR=2_Nrf={}more={}naive_64x2"
+
+    # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
+    # for item in [0.01, 0.1, 1, 5, 10]:
+    #     garsons_method(file.format(item))
     # obtain_channel_distributions(10000, 50, 64, 5)
     # A[2]
     N = 1
@@ -213,6 +244,7 @@ if __name__ == "__main__":
     N_rf = 4
     sigma2_h = 6.3
     sigma2_n = 1
+
     tf.random.set_seed(seed)
     np.random.seed(seed)
     model_path = file + ".h5"
@@ -226,36 +258,24 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     mores = [1,2,3,4,5,6,7,8]
-    Es = [128, 64, 16, 32]
-    model = DP_partial_feedback_pure_greedy_model(8, 16, 1, M, K, sigma2_n, perfect_CSI=False)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 8, 1, M, K, sigma2_n, perfect_CSI=False)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 8, 5, M, K, sigma2_n, perfect_CSI=False)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=False)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 16, 5, M, K, sigma2_n, perfect_CSI=False)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 16, 2, M, K, sigma2_n, perfect_CSI=False)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 2, 1, M, K, sigma2_n, perfect_CSI=False)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 2, 5, M, K, sigma2_n, perfect_CSI=False)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
-    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    A[2]
-    # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=True)
+    Es = [64, 32, 16]
+    # model = DP_partial_feedback_pure_greedy_model(8, 8, 1, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=False)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    # model = DP_partial_feedback_pure_greedy_model(8, 8, 5, M, K, sigma2_n, perfect_CSI=False)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+
     for j in Es:
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = 8
-            print("========================================== bits =", j, "Nrf = ", i)
-            # model = tf.keras.models.load_model(model_path.format(i, j), custom_objects=custome_obj)
-            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+            N_rf = i
+            bits=j
+            print("========================================== lambda =", j, "Nrf = ", i)
+            model = tf.keras.models.load_model(model_path.format(N_rf, bits), custom_objects=custome_obj)
+            # print(model.get_layer("model_2").get_layer("model_1").summary())
+            # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
             #     print(model.get_layer("model").summary())
             #     print(model.summary())
@@ -263,9 +283,9 @@ if __name__ == "__main__":
             # model = top_N_rf_user_model(M, K, N_rf)
             # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
             # model = partial_feedback_pure_greedy_model(N_rf, 32, i, M, K, sigma2_n)
+            # model = relaxation_based_solver(M, K, N_rf)
             test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
             # test_greedy(M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-        A[2]

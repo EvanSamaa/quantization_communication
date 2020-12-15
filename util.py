@@ -24,10 +24,14 @@ import tensorflow as tf
 def generate_link_channel_data(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 2  # Number of Paths
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
+<<<<<<< HEAD
     P = P/tf.sqrt(tf.constant(M, dtype=tf.complex64))/tf.sqrt(tf.constant(Nrf, dtype=tf.complex64))*10.0 # log(x^2) = 1.5 for 15 for constant
 
     print(tf.reduce_sum(tf.norm(tf.abs(P)), axis=1))
     A[2]
+=======
+    P = P/tf.sqrt(tf.constant(M, dtype=tf.complex64))/tf.sqrt(tf.constant(Nrf, dtype=tf.complex64))*tf.sqrt(tf.constant(100, dtype=tf.complex64))
+>>>>>>> 3986b855054f60bb44aafb029287a75cc2a47ae8
     P = tf.expand_dims(P, 0)
     P = tf.tile(P, (N, 1, 1))
     LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
@@ -331,6 +335,10 @@ def Mix_loss():
         loss2 = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(y_true, y_pred)
         return loss2 + loss1/100
     return mixloss
+def user_constraint(pred_i, K, M):
+    unflattened_X = tf.reshape(pred_i, (pred_i.shape[0], K, M))
+    loss = tf.reduce_mean(tf.square(tf.maximum(tf.reduce_sum(unflattened_X, axis=2), 1.0)-1.0))
+    return loss
 def Negative_shove():
     def negative_shove(y_pred, x=None):
         values, indices = tf.nn.top_k(y_pred, 2)
@@ -531,6 +539,14 @@ def Sum_rate_utility_WeiCui_plusp5(K, M, sigma2):
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
+def sinkhorn(X, n):
+    X = tf.exp(X)
+    for i in range(n):
+        X = tf.divide(X, tf.reduce_sum(X, axis=1, keepdims=True))
+    for i in range(n):
+        X = tf.divide(X, tf.reduce_sum(X, axis=2, keepdims=True))
+    decision = tf.reduce_sum(X, axis=2)
+    return decision
 def Sum_rate_utility_WeiCui(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
@@ -723,7 +739,16 @@ def ensumble_output(G, model, k, loss_fn):
     output = tf.gather(output, max_indices, axis=2, batch_dims=1)
     print(output.shape)
     return output
-
+def nrf2expected_loss(N_rf, M, K, sigma):
+    def loss_fn(G, y_pred):
+        Gp1 = tf.square(tf.abs(G)) + 1.0
+        M_Gp1 = tf.keras.layers.Reshape((K*M, 1))(Gp1)
+        M_y_pred = tf.keras.layers.Reshape((K*M, 1))(y_pred)
+        tim = tf.multiply(tf.math.log(tf.matmul(M_Gp1, tf.transpose(M_Gp1, (0, 2, 1)))), tf.matmul(M_y_pred, tf.transpose(M_y_pred, (0, 2, 1))))
+        tim = tf.reduce_sum(tf.reduce_sum(tim, axis=1), axis=1)
+        loss = tf.reduce_mean(tim)
+        return -loss
+    return loss_fn
 
 
 def Sum_rate_utility_WeiCui_all_link_streaming(K, M, sigma2):
@@ -994,8 +1019,7 @@ def All_softmaxes_MSE_general(N_rf, K, M):
             # loss = loss + tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(tf.argmax(raw_output[:, :, i], axis=1), raw_output[:, :, i])
             # loss = loss + tf.keras.losses.MeanSquaredError()(tf.argmax(raw_output[:, :, i], axis=1), raw_output[:, :, i])
             loss = loss + tf.square(1.0 - tf.reduce_max(raw_output[:, :, i], axis=1))
-            loss = loss + tf.reduce_sum(tf.square(raw_output[:, :, i])) - tf.square(tf.reduce_max(raw_output[:, :, i]))
-            loss = loss
+            loss = loss + tf.reduce_sum(tf.reduce_sum(tf.square(0.0 - raw_output[:, :, i]), axis=1) - tf.square(0.0 - tf.reduce_max(raw_output[:, :, i], axis=1)))
         return loss/(1.0*N_rf)/(1.0*K)/(1.0*M)
     return loss_fn
 
