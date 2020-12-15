@@ -10,7 +10,7 @@ def grid_search(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/with_feedback/it16/GNN_annealing_temp_Nrf={}+limit_res".format(N_rf)
+    fname_template_template = "trained_models/Dec_13/with_feedback/its16/GNN_annealing_temp_Nrf={}+limit_res".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -64,8 +64,8 @@ def grid_search(N_rf = 8):
             train_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
                 ###################### model post-processing ######################
-                q_train_data = train_data/max_val
-                q_train_data = tf.where(abs(q_train_data) > 1.0, 1.0, train_data)
+                q_train_data = tf.abs(train_data)/max_val
+                q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
                 q_train_data = tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1)
                 ans, raw_ans, reconstructed_input = model(q_train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                 raw_ans = tf.transpose(raw_ans, [0, 1, 3, 2])
