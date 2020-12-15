@@ -4,8 +4,24 @@ import numpy as np
 # from scipy.io import savemat
 import tensorflow as tf
 # from matplotlib import pyplot as plt
-def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
-    num_data = 1000
+def greedy_grid_search():
+    M = 64
+    K = 50
+    sigma2_n = 1
+    N_rf = 8
+    sigma2_h = 0.0001
+    out = np.zeros((64, 32, 8))
+    for links in [1,2,5,10,64]:
+        for bits in [1,2,4,8,16,32]:
+            model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
+            losses = test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+            out[links-1, bits-1, :] = losses
+            np.save("trained_models\Dec_13\greedy_save_here\grid_search500.npy", out)
+            print("{} links {} bits is done".format(links, bits))
+
+def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
+    store=np.zeros((8,))
+    num_data = 500
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -24,9 +40,12 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
         out = loss_fn1(i, tf.abs(ds_load/i_complex))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(i)
-        print("the soft result is ", result)
-        print("the variance is ", tf.math.reduce_std(out))
+        if printing:
+            print("the soft result is ", result)
+            print("the variance is ", tf.math.reduce_std(out))
+        store[counter-1] = tf.reduce_mean(out)
         counter = counter + 1
+    return store
 def test_greedy_different_resolution(M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
     num_data = 1000
     config = tf.compat.v1.ConfigProto()
@@ -115,17 +134,21 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
+
+        valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+        garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+        q_train_data = tf.abs(ds_load) / max_val
+        q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
+        q_train_data = tf.round(q_train_data * (2 ** 4 - 1)) / (2 ** 4 - 1) * max_val
         # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
         # prediction = model.predict(ds_load, batch_size=10)
         # prediction = model(ds_load)
         # compressed_G, position_matrix = G_compress(ds_load, 2)
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
-        scheduled_output, raw_output, were = model.predict(ds_load, batch_size=50)
+        scheduled_output, raw_output, were = model.predict(q_train_data, batch_size=50)
         # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
 
         # scheduled_output, raw_output, recon = model(ds_load)
-        valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
-        garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
 
         # for i in range(0, num_data):
         # from matplotlib import pyplot as plt
@@ -197,6 +220,8 @@ def garsons_method(model_path):
     plt.plot(garson_importance.numpy(), '+')
     plt.show()
 if __name__ == "__main__":
+
+    # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -221,7 +246,7 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data(training_data, [2], "sum rate")
-    file = "trained_models\Dec_13\with_feedback\GNN_annealing_temp_Nrf={}"
+    file = "trained_models\Dec_13\with_feedback\it32\GNN_annealing_temp_Nrf={}+limit_res"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
@@ -249,10 +274,8 @@ if __name__ == "__main__":
     # N_rfs = [2, 3, 4, 5, 6]
     # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [4,3,2,1]
+    mores = [8,7,6,5,4,3,2,1]
     Es = [1]
-    # model = DP_partial_feedback_pure_greedy_model(8, 2, 1, M, K, sigma2_n, perfect_CSI=False)
-    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 5, M, K, sigma2_n, perfect_CSI=False)
