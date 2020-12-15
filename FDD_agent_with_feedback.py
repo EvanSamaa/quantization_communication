@@ -31,6 +31,10 @@ def grid_search(N_rf = 8):
     ############################### generate data ###############################
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+
+    q_valid_data = tf.abs(valid_data) / max_val
+    q_valid_data = tf.where(q_valid_data > 1.0, 1.0, q_valid_data)
+    q_valid_data = tf.round(q_valid_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
@@ -87,7 +91,7 @@ def grid_search(N_rf = 8):
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:
-            scheduled_output, raw_output, reconstructed_input = model.predict(valid_data, batch_size=N)
+            scheduled_output, raw_output, reconstructed_input = model.predict(q_valid_data, batch_size=N)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
             print("============================================================\n")
