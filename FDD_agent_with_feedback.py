@@ -10,7 +10,7 @@ def grid_search(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/with_feedback/GNN_annealing_temp_Nrf={}".format(N_rf)
+    fname_template_template = "trained_models/Dec_13/with_feedback/GNN_annealing_temp_Nrf={}+small_reconstruction".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -74,7 +74,7 @@ def grid_search(N_rf = 8):
                 out = tf.reshape(out, [sample_size*N, K*M])
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
-                loss = train_sum_rate(out, train_label) + tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data)/max_val)
+                loss = train_sum_rate(out, train_label) + 0.01 * tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data)/max_val)
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
@@ -110,5 +110,5 @@ def grid_search(N_rf = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for N_rf_to_search in [7,6,5,4,3,2,1]:
+    for N_rf_to_search in [8,7,6,5,4,3,2,1]:
         grid_search(N_rf_to_search)
