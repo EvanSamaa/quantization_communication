@@ -10,7 +10,7 @@ def grid_search(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/with_feedback/GNN_annealing_temp_Nrf={}+more_iter".format(N_rf)
+    fname_template_template = "trained_models/Dec_13/with_feedback/GNN_annealing_temp_Nrf={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -34,7 +34,7 @@ def grid_search(N_rf = 8):
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 30 # number of
+    N = 100 # number of
     rounds = 5
     sample_size = 100
     temp = 0.1
