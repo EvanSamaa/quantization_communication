@@ -66,7 +66,7 @@ def grid_search(N_rf = 8):
                 ###################### model post-processing ######################
                 q_train_data = tf.abs(train_data)/max_val
                 q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
-                q_train_data = tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1)
+                q_train_data = tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
                 ans, raw_ans, reconstructed_input = model(q_train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                 raw_ans = tf.transpose(raw_ans, [0, 1, 3, 2])
                 out_raw = tf.reshape(raw_ans[:,-1], [N * N_rf, K*M])
