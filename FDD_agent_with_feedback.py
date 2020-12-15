@@ -10,7 +10,7 @@ def grid_search(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/with_feedback/b14/GNN_annealing_temp_Nrf={}".format(N_rf)
+    fname_template_template = "trained_models/Dec_13/with_feedback/GNN_annealing_temp_Nrf={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -22,7 +22,7 @@ def grid_search(N_rf = 8):
     K = 50
     B = 4
     E = 30
-    more = 14
+    more = 64
     seed = 100
     # N_rf = 8
     sigma2_h = 6.3
@@ -110,5 +110,5 @@ def grid_search(N_rf = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for N_rf_to_search in [8,7,6,5,4,3,2,1]:
+    for N_rf_to_search in [1]:
         grid_search(N_rf_to_search)

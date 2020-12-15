@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 # from matplotlib import pyplot as plt
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
-    num_data = 100
+    num_data = 1000
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -14,6 +14,8 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
     print("Testing Starts")
+    tf.random.set_seed(200)
+    np.random.seed(200)
     ds_load = generate_link_channel_data(num_data, K, M, 1)
     prediction = model(ds_load)
     counter = 1
@@ -219,7 +221,6 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data(training_data, [2], "sum rate")
-
     file = "trained_models\Dec_13\with_feedback\GNN_annealing_temp_Nrf={}"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
@@ -250,13 +251,27 @@ if __name__ == "__main__":
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
     mores = [8,7,6,5,4]
     Es = [1]
-    # model = DP_partial_feedback_pure_greedy_model(8, 8, 1, M, K, sigma2_n, perfect_CSI=False)
-    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    # model = DP_partial_feedback_pure_greedy_model(8, 8, 2, M, K, sigma2_n, perfect_CSI=False)
-    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    # model = DP_partial_feedback_pure_greedy_model(8, 8, 5, M, K, sigma2_n, perfect_CSI=False)
-    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 2, 1, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 2, 5, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
 
+    model = DP_partial_feedback_pure_greedy_model(8, 4, 1, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 4, 2, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 4, 5, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+
+    model = DP_partial_feedback_pure_greedy_model(8, 1, 1, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 1, 2, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    model = DP_partial_feedback_pure_greedy_model(8, 1, 5, M, K, sigma2_n, perfect_CSI=False)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    A[2]
     for j in Es:
         for i in mores:
             tf.random.set_seed(seed)
