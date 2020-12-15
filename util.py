@@ -15,9 +15,35 @@ import scipy as sp
 from generate_batch_data import generate_batch_data, generate_batch_data_with_angle
 # from models import k_clustering_hieristic
 # from matplotlib import pyplot as plt
-
 # ==========================  Data gen ============================s
 import tensorflow as tf
+
+class ModelTrainer():
+    def __init__(self, save_dir, data_cols=2, epoch=100000):
+        self.save_dir = save_dir
+        self.data = np.zeros((epoch, data_cols))
+        self.data_cols = data_cols
+    def log(self, epoch, vals):
+        for i in range(self.data_cols):
+            self.data[epoch, i] = vals[i]
+    def save(self):
+        self.data
+        np.save(self.save_dir, self.data)
+
+def rebar_loss(logits, Nrf, M, K):
+    # logit shape = (N, passes, M*K, N_rf)
+    epsilon = 1E-12
+    u = tf.random.uniform(z.shape.as_list(), dtype=z.dtype)
+    gumbel = - tf.math.log(-tf.math.log(u + epsilon) + epsilon, name="gumbel")
+    z = gumbel + u
+
+    def truncated_gumbel(gumbel, truncation):
+        return -tf.math.log(epsilon + tf.exp(-gumbel) + tf.exp(-truncation))
+    v = tf.random.uniform(logits.shape.as_list(), dtype=logits.dtype)
+    gumbel = -tf.math.log(-tf.math.log(v + epsilon) + epsilon, name="gumbel")
+    topgumbels = gumbel + tf.reduce_logsumexp(logits, axis=-1, keepdims=True)
+    topgumbel = tf.reduce_sum(s*topgumbels, axis=-1, keepdims=True)
+    z_hat = truncated_gumbel(gumbel + logits, topgumbel)
 
 
 
@@ -338,6 +364,10 @@ def Mix_loss():
 def user_constraint(pred_i, K, M):
     unflattened_X = tf.reshape(pred_i, (pred_i.shape[0], K, M))
     loss = tf.reduce_mean(tf.square(tf.maximum(tf.reduce_sum(unflattened_X, axis=2), 1.0)-1.0))
+    return loss
+def non_double_count_loss(pred_i, K, M):
+    unflattened_X = tf.reshape(pred_i, (pred_i.shape[0], K, M))
+    loss = tf.reduce_mean(tf.square(tf.multiply(unflattened_X, 1.0-unflattened_X)))
     return loss
 def Negative_shove():
     def negative_shove(y_pred, x=None):
@@ -1420,9 +1450,11 @@ if __name__ == "__main__":
     sigma2 = 0
     data = generate_link_channel_data(1, K, M, Nrf=1)
     data = tf.square(tf.abs(data[0]))
-
-    tim = tf.random.normal((15, 5, 5))
+    gsm = GumbelSoftmax(0.3, logits=True)
+    tim = tf.random.normal((5, ))
     print(tim)
+    print(gsm._log_prob(tim))
+    A[2]
     print(STE_argmax(tim, -1, [1,1,5]))
     A[1]
     data = data/tf.reduce_max(data)

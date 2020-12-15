@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tf_agents.distributions import gumbel_softmax
 from util import *
 from models import *
 import numpy as np
@@ -92,43 +93,51 @@ if __name__ == "__main__":
     EPOCHS = 100000
     # EPOCHS = 1
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+    garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+    model = FDD_per_link_archetecture_more_G(M, K, 5, N_rf, True, max_val)
     for i in range(0, 1000):
+        train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
         sum_rate = Sum_rate_utility_WeiCui(K, M, 1)
         train_sum_rate = Sum_rate_utility_WeiCui(K, M, 0)
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
-        optimizer = tf.keras.optimizers.Adam(lr=0.01)
-        ans = tf.Variable(tf.random.normal((1, K * M, N_rf)), trainable=True)
-        ans_user = tf.Variable(tf.random.normal((1, K, N_rf)), trainable=True)
-        ans_link = tf.Variable(tf.random.normal((1, K, M)), trainable=True)
-        for e in range(0, 2000):
+        optimizer = tf.keras.optimizers.Adam(lr=0.001)
+        train_hard_loss.reset_states()
+        train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), train_label))
+        for e in range(0, 200):
             train_loss.reset_states()
-            train_hard_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
-                out_raw = tf.keras.layers.Softmax(axis=1)(ans)
-                out = tf.reduce_sum(out_raw, axis=2)
+                ans, raw_ans = model(train_data)
+                raw_ans = tf.transpose(raw_ans, [0, 1, 3, 2])
+                ###################### shape flatten ######################
+                out_raw = tf.reshape(raw_ans[:,-1], [N * N_rf, K*M])
+                temp = 0.1
+                sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw)
+                out_raw = sm.sample(100)
+
                 # out_user = tf.keras.layers.Softmax(axis=1)(ans_user)
                 # out_user = tf.reduce_sum(out_user, axis=2, keepdims=True)
                 # out_link = tf.keras.layers.Softmax(axis=2)(ans_link)
                 # out = tf.multiply(out_user, out_link)
-                # out = tf.keras.layers.Reshape((M*K, ))(out)
-                loss = train_sum_rate(out, valid_data[i:i+1])
-                mask = tf.stop_gradient(
-                    Harden_scheduling_user_constrained(N_rf, K, M, default_val=0)(out))
-                ce = tf.keras.losses.CategoricalCrossentropy()(mask, out)
-                # ce = ce + tf.keras.losses.MSE(mask, out)
+                out_raw = tf.reshape(out_raw, [100, N, N_rf, K*M])
+                out = tf.reduce_sum(out_raw, axis=2)
+                out = tf.reshape(out, [100*N, K*M])
+                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
+                loss = train_sum_rate(out, train_label)
                 # ce = All_softmaxes_MSE_general(N_rf, K, M)(out_raw)
-                loss = loss + ce
-            gradients = tape.gradient(loss, ans)
-            optimizer.apply_gradients(zip([gradients],[ans]))
+                loss = loss
+            gradients = tape.gradient(loss, model.trainable_variables)
+            optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
-            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), valid_data[i:i+1]))
+            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(out), train_label))
+
             print(train_hard_loss.result(),train_loss.result())
             del tape
+        print("====================\n", train_hard_loss.result(), train_loss.result())
         from matplotlib import pyplot as plt
-        plt.plot(out[0].numpy())
-        plt.show()
+        # plt.plot(out[0].numpy())
+        # plt.show()
     A[2]
 
 
@@ -226,10 +235,6 @@ if __name__ == "__main__":
                         improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1, 2].min() - graphing_data[
                                                                                                     epoch - check + 1: epoch + 1,
                                                                                                     2].min()
-                        # improvement = graphing_data[epoch + 1 - (check * 2): epoch - check + 1,
-                        #               1].min() - graphing_data[
-                        #                          epoch - check + 1: epoch + 1,
-                        #                          1].min()
                         counter = 0
                         for asldk in graphing_data[0:epoch+1, 2]:
                             if asldk != 0:
