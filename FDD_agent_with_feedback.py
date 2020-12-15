@@ -22,7 +22,7 @@ def grid_search(N_rf = 8):
     K = 50
     B = 4
     E = 30
-    more = 64
+    more = 8
     seed = 100
     # N_rf = 8
     sigma2_h = 6.3
@@ -110,5 +110,5 @@ def grid_search(N_rf = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for N_rf_to_search in [1]:
+    for N_rf_to_search in [8,7,6,5,4,3,2,1]:
         grid_search(N_rf_to_search)
