@@ -10,7 +10,7 @@ def grid_search(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/with_feedback/its16/GNN_annealing_temp_Nrf={}+limit_res=2".format(N_rf)
+    fname_template_template = "trained_models/Dec_13/with_feedback/its16/GNN_annealing_temp_Nrf={}+limit_res+trained_with_limited_res".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -27,7 +27,7 @@ def grid_search(N_rf = 8):
     # N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1.0
-    res = 2
+    res = 4
     ############################### generate data ###############################
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
@@ -79,7 +79,7 @@ def grid_search(N_rf = 8):
                 out_raw = tf.reshape(out_raw, [sample_size, N, N_rf, K*M])
                 out = tf.reduce_sum(out_raw, axis=2)
                 out = tf.reshape(out, [sample_size*N, K*M])
-                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
+                train_label = tf.reshape(tf.tile(tf.expand_dims(q_train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
                 loss = train_sum_rate(out, train_label) + tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(q_train_data))
             gradients = tape.gradient(loss, model.trainable_variables)
