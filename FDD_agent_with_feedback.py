@@ -27,7 +27,7 @@ def grid_search(N_rf = 8):
     # N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1.0
-    res = 4
+    res = 2
     ############################### generate data ###############################
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
