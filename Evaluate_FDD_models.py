@@ -11,17 +11,18 @@ def greedy_grid_search():
     N_rf = 8
     sigma2_h = 0.0001
     out = np.zeros((64, 32, 8))
-    for links in [1,2,5,10,64]:
-        for bits in [1,2,4,8,16,32]:
-            model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
-            losses = test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            out[links-1, bits-1, :] = losses
-            np.save("trained_models\Dec_13\greedy_save_here\grid_search500.npy", out)
-            print("{} links {} bits is done".format(links, bits))
+    for links in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]:
+        for bits in range(1,33):
+            if links*(6+bits) <= 128:
+                model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
+                losses = test_greedy(model, M=M, K=K, B=bits, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, printing=False)
+                out[links-1, bits-1, :] = losses
+                np.save("trained_models\Dec_13\greedy_save_here\grid_search_all_under128.npy", out)
+                print("{} links {} bits is done".format(links, bits))
 
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
-    num_data = 500
+    num_data = 100
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -220,7 +221,7 @@ def garsons_method(model_path):
     plt.plot(garson_importance.numpy(), '+')
     plt.show()
 if __name__ == "__main__":
-
+    greedy_grid_search()
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,

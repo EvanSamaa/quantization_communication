@@ -11,7 +11,6 @@ if __name__ == "__main__":
     X, Y = np.meshgrid(x, y)
     zs = np.zeros((len(x), len(y)), dtype=np.float32)
     # delete the for looop to display only one Nrf
-    #
     for N in range(8):
         for i in range(len(x)):
             for j in range(len(y)):

@@ -50,14 +50,7 @@ def rebar_loss(logits, Nrf, M, K):
 def generate_link_channel_data(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 2  # Number of Paths
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
-<<<<<<< HEAD
-    P = P/tf.sqrt(tf.constant(M, dtype=tf.complex64))/tf.sqrt(tf.constant(Nrf, dtype=tf.complex64))*10.0 # log(x^2) = 1.5 for 15 for constant
-
-    print(tf.reduce_sum(tf.norm(tf.abs(P)), axis=1))
-    A[2]
-=======
     P = P/tf.sqrt(tf.constant(M, dtype=tf.complex64))/tf.sqrt(tf.constant(Nrf, dtype=tf.complex64))*tf.sqrt(tf.constant(100, dtype=tf.complex64))
->>>>>>> 3986b855054f60bb44aafb029287a75cc2a47ae8
     P = tf.expand_dims(P, 0)
     P = tf.tile(P, (N, 1, 1))
     LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
