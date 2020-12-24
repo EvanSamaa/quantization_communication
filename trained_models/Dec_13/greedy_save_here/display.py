@@ -24,22 +24,20 @@ def display2d():
 
     plt.show()
 if __name__ == "__main__":
-    grid = np.load("grid_search.npy")
+    grid = np.load("grid_search_all_under128.npy")
     fig = plt.figure()
     # add or remove points using x and y
-    x = np.array([1, 2, 5, 10])  # links
-    y = np.array([1, 2, 4, 8, 16, 32])  # bits
-    Nrf = 5
-    curves = []
-    vals = []
+    x = np.arange(1, 64)  # links
+    y = np.arange(1, 32)  # bits
+    Nrf = 8
+    out = np.zeros((128, ))
     for i in x:
         new_curve = []
         new_val = []
         for j in y:
-            new_curve.append(i*(6+j))
-            new_val.append(-grid[i-1,j-1,Nrf-1])
-        curves.append(np.array(new_curve))
-        vals.append(np.array(new_val))
-        plt.plot(np.array(new_curve), np.array(new_val), label="{} links".format(i))
+            if grid[i, j].any() != 0:
+                new_curve.append(i*(6+j))
+                out[i*(6+j)] = max(out[i*(6+j)], -grid[i-1,j-1,Nrf-1])
+    plt.plot(np.arange(128, ), out, label="{} links".format(i))
     plt.legend()
     plt.show()

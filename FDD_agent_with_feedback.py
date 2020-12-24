@@ -31,7 +31,6 @@ def grid_search(N_rf = 8):
     ############################### generate data ###############################
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
-
     q_valid_data = tf.abs(valid_data) / max_val
     q_valid_data = tf.where(q_valid_data > 1.0, 1.0, q_valid_data)
     q_valid_data = tf.round(q_valid_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
