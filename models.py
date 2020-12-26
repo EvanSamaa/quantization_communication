@@ -5066,6 +5066,7 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     reconstructed_input = tf.keras.layers.Reshape((K,M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e_all])
     return model
+def CSI_reconstruction_
 def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)

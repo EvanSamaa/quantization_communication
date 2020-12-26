@@ -96,7 +96,7 @@ def grid_search(N_rf = 8):
             training_curve[e, 1] = train_loss.result()
             training_curve[e, 2] = train_reconstruction_loss.result()
             del tape
-        np.save("trained_models/better_quantizer/with_recon.npy")
+        np.save("trained_models/better_quantizer/with_recon.npy", training_curve)
         A[2]
         ###################### testing with validation set ######################
         if i%check == 0:
