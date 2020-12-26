@@ -80,13 +80,13 @@ def grid_search(N_rf = 8):
                 out = tf.reshape(out, [sample_size*N, K*M])
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
-                loss = train_sum_rate(out, train_label) + tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(q_train_data))
+                loss = train_sum_rate(out, train_label) + temp*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(q_train_data))
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
             train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_data))
-            print(train_hard_loss.result(),train_loss.result())
+            print(train_hard_loss.result(),train_loss.result(), )
             del tape
         A[2]
         ###################### testing with validation set ######################
