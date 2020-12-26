@@ -31,13 +31,17 @@ if __name__ == "__main__":
     y = np.arange(1, 32)  # bits
     Nrf = 8
     out = np.zeros((128, ))
+    out_x = []
+    out_y = []
     for i in x:
-        new_curve = []
-        new_val = []
         for j in y:
             if grid[i, j].any() != 0:
-                new_curve.append(i*(6+j))
-                out[i*(6+j)] = max(out[i*(6+j)], -grid[i-1,j-1,Nrf-1])
-    plt.plot(np.arange(128, ), out, label="{} links".format(i))
+                out[i*(6+j)] = max(-grid[i-1,j-1,Nrf-1], out[i*(6+j)])
+    for i in range(0, 128):
+        if out[i] != 0:
+            out_x.append(i)
+            out_y.append(out[i])
+
+    plt.plot(np.array(out_x), np.array(out_y), label="{} links".format(i))
     plt.legend()
     plt.show()
