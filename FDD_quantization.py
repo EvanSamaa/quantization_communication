@@ -84,7 +84,7 @@ def grid_search(N_rf = 8):
                 out = tf.reshape(out, [sample_size*N, K*M])
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
-                loss = train_sum_rate(out, train_label) + tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data))
+                loss = train_sum_rate(out, train_label) + 0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data))
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
@@ -96,7 +96,7 @@ def grid_search(N_rf = 8):
             training_curve[e, 1] = train_loss.result()
             training_curve[e, 2] = train_reconstruction_loss.result()
             del tape
-        np.save("trained_models/better_quantizer/with_recon.npy", training_curve)
+        np.save("trained_models/better_quantizer/without_recon.npy", training_curve)
         A[2]
         ###################### testing with validation set ######################
         if i%check == 0:
