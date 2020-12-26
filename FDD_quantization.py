@@ -50,6 +50,8 @@ def grid_search(N_rf = 8):
     train_sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
+    train_reconstruction_loss = tf.keras.metrics.Mean(name='train_loss')
+
     ################################ storing train data in npy file  ##############################
     # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
     max_acc = 0
@@ -59,12 +61,14 @@ def grid_search(N_rf = 8):
         train_hard_loss.reset_states()
         # generate training data
         train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
+        training_curve = np.zeros((rounds, 3))
         ###################### training happens here ######################
         for e in range(0, rounds):
             temp = 0.5 * np.exp(-4.5 / rounds * e) + 0.1
             temp = np.float32(temp)
             train_hard_loss.reset_states()
             train_loss.reset_states()
+            train_reconstruction_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
                 ###################### model post-processing ######################
                 q_train_data = tf.abs(train_data)/max_val
@@ -80,14 +84,19 @@ def grid_search(N_rf = 8):
                 out = tf.reshape(out, [sample_size*N, K*M])
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
-                loss = train_sum_rate(out, train_label) + temp*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(q_train_data))
+                loss = train_sum_rate(out, train_label) + 0*tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data))
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
             train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_data))
+            train_reconstruction_loss(tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data)))
             print(train_hard_loss.result(),train_loss.result(), )
+            training_curve[e, 0] = train_hard_loss.result()
+            training_curve[e, 1] = train_loss.result()
+            training_curve[e, 2] = train_reconstruction_loss.result()
             del tape
+        np.save("trained_models/better_quantizer/without_recon.npy")
         A[2]
         ###################### testing with validation set ######################
         if i%check == 0:
@@ -117,5 +126,5 @@ def grid_search(N_rf = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for N_rf_to_search in [8,7,6,5,4,3,2,1]:
+    for N_rf_to_search in [8]:
         grid_search(N_rf_to_search)
