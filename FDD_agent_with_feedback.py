@@ -5,7 +5,7 @@ from models import *
 import numpy as np
 import scipy as sp
 from keras_adabound.optimizers import AdaBound
-def grid_search(N_rf = 8):
+def grid_search(more = 8):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -22,9 +22,9 @@ def grid_search(N_rf = 8):
     K = 50
     B = 4
     E = 30
-    more = 32
+    more = more
     seed = 100
-    # N_rf = 8
+    N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1.0
     res = 8
