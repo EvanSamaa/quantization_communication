@@ -10,7 +10,7 @@ def grid_search(more = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec28/GNN_annealing_temp_Nrf={}+limit_res=6".format(N_rf)
+    fname_template_template = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6".format(more)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
