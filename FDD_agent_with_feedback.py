@@ -10,7 +10,7 @@ def grid_search(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/with_feedback/it64/GNN_annealing_temp_Nrf={}+limit_res=6".format(N_rf)
+    fname_template_template = "trained_models/Dec28/GNN_annealing_temp_Nrf={}+limit_res=6".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -27,7 +27,7 @@ def grid_search(N_rf = 8):
     # N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1.0
-    res = 6
+    res = 8
     ############################### generate data ###############################
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
@@ -116,5 +116,5 @@ def grid_search(N_rf = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for N_rf_to_search in [8,7,6,5,4,3,2,1]:
+    for N_rf_to_search in range(1,65,2):
         grid_search(N_rf_to_search)

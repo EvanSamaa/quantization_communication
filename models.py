@@ -5066,7 +5066,20 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     reconstructed_input = tf.keras.layers.Reshape((K,M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e_all])
     return model
-# def CSI_reconstruction_
+def CSI_reconstruction_with_two_decoders(M, K, B, E, N_rf, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
+    decoder_trash = Autoencoder_Decoding_module(M, (K, more))
+    decoder = Autoencoder_Decoding_module(M, (K, more))
+    z = encoder(inputs_mod)
+    z_binary = sigmoid(z) + tf.stop_gradient(binary_activation(z) - sigmoid(z))
+    reconstructed_input_with_binary = tf.keras.layers.Reshape((K, M))(decoder(z_binary))
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder_trash(z))
+
+    model = Model(inputs, [reconstructed_input_with_binary, reconstructed_input])
+    return model
 def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
