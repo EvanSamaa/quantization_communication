@@ -5079,9 +5079,10 @@ def CSI_reconstruction_knowledge_distillation(M, K, B, E, N_rf, more=1, qbit=0, 
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_binary))
     model = Model(inputs, [reconstructed_input_teacher, reconstructed_input])
     return model
-def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0):
+def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
     encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, E * more))
