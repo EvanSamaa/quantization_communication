@@ -270,7 +270,7 @@ def grid_search_VQVAE(bits = 8):
                 reconstructed_input, z_qq, z_e = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
-                loss_student = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data)) + vqvae_loss(z_qq, z_e)
+                loss_student = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data)) + vqvae_loss.call(z_qq, z_e)
             gradients_student = tape.gradient(loss_student, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients_student, model.trainable_variables))
             # optimizer.minimize(loss, ans)
