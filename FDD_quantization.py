@@ -46,21 +46,21 @@ def grid_search(bits = 8):
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    train_reconstruction_loss = tf.keras.metrics.Mean(name='train_loss')
-
+    train_reconstruction_loss_student = tf.keras.metrics.Mean(name='train_loss')
+    train_reconstruction_loss_teacher = tf.keras.metrics.Mean(name='train_loss')
     ################################ storing train data in npy file  ##############################
     # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
     max_acc = 0
-    np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=1, epoch=EPOCHS)
+    np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=3, epoch=EPOCHS)
     # training loop
     for i in range(0, EPOCHS):
         # generate training data
-        train_reconstruction_loss.reset_states()
+        train_reconstruction_loss_teacher.reset_states()
+        train_reconstruction_loss_student.reset_states()
         train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
-        training_curve = np.zeros((rounds, 3))
         ###################### training happens here ######################
         for e in range(0, 1):
-            train_reconstruction_loss.reset_states()
+            train_reconstruction_loss_student.reset_states()
             with tf.GradientTape(persistent=True) as tape:
                 ###################### model post-processing ######################
                 # q_train_data = tf.abs(train_data)/max_val
@@ -78,13 +78,15 @@ def grid_search(bits = 8):
             optimizer.apply_gradients(zip(gradients_teacher, model_teacher))
             optimizer.apply_gradients(zip(gradients_student, model_student))
             # optimizer.minimize(loss, ans)
-            train_reconstruction_loss(tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data)))
+            train_reconstruction_loss_student(loss_student)
+            train_reconstruction_loss_teacher(loss_teacher)
+            print(train_reconstruction_loss_teacher.result(), train_reconstruction_loss_student.result())
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:
             reconstructed_input_teacher, reconstructed_input = model(valid_data)
             valid_loss = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(valid_data))
-            np_data.log(i, [valid_loss])
+            np_data.log(i, [train_reconstruction_loss_teacher.result(), train_reconstruction_loss_student.result(), valid_loss])
             print("============================================================\n")
             print(valid_loss)
             if valid_loss < max_acc:
@@ -105,7 +107,7 @@ def grid_search(bits = 8):
                 if improvement <= 0.0001:
                     break
         else:
-            np_data.log(i, [0])
+            np_data.log(i, [train_reconstruction_loss_teacher.result(), train_reconstruction_loss_student.result(), 0])
     np_data.save()
 if __name__ == "__main__":
     for N_rf_to_search in [16,32,64,128]:
