@@ -244,7 +244,7 @@ def grid_search_VQVAE(bits = 8):
     sample_size = 100
     temp = 0.1
     check = 200
-    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=more/B, avg_max=max_val)
+    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=int(more/B), avg_max=max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
