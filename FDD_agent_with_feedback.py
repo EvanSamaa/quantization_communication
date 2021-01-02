@@ -105,7 +105,7 @@ def grid_search_knowledge_distillation(more = 8):
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:
-            scheduled_output, raw_output, reconstructed_input = model.predict(q_valid_data, batch_size=N)
+            scheduled_output, raw_output, teacher_scheduled_output, teacher_raw_output, reconstructed_input, reconstructed_input_teacher  = model.predict(q_valid_data, batch_size=N)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_loss_teacher.result(), train_hard_loss_teacher.result(), train_hard_loss.result(), train_loss.result(), valid_loss])
             print("============================================================\n")
