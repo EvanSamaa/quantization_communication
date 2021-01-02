@@ -10,7 +10,7 @@ def grid_search_student_teacher(bits = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/better_quantizer/student_teacher_{}bits"
+    fname_template_template = "trained_models/better_quantizer/student_teacher+tanh_{}bits"
     fname_template = fname_template_template.format(bits) + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -308,6 +308,7 @@ def grid_search_VQVAE(bits = 8):
     np_data.save()
 if __name__ == "__main__":
     for N_rf_to_search in [16,32,64,128]:
-        grid_search_VQVAE(N_rf_to_search)
-        grid_search_STE(N_rf_to_search)
+        grid_search_student_teacher(N_rf_to_search)
+        # grid_search_VQVAE(N_rf_to_search)
+        # grid_search_STE(N_rf_to_search)
 

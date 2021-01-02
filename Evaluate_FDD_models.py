@@ -194,20 +194,22 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         #     plt.pause(0.0001)
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
-def plot_data(arr, col=[], title="loss"):
+def plot_data(arr, col=[], title="loss", series_name = None):
     from matplotlib import pyplot as plt
     cut = 0
     for i in range(arr.shape[0]-1, 0, -1):
-        if arr[i].any != 0:
+        if arr[i,0] != 0:
             cut = i
             break
     arr = arr[:cut, :]
+    print(arr.shape)
     x = np.arange(0, arr.shape[0])
-    for i in col:
-        plt.plot(x, arr[:, i])
+    for i in range(len(col)):
+        plt.plot(x, arr[:, col[i]], '+', label=series_name[i])
+
     # plt.plot(x, arr[:, 3])
     plt.title(title)
-    plt.show()
+    # plt.show()
 def garsons_method(model_path):
     from matplotlib import pyplot as plt
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
@@ -217,10 +219,22 @@ def garsons_method(model_path):
     garson_importance = tf.reduce_sum(tf.abs(kernel), axis=1)
     norm = tf.reduce_sum(garson_importance, keepdims=True)
     garson_importance = tf.divide(garson_importance, norm)
-    plt.plot(garson_importance.numpy(), '+')
+    plt.plot(garson_importance.numpy())
     plt.show()
 if __name__ == "__main__":
-
+    from matplotlib import pyplot as plt
+    # for bits in [16,32,64]:
+    #     info = np.load("trained_models/better_quantizer/VQVAE_{}bits.npy".format(bits))
+    #     plot_data(info, [1], series_name=[str(bits) + "VQVAE"])
+    for bits in [16,32,64]:
+        info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
+        plot_data(info, [1], series_name=[str(bits) + "STE"])
+    for bits in [16,32,64,128]:
+        info = np.load("trained_models/better_quantizer/student_teacher_{}bits.npy".format(bits))
+        plot_data(info, [2], series_name=[str(bits) + "KD"])
+    plt.legend()
+    plt.show()
+    A[2]
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,

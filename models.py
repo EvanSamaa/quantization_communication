@@ -5075,7 +5075,7 @@ def CSI_reconstruction_knowledge_distillation(M, K, B, E, N_rf, more=1, qbit=0, 
     decoder_teacher = Autoencoder_Decoding_module(M, (K, more), i = 1)
     z = encoder(inputs_mod)
     z_binary = tf.tanh(z) + tf.stop_gradient(tf.sign(z) - tf.tanh(z))
-    reconstructed_input_teacher = tf.keras.layers.Reshape((K, M))(decoder_teacher(z))
+    reconstructed_input_teacher = tf.keras.layers.Reshape((K, M))(decoder_teacher(tf.tanh(z)))
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_binary))
     model = Model(inputs, [reconstructed_input_teacher, reconstructed_input])
     return model
