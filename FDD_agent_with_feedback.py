@@ -131,5 +131,5 @@ def grid_search_knowledge_distillation(more = 8):
             np_data.log(i, [train_loss_teacher.result(), train_hard_loss_teacher.result(), train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for N_rf_to_search in range(16,32,64,128):
+    for N_rf_to_search in [16,32,64,128]:
         grid_search_knowledge_distillation(N_rf_to_search)
