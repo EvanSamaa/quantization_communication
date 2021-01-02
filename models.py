@@ -5051,6 +5051,17 @@ def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, avg_
     scheduled_output, raw_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
     return model
+def Feedbakk_FDD_model_scheduler_knowledge_distillation(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    encoding_module = CSI_reconstruction_knowledge_distillation(M, K, B, E, N_rf, more=more, qbit=qbit, avg_max=avg_max)
+    scheduling_module = FDD_per_link_archetecture_more_G(M, K, k, N_rf, normalization=False, avg_max=avg_max)
+    # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    reconstructed_input_teacher, reconstructed_input = encoding_module(inputs)
+
+    scheduled_output, raw_output = scheduling_module(reconstructed_input)
+    teacher_scheduled_output, teacher_raw_output = scheduling_module(reconstructed_input)
+    model = Model(inputs, [scheduled_output, raw_output, teacher_scheduled_output, teacher_raw_output, reconstructed_input, reconstructed_input_teacher])
+    return model
 def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)

@@ -223,12 +223,12 @@ def garsons_method(model_path):
     plt.show()
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
-    # for bits in [16,32,64]:
-    #     info = np.load("trained_models/better_quantizer/VQVAE_{}bits.npy".format(bits))
-    #     plot_data(info, [1], series_name=[str(bits) + "VQVAE"])
-    for bits in [16,32,64]:
-        info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
-        plot_data(info, [1], series_name=[str(bits) + "STE"])
+    for bits in [16,32,64, 128]:
+        info = np.load("trained_models/better_quantizer/student_teacher+tanh_{}bits.npy".format(bits))
+        plot_data(info, [2], series_name=[str(bits) + "KD+tanh"])
+    # for bits in [16,32,64, 128]:
+    #     info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
+    #     plot_data(info, [1], series_name=[str(bits) + "STE"])
     for bits in [16,32,64,128]:
         info = np.load("trained_models/better_quantizer/student_teacher_{}bits.npy".format(bits))
         plot_data(info, [2], series_name=[str(bits) + "KD"])
