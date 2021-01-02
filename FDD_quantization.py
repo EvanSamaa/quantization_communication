@@ -10,7 +10,7 @@ def grid_search(bits = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/better_quantizer/student_teacher_{}bits"
+    fname_template_template = "trained_models/better_quantizer/STE_{}bits"
     fname_template = fname_template_template.format(bits) + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -41,21 +41,19 @@ def grid_search(bits = 8):
     rounds = 1000
     sample_size = 100
     temp = 0.1
-    check = 500
-    model = CSI_reconstruction_knowledge_distillation(M, K, B, E, N_rf, more=more, avg_max=max_val)
+    check = 200
+    model = CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=more, avg_max=max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     train_reconstruction_loss_student = tf.keras.metrics.Mean(name='train_loss')
-    train_reconstruction_loss_teacher = tf.keras.metrics.Mean(name='train_loss')
     ################################ storing train data in npy file  ##############################
     # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
     max_acc = 10000
-    np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=3, epoch=EPOCHS)
+    np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=2, epoch=EPOCHS)
     # training loop
     for i in range(0, EPOCHS):
         # generate training data
-        train_reconstruction_loss_teacher.reset_states()
         train_reconstruction_loss_student.reset_states()
         train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
@@ -66,28 +64,22 @@ def grid_search(bits = 8):
                 # q_train_data = tf.abs(train_data)/max_val
                 # q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
                 # q_train_data = tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
-                reconstructed_input_teacher, reconstructed_input = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
+                reconstructed_input = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
-                loss_teacher = tf.keras.losses.MeanSquaredError()(reconstructed_input_teacher, tf.abs(train_data))
                 loss_student = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data))
-            model_student = model.get_layer('encoder_0').trainable_variables + model.get_layer('decoder_0').trainable_variables
-            model_teacher = model.get_layer('encoder_0').trainable_variables + model.get_layer('decoder_1').trainable_variables
-            gradients_student = tape.gradient(loss_student, model_student)
-            gradients_teacher = tape.gradient(loss_teacher, model_teacher)
-            optimizer.apply_gradients(zip(gradients_teacher, model_teacher))
-            optimizer.apply_gradients(zip(gradients_student, model_student))
+            gradients_student = tape.gradient(loss_student, model.trainable_variables)
+            optimizer.apply_gradients(zip(gradients_student, model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_reconstruction_loss_student(loss_student)
-            train_reconstruction_loss_teacher(loss_teacher)
 
-            print(train_reconstruction_loss_teacher.result(), train_reconstruction_loss_student.result())
+            print(train_reconstruction_loss_student.result())
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:
-            reconstructed_input_teacher, reconstructed_input = model(valid_data)
+            reconstructed_input = model(valid_data)
             valid_loss = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(valid_data))
-            np_data.log(i, [train_reconstruction_loss_teacher.result(), train_reconstruction_loss_student.result(), valid_loss])
+            np_data.log(i, [train_reconstruction_loss_student.result(), valid_loss])
             print("============================================================\n")
             print(valid_loss)
             if valid_loss < max_acc:
@@ -108,7 +100,7 @@ def grid_search(bits = 8):
                 if improvement <= 0.0001:
                     break
         else:
-            np_data.log(i, [train_reconstruction_loss_teacher.result(), train_reconstruction_loss_student.result(), 0])
+            np_data.log(i, [train_reconstruction_loss_student.result(), 0])
     np_data.save()
 if __name__ == "__main__":
     for N_rf_to_search in [16,32,64,128]:
