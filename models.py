@@ -5059,7 +5059,7 @@ def Feedbakk_FDD_model_scheduler_knowledge_distillation(M, K, B, E, N_rf, k, mor
     reconstructed_input_teacher, reconstructed_input = encoding_module(inputs)
 
     scheduled_output, raw_output = scheduling_module(reconstructed_input)
-    teacher_scheduled_output, teacher_raw_output = scheduling_module(reconstructed_input)
+    teacher_scheduled_output, teacher_raw_output = scheduling_module(reconstructed_input_teacher)
     model = Model(inputs, [scheduled_output, raw_output, teacher_scheduled_output, teacher_raw_output, reconstructed_input, reconstructed_input_teacher])
     return model
 def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
