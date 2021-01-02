@@ -24,6 +24,17 @@ def display2d():
 
     plt.show()
 if __name__ == "__main__":
+    withrecond = "../../../trained_models/better_quantizer/with_recon.npy"
+    withoutrecond = "../../../trained_models/better_quantizer/without_recon.npy"
+    withrecond = np.load(withrecond)
+    withoutrecond = np.load(withoutrecond)
+    plt.plot(withrecond[:,0], label="with reconstruction loss, threshold")
+    plt.plot(withoutrecond[:,0], label="without reconstruction loss, threshold")
+    plt.plot(withrecond[:,1], label="with reconstruction loss, sm")
+    plt.plot(withoutrecond[:,1], label="without reconstruction loss, sm")
+    plt.legend()
+    plt.show()
+
     grid = np.load("grid_search_all_under128.npy")
     fig = plt.figure()
     # add or remove points using x and y
