@@ -10,7 +10,7 @@ def grid_search_knowledge_distillation(more = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/better_quantizer_with_scheduling/student_teacher_{}bits_Nrf=5".format(more)
+    fname_template_template = "trained_models/better_quantizer_with_scheduling/student_teacher_{}bits_Nrf=8".format(more)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -24,7 +24,7 @@ def grid_search_knowledge_distillation(more = 8):
     E = 30
     more = more
     seed = 100
-    N_rf = 5
+    N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1.0
     res = 8
