@@ -37,7 +37,7 @@ def grid_search_knowledge_distillation(more = 8):
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 40 # number of
+    N = 20 # number of
     rounds = 5
     sample_size = 100
     temp = 0.1
