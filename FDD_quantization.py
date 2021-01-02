@@ -238,13 +238,13 @@ def grid_search_VQVAE(bits = 8):
     q_valid_data = tf.round(q_valid_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
     ################################ hyperparameters ###############################
     EPOCHS = 1000000
-    lr = 0.001
+    lr = 0.0001
     N = 400 # number of
     rounds = 1000
     sample_size = 100
     temp = 0.1
     check = 200
-    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=more, avg_max=max_val)
+    model = CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, 6, more=more/B, avg_max=max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -270,7 +270,7 @@ def grid_search_VQVAE(bits = 8):
                 reconstructed_input, z_qq, z_e = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
-                loss_student = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data)) + 10*vqvae_loss.call(z_qq, z_e)
+                loss_student = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data)) + vqvae_loss.call(z_qq, z_e)
             gradients_student = tape.gradient(loss_student, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients_student, model.trainable_variables))
             # optimizer.minimize(loss, ans)
