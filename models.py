@@ -2984,7 +2984,7 @@ def Autoencoder_Encoding_module(input_shape, i=0, code_size=15, normalization=Fa
     else:
         x = inputs
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_1".format(i))(x)
-    x = LeakyReLU()(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
@@ -3024,7 +3024,7 @@ def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalizatio
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
-    x = LeakyReLU()(x)
+    x = sigmoid(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(output_size, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="decoder_{}".format(i))
@@ -5124,7 +5124,7 @@ def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=1, q
     encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, more))
     z = encoder(inputs_mod)
-    z = 2*sigmoid(z)-1 + tf.stop_gradient(tf.sign(sigmoid(z)-0.5) - 2*sigmoid(z)-1)
+    z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
     model = Model(inputs, reconstructed_input)
     return model
