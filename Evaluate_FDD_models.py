@@ -254,18 +254,14 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data(training_data, [2], "sum rate")
-    file = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.npy"
+    file = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6.npy"
     y = []
     x = []
-    model_b4 = tf.keras.models.load_model("trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.h5".format(63), custom_objects=custome_obj)
-    model_after = tf.keras.models.load_model("trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.h5.h5".format(81), custom_objects=custome_obj)
-    print(model_b4.get_layer("functional_125").summary())
-    print(model_after.get_layer("functional_33").summary())
     for i in range(1,129,2):
         try:
             out = np.load(file.format(i))
         except:
-            out = np.load("trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.h5.npy".format(i))
+            out = np.load("trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6.h5.npy".format(i))
         check = 1
         while True:
             if out[check,-1] != 0:
@@ -281,7 +277,7 @@ if __name__ == "__main__":
     # add or remove points using x and y
     x = np.arange(1, 64)  # links
     y = np.arange(1, 32)  # bits
-    Nrf = 8
+    Nrf = 5
     out = np.zeros((128,))
     out_x = []
     out_y = []

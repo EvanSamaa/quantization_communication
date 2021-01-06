@@ -5124,7 +5124,7 @@ def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=1, q
     encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, more))
     z = encoder(inputs_mod)
-    z = sigmoid(z) + tf.stop_gradient(binary_activation(z) - sigmoid(z))
+    z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z)) - sigmoid(z))
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
     model = Model(inputs, reconstructed_input)
     return model
