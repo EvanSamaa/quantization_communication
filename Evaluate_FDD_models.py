@@ -222,19 +222,13 @@ def garsons_method(model_path):
     plt.plot(garson_importance.numpy())
     plt.show()
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-    for bits in [16,32,64, 128]:
-        info = np.load("trained_models/better_quantizer/student_teacher+tanh_{}bits.npy".format(bits))
-        plot_data(info, [2], series_name=[str(bits) + "KD+tanh"])
     # for bits in [16,32,64, 128]:
     #     info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
     #     plot_data(info, [1], series_name=[str(bits) + "STE"])
-    for bits in [16,32,64,128]:
-        info = np.load("trained_models/better_quantizer/student_teacher_{}bits.npy".format(bits))
-        plot_data(info, [2], series_name=[str(bits) + "KD"])
-    plt.legend()
-    plt.show()
-    A[2]
+    # for bits in [16,32,64,128]:
+    #     info = np.load("trained_models/better_quantizer/student_teacher_{}bits.npy".format(bits))
+    # plot_data(info, [2], series_name=[str(bits) + "KD"])
+
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -260,7 +254,19 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data(training_data, [2], "sum rate")
-    file = "trained_models\Dec_13\with_feedback\it32\GNN_annealing_temp_Nrf={}+limit_res"
+    file = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.h5"
+    model = tf.keras.models.load_model(file.format(1), custom_objects=custome_obj)
+    print(model.get_layer("scheduler").summary())
+    A[2]
+    y = []
+    x = []
+    for i in range(1,64,2):
+        out = np.load(file.format(i))
+        x.append(i)
+        y.append(-out[:,-1].min())
+    from matplotlib import pyplot as plt
+    plt.plot(np.array(x), np.array(y))
+    plt.show()
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
