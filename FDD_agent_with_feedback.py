@@ -241,5 +241,5 @@ def grid_search_STD(more = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for N_rf_to_search in [65,129,2]:
+    for N_rf_to_search in range(65,129,2):
         grid_search_STD(N_rf_to_search)
