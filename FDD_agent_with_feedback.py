@@ -135,7 +135,7 @@ def grid_search_STD(more = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec28/sigmoid_NRF=8/GNN_annealing_temp_B={}+limit_res=6".format(more)
+    fname_template_template = "trained_models/Dec28/sigmoid_NRF=8_diff_rate/GNN_annealing_temp_B={}+limit_res=6".format(more)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -206,8 +206,11 @@ def grid_search_STD(more = 8):
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
                 loss = train_sum_rate(out, train_label)
-            gradients = tape.gradient(loss, model.trainable_variables)
-            optimizer.apply_gradients(zip(gradients,model.trainable_variables))
+            gradients = tape.gradient(10*loss, model.get_layer("functional_1").trainable_variables)
+            optimizer.apply_gradients(zip(gradients, model.get_layer("functional_1").trainable_variables))
+            gradients2 = tape.gradient(loss, model.get_layer("scheduler").trainable_variables)
+            optimizer.apply_gradients(zip(gradients2, model.get_layer("scheduler").trainable_variables))
+
             # optimizer.minimize(loss, ans)
             train_loss(loss)
             train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:,-1]), train_data))
@@ -241,5 +244,7 @@ def grid_search_STD(more = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
+    # for N_rf_to_search in range(1,25,2):
+    #     grid_search_STD(N_rf_to_search)
     for N_rf_to_search in range(65,129,2):
         grid_search_STD(N_rf_to_search)
