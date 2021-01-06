@@ -210,7 +210,7 @@ def grid_search_STD(more = 8):
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
-            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:,-1]), q_train_data))
+            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:,-1]), train_data))
             print(train_hard_loss.result(),train_loss.result())
             del tape
         ###################### testing with validation set ######################
@@ -243,3 +243,4 @@ def grid_search_STD(more = 8):
 if __name__ == "__main__":
     for N_rf_to_search in range(65,129,2):
         grid_search_STD(N_rf_to_search)
+        A[2]

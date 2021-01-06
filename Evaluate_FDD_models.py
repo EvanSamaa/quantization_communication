@@ -254,18 +254,48 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data(training_data, [2], "sum rate")
-    file = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.h5"
-    model = tf.keras.models.load_model(file.format(1), custom_objects=custome_obj)
-    print(model.get_layer("scheduler").summary())
-    A[2]
+    file = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.npy"
     y = []
     x = []
-    for i in range(1,64,2):
-        out = np.load(file.format(i))
+    model_b4 = tf.keras.models.load_model("trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.h5".format(63), custom_objects=custome_obj)
+    model_after = tf.keras.models.load_model("trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.h5.h5".format(81), custom_objects=custome_obj)
+    print(model_b4.get_layer("functional_125").summary())
+    print(model_after.get_layer("functional_33").summary())
+    for i in range(1,129,2):
+        try:
+            out = np.load(file.format(i))
+        except:
+            out = np.load("trained_models/Dec28/NRF=8/GNN_annealing_temp_B={}+limit_res=6.h5.npy".format(i))
+        check = 1
+        while True:
+            if out[check,-1] != 0:
+                break
+            check += 1
+        print(i, -out[:,-1].min())
         x.append(i)
         y.append(-out[:,-1].min())
     from matplotlib import pyplot as plt
     plt.plot(np.array(x), np.array(y))
+
+    grid = np.load("trained_models/Dec_13/greedy_save_here/grid_search_all_under128.npy")
+    # add or remove points using x and y
+    x = np.arange(1, 64)  # links
+    y = np.arange(1, 32)  # bits
+    Nrf = 8
+    out = np.zeros((128,))
+    out_x = []
+    out_y = []
+    for i in x:
+        for j in y:
+            if grid[i, j].any() != 0:
+                out[i * (6 + j)] = max(-grid[i - 1, j - 1, Nrf - 1], out[i * (6 + j)])
+    for i in range(0, 128):
+        if out[i] != 0:
+            out_x.append(i)
+            out_y.append(out[i])
+
+    plt.plot(np.array(out_x), np.array(out_y), label="{} links".format(i))
+
     plt.show()
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
