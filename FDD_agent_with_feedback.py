@@ -207,9 +207,10 @@ def grid_search_STD(more = 8):
                 ###################### model post-processing ######################
                 loss = train_sum_rate(out, train_label)
             gradients = tape.gradient(10*loss, model.get_layer("functional_1").trainable_variables)
-            optimizer.apply_gradients(zip(gradients, model.get_layer("functional_1").trainable_variables))
+            # optimizer.apply_gradients(zip(gradients, model.get_layer("functional_1").trainable_variables))
             gradients2 = tape.gradient(loss, model.get_layer("scheduler").trainable_variables)
-            optimizer.apply_gradients(zip(gradients2, model.get_layer("scheduler").trainable_variables))
+            optimizer.apply_gradients(zip(gradients+gradients2, model.get_layer("functional_1").trainable_variables
+                                          + model.get_layer("scheduler").trainable_variables))
 
             # optimizer.minimize(loss, ans)
             train_loss(loss)
