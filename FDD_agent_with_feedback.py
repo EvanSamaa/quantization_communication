@@ -206,9 +206,11 @@ def grid_search_STD(more = 8):
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
                 loss = train_sum_rate(out, train_label)
-            gradients = tape.gradient(loss, model.trainable_variables)
-            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-
+                loss10 = 10.0*loss
+            gradients = tape.gradient(loss, model.get_layer("scheduler").trainable_variables)
+            optimizer.apply_gradients(zip(gradients, model.get_layer("scheduler").trainable_variables))
+            gradients2 = tape.gradient(loss10, model.get_layer("functional_1").trainable_variables)
+            optimizer.apply_gradients(zip(gradients2, model.get_layer("functional_1").trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
             train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:,-1]), train_data))
@@ -241,6 +243,7 @@ def grid_search_STD(more = 8):
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
+    tf.keras.backend.clear_session()
 if __name__ == "__main__":
     # for N_rf_to_search in range(1,25,2):
     #     grid_search_STD(N_rf_to_search)

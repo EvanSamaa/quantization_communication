@@ -272,6 +272,7 @@ def grid_search_VQVAE(bits = 8):
                 ###################### model post-processing ######################
                 mse_loss = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data))
                 loss_student = mse_loss + vqvae_loss.call(z_qq, z_e)
+
             gradients_student = tape.gradient(loss_student, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients_student, model.trainable_variables))
             # optimizer.minimize(loss, ans)
@@ -306,6 +307,7 @@ def grid_search_VQVAE(bits = 8):
         else:
             np_data.log(i, [train_reconstruction_loss_student.result(), 0])
     np_data.save()
+
 if __name__ == "__main__":
     for N_rf_to_search in [16,32,64,128]:
         grid_search_student_teacher(N_rf_to_search)
