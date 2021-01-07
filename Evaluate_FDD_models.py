@@ -121,7 +121,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
 
-    num_data = 1000
+    num_data = 5
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -145,22 +145,28 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # prediction = model(ds_load)
         # compressed_G, position_matrix = G_compress(ds_load, 2)
         # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
-        scheduled_output, raw_output, were = model.predict(q_train_data, batch_size=50)
+        scheduled_output, raw_output, reconstructed_input = model.predict(q_train_data, batch_size=50)
         # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
 
         # scheduled_output, raw_output, recon = model(ds_load)
 
         # for i in range(0, num_data):
-        # from matplotlib import pyplot as plt
-        # for k in range(0, num_data):
-        #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-        #     for i in range(0,5):
-        #         prediction = scheduled_output[:, i]
-        #         # plt.imshow(tf.reshape(prediction[k], (K, M)))
-        #         plt.plot(np.arange(0, K*M), G_pred[-1][0])
-        #         plt.plot(np.arange(0, K*M), prediction[k])
-        #
-        #         plt.show()
+        from matplotlib import pyplot as plt
+        for k in range(0, num_data):
+            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+            print(reconstructed_input)
+            # for i in range(0,5):
+            #     prediction = scheduled_output[:, i]
+            #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
+            #     plt.plot(np.arange(0, K*M), G_pred[-1][0])
+            #     plt.plot(np.arange(0, K*M), prediction[k])
+            #
+            #     plt.show()
+            print(reconstructed_input[k].shape)
+            # tf.concat([reconstructed_input[k], tf.zeros((50, 20)), tf.abs(ds_load[k])], axis=1)
+            plt.imshow(tf.concat([tf.abs(reconstructed_input[k]), tf.zeros((20, 64)), tf.abs(ds_load[k])], axis=0))
+
+            plt.show()
         # A[2]
         prediction = scheduled_output[:, -1]
         out = loss_fn1(prediction, tf.abs(ds_load))
@@ -221,40 +227,9 @@ def garsons_method(model_path):
     garson_importance = tf.divide(garson_importance, norm)
     plt.plot(garson_importance.numpy())
     plt.show()
-if __name__ == "__main__":
-    # for bits in [16,32,64, 128]:
-    #     info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
-    #     plot_data(info, [1], series_name=[str(bits) + "STE"])
-    # for bits in [16,32,64,128]:
-    #     info = np.load("trained_models/better_quantizer/student_teacher_{}bits.npy".format(bits))
-    # plot_data(info, [2], series_name=[str(bits) + "KD"])
 
-    # Axes3D import has side effects, it enables using projection='3d' in add_subplot
-    custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
-                   'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
-                   "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
-                   "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg,
-                   "Per_link_Input_modification_more_G":Per_link_Input_modification_more_G,
-                   "Per_link_Input_modification_more_G_less_X":Per_link_Input_modification_more_G_less_X,
-                   "Per_link_Input_modification_even_more_G":Per_link_Input_modification_even_more_G,
-                   "Per_link_Input_modification_compress_XG":Per_link_Input_modification_compress_XG,
-                   "Per_link_Input_modification_compress_XG_alt": Per_link_Input_modification_compress_XG_alt,
-                   "Per_link_Input_modification_more_G_alt_2":Per_link_Input_modification_more_G_alt_2,
-                   "Per_link_Input_modification_compress_XG_alt_2":Per_link_Input_modification_compress_XG_alt_2,
-                   "Per_link_Input_modification_most_G":Per_link_Input_modification_most_G,
-                   "Per_link_sequential_modification": Per_link_sequential_modification,
-                   "Per_link_sequential_modification_compressedX":Per_link_sequential_modification_compressedX,
-                   "Per_link_Input_modification_most_G_raw_self":Per_link_Input_modification_most_G_raw_self,
-                   "Reduced_output_input_mod":Reduced_output_input_mod,
-                   "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
-                   "X_extends":X_extends,
-                   "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
-                   "Sparsemax":Sparsemax,
-                   "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
-                   "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
-    # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
-    # plot_data(training_data, [2], "sum rate")
-    file = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6.npy"
+def all_bits_compare_with_greedy():
+    file = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B=65+limit_res=6.h5"
     y = []
     x = []
     for i in range(1,129,2):
@@ -291,8 +266,41 @@ if __name__ == "__main__":
             out_y.append(out[i])
 
     plt.plot(np.array(out_x), np.array(out_y), label="{} links".format(i))
-
     plt.show()
+if __name__ == "__main__":
+    # for bits in [16,32,64, 128]:
+    #     info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
+    #     plot_data(info, [1], series_name=[str(bits) + "STE"])
+    # for bits in [16,32,64,128]:
+    #     info = np.load("trained_models/better_quantizer/student_teacher_{}bits.npy".format(bits))
+    # plot_data(info, [2], series_name=[str(bits) + "KD"])
+
+    # Axes3D import has side effects, it enables using projection='3d' in add_subplot
+    custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
+                   'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
+                   "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
+                   "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg,
+                   "Per_link_Input_modification_more_G":Per_link_Input_modification_more_G,
+                   "Per_link_Input_modification_more_G_less_X":Per_link_Input_modification_more_G_less_X,
+                   "Per_link_Input_modification_even_more_G":Per_link_Input_modification_even_more_G,
+                   "Per_link_Input_modification_compress_XG":Per_link_Input_modification_compress_XG,
+                   "Per_link_Input_modification_compress_XG_alt": Per_link_Input_modification_compress_XG_alt,
+                   "Per_link_Input_modification_more_G_alt_2":Per_link_Input_modification_more_G_alt_2,
+                   "Per_link_Input_modification_compress_XG_alt_2":Per_link_Input_modification_compress_XG_alt_2,
+                   "Per_link_Input_modification_most_G":Per_link_Input_modification_most_G,
+                   "Per_link_sequential_modification": Per_link_sequential_modification,
+                   "Per_link_sequential_modification_compressedX":Per_link_sequential_modification_compressedX,
+                   "Per_link_Input_modification_most_G_raw_self":Per_link_Input_modification_most_G_raw_self,
+                   "Reduced_output_input_mod":Reduced_output_input_mod,
+                   "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
+                   "X_extends":X_extends,
+                   "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
+                   "Sparsemax":Sparsemax,
+                   "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
+                   "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
+    # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
+    # plot_data
+    file = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B=63+limit_res=6"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
@@ -314,13 +322,7 @@ if __name__ == "__main__":
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
-    # training_data = np.load(training_datsa_path)
-    # plot_data(training_data, 0)
-    # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
-    # N_rfs = [2, 3, 4, 5, 6]
-    # model = DP_partial_feedback_semi_exhaustive_model(N_rf, 32, 10, M, K, sigma2_n)
-    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-    mores = [8,7,6,5,4,3,2,1]
+    mores = [6]
     Es = [1]
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
@@ -330,11 +332,11 @@ if __name__ == "__main__":
         for i in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = i
+            N_rf = 6
             bits=j
             print("========================================== lambda =", j, "Nrf = ", i)
 
-            model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # print(model.get_layer("model_2").get_layer("model_1").summary())
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
