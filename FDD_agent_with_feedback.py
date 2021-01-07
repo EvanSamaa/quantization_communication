@@ -206,7 +206,7 @@ def grid_search_STD(more = 8):
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
                 loss = train_sum_rate(out, train_label)
-            gradients = tape.gradient(10*loss, model.trainable_variables)
+            gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
             # optimizer.minimize(loss, ans)
