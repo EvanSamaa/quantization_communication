@@ -23,6 +23,23 @@ def display2d():
     ax.set_zlabel('SR')
 
     plt.show()
+def display2d():
+    valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+    garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+    q_valid_data = tf.abs(valid_data) / max_val
+    q_valid_data = tf.where(q_valid_data > 1.0, 1.0, q_valid_data)
+    q_valid_data = tf.where(q_valid_data > 1.0, 1.0, q_valid_data)
+    capped_valid = q_valid_data
+    q_valid_data = tf.round(q_valid_data * (2 ** res - 1) + 1/2**res) / (2 ** res - 1) * max_val
+    from matplotlib import pyplot as plt
+    numbers = tf.abs(tf.reshape(capped_valid, [1000*K*M,])).numpy()
+    plt.hist(numbers, bins=2**4, label="4 bits quantization")
+    plt.hist(numbers, bins=2**5, label="5 bits quantization")
+    plt.hist(numbers, bins=2**6, label="6 bits quantization")
+    plt.hist(numbers, bins=2**8, label="8 bits quantization")
+    plt.title("Effect of Quantization On channel gains")
+    plt.legend()
+    plt.show()
 if __name__ == "__main__":
     withrecond = "../../../trained_models/better_quantizer/with_recon.npy"
     withoutrecond = "../../../trained_models/better_quantizer/without_recon.npy"
@@ -40,7 +57,7 @@ if __name__ == "__main__":
     # add or remove points using x and y
     x = np.arange(1, 64)  # links
     y = np.arange(1, 32)  # bits
-    Nrf = 8
+    Nrf = 5
     out = np.zeros((128, ))
     out_x = []
     out_y = []
