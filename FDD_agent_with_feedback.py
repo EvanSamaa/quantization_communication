@@ -156,9 +156,9 @@ def grid_search_STD(more = 8):
     ############################### generate data ###############################
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
-    q_valid_data = tf.abs(valid_data) / max_val
-    q_valid_data = tf.where(q_valid_data > 1.0, 1.0, q_valid_data)
-    q_valid_data = tf.round(q_valid_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
+    # q_valid_data = tf.abs(valid_data) / max_val
+    # q_valid_data = tf.where(q_valid_data > 1.0, 1.0, q_valid_data)
+    # q_valid_data = tf.round(q_valid_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
@@ -192,10 +192,10 @@ def grid_search_STD(more = 8):
             train_loss.reset_states()
             with tf.GradientTape(persistent=True) as tape:
                 ###################### model post-processing ######################
-                q_train_data = tf.abs(train_data)/max_val
-                q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
-                q_train_data = tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
-                scheduled_output, raw_output, reconstructed_input = model(q_train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
+                # q_train_data = tf.abs(train_data)/max_val
+                # q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
+                # q_train_data = tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
+                scheduled_output, raw_output, reconstructed_input = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                 raw_ans = tf.transpose(raw_output, [0, 1, 3, 2])
                 out_raw = tf.reshape(raw_ans[:,-1], [N * N_rf, K*M])
                 sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw)
@@ -206,11 +206,8 @@ def grid_search_STD(more = 8):
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
                 loss = train_sum_rate(out, train_label)
-            gradients = tape.gradient(10*loss, model.get_layer("functional_1").trainable_variables)
-            # optimizer.apply_gradients(zip(gradients, model.get_layer("functional_1").trainable_variables))
-            gradients2 = tape.gradient(loss, model.get_layer("scheduler").trainable_variables)
-            optimizer.apply_gradients(zip(gradients+gradients2, model.get_layer("functional_1").trainable_variables
-                                          + model.get_layer("scheduler").trainable_variables))
+            gradients = tape.gradient(10*loss, model.trainable_variables)
+            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
             # optimizer.minimize(loss, ans)
             train_loss(loss)
@@ -219,7 +216,7 @@ def grid_search_STD(more = 8):
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:
-            scheduled_output, raw_output, reconstructed_input = model.predict(q_valid_data, batch_size=N)
+            scheduled_output, raw_output, reconstructed_input = model.predict(valid_data, batch_size=N)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
             print("============================================================\n")
