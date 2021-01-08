@@ -120,7 +120,12 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-
+    from matplotlib import pyplot as plt
+    plt.plot(np.load("trained_models/better_quantizer/chunky_128bits.npy")[:, 0], label="chunky")
+    plt.plot(np.load("trained_models/better_quantizer/STE_128bits.npy")[:, 0], label="ste")
+    plt.legend()
+    plt.show()
+    A[2]
     num_data = 5
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)

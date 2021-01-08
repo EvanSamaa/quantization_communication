@@ -3020,7 +3020,7 @@ def Autoencoder_chunky_Encoding_module(input_shape, i=0, code_size=4, splits=16)
     M = input_shape[1]
     distribute = tf.keras.layers.TimeDistributed
     input_mod = tf.keras.layers.Reshape((K, int(splits), int(M/splits)))(inputs)
-    x = distribute(Dense(64))(input_mod)
+    x = distribute(Dense(512))(input_mod)
     print(x.shape)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
@@ -3033,7 +3033,7 @@ def Autoencoder_chunky_Decoding_module(input_shape, i=0, M=64, splits=16):
     code_size = int(input_shape[1]/splits)
     distribute = tf.keras.layers.TimeDistributed
     inputs_mod = tf.keras.layers.Reshape((K, splits, code_size))(inputs) # N, K, M, 1
-    x = distribute(Dense(64))(inputs_mod)
+    x = distribute(Dense(512))(inputs_mod)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = distribute(Dense(M/splits))(x)
