@@ -3001,7 +3001,7 @@ def Autoencoder_Encoding_module_sig(input_shape, i=0, code_size=15, normalizatio
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
-def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=4):
+def Autoencoder_cnn_Encoding_module(input_shape, i=0, code_size=4):
     inputs = Input(input_shape, dtype=tf.float32)
     K = input_shape[0]
     M = input_shape[1]
@@ -3014,7 +3014,18 @@ def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=4):
     x = distribute(Dense(code_size))(x)
     x = tf.keras.layers.Reshape((x.shape[1], x.shape[2] * x.shape[3]))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
-def Autoencoder_CNN_Decoding_module(input_shape, i=0, M=64, splits=16):
+def Autoencoder_chunky_Encoding_module(input_shape, i=0, code_size=4):
+    inputs = Input(input_shape, dtype=tf.float32)
+    K = input_shape[0]
+    M = input_shape[1]
+    distribute = tf.keras.layers.TimeDistributed
+    x = distribute(Dense(64))(inputs)
+    x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = distribute(Dense(code_size))(x)
+    x = tf.keras.layers.Reshape((x.shape[1], x.shape[2] * x.shape[3]))(x)
+    return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_chunky_Decoding_module(input_shape, i=0, M=64, splits=16):
     inputs = Input(input_shape, dtype=tf.float32)
     K = input_shape[0]
     code_size = int(input_shape[1]/splits)
@@ -5140,8 +5151,8 @@ def CSI_reconstruction_model_seperate_decoders_chunky(M, K, B, E, N_rf, more=1, 
     inputs_mod = tf.divide(inputs_mod, avg_max)
     splits = 16
     code_size = more/16
-    encoder = Autoencoder_CNN_Encoding_module((K, M), i=0, code_size=code_size)
-    decoder = Autoencoder_CNN_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
+    encoder = Autoencoder_chunky_Encoding_module((K, M), i=0, code_size=code_size)
+    decoder = Autoencoder_chunky_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
     z = encoder(inputs_mod)
     z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
