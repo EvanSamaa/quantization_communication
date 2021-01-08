@@ -1440,8 +1440,11 @@ if __name__ == "__main__":
     M = 64
     K = 50
     B = 5
+
     sigma2 = 0
     data = generate_link_channel_data(1, K, M, Nrf=1)
+    A[2]
+
     data = tf.square(tf.abs(data[0]))
     gsm = GumbelSoftmax(0.3, logits=True)
     tim = tf.random.normal((5, ))

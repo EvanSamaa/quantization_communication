@@ -3001,26 +3001,31 @@ def Autoencoder_Encoding_module_sig(input_shape, i=0, code_size=15, normalizatio
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
-def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
+def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=4):
     inputs = Input(input_shape, dtype=tf.float32)
     K = input_shape[0]
     M = input_shape[1]
     distribute = tf.keras.layers.TimeDistributed
-    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs)
-    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
-    inputs_mod = tf.keras.layers.Reshape((K, M, M, 1))(tf.matmul(inputs_mod, inputs_mod2))
-    x = distribute(tf.keras.layers.Conv2D(4, 5))(inputs_mod)
-    x = distribute(tf.keras.layers.MaxPool2D())(x)
+    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs) # N, K, M, 1
+    x = distribute(tf.keras.layers.Conv1D(16, 4, 4))(inputs_mod)
+    x = distribute(Dense(64))(x)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = distribute(tf.keras.layers.Conv2D(1, 5))(x)
-    x = distribute(tf.keras.layers.MaxPool2D())(x)
-    x = LeakyReLU()(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    x = distribute(Dense(code_size))(x)
     x = tf.keras.layers.Reshape((x.shape[1], x.shape[2] * x.shape[3]))(x)
-    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(x)
-    x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_CNN_Decoding_module(input_shape, i=0, M=64, splits=16):
+    inputs = Input(input_shape, dtype=tf.float32)
+    K = input_shape[0]
+    code_size = int(input_shape[1]/splits)
+    distribute = tf.keras.layers.TimeDistributed
+    inputs_mod = tf.keras.layers.Reshape((K, splits, code_size))(inputs) # N, K, M, 1
+    x = distribute(Dense(64))(inputs_mod)
+    x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = distribute(Dense(M/splits))(x)
+    x = tf.keras.layers.Reshape((x.shape[1], x.shape[2] * x.shape[3]))(x)
+    return Model(inputs, x, name="decoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
@@ -5128,6 +5133,20 @@ def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=1, q
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
     model = Model(inputs, reconstructed_input)
     return model
+
+def CSI_reconstruction_model_seperate_decoders_chunky(M, K, B, E, N_rf, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
+    splits = 16
+    code_size = more/16
+    encoder = Autoencoder_CNN_Encoding_module((K, M), i=0, code_size=code_size)
+    decoder = Autoencoder_CNN_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
+    z = encoder(inputs_mod)
+    z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
+    model = Model(inputs, reconstructed_input)
+    return model
 def CSI_reconstruction_model_seperate_decoders_input_mod(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -5259,7 +5278,7 @@ if __name__ == "__main__":
     tim = tf.random.normal((10, M*K, N_rf), 0, 1)
     G = tf.random.normal((10, M*K), 0, 1)
     outputer(tim, tf.ones((10, M*K)), G, None)
-
+    model = CSI_reconstruction_model_seperate_decoders_chunky
     A[2]
     FDD_RNN_model(M, K, N_rf)
     Top2Precoder_model(M, K, N_rf)
@@ -5269,7 +5288,6 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, 1, perfect_CSI=True)
     # model(G)
     model = FDD_one_at_a_time(M, K, 6, N_rf)
-    # model = Autoencoder_CNN_Encoding_module(input_shape=(K, M), i=0, code_size=15, normalization=False)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)
