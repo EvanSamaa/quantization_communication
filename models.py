@@ -5151,8 +5151,8 @@ def CSI_reconstruction_model_seperate_decoders_chunky(M, K, B, E, N_rf, more=1, 
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     inputs_mod = tf.divide(inputs_mod, avg_max)
-    splits = 16
-    code_size = more/16
+    splits = 4
+    code_size = more/splits
     encoder = Autoencoder_chunky_Encoding_module((K, M), i=0, code_size=code_size, splits=splits)
     decoder = Autoencoder_chunky_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
     z = encoder(inputs_mod)
