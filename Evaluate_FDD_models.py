@@ -153,7 +153,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # for i in range(0, num_data):
         from matplotlib import pyplot as plt
         for k in range(0, num_data):
-            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 32, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+            G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 64, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
             # for i in range(0,5):
             #     prediction = scheduled_output[:, i]
             #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
@@ -227,10 +227,12 @@ def garsons_method(model_path):
     plt.show()
 
 def all_bits_compare_with_greedy():
-    file = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6.npy"
+    file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B={}+limit_res=6.npy"
     y = []
     x = []
-    for i in range(1,110,2):
+    # for i in range(1,110,2):
+    for i in [16,32,64,128]:
+
         try:
             out = np.load(file.format(i))
         except:
@@ -265,9 +267,8 @@ def all_bits_compare_with_greedy():
 
     plt.plot(np.array(out_x), np.array(out_y), label="{} links".format(i))
     plt.show()
-    A[2]
 if __name__ == "__main__":
-    all_bits_compare_with_greedy()
+    # all_bits_compare_with_greedy()
     # for bits in [16,32,64, 128]:
     #     info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
     #     plot_data(info, [1], series_name=[str(bits) + "STE"])
@@ -300,7 +301,7 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data
-    file = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B=7+limit_res=6"
+    file = "trained_models/Dec28/NRF=5/shifted/GNN_annealing_temp_B=128+limit_res=6"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
@@ -322,7 +323,7 @@ if __name__ == "__main__":
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
-    mores = [6]
+    mores = [5]
     Es = [1]
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)

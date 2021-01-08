@@ -158,7 +158,6 @@ def grid_search_STD(more = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     q_valid_data = tf.abs(valid_data) / max_val
     q_valid_data = tf.where(q_valid_data > 1.0, 1.0, q_valid_data)
-    q_valid_data = tf.where(q_valid_data > 1.0, 1.0, q_valid_data)
     capped_valid = q_valid_data
     q_valid_data = (tf.round(q_valid_data * (2 ** res - 1)) / (2 ** res - 1)  + 1/2**(res+1)) * max_val
     ################################ hyperparameters ###############################
@@ -196,7 +195,7 @@ def grid_search_STD(more = 8):
                 ###################### model post-processing ######################
                 q_train_data = tf.abs(train_data)/max_val
                 q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
-                q_train_data = (tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1)) + 1/(2**(res+1))* max_val
+                q_train_data = (tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1) + 1/(2**(res+1)))* max_val
                 scheduled_output, raw_output, reconstructed_input = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                 raw_ans = tf.transpose(raw_output, [0, 1, 3, 2])
                 out_raw = tf.reshape(raw_ans[:,-1], [N * N_rf, K*M])
