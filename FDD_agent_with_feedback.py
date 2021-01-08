@@ -135,7 +135,7 @@ def grid_search_STD(more = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B={}+limit_res=6".format(more)
+    fname_template_template = "trained_models/Dec28/NRF=5/shifted/GNN_annealing_temp_B={}+limit_res=6".format(more)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -196,7 +196,7 @@ def grid_search_STD(more = 8):
                 q_train_data = tf.abs(train_data)/max_val
                 q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
                 q_train_data = (tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1) + 1/(2**(res+1)))* max_val
-                scheduled_output, raw_output, reconstructed_input = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
+                scheduled_output, raw_output, reconstructed_input = model(q_train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                 raw_ans = tf.transpose(raw_output, [0, 1, 3, 2])
                 out_raw = tf.reshape(raw_ans[:,-1], [N * N_rf, K*M])
                 sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw)
@@ -216,7 +216,7 @@ def grid_search_STD(more = 8):
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:
-            scheduled_output, raw_output, reconstructed_input = model.predict(valid_data, batch_size=N)
+            scheduled_output, raw_output, reconstructed_input = model.predict(q_valid_data, batch_size=N)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
             print("============================================================\n")
