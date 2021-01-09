@@ -312,7 +312,7 @@ def grid_search_CNN(bits = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/better_quantizer/chunky_{}bits"
+    fname_template_template = "trained_models/better_quantizer/chunky_{}bits_2splits"
     fname_template = fname_template_template.format(bits) + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -347,7 +347,6 @@ def grid_search_CNN(bits = 8):
     model = CSI_reconstruction_model_seperate_decoders_chunky(M, K, B, E, N_rf, more=more, avg_max=max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
-    sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     train_reconstruction_loss_student = tf.keras.metrics.Mean(name='train_loss')
     ################################ storing train data in npy file  ##############################
     # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
@@ -367,7 +366,6 @@ def grid_search_CNN(bits = 8):
                 # q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
                 # q_train_data = tf.round(q_train_data * (2 ** res - 1)) / (2 ** res - 1) * max_val
                 reconstructed_input = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
-                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
                 ###################### model post-processing ######################
                 loss_student = tf.keras.losses.MeanSquaredError()(reconstructed_input, tf.abs(train_data))
             gradients_student = tape.gradient(loss_student, model.trainable_variables)
@@ -404,6 +402,7 @@ def grid_search_CNN(bits = 8):
         else:
             np_data.log(i, [train_reconstruction_loss_student.result(), 0])
     np_data.save()
+    tf.keras.backend.clear_session()
 if __name__ == "__main__":
     for N_rf_to_search in [128, 64, 32, 16]:
         grid_search_CNN(N_rf_to_search)

@@ -3021,7 +3021,6 @@ def Autoencoder_chunky_Encoding_module(input_shape, i=0, code_size=4, splits=16)
     distribute = tf.keras.layers.TimeDistributed
     input_mod = tf.keras.layers.Reshape((K, int(splits), int(M/splits)))(inputs)
     x = distribute(Dense(512))(input_mod)
-    print(x.shape)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = distribute(Dense(code_size))(x)
@@ -5151,7 +5150,7 @@ def CSI_reconstruction_model_seperate_decoders_chunky(M, K, B, E, N_rf, more=1, 
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
     inputs_mod = tf.divide(inputs_mod, avg_max)
-    splits = 4
+    splits = 2
     code_size = more/splits
     encoder = Autoencoder_chunky_Encoding_module((K, M), i=0, code_size=code_size, splits=splits)
     decoder = Autoencoder_chunky_Decoding_module((K, int(more)), i=0, M=M, splits=splits)

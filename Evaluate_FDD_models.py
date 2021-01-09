@@ -121,8 +121,15 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
     from matplotlib import pyplot as plt
-    plt.plot(np.load("trained_models/better_quantizer/chunky_128bits.npy")[:, 0], label="chunky")
-    plt.plot(np.load("trained_models/better_quantizer/STE_128bits.npy")[:, 0], label="ste")
+    plt.plot(np.load("trained_models/better_quantizer/chunky_128bits.npy")[:, 0], label="chunky_128")
+    plt.plot(np.load("trained_models/better_quantizer/chunky_64bits.npy")[:, 0], label="chunky_64")
+    plt.plot(np.load("trained_models/better_quantizer/chunky_32bits.npy")[:, 0], label="chunky_32")
+    plt.plot(np.load("trained_models/better_quantizer/chunky_16bits.npy")[:, 0], label="chunky_16")
+    plt.plot(np.load("trained_models/better_quantizer/STE_128bits.npy")[:, 0], label="ste_128")
+    plt.plot(np.load("trained_models/better_quantizer/STE_64bits.npy")[:, 0], label="ste_64")
+    plt.plot(np.load("trained_models/better_quantizer/STE_32bits.npy")[:, 0], label="ste_32")
+    plt.plot(np.load("trained_models/better_quantizer/STE_16bits.npy")[:, 0], label="ste_16")
+
     plt.legend()
     plt.show()
     A[2]
