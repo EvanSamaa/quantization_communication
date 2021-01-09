@@ -3038,6 +3038,32 @@ def Autoencoder_chunky_Decoding_module(input_shape, i=0, M=64, splits=16):
     x = distribute(Dense(M/splits))(x)
     x = tf.keras.layers.Reshape((x.shape[1], x.shape[2] * x.shape[3]))(x)
     return Model(inputs, x, name="decoder_{}".format(i))
+def Autoencoder_layers_Encoding_module(input_shape, i=0, max_bits=4, splits=16):
+    inputs = Input(input_shape, dtype=tf.float32)
+    x_1 = []
+    for i in range(splits):
+        layer_i = Dense(256)
+        x = layer_i(inputs)
+        x = LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = Dense(max_bits)(x)
+        x_1.append(x)
+    x = tf.concat(x_1, axis=2)
+    return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_layers_Decoding_module(input_shape, i=0, M=64, splits=16):
+    inputs = Input(input_shape, dtype=tf.float32)
+    K = input_shape[0]
+    max_code_size = int(input_shape[1]/splits)
+    inputs_mod = tf.keras.layers.Reshape((K, splits, max_code_size))(inputs) # N,
+    out = []
+    for i in range(splits):
+        x = Dense(256)(inputs_mod[:, :, i])
+        x = LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = Dense(M)(x)
+        out.append(x)
+    x = tf.add_n(out)
+    return Model(inputs, x, name="decoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
@@ -5154,6 +5180,19 @@ def CSI_reconstruction_model_seperate_decoders_chunky(M, K, B, E, N_rf, more=1, 
     code_size = more/splits
     encoder = Autoencoder_chunky_Encoding_module((K, M), i=0, code_size=code_size, splits=splits)
     decoder = Autoencoder_chunky_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
+    z = encoder(inputs_mod)
+    z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
+    model = Model(inputs, reconstructed_input)
+    return model
+def CSI_reconstruction_model_seperate_decoders_layers(M, K, B, E, N_rf, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
+    max_bits = 32
+    splits = int(more/max_bits)
+    encoder = Autoencoder_layers_Encoding_module((K, M), i=0, max_bits=max_bits, splits=splits)
+    decoder = Autoencoder_layers_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
     z = encoder(inputs_mod)
     z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
