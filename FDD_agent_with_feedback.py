@@ -267,7 +267,7 @@ def grid_search_STD(more = 8):
     np_data.save()
     tf.keras.backend.clear_session()
 def grid_search_pretrained(bits):
-    path_template = "trained_models/better_quantizer/ste_models/STE_{}bits.h5".format(bits)
+    path = "trained_models/better_quantizer/ste_models/STE_{}bits.h5".format(bits)
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
