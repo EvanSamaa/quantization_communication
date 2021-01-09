@@ -5191,8 +5191,12 @@ def CSI_reconstruction_model_seperate_decoders_layers(M, K, B, E, N_rf, more=1, 
     inputs_mod = tf.divide(inputs_mod, avg_max)
     max_bits = 32
     splits = int(more/max_bits)
-    encoder = Autoencoder_layers_Encoding_module((K, M), i=0, max_bits=max_bits, splits=splits)
-    decoder = Autoencoder_layers_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
+    if more <= max_bits:
+        encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
+        decoder = Autoencoder_Decoding_module(M, (K, more))
+    else:
+        encoder = Autoencoder_layers_Encoding_module((K, M), i=0, max_bits=max_bits, splits=splits)
+        decoder = Autoencoder_layers_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
     z = encoder(inputs_mod)
     z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
