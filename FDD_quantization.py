@@ -504,7 +504,8 @@ def grid_search_multirate(bits = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/better_quantizer/layers_{}bits_max32bits"
+
+    fname_template_template = "trained_models/better_quantizer/multi_rate_{}"
     fname_template = fname_template_template.format(bits) + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -537,7 +538,6 @@ def grid_search_multirate(bits = 8):
     temp = 0.1
     check = 200
     model = CSI_reconstruction_model_seperate_decoders_multirate(M, K, B, E, N_rf, rates=more, avg_max=max_val)
-    A[2]
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     train_reconstruction_loss_student = tf.keras.metrics.Mean(name='train_loss')
