@@ -3076,7 +3076,6 @@ def Autoencoder_rates_Encoding_module(input_shape, i=0, rates=[], splits=4):
         x_1.append(x)
     x = tf.concat(x_1, axis=2)
     return Model(inputs, x, name="encoder_{}".format(i))
-
 def Autoencoder_rates_Decoding_module(input_shape, i=0, M=64, rates=[], splits=4):
     inputs = Input(input_shape, dtype=tf.float32)
     K = input_shape[0]
@@ -5357,7 +5356,15 @@ def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1):
     model = Model(inputs, [reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t])
     print(model.summary())
     return model
-
+def Feedbakk_FDD_model_scheduler_pretrained(M, K, B, E, N_rf, k, model_path, custome_obj, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    encoding_module = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    scheduling_module = FDD_per_link_archetecture_more_G(M, K, k, N_rf, normalization=False, avg_max=avg_max)
+    # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    reconstructed_input = encoding_module(inputs)
+    scheduled_output, raw_output = scheduling_module(reconstructed_input)
+    model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
+    return model
 
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))

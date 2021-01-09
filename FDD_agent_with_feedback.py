@@ -5,6 +5,30 @@ from models import *
 import numpy as np
 import scipy as sp
 from keras_adabound.optimizers import AdaBound
+
+custome_obj = {'Closest_embedding_layer': Closest_embedding_layer,
+               'Interference_Input_modification': Interference_Input_modification,
+               'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
+               "Interference_Input_modification_per_user": Interference_Input_modification_per_user,
+               "Closest_embedding_layer_moving_avg": Closest_embedding_layer_moving_avg,
+               "Per_link_Input_modification_more_G": Per_link_Input_modification_more_G,
+               "Per_link_Input_modification_more_G_less_X": Per_link_Input_modification_more_G_less_X,
+               "Per_link_Input_modification_even_more_G": Per_link_Input_modification_even_more_G,
+               "Per_link_Input_modification_compress_XG": Per_link_Input_modification_compress_XG,
+               "Per_link_Input_modification_compress_XG_alt": Per_link_Input_modification_compress_XG_alt,
+               "Per_link_Input_modification_more_G_alt_2": Per_link_Input_modification_more_G_alt_2,
+               "Per_link_Input_modification_compress_XG_alt_2": Per_link_Input_modification_compress_XG_alt_2,
+               "Per_link_Input_modification_most_G": Per_link_Input_modification_most_G,
+               "Per_link_sequential_modification": Per_link_sequential_modification,
+               "Per_link_sequential_modification_compressedX": Per_link_sequential_modification_compressedX,
+               "Per_link_Input_modification_most_G_raw_self": Per_link_Input_modification_most_G_raw_self,
+               "Reduced_output_input_mod": Reduced_output_input_mod,
+               "TopPrecoderPerUserInputMod": TopPrecoderPerUserInputMod,
+               "X_extends": X_extends,
+               "Per_link_Input_modification_most_G_col": Per_link_Input_modification_most_G_col,
+               "Sparsemax": Sparsemax,
+               "Sequential_Per_link_Input_modification_most_G_raw_self": Sequential_Per_link_Input_modification_most_G_raw_self,
+               "Per_link_Input_modification_most_G_raw_self_sigmoid": Per_link_Input_modification_most_G_raw_self_sigmoid}
 def grid_search_knowledge_distillation(more = 8):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -242,12 +266,13 @@ def grid_search_STD(more = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
     tf.keras.backend.clear_session()
-def grid_search_STD(more = 8):
+def grid_search_pretrained(bits):
+    path_template = "trained_models/better_quantizer/ste_models/STE_{}bits.h5".format(bits)
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec28/NRF=5/shifted/GNN_annealing_temp_B={}+limit_res=4".format(more)
+    fname_template_template = "trained_models/Dec28/NRF=5/pretrained_encoder/GNN_annealing_temp_B={}+limit_res=6".format(bits)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -259,18 +284,16 @@ def grid_search_STD(more = 8):
     K = 50
     B = 4
     E = 30
-    more = more
     seed = 100
     N_rf = 5
     sigma2_h = 6.3
     sigma2_n = 1.0
-    res = 4
+    res = 6
     ############################### generate data ###############################
     valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     q_valid_data = tf.abs(valid_data) / max_val
     q_valid_data = tf.where(q_valid_data > 1.0, 1.0, q_valid_data)
-    capped_valid = q_valid_data
     q_valid_data = (tf.round(q_valid_data * (2 ** res - 1)) / (2 ** res - 1)  + 1/2**(res+1)) * max_val
     ################################ hyperparameters ###############################
     EPOCHS = 100000
@@ -281,7 +304,7 @@ def grid_search_STD(more = 8):
     temp = 0.1
     check = 200
     # model = FDD_per_link_archetecture_more_G(M, K, 7, N_rf, True, max_val)
-    model = Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, 4, more=more, avg_max=max_val)
+    model = Feedbakk_FDD_model_scheduler_pretrained(M, K, B, E, N_rf, 4, path, custome_obj, avg_max=max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -354,9 +377,11 @@ def grid_search_STD(more = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
     tf.keras.backend.clear_session()
+
 if __name__ == "__main__":
     # for N_rf_to_search in range(1,25,2):
     #     grid_search_STD(N_rf_to_search)
     # for N_rf_to_search in range(65,129,2):
-    for N_rf_to_search in [128,64,32,16]:
-        grid_search_STD(N_rf_to_search)
+    for N_rf_to_search in range(2, 34, 2):
+    # for bits in [128,64,32,16]:
+        grid_search_pretrained(bits)
