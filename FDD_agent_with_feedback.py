@@ -382,6 +382,6 @@ if __name__ == "__main__":
     # for N_rf_to_search in range(1,25,2):
     #     grid_search_STD(N_rf_to_search)
     # for N_rf_to_search in range(65,129,2):
-    for bits in range(2, 34, 2):
+    for bits in range(34, 130, 2):
     # for bits in [128,64,32,16]:
         grid_search_pretrained(bits)

@@ -120,19 +120,6 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    from matplotlib import pyplot as plt
-    plt.plot(np.load("trained_models/better_quantizer/layers_128bits_max32bits.npy")[:, 0], label="chunky_128")
-    plt.plot(np.load("trained_models/better_quantizer/layers_64bits_max32bits.npy")[:, 0], label="chunky_64")
-    plt.plot(np.load("trained_models/better_quantizer/layers_32bits_max32bits.npy")[:, 0], label="chunky_32")
-    plt.plot(np.load("trained_models/better_quantizer/layers_16bits_max32bits.npy")[:, 0], label="chunky_16")
-    plt.plot(np.load("trained_models/better_quantizer/STE_128bits.npy")[:, 0], label="ste_128")
-    plt.plot(np.load("trained_models/better_quantizer/STE_64bits.npy")[:, 0], label="ste_64")
-    plt.plot(np.load("trained_models/better_quantizer/STE_32bits.npy")[:, 0], label="ste_32")
-    plt.plot(np.load("trained_models/better_quantizer/STE_16bits.npy")[:, 0], label="ste_16")
-
-    plt.legend()
-    plt.show()
-    A[2]
     num_data = 5
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -239,16 +226,13 @@ def garsons_method(model_path):
     plt.show()
 
 def all_bits_compare_with_greedy():
-    file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B={}+limit_res=6.npy"
+    file1 = "trained_models/Dec28/NRF=5/shifted/GNN_annealing_temp_B={}+limit_res=6.npy"
+    file2 = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B={}+limit_res=6.npy"
     y = []
     x = []
     # for i in range(1,110,2):
     for i in [16,32,64,128]:
-
-        try:
-            out = np.load(file.format(i))
-        except:
-            out = np.load("trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6.h5.npy".format(i))
+        out = np.load(file1.format(i))
         check = 1
         while True:
             if out[check,-1] != 0:
@@ -258,7 +242,22 @@ def all_bits_compare_with_greedy():
         x.append(i)
         y.append(-out[:,-1].min())
     from matplotlib import pyplot as plt
-    plt.plot(np.array(x), np.array(y))
+    plt.plot(np.array(x), np.array(y), label = "quantize_input")
+
+    y = []
+    x = []
+    for i in [16,32,64,128]:
+        out = np.load(file2.format(i))
+        check = 1
+        while True:
+            if out[check,-1] != 0:
+                break
+            check += 1
+        print(i, -out[:,-1].min())
+        x.append(i)
+        y.append(-out[:,-1].min())
+    from matplotlib import pyplot as plt
+    plt.plot(np.array(x), np.array(y), label = "unqiantize_input")
 
     grid = np.load("trained_models/Dec_13/greedy_save_here/grid_search_all_under128.npy")
     # add or remove points using x and y
@@ -278,16 +277,21 @@ def all_bits_compare_with_greedy():
             out_y.append(out[i])
 
     plt.plot(np.array(out_x), np.array(out_y), label="{} links".format(i))
+    plt.legend()
     plt.show()
 if __name__ == "__main__":
     # all_bits_compare_with_greedy()
-    # for bits in [16,32,64, 128]:
-    #     info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
-    #     plot_data(info, [1], series_name=[str(bits) + "STE"])
-    # for bits in [16,32,64,128]:
-    #     info = np.load("trained_models/better_quantizer/student_teacher_{}bits.npy".format(bits))
-    # plot_data(info, [2], series_name=[str(bits) + "KD"])
 
+    from matplotlib import pyplot as plt
+    for bits in [16,32,64,128]:
+        info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
+        plot_data(info, [-1], series_name=[str(bits) + "STE"])
+    for bits in [16,32,64,128]:
+        info = np.load("trained_models/better_quantizer/layers_{}bits_max32bits.npy".format(bits))
+        plot_data(info, [-1], series_name=[str(bits) + "layers"])
+    plt.legend()
+    plt.show()
+    A[2]
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -313,7 +317,7 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data
-    file = "trained_models/Dec28/NRF=5/shifted/GNN_annealing_temp_B=128+limit_res=6"
+    file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B=128+limit_res=6"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
