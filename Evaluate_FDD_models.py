@@ -38,7 +38,7 @@ def partial_feedback_and_DNN_grid_search():
                     dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
                     losses = test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=bits, N_rf=Nrf,
                                                               sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-                    out[links-1, bits-1, Nrf-1] = losses
+                    out[links-1, bits-1, Nrf-1] = max(-out[links-1, bits-1, Nrf-1], losses)
                     np.save("trained_models\Dec_13\greedy_save_here\partial_feedback_and_DNN_scheduler.npy", out)
                     print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
