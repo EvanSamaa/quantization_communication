@@ -27,7 +27,7 @@ def partial_feedback_and_DNN_grid_search():
     model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
     out = np.zeros((64, 32, 8))
     for links in range(1, 19):
-        for bits in range(0, 33, 4):
+        for bits in range(1, 33, 4):
             if links*(6+bits) <= 128:
                 garbage, g_max = Input_normalization_per_user(
                     tf.abs(generate_link_channel_data(1000, K, M, Nrf=1)))
@@ -247,7 +247,7 @@ def test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M = 20
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 1000
+    num_data = 50
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -475,8 +475,8 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
-    partial_feedback_and_DNN_grid_search()
-    A[2]
+    # partial_feedback_and_DNN_grid_search()
+    # A[2]
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data
     file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B=128+limit_res=6"
