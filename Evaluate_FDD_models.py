@@ -28,19 +28,17 @@ def partial_feedback_and_DNN_grid_search():
     out = np.zeros((64, 32, 8))
     for links in range(1, 18):
         for bits in range(1,33):
-            for Nrf in range(1, 9):
-                tf.random.set_seed(200)
-                np.random.seed(200)
-                if links*(6+bits) <= 128:
-                    garbage, g_max = Input_normalization_per_user(
-                        tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
-                    feed_back_model = k_link_feedback_model(N_rf, bits, links, M, K, g_max)
-                    dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
-                    losses = test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=bits, N_rf=Nrf,
-                                                              sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-                    out[links-1, bits-1, Nrf-1] = max(-out[links-1, bits-1, Nrf-1], losses)
-                    np.save("trained_models\Dec_13\greedy_save_here\partial_feedback_and_DNN_scheduler.npy", out)
-                    print("{} links {} bits is done".format(links, bits))
+            tf.random.set_seed(200)
+            np.random.seed(200)
+            if links*(6+bits) <= 128:
+                garbage, g_max = Input_normalization_per_user(
+                    tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
+                feed_back_model = k_link_feedback_model(N_rf, bits, links, M, K, g_max)
+                losses = test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, model_path, M=M, K=K, B=bits, N_rf=8,
+                                                          sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+                out[links-1, bits-1] = np.maximum(out[links-1, bits-1], -losses)
+                np.save("trained_models\Dec_13\greedy_save_here\partial_feedback_and_DNN_scheduler.npy", out)
+                print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
     num_data = 500
@@ -301,6 +299,65 @@ def test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M = 20
         #     plt.pause(0.0001)
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
+        return rtv
+def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model_path, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    num_data = 1000
+    result = np.zeros((3, ))
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    # loss_fn1 = tf.keras.losses.MeanSquaredError()
+    # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
+    # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
+    print("Testing Starts")
+    rtv = np.zeros((8,))
+    for e in range(0, 1):
+        ds = generate_link_channel_data(num_data, K, M, N_rf)
+        # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
+        # print(ds)
+        ds_load = ds
+
+        ds_load_q = feed_back_model(ds_load)
+        for N_rf in range(1, 9):
+            dnn_model = tf.keras.models.load_model(dnn_model_path.format(N_rf), custom_objects=custome_obj)
+            scheduled_output, raw_output = dnn_model.predict(ds_load_q, batch_size=50)
+            prediction = scheduled_output[:, -1]
+            out = loss_fn1(prediction, tf.abs(ds_load))
+            result[0] = tf.reduce_mean(out)
+            result[1] = loss_fn2(prediction)
+            print("the soft result is ", result)
+            print("the variance is ", tf.math.reduce_std(out))
+
+            prediction_binary = binary_activation(prediction)
+            out_binary = loss_fn1(prediction_binary, ds_load)
+            result[0] = tf.reduce_mean(out_binary)
+            result[1] = loss_fn2(prediction_binary)
+            print("the hard result is ", result)
+            print("the variance for binary result is ", tf.math.reduce_std(out_binary))
+
+            prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
+            out_hard = loss_fn1(prediction_hard, ds_load)
+            result[0] = tf.reduce_mean(out_hard)
+            result[1] = loss_fn2(prediction_hard)
+            print("the top Nrf result is ", result)
+            print("the variance for hard result is ", tf.math.reduce_std(out_hard))
+            rtv[N_rf-1] = result[0]
+            print(rtv)
+            # ========= ========= =========  plotting ========= ========= =========
+            # ds = tf.square(tf.abs(ds))
+            # # prediction = prediction[:, :, 2]
+            # unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
+            # unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+            # denominator = tf.matmul(ds, unflattened_X)
+            # for i in range(0, num_data):
+            #     plt.imshow(denominator[i], cmap="gray")
+            #     plt.show(block=False)
+            #     plt.pause(0.0001)
+            #     plt.close()
+            # ========= ========= =========  plotting ========= ========= =========
         return rtv
 def plot_data(arr, col=[], title="loss", series_name = None):
     from matplotlib import pyplot as plt
