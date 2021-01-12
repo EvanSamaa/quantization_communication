@@ -581,6 +581,31 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
             out.append(prev_out)
         return out
     return model
+def DP_DNN_feedback_pure_greedy_model(N_rf, p, M, K, sigma2, encoder_decoder, perfect_CSI=False, pick_top=2):
+    # uniformly quantize the values then pick the top Nrf to output
+    def model(G):
+        # quantization ===
+        valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+        garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+        q_train_data = tf.abs(G) / max_val
+        q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
+        q_train_data = (tf.round(q_train_data * (2 ** 6 - 1)) / (2 ** 6 - 1) + 1 / (2 ** (6 + 1))) * max_val
+        # quantization ===
+        G = encoder_decoder(q_train_data)
+        print(G.shape)
+        top_values, top_indices = tf.math.top_k(G, k=pick_top)
+        # top_values_quantized = top_values
+        out = []
+        prev_out = None
+        G_original = G
+        for i in range(1, N_rf+1):
+            G = G_original/tf.sqrt(i * 1.0)
+            pp = min(p, pick_top)
+            prev_out = DP_sparse_pure_greedy_hueristic(i, sigma2, K, M, pp, G, i-1, prev_out)(top_values, top_indices)
+            # print(prev_out)
+            out.append(prev_out)
+        return out
+    return model
 ############################## Misc Models ##############################
 
 ############################## Layers ##############################

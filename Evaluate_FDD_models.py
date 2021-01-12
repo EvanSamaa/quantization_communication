@@ -18,10 +18,57 @@ def greedy_grid_search():
             out[links-1, bits-1, :] = losses
             np.save("trained_models\Dec_13\greedy_save_here\grid_search500.npy", out)
             print("{} links {} bits is done".format(links, bits))
-
+def partial_feedback_and_DNN_grid_search():
+    M = 64
+    K = 50
+    sigma2_n = 1
+    N_rf = 8
+    sigma2_h = 0.0001
+    model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
+    out = np.zeros((64, 32, 8))
+    for links in range(1, 18):
+        for bits in range(1,33):
+            for Nrf in range(1, 9):
+                if links*(6+bits) <= 128:
+                    garbage, g_max = Input_normalization_per_user(
+                        tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
+                    feed_back_model = k_link_feedback_model(N_rf, bits, links, M, K, g_max)
+                    dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+                    losses = test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=bits, N_rf=Nrf,
+                                                              sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+                    out[links-1, bits-1, Nrf-1] = losses
+                    np.save("trained_models\Dec_13\greedy_save_here\partial_feedback_and_DNN_scheduler.npy", out)
+                    print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
     num_data = 500
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    result = np.zeros((3,))
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
+    print("Testing Starts")
+    tf.random.set_seed(200)
+    np.random.seed(200)
+    ds_load = generate_link_channel_data(num_data, K, M, 1)
+    prediction = model(ds_load)
+    counter = 1
+    for i in prediction:
+        i_complex = tf.complex(tf.sqrt(counter*1.0), 0.0)
+        out = loss_fn1(i, tf.abs(ds_load/i_complex))
+        result[0] = tf.reduce_mean(out)
+        result[1] = loss_fn2(i)
+        if printing:
+            print("the soft result is ", result)
+            print("the variance is ", tf.math.reduce_std(out))
+        store[counter-1] = tf.reduce_mean(out)
+        counter = counter + 1
+    return store
+def test_DNN_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
+    store=np.zeros((8,))
+    num_data = 5
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -197,6 +244,62 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         #     plt.pause(0.0001)
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
+def test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    num_data = 1000
+    result = np.zeros((3, ))
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    # loss_fn1 = tf.keras.losses.MeanSquaredError()
+    # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
+    # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
+    print("Testing Starts")
+    rtv = 0
+    for e in range(0, 1):
+        ds = generate_link_channel_data(num_data, K, M, N_rf)
+        # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
+        # print(ds)
+        ds_load = ds
+
+        ds_load_q = feed_back_model(ds_load)
+        scheduled_output, raw_output = dnn_model.predict(ds_load_q, batch_size=50)
+        prediction = scheduled_output[:, -1]
+        out = loss_fn1(prediction, tf.abs(ds_load))
+        result[0] = tf.reduce_mean(out)
+        result[1] = loss_fn2(prediction)
+        print("the soft result is ", result)
+        print("the variance is ", tf.math.reduce_std(out))
+
+        prediction_binary = binary_activation(prediction)
+        out_binary = loss_fn1(prediction_binary, ds_load)
+        result[0] = tf.reduce_mean(out_binary)
+        result[1] = loss_fn2(prediction_binary)
+        print("the hard result is ", result)
+        print("the variance for binary result is ", tf.math.reduce_std(out_binary))
+
+        prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
+        out_hard = loss_fn1(prediction_hard, ds_load)
+        result[0] = tf.reduce_mean(out_hard)
+        result[1] = loss_fn2(prediction_hard)
+        print("the top Nrf result is ", result)
+        print("the variance for hard result is ", tf.math.reduce_std(out_hard))
+        rtv = result[0]
+        # ========= ========= =========  plotting ========= ========= =========
+        # ds = tf.square(tf.abs(ds))
+        # # prediction = prediction[:, :, 2]
+        # unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
+        # unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        # denominator = tf.matmul(ds, unflattened_X)
+        # for i in range(0, num_data):
+        #     plt.imshow(denominator[i], cmap="gray")
+        #     plt.show(block=False)
+        #     plt.pause(0.0001)
+        #     plt.close()
+        # ========= ========= =========  plotting ========= ========= =========
+        return rtv
 def plot_data(arr, col=[], title="loss", series_name = None):
     from matplotlib import pyplot as plt
     cut = 0
@@ -224,14 +327,13 @@ def garsons_method(model_path):
     garson_importance = tf.divide(garson_importance, norm)
     plt.plot(garson_importance.numpy())
     plt.show()
-
 def all_bits_compare_with_greedy():
-    file1 = "trained_models/Dec28/NRF=5/shifted/GNN_annealing_temp_B={}+limit_res=6.npy"
-    file2 = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B={}+limit_res=6.npy"
+    file1 = "trained_models/Dec28/NRF=5/pretrained_encoder/GNN_annealing_temp_B={}+limit_res=6.npy"
+    file2 = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6.npy"
     y = []
     x = []
     # for i in range(1,110,2):
-    for i in [16,32,64,128]:
+    for i in range(2, 122, 2):
         out = np.load(file1.format(i))
         check = 1
         while True:
@@ -246,8 +348,11 @@ def all_bits_compare_with_greedy():
 
     y = []
     x = []
-    for i in [16,32,64,128]:
-        out = np.load(file2.format(i))
+    for i in range(1, 122, 2):
+        try:
+            out = np.load(file2.format(i))
+        except:
+            out = np.load("trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6.h5.npy".format(i))
         check = 1
         while True:
             if out[check,-1] != 0:
@@ -279,19 +384,22 @@ def all_bits_compare_with_greedy():
     plt.plot(np.array(out_x), np.array(out_y), label="{} links".format(i))
     plt.legend()
     plt.show()
+
 if __name__ == "__main__":
+
+
     # all_bits_compare_with_greedy()
 
-    from matplotlib import pyplot as plt
-    for bits in [16,32,64,128]:
-        info = np.load("trained_models/better_quantizer/STE_{}bits.npy".format(bits))
-        plot_data(info, [-1], series_name=[str(bits) + "STE"])
-    for bits in [16,32,64,128]:
-        info = np.load("trained_models/better_quantizer/layers_{}bits_max32bits.npy".format(bits))
-        plot_data(info, [-1], series_name=[str(bits) + "layers"])
-    plt.legend()
-    plt.show()
-    A[2]
+    # from matplotlib import pyplot as plt
+    # for bits in range(2, 34, 2):
+    #     info = np.load("trained_models/Dec28/NRF=5/pretrained_encoder/GNN_annealing_temp_B={}+limit_res=6.npy".format(bits))
+    #     plot_data(info, [-1], series_name=[str(bits) + "pretrained_encoder"])
+    # for bits in [16,32,64,128]:
+    #     info = np.load("trained_models/better_quantizer/layers_{}bits_max32bits.npy".format(bits))
+    #     plot_data(info, [-1], series_name=[str(bits) + "layers"])
+    # plt.legend()
+    # plt.show()
+    # A[2]
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -315,6 +423,8 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
+    partial_feedback_and_DNN_grid_search()
+    A[2]
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data
     file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B=128+limit_res=6"
@@ -335,25 +445,27 @@ if __name__ == "__main__":
 
     tf.random.set_seed(seed)
     np.random.seed(seed)
-    model_path = file + ".h5"
+
+    model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
+    # model_path = file + ".h5"
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
-    mores = [5]
-    Es = [1]
+    mores = [1, 2, 3, 4, 5]
+    Es = [1, 2, 4, 8]
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 5, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    for j in Es:
-        for i in mores:
+    for i in Es:
+        for j in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = 6
-            bits=j
-            print("========================================== lambda =", j, "Nrf = ", i)
+            N_rf = 8
+            links = j
+            bits = i
+            print("========================================== links =", j, "bits = ", i)
 
-            model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # print(model.get_layer("model_2").get_layer("model_1").summary())
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
@@ -364,7 +476,10 @@ if __name__ == "__main__":
             # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
             # model = partial_feedback_pure_greedy_model(N_rf, 32, i, M, K, sigma2_n)
             # model = relaxation_based_solver(M, K, N_rf)
-            test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            garbage, g_max = Input_normalization_per_user(tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
+            feed_back_model = k_link_feedback_model(N_rf, bits, links, M, K, g_max)
+            dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
