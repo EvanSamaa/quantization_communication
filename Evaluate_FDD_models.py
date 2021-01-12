@@ -29,6 +29,8 @@ def partial_feedback_and_DNN_grid_search():
     for links in range(1, 18):
         for bits in range(1,33):
             for Nrf in range(1, 9):
+                tf.random.set_seed(200)
+                np.random.seed(200)
                 if links*(6+bits) <= 128:
                     garbage, g_max = Input_normalization_per_user(
                         tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
