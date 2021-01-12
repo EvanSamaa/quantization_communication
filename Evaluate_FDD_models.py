@@ -26,10 +26,8 @@ def partial_feedback_and_DNN_grid_search():
     sigma2_h = 0.0001
     model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
     out = np.zeros((64, 32, 8))
-    for links in range(1, 18):
-        for bits in range(1,33):
-            tf.random.set_seed(200)
-            np.random.seed(200)
+    for links in range(1, 19):
+        for bits in range(1,32):
             if links*(6+bits) <= 128:
                 garbage, g_max = Input_normalization_per_user(
                     tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
@@ -256,7 +254,7 @@ def test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M = 20
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
-    print("Testing Starts")
+    # print("Testing Starts")
     rtv = 0
     for e in range(0, 1):
         ds = generate_link_channel_data(num_data, K, M, N_rf)
@@ -315,37 +313,38 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
     print("Testing Starts")
     rtv = np.zeros((8,))
     for e in range(0, 1):
-        ds = generate_link_channel_data(num_data, K, M, N_rf)
-        # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
-        # print(ds)
+        tf.random.set_seed(200)
+        np.random.seed(200)
+        ds = generate_link_channel_data(num_data, K, M, 1)
         ds_load = ds
-
         ds_load_q = feed_back_model(ds_load)
+        ds_load_q_origial = ds_load_q
         for N_rf in range(1, 9):
+            ds_load_q = ds_load_q_origial/tf.sqrt(N_rf * 1.0)
             dnn_model = tf.keras.models.load_model(dnn_model_path.format(N_rf), custom_objects=custome_obj)
             scheduled_output, raw_output = dnn_model.predict(ds_load_q, batch_size=50)
             prediction = scheduled_output[:, -1]
             out = loss_fn1(prediction, tf.abs(ds_load))
             result[0] = tf.reduce_mean(out)
             result[1] = loss_fn2(prediction)
-            print("the soft result is ", result)
-            print("the variance is ", tf.math.reduce_std(out))
+            # print("the soft result is ", result)
+            # print("the variance is ", tf.math.reduce_std(out))
 
             prediction_binary = binary_activation(prediction)
             out_binary = loss_fn1(prediction_binary, ds_load)
             result[0] = tf.reduce_mean(out_binary)
             result[1] = loss_fn2(prediction_binary)
-            print("the hard result is ", result)
-            print("the variance for binary result is ", tf.math.reduce_std(out_binary))
+            # print("the hard result is ", result)
+            # print("the variance for binary result is ", tf.math.reduce_std(out_binary))
 
             prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
             out_hard = loss_fn1(prediction_hard, ds_load)
             result[0] = tf.reduce_mean(out_hard)
             result[1] = loss_fn2(prediction_hard)
-            print("the top Nrf result is ", result)
-            print("the variance for hard result is ", tf.math.reduce_std(out_hard))
+            # print("the top Nrf result is ", result)
+            # print("the variance for hard result is ", tf.math.reduce_std(out_hard))
             rtv[N_rf-1] = result[0]
-            print(rtv)
+        print(rtv)
             # ========= ========= =========  plotting ========= ========= =========
             # ds = tf.square(tf.abs(ds))
             # # prediction = prediction[:, :, 2]
@@ -445,8 +444,6 @@ def all_bits_compare_with_greedy():
     plt.show()
 
 if __name__ == "__main__":
-
-
     # all_bits_compare_with_greedy()
 
     # from matplotlib import pyplot as plt
