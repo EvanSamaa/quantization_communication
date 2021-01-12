@@ -25,9 +25,10 @@ def partial_feedback_and_DNN_grid_search():
     N_rf = 8
     sigma2_h = 0.0001
     model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
+    bits_to_try = [1,2,3,4,5,6,7,8] + list(range(9, 33, 4))
     out = np.zeros((64, 32, 8))
     for links in range(1, 19):
-        for bits in range(1, 33, 4):
+        for bits in bits_to_try:
             if links*(6+bits) <= 128:
                 garbage, g_max = Input_normalization_per_user(
                     tf.abs(generate_link_channel_data(1000, K, M, Nrf=1)))
