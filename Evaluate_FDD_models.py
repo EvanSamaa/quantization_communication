@@ -303,7 +303,7 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 50
+    num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
