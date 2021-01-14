@@ -11,13 +11,15 @@ def greedy_grid_search():
     N_rf = 8
     sigma2_h = 0.0001
     out = np.zeros((64, 32, 8))
-    for links in [1,2,5,10,64]:
-        for bits in [1,2,4,8,16,32]:
-            model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
-            losses = test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            out[links-1, bits-1, :] = losses
-            np.save("trained_models\Dec_13\greedy_save_here\grid_search500.npy", out)
-            print("{} links {} bits is done".format(links, bits))
+    bits_to_try = [1, 2, 3, 4, 5, 6, 7] + list(range(8, 33, 4))
+    for links in range(1, 19):
+        for bits in bits_to_try:
+            if links * (6 + bits) <= 128:
+                model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
+                losses = test_greedy(model, M=M, K=K, B=bits, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+                out[links-1, bits-1, :] = losses
+                np.save("trained_models\Dec_13\greedy_save_here\ggrid_search_all_under128_180AOE.npy", out)
+                print("{} links {} bits is done".format(links, bits))
 def partial_feedback_and_DNN_grid_search():
     M = 64
     K = 50
@@ -51,7 +53,7 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    ds_load = generate_link_channel_data(num_data, K, M, 1)
+    ds_load = generate_link_channel_data_fullAOE(num_data, K, M, 1)
     prediction = model(ds_load)
     counter = 1
     for i in prediction:
@@ -486,6 +488,8 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.legend()
     plt.show()
 if __name__ == "__main__":
+    greedy_grid_search()
+    A[2]
     # all_bits_compare_with_greedy()
     #
     # print(np.load("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler.npy"))
