@@ -54,7 +54,7 @@ def generate_link_channel_data_fullAOE(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1)
     P = tf.tile(P, (N, 1, 1))
     LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
     Mainlobe_UE = np.array([0, 0], dtype=np.float32)  # Mean of the AoD range
-    HalfBW_UE = np.array([90.0, 90.0], dtype=np.float32)  # Half of the AoD range
+    HalfBW_UE = np.array([180.0, 180.0], dtype=np.float32)  # Half of the AoD range
     h_act_batch = tf.constant(generate_batch_data(N, M, K, Lp, LSF_UE, Mainlobe_UE, HalfBW_UE), dtype=tf.complex64)
     # taking hermecian
     h_act_batch = tf.transpose(h_act_batch, perm=(0, 2, 1), conjugate=True)
