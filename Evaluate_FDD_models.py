@@ -262,8 +262,10 @@ def test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M = 20
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
-
         ds_load_q = feed_back_model(ds_load)
+        from matplotlib import pyplot as plt
+        plt.imshow(np.abs(ds_load_q[0]))
+        plt.show()
         scheduled_output, raw_output = dnn_model.predict(ds_load_q, batch_size=50)
         prediction = scheduled_output[:, -1]
         out = loss_fn1(prediction, tf.abs(ds_load))
@@ -388,7 +390,7 @@ def all_bits_compare_with_greedy():
     y = []
     x = []
     # for i in range(1,110,2):
-    for i in range(2, 122, 2):
+    for i in range(2, 120, 2):
         out = np.load(file1.format(i))
         check = 1
         while True:
@@ -399,11 +401,11 @@ def all_bits_compare_with_greedy():
         x.append(i)
         y.append(-out[:,-1].min())
     from matplotlib import pyplot as plt
-    plt.plot(np.array(x), np.array(y), label = "quantize_input")
+    plt.plot(np.array(x), np.array(y), label = "pretrained encoder")
 
     y = []
     x = []
-    for i in range(1, 122, 2):
+    for i in range(1, 100, 2):
         try:
             out = np.load(file2.format(i))
         except:
@@ -417,7 +419,7 @@ def all_bits_compare_with_greedy():
         x.append(i)
         y.append(-out[:,-1].min())
     from matplotlib import pyplot as plt
-    plt.plot(np.array(x), np.array(y), label = "unqiantize_input")
+    plt.plot(np.array(x), np.array(y), label = "STE")
 
     grid = np.load("trained_models/Dec_13/greedy_save_here/grid_search_all_under128.npy")
     # add or remove points using x and y
@@ -436,13 +438,58 @@ def all_bits_compare_with_greedy():
             out_x.append(i)
             out_y.append(out[i])
 
-    plt.plot(np.array(out_x), np.array(out_y), label="{} links".format(i))
+    plt.plot(np.array(out_x), np.array(out_y), label="greedy".format(i))
+    plt.xlabel("bits per user")
+    plt.ylabel("sum rate")
     plt.legend()
     plt.show()
 
+def all_bits_compare_with_greedy_plot_link_seperately():
+    file1 = "trained_models/Dec28/NRF=5/pretrained_encoder/GNN_annealing_temp_B={}+limit_res=6.npy"
+    file2 = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6.npy"
+    y = []
+    x = []
+    # for i in range(1,110,2):
+    for i in range(2, 120, 2):
+        out = np.load(file1.format(i))
+        check = 1
+        while True:
+            if out[check,-1] != 0:
+                break
+            check += 1
+        print(i, -out[:,-1].min())
+        x.append(i)
+        y.append(-out[:,-1].min())
+    from matplotlib import pyplot as plt
+
+    plt.plot(np.array(x), np.array(y), label = "pretrained encoder")
+    grid = np.load("trained_models/Dec_13/greedy_save_here/grid_search_all_under128.npy")
+    # add or remove points using x and y
+    x = np.arange(1, 64)  # links
+    y = np.arange(1, 32)  # bits
+    Nrf = 5
+    out = np.zeros((128,))
+    out_x = []
+    out_y = []
+    for i in x:
+        for j in y:
+            if grid[i, j].any() != 0:
+                out[i * (6 + j)] = max(-grid[i - 1, j - 1, Nrf - 1], out[i * (6 + j)])
+    for i in range(0, 128):
+        if out[i] != 0:
+            out_x.append(i)
+            out_y.append(out[i])
+
+    plt.plot(np.array(out_x), np.array(out_y), label="greedy".format(i))
+    plt.xlabel("bits per user")
+    plt.ylabel("sum rate")
+    plt.legend()
+    plt.show()
 if __name__ == "__main__":
     # all_bits_compare_with_greedy()
-
+    #
+    # print(np.load("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler.npy"))
+    # A[2]
     # from matplotlib import pyplot as plt
     # for bits in range(2, 34, 2):
     #     info = np.load("trained_models/Dec28/NRF=5/pretrained_encoder/GNN_annealing_temp_B={}+limit_res=6.npy".format(bits))
@@ -477,8 +524,8 @@ if __name__ == "__main__":
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
     # partial_feedback_and_DNN_grid_search()
-    partial_feedback_and_DNN_grid_search()
-    A[2]
+    # partial_feedback_and_DNN_grid_search()
+    # A[2]
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data
     file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B=128+limit_res=6"
@@ -505,7 +552,7 @@ if __name__ == "__main__":
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
-    mores = [1, 2, 3, 4, 5]
+    mores = [2, 2, 3, 4, 5]
     Es = [1, 2, 4, 8]
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)

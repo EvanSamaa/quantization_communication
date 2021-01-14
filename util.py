@@ -539,7 +539,7 @@ def TEMP_Pairwise_Cross_Entropy_loss(K, M, k):
         loss = loss
         return loss
     return loss_fn
-def Sum_rate_utility_WeiCui_plusp5(K, M, sigma2):
+def  _plusp5(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
     def sum_rate_utility(y_pred, G, display=False):
