@@ -552,7 +552,7 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
         G = (tf.abs(G))
         # quantization ===
         G, G_max= Input_normalization_per_user(G)
-        G = tf.where(G > G_max, G_max, G)
+        G = tf.where(G > 1, 1, G)
         G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
         G = tf.multiply(G, G_max)
         # quantization ===
@@ -624,7 +624,7 @@ def k_link_feedback_model(N_rf, B, p, M, K, g_max):
     def model(G, g_max=g_max):
         G = (tf.abs(G))
         G, g_max= Input_normalization_per_user(G, g_max)
-        G = tf.where(G > g_max, g_max, G)
+        G = tf.where(G > 1, 1, G)
         G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
         G = tf.multiply(G, g_max)
         top_values, top_indices = tf.math.top_k(G, k=p)
