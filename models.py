@@ -607,7 +607,6 @@ def DP_DNN_feedback_pure_greedy_model(N_rf, p, M, K, sigma2, encoder_decoder, pe
         return out
     return model
 ############################## Misc Models ##############################
-
 ############################## Layers ##############################
 def relaxation_based_solver(M, K, N_rf, sigma=1.0):
     def solver(G):
