@@ -17,8 +17,9 @@ def greedy_grid_search():
                 model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
                 losses = test_greedy(model, M=M, K=K, B=bits, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, printing=False)
                 out[links-1, bits-1, :] = losses
-                np.save("trained_models\Dec_13\greedy_save_here\grid_search_all_under128.npy", out)
                 print("{} links {} bits is done".format(links, bits))
+            np.save("./trained_models/Dec_13/greedy_save_here/grid_search_all_under128.npy", out)
+
 
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
