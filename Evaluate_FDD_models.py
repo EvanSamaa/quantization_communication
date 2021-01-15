@@ -512,7 +512,7 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
-    greedy_grid_search()
+    partial_feedback_and_DNN_grid_search()
     A[2]
     # greedy_grid_search()
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
