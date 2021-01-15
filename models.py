@@ -552,7 +552,7 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
         G = (tf.abs(G))
         # quantization ===
         G, G_max= Input_normalization_per_user(G)
-        G = tf.where(G > G_max, G_max, G)
+        G = tf.where(G > 1, 1, G)
         G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
         G = tf.multiply(G, G_max)
         # quantization ===
@@ -569,6 +569,31 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
             G = G_copy
         if p > pick_top:
             top_values, top_indices = tf.math.top_k(G, k=pick_top)
+        # top_values_quantized = top_values
+        out = []
+        prev_out = None
+        G_original = G
+        for i in range(1, N_rf+1):
+            G = G_original/tf.sqrt(i * 1.0)
+            pp = min(p, pick_top)
+            prev_out = DP_sparse_pure_greedy_hueristic(i, sigma2, K, M, pp, G, i-1, prev_out)(top_values, top_indices)
+            # print(prev_out)
+            out.append(prev_out)
+        return out
+    return model
+def DP_DNN_feedback_pure_greedy_model(N_rf, p, M, K, sigma2, encoder_decoder, perfect_CSI=False, pick_top=2):
+    # uniformly quantize the values then pick the top Nrf to output
+    def model(G):
+        # quantization ===
+        valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+        garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+        q_train_data = tf.abs(G) / max_val
+        q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
+        q_train_data = (tf.round(q_train_data * (2 ** 6 - 1)) / (2 ** 6 - 1) + 1 / (2 ** (6 + 1))) * max_val
+        # quantization ===
+        G = encoder_decoder(q_train_data)
+        print(G.shape)
+        top_values, top_indices = tf.math.top_k(G, k=pick_top)
         # top_values_quantized = top_values
         out = []
         prev_out = None
@@ -598,10 +623,6 @@ def relaxation_based_solver(M, K, N_rf, sigma=1.0):
 def k_link_feedback_model(N_rf, B, p, M, K, g_max):
     def model(G, g_max=g_max):
         G = (tf.abs(G))
-        G, g_max= Input_normalization_per_user(G, g_max)
-        G = tf.where(G > g_max, g_max, G)
-        G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
-        G = tf.multiply(G, g_max)
         top_values, top_indices = tf.math.top_k(G, k=p)
         G_copy = np.zeros((top_indices.shape[0], K, M))
         for n in range(0, top_indices.shape[0]):
@@ -611,6 +632,10 @@ def k_link_feedback_model(N_rf, B, p, M, K, g_max):
                 G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
         G_copy = tf.constant(G_copy, dtype=tf.float32)
         G = G_copy
+        G, g_max = Input_normalization_per_user(G, g_max)
+        G = tf.where(G > 1, 1, G)
+        G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
+        G = tf.multiply(G, g_max)
         return G
     return model
 class iterative_NN_scheduler():
@@ -3001,26 +3026,97 @@ def Autoencoder_Encoding_module_sig(input_shape, i=0, code_size=15, normalizatio
     x = tf.keras.layers.BatchNormalization()(x)
     x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
-def Autoencoder_CNN_Encoding_module(input_shape, i=0, code_size=15, normalization=False):
+def Autoencoder_cnn_Encoding_module(input_shape, i=0, code_size=4):
     inputs = Input(input_shape, dtype=tf.float32)
     K = input_shape[0]
     M = input_shape[1]
     distribute = tf.keras.layers.TimeDistributed
-    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs)
-    inputs_mod2 = tf.transpose(tf.keras.layers.Reshape((K, M, 1))(inputs_mod), perm=[0, 1, 3, 2])
-    inputs_mod = tf.keras.layers.Reshape((K, M, M, 1))(tf.matmul(inputs_mod, inputs_mod2))
-    x = distribute(tf.keras.layers.Conv2D(4, 5))(inputs_mod)
-    x = distribute(tf.keras.layers.MaxPool2D())(x)
+    inputs_mod = tf.keras.layers.Reshape((K, M, 1))(inputs) # N, K, M, 1
+    x = distribute(tf.keras.layers.Conv1D(16, 4, 4))(inputs_mod)
+    x = distribute(Dense(64))(x)
     x = LeakyReLU()(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = distribute(tf.keras.layers.Conv2D(1, 5))(x)
-    x = distribute(tf.keras.layers.MaxPool2D())(x)
-    x = LeakyReLU()(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    x = distribute(Dense(code_size))(x)
     x = tf.keras.layers.Reshape((x.shape[1], x.shape[2] * x.shape[3]))(x)
-    x = Dense(64, kernel_initializer=tf.keras.initializers.he_normal())(x)
-    x = Dense(code_size, kernel_initializer=tf.keras.initializers.he_normal(), name="encoder_{}_dense_2".format(i))(x)
     return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_chunky_Encoding_module(input_shape, i=0, code_size=4, splits=16):
+    inputs = Input(input_shape, dtype=tf.float32)
+    K = input_shape[0]
+    M = input_shape[1]
+    distribute = tf.keras.layers.TimeDistributed
+    input_mod = tf.keras.layers.Reshape((K, int(splits), int(M/splits)))(inputs)
+    x = distribute(Dense(512))(input_mod)
+    x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = distribute(Dense(code_size))(x)
+    x = tf.keras.layers.Reshape((x.shape[1], x.shape[2] * x.shape[3]))(x)
+    return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_chunky_Decoding_module(input_shape, i=0, M=64, splits=16):
+    inputs = Input(input_shape, dtype=tf.float32)
+    K = input_shape[0]
+    code_size = int(input_shape[1]/splits)
+    distribute = tf.keras.layers.TimeDistributed
+    inputs_mod = tf.keras.layers.Reshape((K, splits, code_size))(inputs) # N, K, M, 1
+    x = distribute(Dense(512))(inputs_mod)
+    x = LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = distribute(Dense(M/splits))(x)
+    x = tf.keras.layers.Reshape((x.shape[1], x.shape[2] * x.shape[3]))(x)
+    return Model(inputs, x, name="decoder_{}".format(i))
+def Autoencoder_layers_Encoding_module(input_shape, i=0, max_bits=4, splits=16):
+    inputs = Input(input_shape, dtype=tf.float32)
+    x_1 = []
+    for i in range(splits):
+        layer_i = Dense(256)
+        x = layer_i(inputs)
+        x = LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = Dense(max_bits)(x)
+        x_1.append(x)
+    x = tf.concat(x_1, axis=2)
+    return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_layers_Decoding_module(input_shape, i=0, M=64, splits=16):
+    inputs = Input(input_shape, dtype=tf.float32)
+    K = input_shape[0]
+    max_code_size = int(input_shape[1]/splits)
+    inputs_mod = tf.keras.layers.Reshape((K, splits, max_code_size))(inputs) # N,
+    out = []
+    for i in range(splits):
+        x = Dense(256)(inputs_mod[:, :, i])
+        x = LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = Dense(M)(x)
+        out.append(x)
+    x = tf.add_n(out)
+    return Model(inputs, x, name="decoder_{}".format(i))
+def Autoencoder_rates_Encoding_module(input_shape, i=0, rates=[], splits=4):
+    inputs = Input(input_shape, dtype=tf.float32)
+    x_1 = []
+    for i in range(splits):
+        layer_i = Dense(8*rates[i])
+        x = layer_i(inputs)
+        x = LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = Dense(rates[i])(x)
+        x_1.append(x)
+    x = tf.concat(x_1, axis=2)
+    return Model(inputs, x, name="encoder_{}".format(i))
+def Autoencoder_rates_Decoding_module(input_shape, i=0, M=64, rates=[], splits=4):
+    inputs = Input(input_shape, dtype=tf.float32)
+    K = input_shape[0]
+    out = []
+    for i in range(splits):
+        if i == 0:
+            current = 0
+        else:
+            current = tf.add_n(rates[:i])
+        x = Dense(8*rates[i])(inputs[:, :, current:current+rates[i]])
+        x = LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = Dense(M)(x)
+        out.append(x)
+    x = tf.add_n(out)
+    return Model(inputs, x, name="decoder_{}".format(i))
 def Autoencoder_Decoding_module(output_size, input_shape, i=0):
     inputs = Input(input_shape)
     x = Dense(512, kernel_initializer=tf.keras.initializers.he_normal(), name="decoder_{}_dense_1".format(i))(inputs)
@@ -5051,6 +5147,17 @@ def Feedbakk_FDD_model_scheduler_naive(M, K, B, E, N_rf, k, more=1, qbit=0, avg_
     scheduled_output, raw_output = scheduling_module(reconstructed_input)
     model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
     return model
+def Feedbakk_FDD_model_scheduler_knowledge_distillation(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    encoding_module = CSI_reconstruction_knowledge_distillation(M, K, B, E, N_rf, more=more, qbit=qbit, avg_max=avg_max)
+    scheduling_module = FDD_per_link_archetecture_more_G(M, K, k, N_rf, normalization=False, avg_max=avg_max)
+    # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    reconstructed_input_teacher, reconstructed_input = encoding_module(inputs)
+
+    scheduled_output, raw_output = scheduling_module(reconstructed_input)
+    teacher_scheduled_output, teacher_raw_output = scheduling_module(reconstructed_input_teacher)
+    model = Model(inputs, [scheduled_output, raw_output, teacher_scheduled_output, teacher_raw_output, reconstructed_input, reconstructed_input_teacher])
+    return model
 def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
@@ -5066,9 +5173,23 @@ def CSI_reconstruction_model(M, K, B, E, N_rf, k, more=1):
     reconstructed_input = tf.keras.layers.Reshape((K,M))(decoder(z_fed_forward))
     model = Model(inputs, [reconstructed_input, z_qq, z_e_all])
     return model
-def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0):
+def CSI_reconstruction_knowledge_distillation(M, K, B, E, N_rf, more=1, qbit=0, avg_max=None):
     inputs = Input((K, M))
     inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
+    encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
+    decoder = Autoencoder_Decoding_module(M, (K, more), i = 0)
+    decoder_teacher = Autoencoder_Decoding_module(M, (K, more), i = 1)
+    z = encoder(inputs_mod)
+    z_binary = tf.tanh(z) + tf.stop_gradient(tf.sign(z) - tf.tanh(z))
+    reconstructed_input_teacher = tf.keras.layers.Reshape((K, M))(decoder_teacher(tf.tanh(z)))
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z_binary))
+    model = Model(inputs, [reconstructed_input_teacher, reconstructed_input])
+    return model
+def CSI_reconstruction_model_seperate_decoders(M, K, B, E, N_rf, k, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
     find_nearest_e = Closest_embedding_layer(user_count=K, embedding_count=2 ** B, bit_count=E, i=0)
     encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=E * more + qbit, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, E * more))
@@ -5099,7 +5220,51 @@ def CSI_reconstruction_model_seperate_decoders_naive(M, K, B, E, N_rf, more=1, q
     encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
     decoder = Autoencoder_Decoding_module(M, (K, more))
     z = encoder(inputs_mod)
-    z = sigmoid(z) + tf.stop_gradient(binary_activation(z) - sigmoid(z))
+    z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
+    model = Model(inputs, reconstructed_input)
+    return model
+def CSI_reconstruction_model_seperate_decoders_chunky(M, K, B, E, N_rf, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
+    splits = 2
+    code_size = more/splits
+    encoder = Autoencoder_chunky_Encoding_module((K, M), i=0, code_size=code_size, splits=splits)
+    decoder = Autoencoder_chunky_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
+    z = encoder(inputs_mod)
+    z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
+    model = Model(inputs, reconstructed_input)
+    return model
+def CSI_reconstruction_model_seperate_decoders_layers(M, K, B, E, N_rf, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
+    max_bits = 32
+    splits = int(more/max_bits)
+    if more <= max_bits:
+        encoder = Autoencoder_Encoding_module((K, M), i=0, code_size=more, normalization=False)
+        decoder = Autoencoder_Decoding_module(M, (K, more))
+    else:
+        encoder = Autoencoder_layers_Encoding_module((K, M), i=0, max_bits=max_bits, splits=splits)
+        decoder = Autoencoder_layers_Decoding_module((K, int(more)), i=0, M=M, splits=splits)
+    z = encoder(inputs_mod)
+    z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
+    reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
+    model = Model(inputs, reconstructed_input)
+    return model
+def CSI_reconstruction_model_seperate_decoders_multirate(M, K, B, E, N_rf, rates, qbit=0, avg_max=None):
+    # e.g. rates = [8,16,32,64]
+    inputs = Input((K, M))
+    inputs_mod = tf.abs(inputs)
+    inputs_mod = tf.divide(inputs_mod, avg_max)
+    splits = len(rates)
+    more = tf.add_n(rates)
+    encoder = Autoencoder_rates_Encoding_module((K, M), i=0, rates=rates, splits=splits)
+    decoder = Autoencoder_rates_Decoding_module((K, int(more)), i=0, M=M, rates=rates, splits=splits)
+    z = encoder(inputs_mod)
+    z = sigmoid(z) + tf.stop_gradient(binary_activation(sigmoid(z), shift=0.5) - sigmoid(z))
     reconstructed_input = tf.keras.layers.Reshape((K, M))(decoder(z))
     model = Model(inputs, reconstructed_input)
     return model
@@ -5216,7 +5381,15 @@ def CSI_reconstruction_VQVAE2(M, K, B, E, N_rf, k, B_t=2, E_t=10, more=1):
     model = Model(inputs, [reconstructed_input, z_q_b, z_e_b, z_q_t, z_e_t])
     print(model.summary())
     return model
-
+def Feedbakk_FDD_model_scheduler_pretrained(M, K, B, E, N_rf, k, model_path, custome_obj, more=1, qbit=0, avg_max=None):
+    inputs = Input((K, M))
+    encoding_module = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
+    scheduling_module = FDD_per_link_archetecture_more_G(M, K, k, N_rf, normalization=False, avg_max=avg_max)
+    # scheduling_module = FDD_per_user_architecture_double_softmax(M, K, k=k, N_rf=N_rf, output_all=output_all)
+    reconstructed_input = encoding_module(inputs)
+    scheduled_output, raw_output = scheduling_module(reconstructed_input)
+    model = Model(inputs, [scheduled_output, raw_output, reconstructed_input])
+    return model
 
 if __name__ == "__main__":
     # F_create_encoding_model_with_annealing(2, 1, (2, 24))
@@ -5234,7 +5407,7 @@ if __name__ == "__main__":
     tim = tf.random.normal((10, M*K, N_rf), 0, 1)
     G = tf.random.normal((10, M*K), 0, 1)
     outputer(tim, tf.ones((10, M*K)), G, None)
-
+    model = CSI_reconstruction_model_seperate_decoders_chunky
     A[2]
     FDD_RNN_model(M, K, N_rf)
     Top2Precoder_model(M, K, N_rf)
@@ -5244,7 +5417,6 @@ if __name__ == "__main__":
     # model = DP_partial_feedback_pure_greedy_model(N_rf, B, 10, M, K, 1, perfect_CSI=True)
     # model(G)
     model = FDD_one_at_a_time(M, K, 6, N_rf)
-    # model = Autoencoder_CNN_Encoding_module(input_shape=(K, M), i=0, code_size=15, normalization=False)
     # LSTM_like_model_for_FDD(M, K, N_rf, k=3)
     # LSTM_like_model_for_FDD(M, K, k=3, N_rf=3)
     # nn = NN_Clustering(N_rf, M, reduced_dim=15)

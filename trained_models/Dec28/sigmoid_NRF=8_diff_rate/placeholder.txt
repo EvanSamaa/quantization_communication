@@ -1,0 +1,4 @@
+            gradients = tape.gradient(10*loss, model.get_layer("functional_1").trainable_variables)
+            optimizer.apply_gradients(zip(gradients, model.get_layer("functional_1").trainable_variables))
+            gradients2 = tape.gradient(loss, model.get_layer("scheduler").trainable_variables)
+            optimizer.apply_gradients(zip(gradients2, model.get_layer("scheduler").trainable_variables))

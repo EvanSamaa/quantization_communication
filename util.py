@@ -46,7 +46,23 @@ def rebar_loss(logits, Nrf, M, K):
     z_hat = truncated_gumbel(gumbel + logits, topgumbel)
 
 
-
+def generate_link_channel_data_fullAOE(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
+    Lp = 2  # Number of Paths
+    P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
+    P = P/tf.sqrt(tf.constant(M, dtype=tf.complex64))/tf.sqrt(tf.constant(Nrf, dtype=tf.complex64))*tf.sqrt(tf.constant(100, dtype=tf.complex64))
+    P = tf.expand_dims(P, 0)
+    P = tf.tile(P, (N, 1, 1))
+    LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
+    Mainlobe_UE = np.array([0, 0], dtype=np.float32)  # Mean of the AoD range
+    HalfBW_UE = np.array([180.0, 180.0], dtype=np.float32)  # Half of the AoD range
+    h_act_batch = tf.constant(generate_batch_data(N, M, K, Lp, LSF_UE, Mainlobe_UE, HalfBW_UE), dtype=tf.complex64)
+    # taking hermecian
+    h_act_batch = tf.transpose(h_act_batch, perm=(0, 2, 1), conjugate=True)
+    G = tf.matmul(h_act_batch, P)
+    # noise = tf.complex(tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32),
+    #                    tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32))
+    G_hat = G
+    return G_hat
 def generate_link_channel_data(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 2  # Number of Paths
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
@@ -539,7 +555,7 @@ def TEMP_Pairwise_Cross_Entropy_loss(K, M, k):
         loss = loss
         return loss
     return loss_fn
-def Sum_rate_utility_WeiCui_plusp5(K, M, sigma2):
+def  _plusp5(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
     def sum_rate_utility(y_pred, G, display=False):
@@ -1440,8 +1456,11 @@ if __name__ == "__main__":
     M = 64
     K = 50
     B = 5
+
     sigma2 = 0
     data = generate_link_channel_data(1, K, M, Nrf=1)
+    A[2]
+
     data = tf.square(tf.abs(data[0]))
     gsm = GumbelSoftmax(0.3, logits=True)
     tim = tf.random.normal((5, ))

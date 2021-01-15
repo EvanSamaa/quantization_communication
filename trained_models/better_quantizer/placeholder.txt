@@ -1,0 +1,9 @@
+format of the knowledge distillation training data is:
+0 train_reconstruction_loss_teacher.result()
+1 train_reconstruction_loss_student.result()
+2 valid_loss
+
+
+format of the VQVAE training data is:
+0 train_reconstruction_loss.result()
+1 validation loss
