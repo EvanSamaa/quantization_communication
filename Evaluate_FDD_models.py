@@ -26,19 +26,19 @@ def partial_feedback_and_DNN_grid_search():
     sigma2_n = 1
     N_rf = 8
     sigma2_h = 0.0001
-    model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
+    model_path = "trained_models/Jan_13/GNN_annealing_temp_Nrf={}+180_half_AOE.h5"
     bits_to_try = [1,2,3,4,5,6,7] + list(range(8, 32, 4))
     out = np.zeros((64, 32, 8))
     for links in range(1, 19):
         for bits in bits_to_try:
             if links*(6+bits) <= 128:
                 garbage, g_max = Input_normalization_per_user(
-                    tf.abs(generate_link_channel_data(1000, K, M, Nrf=1)))
+                    tf.abs(generate_link_channel_data_fullAOE(1000, K, M, Nrf=1)))
                 feed_back_model = k_link_feedback_model(N_rf, bits, links, M, K, g_max)
                 losses = test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, model_path, M=M, K=K, B=bits,
                                                           sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1] = np.maximum(out[links-1, bits-1], -losses)
-                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_30half_AOE_fixed_quantization.npy", out)
+                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_180AOE.npy", out)
                 print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
@@ -317,7 +317,7 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
     for e in range(0, 1):
         tf.random.set_seed(200)
         np.random.seed(200)
-        ds = generate_link_channel_data(num_data, K, M, 1)
+        ds = generate_link_channel_data_fullAOE(num_data, K, M, 1)
         ds_load = ds
         ds_load_q_origial = feed_back_model(ds_load)
         for N_rf in range(1, 9):
