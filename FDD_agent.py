@@ -10,7 +10,7 @@ def grid_search(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}+more_iter".format(N_rf)
+    fname_template_template = "trained_models/Jan_13/GNN_annealing_temp_Nrf={}+180_half_AOE".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -26,17 +26,18 @@ def grid_search(N_rf = 8):
     sigma2_n = 1.0
 
     ############################### generate data ###############################
-    valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+    valid_data = generate_link_channel_data_fullAOE(1000, K, M, Nrf=N_rf)
+    from matplotlib import pyplot as plt
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 30 # number of
-    rounds = 50
+    N = 50 # number of
+    rounds = 5
     sample_size = 100
     temp = 0.1
     check = 50
-    model = FDD_per_link_archetecture_more_G(M, K, 7, N_rf, True, max_val)
+    model = FDD_per_link_archetecture_more_G(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -51,7 +52,7 @@ def grid_search(N_rf = 8):
     for i in range(0, EPOCHS):
         train_hard_loss.reset_states()
         # generate training data
-        train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
+        train_data = generate_link_channel_data_fullAOE(N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         for e in range(0, rounds):
             temp = 0.5 * np.exp(-4.5 / rounds * e) + 0.1
@@ -106,5 +107,5 @@ def grid_search(N_rf = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 if __name__ == "__main__":
-    for N_rf_to_search in [8]:
+    for N_rf_to_search in [8,7,6,5,4,3,2,1]:
         grid_search(N_rf_to_search)

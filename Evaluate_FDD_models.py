@@ -11,13 +11,15 @@ def greedy_grid_search():
     N_rf = 8
     sigma2_h = 0.0001
     out = np.zeros((64, 32, 8))
-    for links in [1,2,5,10,64]:
-        for bits in [1,2,4,8,16,32]:
-            model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
-            losses = test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            out[links-1, bits-1, :] = losses
-            np.save("trained_models\Dec_13\greedy_save_here\grid_search500.npy", out)
-            print("{} links {} bits is done".format(links, bits))
+    bits_to_try = [1, 2, 3, 4, 5, 6, 7] + list(range(8, 33, 4))
+    for links in range(1, 19):
+        for bits in bits_to_try:
+            if links * (6 + bits) <= 128:
+                model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
+                losses = test_greedy(model, M=M, K=K, B=bits, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+                out[links-1, bits-1, :] = losses
+                np.save("trained_models\Dec_13\greedy_save_here\ggrid_search_all_under128_180AOE.npy", out)
+                print("{} links {} bits is done".format(links, bits))
 def partial_feedback_and_DNN_grid_search():
     M = 64
     K = 50
@@ -25,7 +27,7 @@ def partial_feedback_and_DNN_grid_search():
     N_rf = 8
     sigma2_h = 0.0001
     model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
-    bits_to_try = [1,2,3,4,5,6,7,8] + list(range(9, 33, 4))
+    bits_to_try = [1,2,3,4,5,6,7] + list(range(8, 32, 4))
     out = np.zeros((64, 32, 8))
     for links in range(1, 19):
         for bits in bits_to_try:
@@ -36,7 +38,7 @@ def partial_feedback_and_DNN_grid_search():
                 losses = test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, model_path, M=M, K=K, B=bits,
                                                           sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1] = np.maximum(out[links-1, bits-1], -losses)
-                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler.npy", out)
+                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_30half_AOE_fixed_quantization.npy", out)
                 print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
@@ -51,7 +53,7 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    ds_load = generate_link_channel_data(num_data, K, M, 1)
+    ds_load = generate_link_channel_data_fullAOE(num_data, K, M, 1)
     prediction = model(ds_load)
     counter = 1
     for i in prediction:
@@ -306,7 +308,7 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 100
+    num_data = 500
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
@@ -486,20 +488,6 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.legend()
     plt.show()
 if __name__ == "__main__":
-    # all_bits_compare_with_greedy()
-    #
-    # print(np.load("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler.npy"))
-    # A[2]
-    # from matplotlib import pyplot as plt
-    # for bits in range(2, 34, 2):
-    #     info = np.load("trained_models/Dec28/NRF=5/pretrained_encoder/GNN_annealing_temp_B={}+limit_res=6.npy".format(bits))
-    #     plot_data(info, [-1], series_name=[str(bits) + "pretrained_encoder"])
-    # for bits in [16,32,64,128]:
-    #     info = np.load("trained_models/better_quantizer/layers_{}bits_max32bits.npy".format(bits))
-    #     plot_data(info, [-1], series_name=[str(bits) + "layers"])
-    # plt.legend()
-    # plt.show()
-    # A[2]
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -523,9 +511,10 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
-    # partial_feedback_and_DNN_grid_search()
-    # partial_feedback_and_DNN_grid_search()
-    # A[2]
+
+    # greedy_grid_search()
+    partial_feedback_and_DNN_grid_search()
+    A[2]
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data
     file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B=128+limit_res=6"
@@ -547,13 +536,13 @@ if __name__ == "__main__":
     tf.random.set_seed(seed)
     np.random.seed(seed)
 
-    model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
+    model_path = "trained_models/Jan_13/GNN_annealing_temp_Nrf={}+180_half_AOE.h5"
     # model_path = file + ".h5"
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
-    mores = [2, 2, 3, 4, 5]
-    Es = [1, 2, 4, 8]
+    mores = [11]
+    Es = [5]
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 5, M, K, sigma2_n, perfect_CSI=False)

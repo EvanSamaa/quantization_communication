@@ -92,15 +92,17 @@ def get_hull(x, y):
     while True:
         if counter >= len(x)-1:
             break
-        max_slope = 0
+        max_slope = -10000
         max_index = counter
         for i in range(counter, len(x)):
             slope = (y[i]-y[counter-1])/(x[i]-x[counter-1])
             if slope > max_slope:
                 max_slope = slope
                 max_index = i
-        new_x.append(x[max_index])
-        new_y.append(y[max_index])
+        if max_slope >= 0:
+        # if True:
+            new_x.append(x[max_index])
+            new_y.append(y[max_index])
         new_counter = max_index + 1
         if new_counter == counter:
             break
@@ -110,6 +112,7 @@ def get_hull(x, y):
 def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
     greedy_up = [13.77, 23.26, 31.25, 38.16, 44.19, 49.41, 53.97, 57.97]
     gumbel_up = [13.76, 21.94, 29.66, 36.48, 42.02, 47.1, 52.01, 55.90]
+    plot_perfect_CSI = True
     for Nrf in range(Nrf, Nrf + 1):
         # add or remove points using x and y
         x = np.arange(1, 64)  # links
@@ -129,7 +132,8 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
                 out_y.append(out[i])
         out_x, out_y = get_hull(out_x, out_y)
         plt.plot(np.array(out_x), np.array(out_y), label="DNN Nrf={}".format(Nrf))
-        plt.plot(np.array([1, max(out_x)]), np.array([gumbel_up[Nrf - 1], gumbel_up[Nrf - 1]]), label="gumbel full CSI")
+        if plot_perfect_CSI:
+            plt.plot(np.array([1, max(out_x)]), np.array([gumbel_up[Nrf - 1], gumbel_up[Nrf - 1]]), label="gumbel full CSI")
         grid = np.load("grid_search_all_under128.npy")
         # add or remove points using x and y
         x = np.arange(1, 64)  # links
@@ -147,7 +151,8 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
                 out_y.append(out[i])
         out_x, out_y = get_hull(out_x, out_y)
         plt.plot(np.array(out_x), np.array(out_y), label="greedy Nrf={}".format(Nrf))
-    plt.plot(np.array([1, max(out_x)]), np.array([greedy_up[Nrf-1], greedy_up[Nrf-1]]), label="greedy full CSI")
+        if plot_perfect_CSI:
+            plt.plot(np.array([1, max(out_x)]), np.array([greedy_up[Nrf-1], greedy_up[Nrf-1]]), label="greedy full CSI")
     plt.legend()
     plt.xlabel("bits per user")
     plt.ylabel("sum rate")

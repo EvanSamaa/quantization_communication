@@ -46,7 +46,23 @@ def rebar_loss(logits, Nrf, M, K):
     z_hat = truncated_gumbel(gumbel + logits, topgumbel)
 
 
-
+def generate_link_channel_data_fullAOE(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
+    Lp = 2  # Number of Paths
+    P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
+    P = P/tf.sqrt(tf.constant(M, dtype=tf.complex64))/tf.sqrt(tf.constant(Nrf, dtype=tf.complex64))*tf.sqrt(tf.constant(100, dtype=tf.complex64))
+    P = tf.expand_dims(P, 0)
+    P = tf.tile(P, (N, 1, 1))
+    LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
+    Mainlobe_UE = np.array([0, 0], dtype=np.float32)  # Mean of the AoD range
+    HalfBW_UE = np.array([180.0, 180.0], dtype=np.float32)  # Half of the AoD range
+    h_act_batch = tf.constant(generate_batch_data(N, M, K, Lp, LSF_UE, Mainlobe_UE, HalfBW_UE), dtype=tf.complex64)
+    # taking hermecian
+    h_act_batch = tf.transpose(h_act_batch, perm=(0, 2, 1), conjugate=True)
+    G = tf.matmul(h_act_batch, P)
+    # noise = tf.complex(tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32),
+    #                    tf.random.normal(G.shape, 0, sigma2_n, dtype=tf.float32))
+    G_hat = G
+    return G_hat
 def generate_link_channel_data(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
     Lp = 2  # Number of Paths
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
