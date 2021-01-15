@@ -18,7 +18,7 @@ def greedy_grid_search():
                 model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
                 losses = test_greedy(model, M=M, K=K, B=bits, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1, :] = losses
-                np.save("trained_models\Dec_13\greedy_save_here\ggrid_search_all_under128_180AOE.npy", out)
+                np.save("trained_models/Dec_13/greedy_save_here/grid_search_all_under128_180AOE.npy", out)
                 print("{} links {} bits is done".format(links, bits))
 def partial_feedback_and_DNN_grid_search():
     M = 64
@@ -511,10 +511,9 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
-
-    # greedy_grid_search()
-    partial_feedback_and_DNN_grid_search()
+    greedy_grid_search()
     A[2]
+    # greedy_grid_search()
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data
     file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B=128+limit_res=6"
