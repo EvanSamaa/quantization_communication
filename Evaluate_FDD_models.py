@@ -358,6 +358,7 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
             #     plt.pause(0.0001)
             #     plt.close()
             # ========= ========= =========  plotting ========= ========= =========
+        tf.keras.backend.clear_session()
         return rtv
 def plot_data(arr, col=[], title="loss", series_name = None):
     from matplotlib import pyplot as plt
