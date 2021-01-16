@@ -112,12 +112,12 @@ def get_hull(x, y):
 def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
     greedy_up = [13.77, 23.26, 31.25, 38.16, 44.19, 49.41, 53.97, 57.97]
     gumbel_up = [13.76, 21.94, 29.66, 36.48, 42.02, 47.1, 52.01, 55.90]
-    plot_perfect_CSI = True
-    for Nrf in range(Nrf, Nrf + 1):
+    plot_perfect_CSI = False
+    for Nrf in range(1, 4 + 1):
         # add or remove points using x and y
         x = np.arange(1, 64)  # links
         y = np.arange(1, 32)  # bits
-        grid = np.load("partial_feedback_and_DNN_scheduler_30half_AOE_fixed_quantization.npy")
+        grid = np.load("partial_feedback_and_DNN_scheduler_180AOE.npy")
         out = np.zeros((128,))
         out_x = []
         out_y = []
