@@ -117,7 +117,7 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
         # add or remove points using x and y
         x = np.arange(1, 64)  # links
         y = np.arange(1, 32)  # bits
-        grid = np.load("partial_feedback_and_DNN_scheduler.npy")
+        grid = np.load("partial_feedback_and_DNN_scheduler_30half_AOE_fixed_quantization.npy")
         out = np.zeros((128,))
         out_x = []
         out_y = []
@@ -159,14 +159,15 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
     plt.show()
 if __name__ == "__main__":
 
-    compare_model_with_greedy_under_partial_feedback_outer_points(4)
-    A[2]
+    # compare_model_with_greedy_under_partial_feedback_outer_points(4)
+    # A[2]
     Nrf = 8
+    compare_model_with_greedy_under_partial_feedback_outer_points(8)
     for Nrf in range(Nrf, Nrf+1):
         # add or remove points using x and y
         x = np.arange(1, 65)  # links
         y = np.arange(1, 33)  # bits
-        grid = np.load("partial_feedback_and_DNN_scheduler.npy")
+        grid = np.load("partial_feedback_and_DNN_scheduler_30half_AOE_fixed_quantization.npy")
         out = np.zeros((128,))
         out_x = []
         out_y = []
