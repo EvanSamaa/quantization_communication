@@ -32,8 +32,8 @@ def partial_feedback_and_DNN_grid_search():
     for links in range(1, 19):
         for bits in bits_to_try:
             if links*(6+bits) <= 128:
-                garbage, g_max = Input_normalization_per_user(
-                    tf.abs(generate_link_channel_data(1000, K, M, Nrf=1)))
+                # garbage, g_max = Input_normalization_per_user(
+                #     tf.abs(generate_link_channel_data_fullAOE(1000, K, M, Nrf=1)))
                 # feed_back_model = k_link_feedback_model(N_rf, bits, links, M, K, g_max)
                 feed_back_model = max_min_k_link_feedback_model(1, bits, links, M, K)
                 losses = test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, model_path, M=M, K=K, B=bits,
@@ -318,7 +318,7 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
     for e in range(0, 1):
         tf.random.set_seed(200)
         np.random.seed(200)
-        ds = generate_link_channel_data(num_data, K, M, 1)
+        ds = generate_link_channel_data_fullAOE(num_data, K, M, 1)
         ds_load = ds
         ds_load_q_origial = feed_back_model(ds_load)
         for N_rf in range(1, 9):
@@ -597,6 +597,8 @@ if __name__ == "__main__":
 
     tf.random.set_seed(seed)
     np.random.seed(seed)
+    partial_feedback_and_DNN_grid_search()
+    
     # for p in range(1,17):
     #     # tf.random.set_seed(seed)
     #     # np.random.seed(seed)
