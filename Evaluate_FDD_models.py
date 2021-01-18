@@ -33,12 +33,13 @@ def partial_feedback_and_DNN_grid_search():
         for bits in bits_to_try:
             if links*(6+bits) <= 128:
                 garbage, g_max = Input_normalization_per_user(
-                    tf.abs(generate_link_channel_data_fullAOE(1000, K, M, Nrf=1)))
-                feed_back_model = k_link_feedback_model(N_rf, bits, links, M, K, g_max)
+                    tf.abs(generate_link_channel_data(1000, K, M, Nrf=1)))
+                # feed_back_model = k_link_feedback_model(N_rf, bits, links, M, K, g_max)
+                feed_back_model = max_min_k_link_feedback_model(1, bits, links, M, K)
                 losses = test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, model_path, M=M, K=K, B=bits,
                                                           sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1] = np.maximum(out[links-1, bits-1], -losses)
-                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_180AOE.npy", out)
+                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_30half_AOE_fixed_quantization.npy", out)
                 print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
@@ -317,7 +318,7 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
     for e in range(0, 1):
         tf.random.set_seed(200)
         np.random.seed(200)
-        ds = generate_link_channel_data_fullAOE(num_data, K, M, 1)
+        ds = generate_link_channel_data(num_data, K, M, 1)
         ds_load = ds
         ds_load_q_origial = feed_back_model(ds_load)
         for N_rf in range(1, 9):
@@ -446,6 +447,68 @@ def all_bits_compare_with_greedy():
     plt.ylabel("sum rate")
     plt.legend()
     plt.show()
+def compare_quantizers(p=1):
+    N = 1000
+    G = tf.abs(generate_link_channel_data(N, K, M, Nrf=1))
+    top_values, top_indices = tf.math.top_k(G, k=p)
+    G_copy = np.zeros((top_indices.shape[0], K, M))
+    for n in range(0, top_indices.shape[0]):
+        for i in range(0, K * p):
+            p_i = int(i % p)
+            user_i = int(tf.floor(i / p))
+            G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
+    G_copy = tf.constant(G_copy, dtype=tf.float32)
+    G_top_p = G_copy
+    def q_1(G_topk, B): # mean of row max
+        g_max = tf.reduce_max(G_topk, axis=2)
+        g_max = tf.reduce_mean(g_max)
+        G_temp = tf.divide(G_topk, g_max)
+        G_temp = tf.where(G_temp > 1, 1, G_temp)
+        G_temp = tf.round(G_temp * (2 ** B - 1)) / (2 ** B - 1)
+        G_temp = tf.multiply(G_temp, g_max)
+        return G_temp
+    def q_2(G_topk, B): # mean of matrix max
+        g_max = tf.reshape(G_topk, (G_topk.shape[0], M*K))
+        g_max = tf.reduce_max(g_max, axis = 1)
+        g_max = tf.reduce_mean(g_max)
+        G_temp = tf.divide(G_topk, g_max)
+        G_temp = tf.where(G_temp > 1, 1, G_temp)
+        G_temp = tf.round(G_temp * (2 ** B - 1)) / (2 ** B - 1)
+        G_temp = tf.multiply(G_temp, g_max)
+        return G_temp
+    def q_3(G_topk, B): # matrix max
+        g_max = tf.reduce_max(G_topk)
+        G_temp = tf.divide(G_topk, g_max)
+        G_temp = tf.where(G_temp > 1, 1, G_temp)
+        G_temp = tf.round(G_temp * (2 ** B - 1)) / (2 ** B - 1)
+        G_temp = tf.multiply(G_temp, g_max)
+        return G_temp
+    def q_4(G_topk, B): # limited range between max and min
+        g_max = tf.reshape(G_topk, (G_topk.shape[0], M * K))
+        g_max = tf.reduce_max(g_max, axis=1)
+        g_max = tf.reduce_mean(g_max)
+        g_min = tf.reshape(G_topk, (N, M*K))
+        g_min = tf.reduce_mean(tf.sort(g_min, axis=1)[:, (M-p)*K])
+        mask = tf.where(G_topk != 0, 1.0, 0.0)
+        G_temp = tf.divide(G_topk-mask*g_min, (g_max-g_min))
+        G_temp = tf.where(G_temp > 1, 1, G_temp)
+        G_temp = tf.round(G_temp * (2 ** B - 1)) / (2 ** B - 1)
+        G_temp = tf.multiply(G_temp, (g_max-g_min)) + g_min * mask
+        return G_temp
+
+    quantizers = [q_1, q_2, q_3, q_4]
+    output = np.zeros((16, 4))
+    for quantizer in range(4):
+        outputs = []
+        for bits in range(1, 17):
+            g_i = quantizers[quantizer](G_top_p, bits)
+            error = tf.abs(G_copy - g_i)
+            error = tf.reduce_mean(error).numpy()
+            outputs.append(error)
+        output[:, quantizer] = np.array(outputs)
+    np.save("trained_models/quantization_comparisons/link={}_basic4.npy".format(p),output)
+
+
 
 def all_bits_compare_with_greedy_plot_link_seperately():
     file1 = "trained_models/Dec28/NRF=5/pretrained_encoder/GNN_annealing_temp_B={}+limit_res=6.npy"
@@ -512,11 +575,10 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid}
-    partial_feedback_and_DNN_grid_search()
-    A[2]
     # greedy_grid_search()
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data
+
     file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B=128+limit_res=6"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
@@ -535,14 +597,28 @@ if __name__ == "__main__":
 
     tf.random.set_seed(seed)
     np.random.seed(seed)
+    # for p in range(1,17):
+    #     # tf.random.set_seed(seed)
+    #     # np.random.seed(seed)
+    #     # compare_quantizers(p)
+    #
+    #     out = np.load("trained_models/quantization_comparisons/link={}_basic4.npy".format(p))
+    #     from matplotlib import pyplot as plt
+    #     for i in range(0, 4):
+    #         plt.plot(range(1, 17), out[:, i], label = "quantizer {}".format(i+1))
+    #     plt.legend()
+    #     plt.show()
+    # A[2]
 
+
+    # compare_quantizers(1)
     model_path = "trained_models/Jan_13/GNN_annealing_temp_Nrf={}+180_half_AOE.h5"
     # model_path = file + ".h5"
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
-    mores = [11]
-    Es = [5]
+    mores = [2]
+    Es = [1]
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 5, M, K, sigma2_n, perfect_CSI=False)
@@ -567,7 +643,7 @@ if __name__ == "__main__":
             # model = partial_feedback_pure_greedy_model(N_rf, 32, i, M, K, sigma2_n)
             # model = relaxation_based_solver(M, K, N_rf)
             garbage, g_max = Input_normalization_per_user(tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
-            feed_back_model = k_link_feedback_model(N_rf, bits, links, M, K, g_max)
+            feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)
             dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
             test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)

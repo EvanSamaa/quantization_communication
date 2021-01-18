@@ -113,11 +113,11 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
     greedy_up = [13.77, 23.26, 31.25, 38.16, 44.19, 49.41, 53.97, 57.97]
     gumbel_up = [13.76, 21.94, 29.66, 36.48, 42.02, 47.1, 52.01, 55.90]
     plot_perfect_CSI = False
-    for Nrf in range(5, 8):
+    for Nrf in range(1, 9):
         # add or remove points using x and y
         x = np.arange(1, 64)  # links
         y = np.arange(1, 32)  # bits
-        grid = np.load("partial_feedback_and_DNN_scheduler_180AOE.npy")
+        grid = np.load("grid_search_all_under128_180AOE.npy")
         out = np.zeros((128,))
         out_x = []
         out_y = []
@@ -125,17 +125,18 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
             for j in y:
                 if grid[i, j].any() != 0:
                     out[i * (6 + j)] = max(grid[i - 1, j - 1, Nrf - 1], out[i * (6 + j)])
-
         for i in range(0, 128):
             if out[i] != 0:
                 out_x.append(i)
                 out_y.append(out[i])
         out_x, out_y = get_hull(out_x, out_y)
-        plt.plot(np.array(out_x), np.array(out_y), label="DNN Nrf={}".format(Nrf))
+        plt.plot(np.array(out_x), np.array(out_y), label="greedy 180 Nrf={}".format(Nrf))
         if plot_perfect_CSI:
             plt.plot(np.array([1, max(out_x)]), np.array([gumbel_up[Nrf - 1], gumbel_up[Nrf - 1]]), label="gumbel full CSI")
 
-        grid = np.load("grid_search_all_under128_180AOE.npy")
+        grid = np.load("partial_feedback_and_DNN_scheduler_180AOE.npy")
+
+
         # add or remove points using x and y
         x = np.arange(1, 64)  # links
         y = np.arange(1, 32)  # bits
@@ -145,13 +146,13 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
         for i in x:
             for j in y:
                 if grid[i, j].any() != 0:
-                    out[i * (6 + j)] = max(-grid[i - 1, j - 1, Nrf - 1], out[i * (6 + j)])
+                    out[i * (6 + j)] = max(grid[i - 1, j - 1, Nrf - 1], out[i * (6 + j)])
         for i in range(0, 128):
             if out[i] != 0:
                 out_x.append(i)
                 out_y.append(out[i])
         out_x, out_y = get_hull(out_x, out_y)
-        plt.plot(np.array(out_x), np.array(out_y), label="greedy Nrf={}".format(Nrf))
+        plt.plot(np.array(out_x), np.array(out_y), label="DNN Nrf={}".format(Nrf))
         if plot_perfect_CSI:
             plt.plot(np.array([1, max(out_x)]), np.array([greedy_up[Nrf-1], greedy_up[Nrf-1]]), label="greedy full CSI")
     plt.legend()
@@ -160,16 +161,16 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
     plt.show()
 if __name__ == "__main__":
 
-    # compare_model_with_greedy_under_partial_feedback_outer_points(4)
-    # A[2]
-    Nrf = 8
-    compare_model_with_greedy_under_partial_feedback_outer_points(8)
+    compare_model_with_greedy_under_partial_feedback_outer_points(4)
     A[2]
+    Nrf = 1
+    # compare_model_with_greedy_under_partial_feedback_outer_points(8)
+    # A[2]
     for Nrf in range(Nrf, Nrf+1):
         # add or remove points using x and y
         x = np.arange(1, 65)  # links
         y = np.arange(1, 33)  # bits
-        grid = np.load("partial_feedback_and_DNN_scheduler_30half_AOE_fixed_quantization.npy")
+        grid = np.load("partial_feedback_and_DNN_scheduler")
         out = np.zeros((128,))
         out_x = []
         out_y = []

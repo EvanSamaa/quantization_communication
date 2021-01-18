@@ -631,12 +631,47 @@ def k_link_feedback_model(N_rf, B, p, M, K, g_max):
                 G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
         G_copy = tf.constant(G_copy, dtype=tf.float32)
         G = G_copy
-        G, g_max = Input_normalization_per_user(G, g_max)
+        G = tf.divide(G, g_max)
         G = tf.where(G > 1, 1, G)
         G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
         G = tf.multiply(G, g_max)
         return G
     return model
+def max_min_k_link_feedback_model(N_rf, B, p, M, K):
+    init_ds = generate_link_channel_data(1000, K, M, N_rf)
+    G = (tf.abs(init_ds))
+    top_values, top_indices = tf.math.top_k(G, k=p)
+    G_copy = np.zeros((top_indices.shape[0], K, M))
+    for n in range(0, top_indices.shape[0]):
+        for i in range(0, K * p):
+            p_i = int(i % p)
+            user_i = int(tf.floor(i / p))
+            G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
+    G_topk = G_copy
+    g_max = tf.reshape(G_topk, (G_topk.shape[0], M * K))
+    g_max = tf.reduce_max(g_max, axis=1)
+    g_max = tf.reduce_mean(g_max)
+    g_min = tf.reshape(G_topk, (G_topk.shape[0], M * K))
+    g_min = tf.reduce_mean(tf.sort(g_min, axis=1)[:, (M - p) * K])
+    g_min = tf.cast(g_min, tf.float32)
+    g_max = tf.cast(g_max, tf.float32)
+    def q_4(G, B=B, g_max=g_max, g_min=g_min): # limited range between max and min
+        G = (tf.abs(G))
+        top_values, top_indices = tf.math.top_k(G, k=p)
+        G_copy = np.zeros((top_indices.shape[0], K, M))
+        for n in range(0, top_indices.shape[0]):
+            for i in range(0, K * p):
+                p_i = int(i % p)
+                user_i = int(tf.floor(i / p))
+                G_copy[n, user_i, int(top_indices[n, user_i, p_i])] = top_values[n, user_i, p_i]
+        G_topk = G_copy
+        mask = tf.where(G_topk != 0, 1.0, 0.0)
+        G_temp = tf.divide(G_topk-mask*g_min, (g_max-g_min))
+        G_temp = tf.where(G_temp > 1, 1, G_temp)
+        G_temp = tf.round(G_temp * (2 ** B - 1)) / (2 ** B - 1)
+        G_temp = tf.multiply(G_temp, (g_max-g_min)) + g_min * mask
+        return G_temp
+    return q_4
 class iterative_NN_scheduler():
     def __init__(self, model, iteration, loss1, lr, loss2=None):
         self.model = model
@@ -5407,7 +5442,6 @@ if __name__ == "__main__":
     G = tf.random.normal((10, M*K), 0, 1)
     outputer(tim, tf.ones((10, M*K)), G, None)
     model = CSI_reconstruction_model_seperate_decoders_chunky
-    A[2]
     FDD_RNN_model(M, K, N_rf)
     Top2Precoder_model(M, K, N_rf)
     G = generate_link_channel_data(N, K, M, N_rf)
