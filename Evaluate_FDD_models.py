@@ -39,7 +39,7 @@ def partial_feedback_and_DNN_grid_search():
                 losses = test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, model_path, M=M, K=K, B=bits,
                                                           sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1] = np.maximum(out[links-1, bits-1], -losses)
-                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_180AOE.npy_min_max_quantization.npy", out)
+                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_180AOE_min_max_quantization.npy", out)
                 print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
