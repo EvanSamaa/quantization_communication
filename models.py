@@ -637,6 +637,30 @@ def k_link_feedback_model(N_rf, B, p, M, K, g_max):
         G = tf.multiply(G, g_max)
         return G
     return model
+
+def DP_partial_feedback_pure_greedy_model_new_feedback_model(N_rf, B, p, M, K, sigma2, perfect_CSI=False, pick_top=2):
+    # uniformly quantize the values then pick the top Nrf to output
+    feed_back_model = max_min_k_link_feedback_model(1, B, p, M, K)
+    def model(G):
+        G = (tf.abs(G))
+        # quantization ===
+        G = feed_back_model(G)
+        # quantization ===
+        top_values, top_indices = tf.math.top_k(G, k=p)
+        if p > pick_top:
+            top_values, top_indices = tf.math.top_k(G, k=pick_top)
+        # top_values_quantized = top_values
+        out = []
+        prev_out = None
+        G_original = G
+        for i in range(1, N_rf+1):
+            G = G_original/tf.sqrt(i * 1.0)
+            pp = min(p, pick_top)
+            prev_out = DP_sparse_pure_greedy_hueristic(i, sigma2, K, M, pp, G, i-1, prev_out)(top_values, top_indices)
+            # print(prev_out)
+            out.append(prev_out)
+        return out
+    return model
 def max_min_k_link_feedback_model(N_rf, B, p, M, K):
     init_ds = generate_link_channel_data(1000, K, M, N_rf)
     G = (tf.abs(init_ds))

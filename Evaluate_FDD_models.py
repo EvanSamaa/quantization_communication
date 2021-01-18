@@ -15,10 +15,10 @@ def greedy_grid_search():
     for links in range(1, 19):
         for bits in bits_to_try:
             if links * (6 + bits) <= 128:
-                model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
+                model = DP_partial_feedback_pure_greedy_model_new_feedback_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
                 losses = test_greedy(model, M=M, K=K, B=bits, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1, :] = losses
-                np.save("trained_models/Dec_13/greedy_save_here/grid_search_all_under128_180AOE.npy", out)
+                np.save("trained_models/Dec_13/greedy_save_here/grid_search_all_under128_180AOE_min_max_quantization.npy", out)
                 print("{} links {} bits is done".format(links, bits))
 def partial_feedback_and_DNN_grid_search():
     M = 64
@@ -26,7 +26,7 @@ def partial_feedback_and_DNN_grid_search():
     sigma2_n = 1
     N_rf = 8
     sigma2_h = 0.0001
-    model_path = "trained_models/Jan_13/GNN_annealing_temp_Nrf={}+180_half_AOE.h5"
+    model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
     bits_to_try = [1,2,3,4,5,6,7] + list(range(8, 32, 4))
     out = np.zeros((64, 32, 8))
     for links in range(1, 19):
@@ -597,6 +597,8 @@ if __name__ == "__main__":
 
     tf.random.set_seed(seed)
     np.random.seed(seed)
+    # greedy_grid_search()
+    # A[2]
     partial_feedback_and_DNN_grid_search()
 
     # for p in range(1,17):
