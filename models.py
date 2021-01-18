@@ -638,7 +638,7 @@ def k_link_feedback_model(N_rf, B, p, M, K, g_max):
         return G
     return model
 def max_min_k_link_feedback_model(N_rf, B, p, M, K):
-    init_ds = generate_link_channel_data_fullAOE(1000, K, M, N_rf)
+    init_ds = generate_link_channel_data(1000, K, M, N_rf)
     G = (tf.abs(init_ds))
     top_values, top_indices = tf.math.top_k(G, k=p)
     G_copy = np.zeros((top_indices.shape[0], K, M))
