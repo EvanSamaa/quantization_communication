@@ -111,7 +111,7 @@ def grid_search_relax(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Jan_18/test_dnn_Nrf={}_more_rounds".format(N_rf)
+    fname_template_template = "trained_models/Jan_18/test_dnn_Nrf={}_15_rounds".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -132,9 +132,9 @@ def grid_search_relax(N_rf = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.0001
+    lr = 0.001
     N = 50 # number of
-    rounds = 10
+    rounds = 15
     sample_size = 50
     temp = 0.1
     check = 50
@@ -157,7 +157,6 @@ def grid_search_relax(N_rf = 8):
         ###################### training happens here ######################
         for e in range(0, rounds):
             temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
-            print(temp)
             temp = np.float32(temp)
             train_hard_loss.reset_states()
             train_loss.reset_states()
