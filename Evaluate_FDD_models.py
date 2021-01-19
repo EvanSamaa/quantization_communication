@@ -601,7 +601,7 @@ if __name__ == "__main__":
 
 
     # compare_quantizers(1)
-    model_path = "trained_models/Jan_13/GNN_annealing_temp_Nrf={}+180_half_AOE.h5"
+    model_path = "trained_models/Jan_18/test_dnn_Nrf={}_less_layer.h5"
     # model_path = file + ".h5"
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
