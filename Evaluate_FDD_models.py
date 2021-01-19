@@ -169,7 +169,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 1000
+    num_data = 5
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -189,7 +189,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
 
         # for i in range(0, num_data):
         from matplotlib import pyplot as plt
-        for k in range(0, 0):
+        for k in range(4, 5):
             G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 64, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
             for i in range(0,5):
                 prediction = scheduled_output[:, i]
@@ -601,7 +601,7 @@ if __name__ == "__main__":
 
 
     # compare_quantizers(1)
-    model_path = "trained_models/Jan_18/test_dnn_Nrf={}_less_layer.h5"
+    model_path = "trained_models/Jan_18/test_dnn_Nrf={}_15_rounds.h5"
     # model_path = file + ".h5"
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
@@ -616,7 +616,7 @@ if __name__ == "__main__":
         for j in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = 8
+            N_rf = 7
             links = j
             bits = i
             print("========================================== links =", j, "bits = ", i)

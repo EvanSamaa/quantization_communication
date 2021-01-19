@@ -110,6 +110,9 @@ def get_hull(x, y):
 
     return new_x, new_y
 def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
+    grid = np.load("grid_search_all_under128_180AOE_min_max_quantization.npy")
+    print(np.max(grid[:,:,6]))
+    A[2]
     greedy_up = [13.77, 23.26, 31.25, 38.16, 44.19, 49.41, 53.97, 57.97]
     gumbel_up = [13.76, 21.94, 29.66, 36.48, 42.02, 47.1, 52.01, 55.90]
     plot_perfect_CSI = False

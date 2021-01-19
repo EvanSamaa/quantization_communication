@@ -792,7 +792,18 @@ def nrf2expected_loss(N_rf, M, K, sigma):
         loss = tf.reduce_mean(tim)
         return -loss
     return loss_fn
-
+def mutex_loss(N_rf, M, K, N):
+    def loss_fn(out):
+        sm_out = tf.keras.layers.Softmax(axis=1)(out)
+        sub1 = tf.tile(tf.expand_dims(1 - sm_out, axis=3), [1,1,1,N_rf])
+        one = tf.tile(tf.expand_dims(tf.expand_dims(tf.ones((N_rf, N_rf)), axis=0), axis=1), [N, M*K, 1, 1])
+        one = tf.multiply(one, sub1)
+        sub1 = sub1 - one
+        one = tf.reduce_sum(one, axis=2)
+        loss = tf.multiply(one, tf.reduce_prod(sub1, axis=3))
+        loss = tf.reduce_mean(loss)
+        return -loss
+    return loss_fn
 
 def Sum_rate_utility_WeiCui_all_link_streaming(K, M, sigma2):
     # sigma2 here is the variance of the noise
