@@ -111,7 +111,7 @@ def grid_search_relax(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Jan_18/test_dnn_Nrf={}_15_rounds".format(N_rf)
+    fname_template_template = "trained_models/Jan_18/test_dnn_Nrf={}0.05Base_temp".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -134,7 +134,7 @@ def grid_search_relax(N_rf = 8):
     EPOCHS = 100000
     lr = 0.001
     N = 50 # number of
-    rounds = 15
+    rounds = 5
     sample_size = 50
     temp = 0.1
     check = 50
@@ -156,7 +156,7 @@ def grid_search_relax(N_rf = 8):
         train_data = generate_link_channel_data_fullAOE(N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         for e in range(0, rounds):
-            temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
+            temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((400.0-i)/400.0)) + 0.05
             temp = np.float32(temp)
             train_hard_loss.reset_states()
             train_loss.reset_states()
