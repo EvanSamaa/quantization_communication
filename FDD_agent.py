@@ -246,7 +246,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     train_sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
-    mutex_loss_fn = mutex_loss(N_rf, M, K, N*sample_size)
+    mutex_loss_fn = mutex_loss(N_rf, M, K, N)
     ################################ storing train data in npy file  ##############################
     # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
     max_acc = 0
@@ -265,8 +265,8 @@ def grid_search_with_mutex_loss(N_rf = 8):
             with tf.GradientTape(persistent=True) as tape:
                 ###################### model post-processing ######################
                 ans, raw_ans = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
-                raw_ans = tf.transpose(raw_ans, [0, 1, 3, 2])
-                out_raw = tf.reshape(raw_ans[:,-1], [N * N_rf, K*M])
+                out_raw = tf.transpose(raw_ans, [0, 1, 3, 2])
+                out_raw = tf.reshape(out_raw[:,-1], [N * N_rf, K*M])
                 sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw)
                 out_raw = sm.sample(sample_size)
                 out_raw = tf.reshape(out_raw, [sample_size, N, N_rf, K*M])
