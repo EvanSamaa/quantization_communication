@@ -169,7 +169,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 5
+    num_data = 50
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
@@ -182,14 +182,16 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
-        scheduled_output, raw_output = model.predict(ds, batch_size=50)
+        # scheduled_output, raw_output = model.predict(ds, batch_size=50)
+        # prediction = scheduled_output[:, -1]
+        prediction = model(ds_load)[-1]
         # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
 
         # scheduled_output, raw_output, recon = model(ds_load)
 
         # for i in range(0, num_data):
         from matplotlib import pyplot as plt
-        for k in range(4, 5):
+        for k in range(5, 5):
             G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 64, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
             for i in range(0,5):
                 prediction = scheduled_output[:, i]
@@ -201,8 +203,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
             # tf.concat([reconstructed_input[k], tf.zeros((50, 20)), tf.abs(ds_load[k])], axis=1)
 
             plt.show()
-        # A[2]
-        prediction = scheduled_output[:, -1]
+        # prediction = scheduled_output[:, -1]
         out = loss_fn1(prediction, tf.abs(ds_load))
         result[0] = tf.reduce_mean(out)
         result[1] = loss_fn2(prediction)
@@ -608,7 +609,7 @@ if __name__ == "__main__":
     # plot_data(training_data, [0, 3], "-sum rate")
     mores = [2]
     Es = [1]
-    # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=False)
+    model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 5, M, K, sigma2_n, perfect_CSI=False)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
@@ -616,7 +617,7 @@ if __name__ == "__main__":
         for j in mores:
             tf.random.set_seed(seed)
             np.random.seed(seed)
-            N_rf = 7
+            N_rf = 8
             links = j
             bits = i
             print("========================================== links =", j, "bits = ", i)
@@ -633,9 +634,10 @@ if __name__ == "__main__":
             # model = relaxation_based_solver(M, K, N_rf)
             # garbage, g_max = Input_normalization_per_user(tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
             # feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)
-            dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            # dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            model = DP_partial_feedback_pure_greedy_model_new_feedback_model(N_rf, 64, 10, M, K, sigma2_n, perfect_CSI=True)
             # test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-            test_performance(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
