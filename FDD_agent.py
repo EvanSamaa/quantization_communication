@@ -156,7 +156,7 @@ def grid_search_relax(N_rf = 8):
         train_data = generate_link_channel_data_fullAOE(N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         for e in range(0, rounds):
-            temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.max(0, ((200-i)/200)) + 0.1
+            temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0, ((200-i)/200)) + 0.1
             temp = np.float32(temp)
             train_hard_loss.reset_states()
             train_loss.reset_states()
