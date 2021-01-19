@@ -4185,6 +4185,48 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     model = Model(inputs, output, name="scheduler")
     return model
+def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
+    def self_agent_dnn(input_shape):
+        inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
+        x = Dense(128, name="Dense1_inside_DNN{}".format(i))(inputs)
+        x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
+        x = sigmoid(x)
+        x = Dense(128, name="Dense2_inside_DNN{}".format(i))(x)
+        x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
+        x = sigmoid(x)
+        x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)
+        model = Model(inputs, x, name="DNN_within_model{}".format(i))
+        return model
+    inputs = Input(shape=(K, M), dtype=tf.complex64)
+    input_mod = tf.abs(inputs)
+    if normalization:
+        input_mod = tf.divide(input_mod, avg_max)
+    input_mod = tf.square(input_mod)
+    input_modder = Per_link_Input_modification_most_G_raw_self(K, M, N_rf, k)
+    sm = tf.keras.layers.Softmax(axis=1)
+    dnns = self_agent_dnn((M * K ,16 + N_rf))
+    raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
+    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
+    input_i = input_modder(raw_out_put_0, input_mod, k - 1.0)
+    # input_i = input_modder(output_0, input_mod, k - 1.0)
+    raw_out_put_i = dnns(input_i)
+    out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2) # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    # begin the second - kth iteration
+    for times in range(1, k):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
+        input_i = input_modder(raw_out_put_i, input_mod, k - times - 1.0)
+        # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        raw_out_put_i = dnns(input_i)
+        out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
+        # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+    model = Model(inputs, output, name="scheduler")
+    return model
 def FDD_per_link_archetecture_more_G_original(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)

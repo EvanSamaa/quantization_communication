@@ -599,7 +599,7 @@ if __name__ == "__main__":
     np.random.seed(seed)
     # greedy_grid_search()
     # A[2]
-    partial_feedback_and_DNN_grid_search()
+    # partial_feedback_and_DNN_grid_search()
 
     # for p in range(1,17):
     #     # tf.random.set_seed(seed)
