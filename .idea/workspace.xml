@@ -20,6 +20,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/trained_models/Jan_18/with_mutex_and_decaying_0p5/t.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FDD_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/FDD_agent.py" afterDir="false" />
     </list>
@@ -128,6 +129,10 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="706" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1611039796840">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="706" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1611039796840" />
     <state width="1899" height="288" key="GridCell.Tab.0.bottom" timestamp="1611039163641">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
