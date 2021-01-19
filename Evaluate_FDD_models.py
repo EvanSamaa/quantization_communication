@@ -178,22 +178,11 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
     print("Testing Starts")
     for e in range(0, 1):
-        ds = generate_link_channel_data(num_data, K, M, N_rf)
+        ds = generate_link_channel_data_fullAOE(num_data, K, M, N_rf)
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
-
-        valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
-        garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
-        q_train_data = tf.abs(ds_load) / max_val
-        q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
-        q_train_data = tf.round(q_train_data * (2 ** 4 - 1)) / (2 ** 4 - 1) * max_val
-        # prediction = ensumble_output(ds_load, model, k, loss_fn1) # this outputs (N, M*K, k)
-        # prediction = model.predict(ds_load, batch_size=10)
-        # prediction = model(ds_load)
-        # compressed_G, position_matrix = G_compress(ds_load, 2)
-        # scheduled_output, raw_output = model.predict_on_batch([ds_load, compressed_G, position_matrix])
-        scheduled_output, raw_output, reconstructed_input = model.predict(q_train_data, batch_size=50)
+        scheduled_output, raw_output = model.predict(ds, batch_size=50)
         # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
 
         # scheduled_output, raw_output, recon = model(ds_load)
@@ -202,15 +191,14 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         from matplotlib import pyplot as plt
         for k in range(0, num_data):
             G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 64, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-            # for i in range(0,5):
-            #     prediction = scheduled_output[:, i]
-            #     # plt.imshow(tf.reshape(prediction[k], (K, M)))
-            #     plt.plot(np.arange(0, K*M), G_pred[-1][0])
-            #     plt.plot(np.arange(0, K*M), prediction[k])
-            #
-            #     plt.show()
+            for i in range(0,5):
+                prediction = scheduled_output[:, i]
+                # plt.imshow(tf.reshape(prediction[k], (K, M)))
+                plt.plot(np.arange(0, K*M), G_pred[-1][0])
+                plt.plot(np.arange(0, K*M), prediction[k])
+
+                plt.show()
             # tf.concat([reconstructed_input[k], tf.zeros((50, 20)), tf.abs(ds_load[k])], axis=1)
-            plt.imshow(tf.concat([tf.abs(reconstructed_input[k]), tf.zeros((20, 64)), tf.abs(ds_load[k])], axis=0))
 
             plt.show()
         # A[2]
@@ -507,9 +495,6 @@ def compare_quantizers(p=1):
             outputs.append(error)
         output[:, quantizer] = np.array(outputs)
     np.save("trained_models/quantization_comparisons/link={}_basic4.npy".format(p),output)
-
-
-
 def all_bits_compare_with_greedy_plot_link_seperately():
     file1 = "trained_models/Dec28/NRF=5/pretrained_encoder/GNN_annealing_temp_B={}+limit_res=6.npy"
     file2 = "trained_models/Dec28/NRF=5/GNN_annealing_temp_B={}+limit_res=6.npy"
@@ -646,10 +631,11 @@ if __name__ == "__main__":
             # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
             # model = partial_feedback_pure_greedy_model(N_rf, 32, i, M, K, sigma2_n)
             # model = relaxation_based_solver(M, K, N_rf)
-            garbage, g_max = Input_normalization_per_user(tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
-            feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)
+            # garbage, g_max = Input_normalization_per_user(tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
+            # feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)
             dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
-            test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            # test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            test_performance(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
