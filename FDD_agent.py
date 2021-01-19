@@ -170,7 +170,7 @@ def grid_search_relax(N_rf = 8):
                 out_raw = tf.reshape(out_raw, [sample_size, N, N_rf, K*M])
                 out = tf.reduce_sum(out_raw, axis=2)
                 out = tf.reshape(out, [sample_size*N, K*M])
-                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [100,1, 1, 1]), [100*N, K, M])
+                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
                 ###################### model post-processing ######################
                 loss = train_sum_rate(out, train_label)
             gradients = tape.gradient(loss, model.trainable_variables)
