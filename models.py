@@ -4198,11 +4198,11 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
         x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
         # x = sigmoid(x)
-        x = tf.math.log(1+x)
+        x = tf.math.log(1+tf.exp(x))
         x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
         # x = sigmoid(x)
-        x = tf.math.log(1+x)
+        x = tf.math.log(1+tf.exp(x))
         x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)
         model = Model(inputs, x, name="DNN_within_model{}".format(i))
         return model
