@@ -733,6 +733,8 @@ class iterative_NN_scheduler():
             del tape
         return scheduled_output, raw_output
 
+############################## Custom Layers ##############################
+
 class Closest_embedding_layer(tf.keras.layers.Layer):
     def __init__(self, user_count=2, embedding_count=8, bit_count=15, i=0, **kwargs):
         super(Closest_embedding_layer, self).__init__()
@@ -2468,7 +2470,6 @@ class AllInput_input_mod(tf.keras.layers.Layer):
             'name': "AllInput_input_mod"
         })
         return config
-
 class Distributed_input_mod(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Distributed_input_mod, self).__init__()
@@ -2739,7 +2740,6 @@ class Per_link_Input_modification_most_G_with_mask(tf.keras.layers.Layer):
             'Mm': None
         })
         return config
-
 class TopPrecoderPerUserInputMod(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, top_l, **kwargs):
         super(TopPrecoderPerUserInputMod, self).__init__()
@@ -2814,7 +2814,6 @@ def G_compress(G, top_l=2):
             position_matrix[n, i, int(top_indices[n, int(user_i.numpy()), p_i])] = 1.0
     position_matrix = tf.Variable(position_matrix, dtype=tf.float32, trainable=False)
     return compressed_G, position_matrix
-
 class X_extends(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, num, **kwargs):
         super(X_extends, self).__init__()
@@ -2847,6 +2846,14 @@ class X_extends(tf.keras.layers.Layer):
             'name': "X_extends",
         })
         return config
+
+
+@tf.custom_gradient
+def rebar_sm(x):
+  e = tf.exp(x)
+  def grad(dy):
+    return dy * (1 - 1 / (1 + e))
+  return tf.math.log(1 + e), grad
 
 ############################## MLP modes ##############################
 def create_MLP_model(input_shape, k):
@@ -4190,10 +4197,12 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
         inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
         x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
-        x = sigmoid(x)
+        # x = sigmoid(x)
+        x = tf.log(1+x)
         x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
-        x = sigmoid(x)
+        # x = sigmoid(x)
+        x = tf.log(1+x)
         x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)
         model = Model(inputs, x, name="DNN_within_model{}".format(i))
         return model
