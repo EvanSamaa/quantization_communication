@@ -388,7 +388,7 @@ def grid_search_REBAR(N_rf = 8):
                 ###################### model post-processing ######################
                 # print(model.shape)
                 ans, raw_ans = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
-                out_put_func(raw_ans, train_data, nu)
+                loss = out_put_func(raw_ans, train_data, nu)
 
                 # out_raw = tf.transpose(raw_ans[:,-1], [0, 2, 1])
                 # out_raw = tf.tile(out_raw, [sample_size, 1, 1])
@@ -399,7 +399,7 @@ def grid_search_REBAR(N_rf = 8):
                 #              *rep.rebar_params(train_sum_rate, nu, train_label, N*sample_size, N_rf, K, M), [out_raw], params=model.trainable_variables, var_params=[nu])
 
                 ###################### model post-processing ######################
-                loss = train_sum_rate(ans[:,-1], train_data) + 0.01*mutex_loss_fn(raw_ans[:, -1])
+                # loss = train_sum_rate(ans[:,-1], train_data) + 0.01*mutex_loss_fn(raw_ans[:, -1])
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
             # optimizer.minimize(loss, ans)
