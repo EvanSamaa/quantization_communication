@@ -82,7 +82,7 @@ class DiscreteReparam:
                     self.gatedzb = self.softgate(self.zb, self.temperature)
             self.logp = self.logpdf(self.param, self.b)
 
-    def rebar_params(self, f_loss, weight):
+    def rebar_params(self, f_loss, weight, gains, N, N_rf, K, M):
         """Returns parameters for relax.RELAX() function corresponding to a
         standard REBAR estimator.
 
@@ -100,9 +100,16 @@ class DiscreteReparam:
                 (loss, control, conditional_control, logp) expected by the
                 RELAX function.
         """
-        return (f_loss(self.b),
-                np.float32(weight)*f_loss(self.gatedz),
-                np.float32(weight)*f_loss(self.gatedzb),
+        b_f = tf.reshape(self.b, [N, N_rf, K * M])
+        gatedz_f = tf.reshape(self.gatedz, [N, N_rf, K * M])
+        gatedzb_f = tf.reshape(self.gatedzb, [N, N_rf, K * M])
+        b_f = tf.reduce_sum(b_f, axis=1)
+        gatedz_f = tf.reduce_sum(gatedz_f, axis=1)
+        gatedzb_f = tf.reduce_sum(gatedzb_f, axis=1)
+
+        return (f_loss(b_f, gains),
+                np.float32(weight)*f_loss(gatedz_f, gains),
+                np.float32(weight)*f_loss(gatedzb_f, gains),
                 self.logp)
 
     @staticmethod
@@ -124,8 +131,6 @@ class DiscreteReparam:
     @staticmethod
     def coupling(param, b, u):
         raise(NotImplementedError)
-
-
 class BinaryReparam(DiscreteReparam):
     """DiscreteReparam subclass implementing reparameterization for
         binary ({0,1} Bernoulli) random variables.
@@ -155,8 +160,6 @@ class BinaryReparam(DiscreteReparam):
         v = ((1. - b) * (u/tf.clip_by_value(uprime, EPSILON, 1.)) +
              b * ((u - uprime) / tf.clip_by_value(1.-uprime, EPSILON, 1.)))
         return tf.clip_by_value(v, 0., 1.)
-
-
 def binary_forward(param, noise=None):
     """draw reparameterization z of binary variable b from p(z)."""
     if noise is not None:

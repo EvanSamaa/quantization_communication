@@ -10,7 +10,7 @@ EPSILON = 1e-16
 def killnan(X):
     return tf.where(tf.is_nan(X), tf.zeros_like(X), X)
 
-def RELAX(tape, loss_fn, loss, control, conditional_control, logp,
+def RELAX(tape, loss_fn, N, N_rf, K, M, gain_matrix, loss, control, conditional_control, logp,
           hard_params, params=[], var_params=[], weight=1.,
           handle_nan=False, summaries=False, report=False):
     '''Estimate the gradient of "loss" with respect to "hard_params" which
@@ -48,7 +48,9 @@ def RELAX(tape, loss_fn, loss, control, conditional_control, logp,
         blocked_approx_gap = approx_gap + tf.stop_gradient(approx_gap - approx_gap)
         with tf.name_scope("pure_grad"):
             # compute gradient of loss outside of dependence through b.
-            pure_grads = tape.gradient([tf.reduce_mean(loss_fn(hard_params[0]))], hard_params)
+            temp_val = tf.reshape(hard_params[0], [N, N_rf, K * M])
+            temp_val = tf.reduce_sum(temp_val, axis=1)
+            pure_grads = tape.gradient([tf.reduce_mean(loss_fn(temp_val, gain_matrix))], hard_params)
         with tf.name_scope("score"):
             scores = tape.gradient([tf.reduce_mean(logp*blocked_approx_gap)], hard_params)
         # scores = tf.contrib.graph_editor.graph_replace(scores, {blocked_approx_gap: approx_gap})
@@ -61,7 +63,7 @@ def RELAX(tape, loss_fn, loss, control, conditional_control, logp,
         gradcollection = list(zip(pure_grads, relax_grads, hard_params, scores))
         hard_params_grads = []
         vectorized = []
-        #var_params_grads = [(tf.zeros_like(var_param), var_param)
+        # var_params_grads = [(tf.zeros_like(var_param), var_param)
         #                    for var_param in var_params]
         if summaries:
             tf.summary.scalar('approx_gap', approx_gap)
@@ -85,32 +87,19 @@ def RELAX(tape, loss_fn, loss, control, conditional_control, logp,
                     full_grad += weight*relax_grad
                 hard_params_grads += [(full_grad, hard_param)]
                 vectorized.append(tf.reshape(full_grad, (-1,)))
-            with tf.name_scope("variance_grad"):
-                grad_vec = tf.reduce_mean(tf.concat(vectorized, axis=0))
-                grad_grads = tape.gradient(grad_vec, var_params)
-                if handle_nan:
-                    grad_grads = [killnan(grad) for grad in grad_grads]
-                var_params_grads = [(2*grad_vec*grad_grad, var_param)
-                                    for grad_grad, var_param in zip(grad_grads, var_params)]
+            # with tf.name_scope("variance_grad"):
+            #     grad_vec = tf.reduce_mean(tf.concat(vectorized, axis=0))
+            #     grad_grads = tape.gradient(grad_vec, var_params)
+            #     if handle_nan:
+            #         grad_grads = [killnan(grad) for grad in grad_grads]
+            #     var_params_grads = [(2*grad_vec*grad_grad, var_param)
+            #                         for grad_grad, var_param in zip(grad_grads, var_params)]
 
-                if summaries:
-                    tf.summary.histogram("relax_grad_"+hard_param.name.replace(":","_"), relax_grad)
-                    tf.summary.histogram("score_grad_"+hard_param.name.replace(":","_"), score_grad)
-
-        with tf.name_scope("params_grad"):
-            # ordinary parameter gradients
-            params_grads = list(zip(tape.gradient(loss, params), params))
-        if report:
-            reinforce = tape.gradient(logp*tf.stop_gradient(loss), hard_params)
-            only_scores = tape.gradient(tf.reduce_mean(logp), hard_params)
-            bias = tf.gradients(tf.reduce_mean(logp*tf.stop_gradient(conditional_control)), hard_params)
-            relax_control = tape.gradient(tf.reduce_mean(control), hard_params)
-            relax_conditional_control = tape.gradient(tf.reduce_mean(conditional_control), hard_params)
-            report_collection = [reinforce, scores, relax_control, relax_conditional_control, bias, only_scores]
-            return hard_params_grads + params_grads, var_params_grads, report_collection #+ [(weight_grad, weight)]
-
-        else:
-            return hard_params_grads + params_grads, var_params_grads #+ [(weight_grad, weight)]
+        # with tf.name_scope("params_grad"):
+        #     # ordinary parameter gradients
+        #     params_grads = list(zip(tape.gradient(loss, params), params))
+        return full_grad #+ [(weight_grad, weight)]
+        # return params_grads
 
 if __name__ is "__main__":
 
