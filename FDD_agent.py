@@ -331,6 +331,7 @@ def grid_search_REBAR(N_rf = 8):
     sigma2_h = 6.3
     sigma2_n = 1.0
 
+
     ############################### generate data ###############################
     valid_data = generate_link_channel_data_fullAOE(1000, K, M, Nrf=N_rf)
     from matplotlib import pyplot as plt
@@ -340,7 +341,7 @@ def grid_search_REBAR(N_rf = 8):
     lr = 0.001
     N = 50 # number of
     rounds = 5
-    sample_size = 25
+    sample_size = 10
     temp = 0.1
     check = 100
     model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
@@ -353,6 +354,21 @@ def grid_search_REBAR(N_rf = 8):
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
     mutex_loss_fn = mutex_loss(N_rf, M, K, N)
+
+    @tf.custom_gradient
+    def out_put_func(raw_ans, train_data, nu):
+        out_raw = tf.transpose(raw_ans[:, -1], [0, 2, 1])
+        out_raw = tf.tile(out_raw, [sample_size, 1, 1])
+        out_raw = tf.reshape(out_raw, [N * sample_size * N_rf, K * M])
+        rep = CategoricalReparam(out_raw)
+        train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size, 1, 1, 1]),
+                                 [sample_size * N, K, M])
+        def grad(dy):
+            return dy * RELAX(tape, train_sum_rate, N * sample_size, N_rf, K, M, train_label,
+                     *rep.rebar_params(train_sum_rate, nu, train_label, N * sample_size, N_rf, K, M), [out_raw],
+                     params=model.trainable_variables, var_params=[nu])
+
+        return 1.0, grad
     ################################ storing train data in npy file  ##############################
     # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
     max_acc = 0
@@ -372,17 +388,19 @@ def grid_search_REBAR(N_rf = 8):
                 ###################### model post-processing ######################
                 # print(model.shape)
                 ans, raw_ans = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
-                # raw_ans = model / 8 / 3200
-                out_raw = tf.transpose(raw_ans[:,-1], [0, 2, 1])
-                out_raw = tf.tile(out_raw, [sample_size, 1, 1])
-                out_raw = tf.reshape(out_raw, [N * sample_size * N_rf, K * M])
-                rep = CategoricalReparam(out_raw)
-                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size, 1, 1, 1]), [sample_size * N, K, M])
-                grad = RELAX(tape, train_sum_rate, N*sample_size, N_rf, K, M, train_label,
-                             *rep.rebar_params(train_sum_rate, nu, train_label, N*sample_size, N_rf, K, M), [out_raw], params=model.trainable_variables, var_params=[nu])
+                out_put_func(raw_ans, train_data, nu)
+
+                # out_raw = tf.transpose(raw_ans[:,-1], [0, 2, 1])
+                # out_raw = tf.tile(out_raw, [sample_size, 1, 1])
+                # out_raw = tf.reshape(out_raw, [N * sample_size * N_rf, K * M])
+                # rep = CategoricalReparam(out_raw)
+                # train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size, 1, 1, 1]), [sample_size * N, K, M])
+                # grad = RELAX(tape, train_sum_rate, N*sample_size, N_rf, K, M, train_label,
+                #              *rep.rebar_params(train_sum_rate, nu, train_label, N*sample_size, N_rf, K, M), [out_raw], params=model.trainable_variables, var_params=[nu])
+
                 ###################### model post-processing ######################
                 loss = train_sum_rate(ans[:,-1], train_data) + 0.01*mutex_loss_fn(raw_ans[:, -1])
-            gradients = tape.gradient(grad, model.trainable_variables)
+            gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
@@ -416,6 +434,7 @@ def grid_search_REBAR(N_rf = 8):
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
+
 if __name__ == "__main__":
     for N_rf_to_search in [8,7,6,5,4,3,2,1]:
         grid_search_REBAR(N_rf_to_search)
