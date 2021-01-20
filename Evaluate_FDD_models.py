@@ -182,21 +182,23 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
-        # scheduled_output, raw_output = model.predict(ds, batch_size=50)
-        # prediction = scheduled_output[:, -1]
-        prediction = model(ds_load)[-1]
+        scheduled_output, raw_output = model.predict(ds, batch_size=50)
+        prediction = scheduled_output[:, -1]
+        # prediction = model(ds_load)[-1]
         # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
 
         # scheduled_output, raw_output, recon = model(ds_load)
 
         # for i in range(0, num_data):
         from matplotlib import pyplot as plt
-        for k in range(5, 5):
+        for k in range(4, 5):
             G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 64, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
             for i in range(0,5):
                 prediction = scheduled_output[:, i]
+                prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
                 # plt.imshow(tf.reshape(prediction[k], (K, M)))
-                plt.plot(np.arange(0, K*M), G_pred[-1][0])
+                # plt.plot(np.arange(0, K*M), G_pred[-1][0])
+                plt.plot(np.arange(0, K*M), prediction_hard[k])
                 plt.plot(np.arange(0, K*M), prediction[k])
 
                 plt.show()
@@ -540,10 +542,6 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.legend()
     plt.show()
 if __name__ == "__main__":
-    fn = "trained_models/Jan_18/test_dnn_Nrf=8soft_RELU.npy"
-    f = np.load(fn)
-    print(f[:,-1].min())
-    A[2]
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -640,10 +638,10 @@ if __name__ == "__main__":
             # model = relaxation_based_solver(M, K, N_rf)
             # garbage, g_max = Input_normalization_per_user(tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
             # feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)
-            # dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
-            model = DP_partial_feedback_pure_greedy_model_new_feedback_model(N_rf, 64, 10, M, K, sigma2_n, perfect_CSI=True)
+            dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            # model = DP_partial_feedback_pure_greedy_model_new_feedback_model(N_rf, 64, 10, M, K, sigma2_n, perfect_CSI=True)
             # test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-            test_performance(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            test_performance(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^

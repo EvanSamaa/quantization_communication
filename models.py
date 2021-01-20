@@ -4221,8 +4221,8 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
 
-    # out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2) # (None, K*M)
-    out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)  # (None, K*M)
+    out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2) # (None, K*M)
+    # out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)  # (None, K*M)
 
     output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
     # begin the second - kth iteration
@@ -4232,10 +4232,10 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
         input_i = input_modder(raw_out_put_i, input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
-        if times == k-1:
-            out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
-        else:
-            out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)
+        # if times == k-1:
+        out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
+        # else:
+        #     out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)
         # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
