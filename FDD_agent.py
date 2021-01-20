@@ -214,7 +214,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Jan_18/test_dnn_Nrf={}100xmutex".format(N_rf)
+    fname_template_template = "trained_models/Jan_18/test_DNN_sigmoid".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -354,21 +354,24 @@ def grid_search_REBAR(N_rf = 8):
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
     mutex_loss_fn = mutex_loss(N_rf, M, K, N)
+    def custom_loss_fun(train_data, nu):
+        @tf.custom_gradient
+        def out_put_func(raw_ans):
+            def grad(dy):
+                out_raw = tf.transpose(raw_ans[:, -1], [0, 2, 1])
+                out_raw = tf.tile(out_raw, [sample_size, 1, 1])
+                out_raw = tf.reshape(out_raw, [N * sample_size * N_rf, K * M])
+                rep = CategoricalReparam(out_raw)
+                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size, 1, 1, 1]),
+                                         [sample_size * N, K, M])
+                tep = RELAX(tape, train_sum_rate, N * sample_size, N_rf, K, M, train_label,
+                            *rep.rebar_params(train_sum_rate, nu, train_label, N * sample_size, N_rf, K, M), [out_raw],
+                            params=model.trainable_variables, var_params=[nu])
+                print(tep)
+                return dy * tep
 
-    @tf.custom_gradient
-    def out_put_func(raw_ans, train_data, nu):
-        out_raw = tf.transpose(raw_ans[:, -1], [0, 2, 1])
-        out_raw = tf.tile(out_raw, [sample_size, 1, 1])
-        out_raw = tf.reshape(out_raw, [N * sample_size * N_rf, K * M])
-        rep = CategoricalReparam(out_raw)
-        train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size, 1, 1, 1]),
-                                 [sample_size * N, K, M])
-        def grad(dy):
-            return dy * RELAX(tape, train_sum_rate, N * sample_size, N_rf, K, M, train_label,
-                     *rep.rebar_params(train_sum_rate, nu, train_label, N * sample_size, N_rf, K, M), [out_raw],
-                     params=model.trainable_variables, var_params=[nu])
-
-        return 1.0, grad
+            return 1.0, grad
+        return out_put_func
     ################################ storing train data in npy file  ##############################
     # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
     max_acc = 0
@@ -388,7 +391,7 @@ def grid_search_REBAR(N_rf = 8):
                 ###################### model post-processing ######################
                 # print(model.shape)
                 ans, raw_ans = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
-                loss = out_put_func(raw_ans, train_data, nu)
+                loss = custom_loss_fun(train_data, nu)(raw_ans)
 
                 # out_raw = tf.transpose(raw_ans[:,-1], [0, 2, 1])
                 # out_raw = tf.tile(out_raw, [sample_size, 1, 1])
@@ -437,4 +440,4 @@ def grid_search_REBAR(N_rf = 8):
 
 if __name__ == "__main__":
     for N_rf_to_search in [8,7,6,5,4,3,2,1]:
-        grid_search_REBAR(N_rf_to_search)
+        grid_search_with_mutex_loss(N_rf_to_search)
