@@ -26,7 +26,7 @@ def partial_feedback_and_DNN_grid_search():
     sigma2_n = 1
     N_rf = 8
     sigma2_h = 0.0001
-    model_path = "trained_models/Dec_13/test_dnn_Nrf={}100xmutex.h5"
+    model_path = "trained_models/Jan_18/test_dnn_Nrf={}100xmutex.h5"
     bits_to_try = [1,2,3,4,5,6,7] + list(range(8, 32, 4))
     out = np.zeros((64, 32, 8))
     for links in range(1, 19):
