@@ -555,4 +555,4 @@ def grid_search_with_emsemble(N_rf = 8):
 
 if __name__ == "__main__":
     for N_rf_to_search in [8]:
-        grid_search_with_mutex_loss(N_rf_to_search)
+        grid_search_with_emsemble(N_rf_to_search)
