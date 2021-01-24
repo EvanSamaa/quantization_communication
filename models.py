@@ -4453,7 +4453,7 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     model = Model(inputs, output, name="scheduler{}".format(i))
     return model
-def FDD_agent_more_G_(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
+def FDD_agent_more_G_with_moderator(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     def self_agent_dnn(input_shape, i=i):
         inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
         x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
@@ -4466,6 +4466,11 @@ def FDD_agent_more_G_(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
         # x = tf.math.log(1+tf.exp(x))
         x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)
         model = Model(inputs, x, name="DNN_within_model{}".format(i))
+        return model
+    def moderator():
+        inputs = Input(shape=[M*K])
+
+        model = Model(inputs, x, name = "moderator")
         return model
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
