@@ -1655,7 +1655,7 @@ class Per_link_Input_modification_most_G_raw_self(tf.keras.layers.Layer):
         return config
 class Per_link_Input_modification_most_G_raw_self_more_interference(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
-        super(Per_link_Input_modification_most_G_raw_self, self).__init__()
+        super(Per_link_Input_modification_most_G_raw_self_more_interference, self).__init__()
         self.K = K
         self.M = M
         self.N_rf = N_rf
