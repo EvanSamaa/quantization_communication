@@ -282,7 +282,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
-            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_data))
+            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(raw_ans[:,-1]), train_data))
             print(train_hard_loss.result(),train_loss.result())
             del tape
         ###################### testing with validation set ######################
