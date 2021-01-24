@@ -554,5 +554,5 @@ def grid_search_with_emsemble(N_rf = 8):
     np_data.save()
 
 if __name__ == "__main__":
-    for N_rf_to_search in [8]:
+    for N_rf_to_search in [8, 7, 6, 5, 4, 3, 2, 1]:
         grid_search_with_emsemble(N_rf_to_search)
