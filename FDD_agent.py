@@ -552,7 +552,7 @@ def grid_search_with_emsemble(N_rf = 8):
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
-def grid_search_with_emsemble_diff_loss(N_rf = 8):
+def grid_search_with_emsemble(N_rf = 8):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
