@@ -4294,15 +4294,15 @@ def FDD_per_link_archetecture_more_G(M, K, k=2, N_rf=3, normalization=True, avg_
     return model
 def FDD_ensemble_model(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     inputs = Input(shape=(K, M), dtype=tf.complex64)
-    model_1 = FDD_agent_more_G(M, K, k, N_rf, normalization, avg_max)
-    model_2 = FDD_agent_more_G(M, K, k, N_rf, normalization, avg_max)
+    model_1 = FDD_agent_more_G(M, K, k, N_rf, normalization, avg_max, i=0)
+    model_2 = FDD_agent_more_G(M, K, k, N_rf, normalization, avg_max, i=1)
     out_1 = model_1(inputs)
     out_2 = model_2(inputs)
     model = Model(inputs, [out_1[0], out_1[1], out_2[0], out_2[1]], name="ensemble")
     return model
 
-def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
-    def self_agent_dnn(input_shape, i=0):
+def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
+    def self_agent_dnn(input_shape, i=i):
         inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
         x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
