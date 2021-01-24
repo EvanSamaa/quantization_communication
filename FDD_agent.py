@@ -622,7 +622,7 @@ def grid_search_with_emsemble_diff_loss(N_rf = 8):
                 loss = train_sum_rate(out1, train_label) + 0.01*mutex_loss_fn(raw_ans1[:, -1])
 
                 out_raw2 = tf.transpose(raw_ans2, [0, 1, 3, 2])
-                out_raw2 = tf.reshape(raw_ans2[:, -1], [N * N_rf, K * M])
+                out_raw2 = tf.reshape(out_raw2[:, -1], [N * N_rf, K * M])
                 sm2 = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw2)
                 out_raw2 = sm2.sample(sample_size)
                 out_raw2 = tf.reshape(out_raw2, [sample_size, N, N_rf, K * M])
