@@ -26,7 +26,7 @@ def partial_feedback_and_DNN_grid_search():
     sigma2_n = 1
     N_rf = 8
     sigma2_h = 0.0001
-    model_path = "trained_models/Dec_13/GNN_annealing_temp_Nrf={}.h5"
+    model_path = "trained_models/Dec_13/test_dnn_Nrf={}100xmutex.h5"
     bits_to_try = [1,2,3,4,5,6,7] + list(range(8, 32, 4))
     out = np.zeros((64, 32, 8))
     for links in range(1, 19):
@@ -39,7 +39,7 @@ def partial_feedback_and_DNN_grid_search():
                 losses = test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, model_path, M=M, K=K, B=bits,
                                                           sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1] = np.maximum(out[links-1, bits-1], -losses)
-                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_30half_AOE_min_max_quantization.npy", out)
+                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_180half_AOE_min_max_quantization+mutex.npy", out)
                 print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
@@ -584,7 +584,8 @@ if __name__ == "__main__":
     N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1
-
+    partial_feedback_and_DNN_grid_search()
+    A[2]
     tf.random.set_seed(seed)
     np.random.seed(seed)
     # greedy_grid_search()
