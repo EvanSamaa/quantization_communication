@@ -4298,7 +4298,7 @@ def FDD_ensemble_model(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     model_2 = FDD_agent_more_G(M, K, k, N_rf, normalization, avg_max)
     out_1 = model_1(inputs)
     out_2 = model_2(inputs)
-    model = Model(inputs, [out_1[0], out_1[0], out_2[0], out_2[0]], name="ensemble")
+    model = Model(inputs, [out_1[0], out_1[1], out_2[0], out_2[1]], name="ensemble")
     return model
 
 def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
