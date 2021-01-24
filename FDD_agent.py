@@ -241,7 +241,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     sample_size = 50
     temp = 0.1
     check = 100
-    model = FDD_agent_more_G_empty_choice(M, K, 5, N_rf, True, max_val)
+    model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
