@@ -214,7 +214,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Jan_18/test_DNN_start_0p9_temp".format(N_rf)
+    fname_template_template = "trained_models/Jan_18/test_DNN_empty_choice".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -237,11 +237,11 @@ def grid_search_with_mutex_loss(N_rf = 8):
     EPOCHS = 100000
     lr = 0.001
     N = 50 # number of
-    rounds = 20
+    rounds = 15
     sample_size = 50
     temp = 0.1
     check = 100
-    model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
+    model = FDD_agent_more_G_empty_choice(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -260,7 +260,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
         train_data = generate_link_channel_data_fullAOE(N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         for e in range(0, rounds):
-            temp = 0.9 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
+            temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
             temp = np.float32(temp)
             train_hard_loss.reset_states()
             train_loss.reset_states()
