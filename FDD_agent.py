@@ -438,7 +438,7 @@ def grid_search_REBAR(N_rf = 8):
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
-def grid_search_with_emsemble(N_rf = 8):
+def grid_search_with_emsemble_diff_loss(N_rf = 8):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -584,7 +584,7 @@ def grid_search_with_emsemble(N_rf = 8):
     sample_size = 50
     temp = 0.1
     check = 100
-    model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
+    model = FDD_ensemble_model(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
