@@ -1684,6 +1684,7 @@ class Per_link_Input_modification_most_G_raw_self_more_interference(tf.keras.lay
         up = tf.multiply(input_mod, x)
         interference_t_2 = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), [1,self.K,1])
         interference_t_2 = interference_t_2 - up
+        interference_t_2 = input_reshaper(interference_t_2)
         interference_f_2 = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
         selected = tf.keras.layers.Reshape((self.M*self.K, 1))(tf.multiply(x, input_mod))
         unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
