@@ -311,7 +311,7 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
     for e in range(0, 1):
         tf.random.set_seed(200)
         np.random.seed(200)
-        ds = generate_link_channel_data(num_data, K, M, 1)
+        ds = generate_link_channel_data_fullAOE(num_data, K, M, 1)
         ds_load = ds
         ds_load_q_origial = feed_back_model(ds_load)
         for N_rf in range(1, 9):
