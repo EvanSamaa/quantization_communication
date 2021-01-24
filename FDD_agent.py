@@ -214,7 +214,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Jan_18/test_DNN_tiny".format(N_rf)
+    fname_template_template = "trained_models/Jan_18/test_DNN_more_interferences_Nrf={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -555,4 +555,4 @@ def grid_search_with_emsemble(N_rf = 8):
 
 if __name__ == "__main__":
     for N_rf_to_search in [8, 7, 6, 5, 4, 3, 2, 1]:
-        grid_search_with_emsemble(N_rf_to_search)
+        grid_search_with_mutex_loss(N_rf_to_search)
