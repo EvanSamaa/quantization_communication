@@ -4350,7 +4350,7 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
         # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
         output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
-    model = Model(inputs, output, name="scheduler")
+    model = Model(inputs, output, name="scheduler{}".format(i))
     return model
 def FDD_agent_more_G_empty_choice(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     def self_agent_dnn(input_shape, i=0):
