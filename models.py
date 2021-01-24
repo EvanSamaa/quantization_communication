@@ -4298,15 +4298,17 @@ def FDD_ensemble_model(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     model_2 = FDD_agent_more_G(M, K, k, N_rf, normalization, avg_max)
     out_1 = model_1(inputs)
     out_2 = model_2(inputs)
+    model = Model(inputs, [out_1[0], out_1[0], out_2[0], out_2[0]], name="ensemble")
+    return model
 
 def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     def self_agent_dnn(input_shape, i=0):
         inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
-        x = Dense(32, name="Dense1_inside_DNN{}".format(i))(inputs)
+        x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
         x = sigmoid(x)
         # x = tf.math.log(1+tf.exp(x))
-        x = Dense(32, name="Dense2_inside_DNN{}".format(i))(x)
+        x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
         x = sigmoid(x)
         # x = tf.math.log(1+tf.exp(x))
