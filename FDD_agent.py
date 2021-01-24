@@ -276,7 +276,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
                 out = tf.reshape(out, [sample_size*N, K*M])
                 train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
                 ###################### model post-processing ######################
-                loss = train_sum_rate(out, train_label) + 0.01*mutex_loss_fn(out[:, -1])
+                loss = train_sum_rate(out, train_label) + 0.01*mutex_loss_fn(out)
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
@@ -439,5 +439,5 @@ def grid_search_REBAR(N_rf = 8):
     np_data.save()
 
 if __name__ == "__main__":
-    for N_rf_to_search in [8,7,6,5,4,3,2,1]:
+    for N_rf_to_search in [8]:
         grid_search_with_mutex_loss(N_rf_to_search)
