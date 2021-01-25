@@ -1732,7 +1732,7 @@ class Per_link_Input_modification_most_G_raw_self_more_interference(tf.keras.lay
              interference_t, interference_f, interference_f_2, interference_t_2,
              GX_user_mean, GX_col_mean,
              col_choice, row_choice,
-             x_raw])
+             tf.keras.layers.Softmax(axis=1)(x_raw)])
         # print(input_i[:, 0, 4])
         # print(input_i[:, 0, 5])
         # print(input_i[:, 0, 6])
