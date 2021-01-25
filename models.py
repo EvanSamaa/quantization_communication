@@ -4459,18 +4459,19 @@ def FDD_agent_more_G_with_moderator(M, K, k=2, N_rf=3, normalization=True, avg_m
         x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
         x = sigmoid(x)
-        # x = tf.math.log(1+tf.exp(x))
         x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
         x = sigmoid(x)
-        # x = tf.math.log(1+tf.exp(x))
         x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)
         model = Model(inputs, x, name="DNN_within_model{}".format(i))
         return model
     def moderator():
-        inputs = Input(shape=[M*K])
-
-        model = Model(inputs, x, name = "moderator")
+        inputs = Input(shape=[N_rf, M*K])
+        x = Dense(64)(inputs)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = sigmoid(x)
+        x = Dense(K*M)(x)
+        model = Model(inputs, x, name="moderator")
         return model
     inputs = Input(shape=(K, M), dtype=tf.complex64)
     input_mod = tf.abs(inputs)
@@ -4481,13 +4482,16 @@ def FDD_agent_more_G_with_moderator(M, K, k=2, N_rf=3, normalization=True, avg_m
     sm = tf.keras.layers.Softmax(axis=1)
     # sm = sigmoid
     dnns = self_agent_dnn((M * K ,17 + N_rf))
+    moderator_dnn = moderator()
     raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
     raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
     raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
     input_i = input_modder(raw_out_put_0, input_mod, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
-
+    raw_out_put_sig = moderator_dnn(tf.transpose(raw_out_put_i, [0, 2, 1]))
+    raw_out_put_sig = sigmoid(tf.transpose(raw_out_put_sig, [0, 2, 1]))
+    raw_out_put_i = tf.multiply(raw_out_put_i, raw_out_put_sig)
     out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2) # (None, K*M)
     # out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)  # (None, K*M)
 
@@ -4499,6 +4503,10 @@ def FDD_agent_more_G_with_moderator(M, K, k=2, N_rf=3, normalization=True, avg_m
         input_i = input_modder(raw_out_put_i, input_mod, k - times - 1.0)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
+        raw_out_put_sig = moderator_dnn(tf.transpose(raw_out_put_i, [0, 2, 1]))
+        raw_out_put_sig = sigmoid(tf.transpose(raw_out_put_sig, [0, 2, 1]))
+        raw_out_put_i = tf.multiply(raw_out_put_i, raw_out_put_sig)
+
         # if times == k-1:
         out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
         # else:
