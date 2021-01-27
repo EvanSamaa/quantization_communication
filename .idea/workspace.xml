@@ -22,6 +22,7 @@
     <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FDD_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/FDD_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Dec_13/greedy_save_here/display.py" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Dec_13/greedy_save_here/display.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,7 +42,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
   </component>
-  <component name="RunManager" selected="Python.FDD_agent">
+  <component name="RunManager" selected="Python.display">
     <configuration name="Evaluate_FDD_models" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="quantization_communication" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -85,15 +86,15 @@
       <method v="2" />
     </configuration>
     <configuration name="display" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Tensorflow_learning" />
+      <module name="quantization_communication" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="" />
+      <option name="SDK_HOME" value="C:\Users\evansamaa\anaconda3\envs\quantization\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/trained_models/Dec_13/greedy_save_here" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/trained_models/Dec_13/greedy_save_here/display.py" />
@@ -134,10 +135,10 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.display" />
         <item itemvalue="Python.FDD_agent" />
         <item itemvalue="Python.Evaluate_FDD_models" />
         <item itemvalue="Python.relax" />
-        <item itemvalue="Python.display" />
       </list>
     </recent_temporary>
   </component>
@@ -179,22 +180,26 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="706" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1611039796840" />
-    <state width="1899" height="127" key="GridCell.Tab.0.bottom" timestamp="1611535334971">
+    <state x="669" y="115" key="#display" timestamp="1611722558788">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="127" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1611535334971" />
-    <state width="1899" height="127" key="GridCell.Tab.0.center" timestamp="1611535334971">
+    <state x="669" y="115" key="#display/0.0.1920.1040@0.0.1920.1040" timestamp="1611722558788" />
+    <state width="1899" height="501" key="GridCell.Tab.0.bottom" timestamp="1611722746821">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="127" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1611535334971" />
-    <state width="1899" height="127" key="GridCell.Tab.0.left" timestamp="1611535334971">
+    <state width="1899" height="501" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1611722746821" />
+    <state width="1899" height="501" key="GridCell.Tab.0.center" timestamp="1611722746821">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="127" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1611535334971" />
-    <state width="1899" height="127" key="GridCell.Tab.0.right" timestamp="1611535334971">
+    <state width="1899" height="501" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1611722746821" />
+    <state width="1899" height="501" key="GridCell.Tab.0.left" timestamp="1611722746820">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="127" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1611535334971" />
+    <state width="1899" height="501" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1611722746820" />
+    <state width="1899" height="501" key="GridCell.Tab.0.right" timestamp="1611722746821">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="501" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1611722746821" />
     <state x="565" y="130" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1610814558720">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
