@@ -39,7 +39,7 @@ def partial_feedback_and_DNN_grid_search():
                 losses = test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, model_path, M=M, K=K, B=bits,
                                                           sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1] = np.maximum(out[links-1, bits-1], -losses)
-                np.save("trained_models/Dec_13/greedy_save_here/partial_feedback_and_DNN_scheduler_180half_AOE_min_max_quantization+mutex.npy", out)
+                np.save("trained_models/Dec_13/greedy_save_here/trainedOn180_runOn30.npy", out)
                 print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
@@ -178,7 +178,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
     print("Testing Starts")
     for e in range(0, 1):
-        ds = generate_link_channel_data_fullAOE(num_data, K, M, N_rf)
+        ds = generate_link_channel_data(num_data, K, M, N_rf)
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
@@ -311,7 +311,7 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
     for e in range(0, 1):
         tf.random.set_seed(200)
         np.random.seed(200)
-        ds = generate_link_channel_data_fullAOE(num_data, K, M, 1)
+        ds = generate_link_channel_data(num_data, K, M, 1)
         ds_load = ds
         ds_load_q_origial = feed_back_model(ds_load)
         for N_rf in range(1, 9):
@@ -366,10 +366,10 @@ def plot_data(arr, col=[], title="loss", series_name = None):
     x = np.arange(0, arr.shape[0])
     for i in range(len(col)):
         plt.plot(x, arr[:, col[i]], '+', label=series_name[i])
-
+    plt.legend()
     # plt.plot(x, arr[:, 3])
     plt.title(title)
-    # plt.show()
+    plt.show()
 def garsons_method(model_path):
     from matplotlib import pyplot as plt
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
@@ -565,12 +565,13 @@ if __name__ == "__main__":
                    "Sparsemax":Sparsemax,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid,
-                   "Per_link_Input_modification_most_G_raw_self_more_interference":Per_link_Input_modification_most_G_raw_self_more_interference}
+                   "Per_link_Input_modification_most_G_raw_self_more_interference":Per_link_Input_modification_most_G_raw_self_more_interference,
+                   "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum":Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum}
     # greedy_grid_search()
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_data
 
-    file = "trained_models/Dec28/NRF=5/shifted_and_unquantize_input/GNN_annealing_temp_B=128+limit_res=6"
+    file = "trained_models/Jan_18/30AOA/test_dnn_Nrf=8+annealing_LR.npy"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
     # for item in [0.01, 0.1, 1, 5, 10]:
     #     garsons_method(file.format(item))
@@ -585,30 +586,14 @@ if __name__ == "__main__":
     N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1
-    partial_feedback_and_DNN_grid_search()
-    A[2]
     tf.random.set_seed(seed)
     np.random.seed(seed)
+    partial_feedback_and_DNN_grid_search()
     # greedy_grid_search()
     # A[2]
     # partial_feedback_and_DNN_grid_search()
-
-    # for p in range(1,17):
-    #     # tf.random.set_seed(seed)
-    #     # np.random.seed(seed)
-    #     # compare_quantizers(p)
-    #
-    #     out = np.load("trained_models/quantization_comparisons/link={}_basic4.npy".format(p))
-    #     from matplotlib import pyplot as plt
-    #     for i in range(0, 4):
-    #         plt.plot(range(1, 17), out[:, i], label = "quantizer {}".format(i+1))
-    #     plt.legend()
-    #     plt.show()
-    # A[2]
-
-
     # compare_quantizers(1)
-    model_path = "trained_models/Jan_18/test_dnn_Nrf={}_15_rounds.h5"
+    model_path = "trained_models/Jan_18/30AOA/test_dnn_Nrf={}+annealing_LR.h5"
     # model_path = file + ".h5"
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)

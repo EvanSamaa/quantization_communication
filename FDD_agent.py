@@ -232,7 +232,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     sigma2_n = 1.0
 
     ############################### generate data ###############################
-    valid_data = generate_link_channel_data_fullAOE(1000, K, M, Nrf=N_rf)
+    valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
@@ -258,7 +258,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     for i in range(0, EPOCHS):
         train_hard_loss.reset_states()
         # generate training data
-        train_data = generate_link_channel_data_fullAOE(N, K, M, Nrf=N_rf)
+        train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         for e in range(0, rounds):
             temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
