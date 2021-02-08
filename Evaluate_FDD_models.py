@@ -54,7 +54,8 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    ds_load = generate_link_channel_data(num_data, K, M, 1)
+    # ds_load = generate_link_channel_data(num_data, K, M, 1)
+    ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=1)
     prediction = model(ds_load)
     counter = 1
     for i in prediction:
@@ -543,18 +544,18 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.legend()
     plt.show()
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-    thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=65+limit_res=6.h5.npy"
-    thing = np.load(thing)
-    plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Pretrained feedback model"])
-    thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=69+limit_res=6.h5.npy"
-    thing = np.load(thing)
-    plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Jointly trained feedback model"])
-    thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=71+limit_res=6.h5.npy"
-    thing = np.load(thing)
-    plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Train with MSE regularization"])
-    plt.show()
-    A[2]
+    # from matplotlib import pyplot as plt
+    # thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=65+limit_res=6.h5.npy"
+    # thing = np.load(thing)
+    # plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Pretrained feedback model"])
+    # thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=69+limit_res=6.h5.npy"
+    # thing = np.load(thing)
+    # plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Jointly trained feedback model"])
+    # thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=71+limit_res=6.h5.npy"
+    # thing = np.load(thing)
+    # plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Train with MSE regularization"])
+    # plt.show()
+    # A[2]
 
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
@@ -606,7 +607,7 @@ if __name__ == "__main__":
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/Jan_18/30AOA/test_dnn_Nrf={}+annealing_LR.h5"
+    model_path = "trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf=8.h5"
     # model_path = file + ".h5"
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
@@ -614,9 +615,8 @@ if __name__ == "__main__":
     mores = [2]
     Es = [1]
     model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=True)
-    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    # model = DP_partial_feedback_pure_greedy_model(8, 2, 5, M, K, sigma2_n, perfect_CSI=False)
-    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    A[2]
     for i in Es:
         for j in mores:
             tf.random.set_seed(seed)
