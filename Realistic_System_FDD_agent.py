@@ -32,9 +32,9 @@ def grid_search_with_mutex_loss(N_rf = 8):
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 35 # number of
+    N = 50 # number of
     rounds = 15
-    sample_size = 50
+    sample_size = 10
     temp = 0.1
     check = 100
     model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
