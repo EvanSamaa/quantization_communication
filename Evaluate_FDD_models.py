@@ -55,7 +55,7 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
     tf.random.set_seed(200)
     np.random.seed(200)
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
-    ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=1)
+    ds_load = gen_realistic_data("trained_models/Feb8th/one_hundred_user_config_1.npy", num_data, K, M, Nrf=1)
     prediction = model(ds_load)
     counter = 1
     for i in prediction:

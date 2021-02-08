@@ -1527,12 +1527,6 @@ def sparse_matrix_from_full(G, p):
     # A[2]
     return G_copy
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-    data = np.load("trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf=.npy")
-    plt.plot(data[:, 0])
-    plt.show()
-    A[2]
-
     N = 500
     M = 64
     K = 50
