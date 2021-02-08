@@ -12,7 +12,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Feb8th/random_user_loc/on_user_loc_0_Nrf={}".format(N_rf)
+    fname_template_template = "trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -27,7 +27,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     sigma2_h = 6.3
     sigma2_n = 1.0
     ############################### generate data ###############################
-    valid_data = gen_realistic_data_batch(1000, K, M, Nrf=N_rf)
+    valid_data = gen_realistic_data_batch("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", 1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
@@ -53,7 +53,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     for i in range(0, EPOCHS):
         train_hard_loss.reset_states()
         # generate training data
-        train_data = gen_realistic_data_batch(N, K, M, Nrf=N_rf)
+        train_data = gen_realistic_data_batch("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         for e in range(0, rounds):
             temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
