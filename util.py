@@ -115,6 +115,21 @@ def gen_channel_quality_data_float_encoded(N, k, low=0, high=1):
     # channel_data = float_to_floatbits(channel_data)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(500)
     return dataset
+def gen_pathloss_batch(N, L, S, K, B2Bdist, inn_ratio, out_ratio, save_loc = ""):
+    BSLoc = tf.zeros((1,))
+    MULoc = 0.5 * B2Bdist * np.sqrt((np.random.uniform(inn_ratio ** 2, out_ratio ** 2, (N, K, 1)))) * np.exp(
+        1j * (np.random.uniform(0, 1, (N, K, 1))) * 2 * np.pi) + BSLoc[0]
+    dist = np.abs(MULoc - BSLoc[0])
+    path_loss_dB = 128.1 + 37.6 * np.log10(dist)
+    pathloss = np.power(10, -path_loss_dB / 20)
+    if save_loc != "":
+        np.save(save_loc, pathloss)
+    pathloss = tf.constant(pathloss, dtype=tf.complex64)
+    # from matplotlib import pyplot as plt
+    # plt.plot(np.real(MULoc), np.imag(MULoc), 'bo')
+    # plt.plot(0, 0, 'ro')
+    # plt.show()
+    return pathloss
 def gen_pathloss(L, S, K, B2Bdist, inn_ratio, out_ratio, save_loc = ""):
 
     # % This function generates channel matrix in frequency domain
@@ -153,14 +168,12 @@ def gen_realistic_data(space_file, N, K, M, Nrf):
         pathloss = tf.constant(np.load(space_file), dtype = tf.complex64)
     channel_data = generate_link_channel_data_fullAOE(N, K, M, Nrf, SNR=100, sigma2_h=0.1, sigma2_n=0.1)
     CSI = np.expand_dims(pathloss, axis=0) * channel_data
-    # from matplotlib import pyplot as plt
-    # fig, (ax1, ax2, ax3) = plt.subplots(3)
-    # ax1.plot(np.abs(pathloss))
-    # ax2.imshow(np.abs(channel_data)[0])
-    # ax3.imshow(np.abs(CSI)[0])
-    # plt.show()
     return CSI
-
+def gen_realistic_data_batch(N, K, M, Nrf):
+    pathloss = gen_pathloss_batch(N, 1, 1, K, 0.3, 0.1, 1.0)
+    channel_data = generate_link_channel_data_fullAOE(N, K, M, Nrf, SNR=100, sigma2_h=0.1, sigma2_n=0.1)
+    CSI = np.expand_dims(pathloss, axis=0) * channel_data
+    return CSI
 def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_data_num = tf.random.uniform((N, 1), 0, k)
     channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
