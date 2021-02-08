@@ -46,10 +46,11 @@ def rebar_loss(logits, Nrf, M, K):
     z_hat = truncated_gumbel(gumbel + logits, topgumbel)
 
 
-def generate_link_channel_data_fullAOE(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
+def generate_link_channel_data_fullAOE(N, K, M, Nrf, SNR=20, sigma2_h=0.1, sigma2_n=0.1):
+    # for all previously trained models, SNR=20
     Lp = 2  # Number of Paths
     P = tf.constant(sp.linalg.dft(M), dtype=tf.complex64) # DFT matrix
-    P = P/tf.sqrt(tf.constant(M, dtype=tf.complex64))/tf.sqrt(tf.constant(Nrf, dtype=tf.complex64))*tf.sqrt(tf.constant(100, dtype=tf.complex64))
+    P = P/tf.sqrt(tf.constant(M, dtype=tf.complex64))/tf.sqrt(tf.constant(Nrf, dtype=tf.complex64))*tf.sqrt(tf.constant(10**(SNR/10), dtype=tf.complex64))
     P = tf.expand_dims(P, 0)
     P = tf.tile(P, (N, 1, 1))
     LSF_UE = np.array([0.0, 0.0], dtype=np.float32)  # Mean of path gains
@@ -114,6 +115,52 @@ def gen_channel_quality_data_float_encoded(N, k, low=0, high=1):
     # channel_data = float_to_floatbits(channel_data)
     dataset = Dataset.from_tensor_slices((channel_data, channel_label)).batch(500)
     return dataset
+def gen_pathloss(L, S, K, B2Bdist, inn_ratio, out_ratio, save_loc = ""):
+
+    # % This function generates channel matrix in frequency domain
+    # % for frequency-selective fading channels based on a 19-cell topology
+    # %
+    # % L: base-stations
+    # % S: sectors per base-station
+    # % K: users per sector
+    # % N: frequency tones
+    # % P: base-station antennas
+    # % Q: mobile antennas
+    # % B2Bdist: Base-station to base-station distance
+    # %
+    # % %% Output format (complex gain)
+    # % Chn(l, s, m, t, k, p, q, n)
+    # % complex gain from the l-th BS, s-th sector, p-th antenna
+    # % to the kth user in the m-th BS, t-th sector, q-th antenna
+    # % in n-th frequency tone
+    BSLoc = tf.zeros((1, ))
+    MULoc = 0.5 * B2Bdist * np.sqrt((np.random.uniform(inn_ratio**2, out_ratio**2,(K, 1)))) * np.exp(1j * (np.random.uniform(0, 1,(K, 1))) * 2 * np.pi) + BSLoc[0]
+    dist = np.abs(MULoc - BSLoc[0])
+    path_loss_dB = 128.1 + 37.6 * np.log10(dist)
+    pathloss = np.power(10, -path_loss_dB / 20)
+    if save_loc != "":
+        np.save(save_loc, pathloss)
+    pathloss = tf.constant(pathloss, dtype = tf.complex64)
+    # from matplotlib import pyplot as plt
+    # plt.plot(np.real(MULoc), np.imag(MULoc), 'bo')
+    # plt.plot(0, 0, 'ro')
+    # plt.show()
+    return pathloss
+def gen_realistic_data(space_file, N, K, M, Nrf):
+    if space_file == "":
+        pathloss = gen_pathloss(1, 1, K, 0.3, 0.1, 1.0)
+    else:
+        pathloss = tf.constant(np.load(space_file), dtype = tf.complex64)
+    channel_data = generate_link_channel_data_fullAOE(N, K, M, Nrf, SNR=100, sigma2_h=0.1, sigma2_n=0.1)
+    CSI = np.expand_dims(pathloss, axis=0) * channel_data
+    # from matplotlib import pyplot as plt
+    # fig, (ax1, ax2, ax3) = plt.subplots(3)
+    # ax1.plot(np.abs(pathloss))
+    # ax2.imshow(np.abs(channel_data)[0])
+    # ax3.imshow(np.abs(CSI)[0])
+    # plt.show()
+    return CSI
+
 def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_data_num = tf.random.uniform((N, 1), 0, k)
     channel_data_num = tf.cast(tf.round(channel_data_num), dtype=tf.int32)
@@ -1471,7 +1518,9 @@ if __name__ == "__main__":
     M = 64
     K = 50
     B = 5
-
+    Nrf = 7
+    gen_realistic_data("space_file", K, N, M, Nrf)
+    A[2]
     sigma2 = 0
     data = generate_link_channel_data(1, K, M, Nrf=1)
     A[2]

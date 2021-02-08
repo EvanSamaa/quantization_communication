@@ -18,7 +18,7 @@ def greedy_grid_search():
                 model = DP_partial_feedback_pure_greedy_model_new_feedback_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
                 losses = test_greedy(model, M=M, K=K, B=bits, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1, :] = losses
-                np.save("trained_models/Dec_13/greedy_save_here/grid_search_all_under128_180AOE_min_max_quantization.npy", out)
+                np.save("trained_models/Dec_13/greedy_save_here/grid_search_all_under128_30AOE_min_max_quantization.npy", out)
                 print("{} links {} bits is done".format(links, bits))
 def partial_feedback_and_DNN_grid_search():
     M = 64
@@ -54,7 +54,7 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    ds_load = generate_link_channel_data_fullAOE(num_data, K, M, 1)
+    ds_load = generate_link_channel_data(num_data, K, M, 1)
     prediction = model(ds_load)
     counter = 1
     for i in prediction:
@@ -368,8 +368,10 @@ def plot_data(arr, col=[], title="loss", series_name = None):
         plt.plot(x, arr[:, col[i]], '+', label=series_name[i])
     plt.legend()
     # plt.plot(x, arr[:, 3])
+    plt.xlabel("epochs")
+    plt.ylabel("sum rate")
     plt.title(title)
-    plt.show()
+    # plt.show()
 def garsons_method(model_path):
     from matplotlib import pyplot as plt
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
@@ -517,7 +519,6 @@ def all_bits_compare_with_greedy_plot_link_seperately():
         x.append(i)
         y.append(-out[:,-1].min())
     from matplotlib import pyplot as plt
-
     plt.plot(np.array(x), np.array(y), label = "pretrained encoder")
     grid = np.load("trained_models/Dec_13/greedy_save_here/grid_search_all_under128.npy")
     # add or remove points using x and y
@@ -542,6 +543,19 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.legend()
     plt.show()
 if __name__ == "__main__":
+    from matplotlib import pyplot as plt
+    thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=65+limit_res=6.h5.npy"
+    thing = np.load(thing)
+    plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Pretrained feedback model"])
+    thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=69+limit_res=6.h5.npy"
+    thing = np.load(thing)
+    plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Jointly trained feedback model"])
+    thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=71+limit_res=6.h5.npy"
+    thing = np.load(thing)
+    plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Train with MSE regularization"])
+    plt.show()
+    A[2]
+
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -569,7 +583,7 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum":Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum}
     # greedy_grid_search()
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
-    # plot_data
+    # plot_dat
 
     file = "trained_models/Jan_18/30AOA/test_dnn_Nrf=8+annealing_LR.npy"
     # file = "trained_models/Nov_23/B=32_one_CE_loss/N_rf=1+VAEB=1x32E=4+1x512_per_linkx6_alt+CE_loss+MP"
@@ -588,7 +602,6 @@ if __name__ == "__main__":
     sigma2_n = 1
     tf.random.set_seed(seed)
     np.random.seed(seed)
-    partial_feedback_and_DNN_grid_search()
     # greedy_grid_search()
     # A[2]
     # partial_feedback_and_DNN_grid_search()
