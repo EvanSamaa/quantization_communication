@@ -172,7 +172,7 @@ def gen_realistic_data(space_file, N, K, M, Nrf):
 def gen_realistic_data_batch(N, K, M, Nrf):
     pathloss = gen_pathloss_batch(N, 1, 1, K, 0.3, 0.1, 1.0)
     channel_data = generate_link_channel_data_fullAOE(N, K, M, Nrf, SNR=100, sigma2_h=0.1, sigma2_n=0.1)
-    CSI = np.expand_dims(pathloss, axis=0) * channel_data
+    CSI = pathloss * channel_data
     return CSI
 def gen_number_data(N=10000, k = 7.5, batchsize=10000):
     channel_data_num = tf.random.uniform((N, 1), 0, k)
