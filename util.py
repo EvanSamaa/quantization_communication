@@ -244,6 +244,11 @@ def obtain_channel_distributions(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
     plt.hist(tf.abs(upper).numpy(), bins=100)
     plt.show()
     return max_G
+def weight_generator(K, M, hard = True):
+    def weight_gen_hard(X, G, K = K, M = M):
+        return 0
+    return 0
+
 
 # ============================  Metrics  ============================
 def quantizaton_evaluation_numbers(model, granuality=0.0001, k=2):
