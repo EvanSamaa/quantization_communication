@@ -191,7 +191,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
             env.reset()
             with tf.GradientTape(persistent=True) as tape:
                 loss = 0
-                gradients = 0
+                gradients = []
                 for episode in range(episodes):
                     temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
                     temp = np.float32(temp)
@@ -214,7 +214,10 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                     env.increment()
                     print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
                     # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
-                    gradients += tape.gradient(loss, model.trainable_variables)
+                    if len(gradients) == 0:
+                        gradients = tape.gradient(loss, model.trainable_variables)
+                    else:
+                        gradients += tape.gradient(loss, model.trainable_variables)
                     del tape
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
