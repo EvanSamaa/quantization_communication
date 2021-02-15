@@ -21,7 +21,7 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
     np.random.seed(200)
     enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.1, True)
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
-    ds_load = gen_realistic_data("trained_models/Feb8th/user_loc1/one_hundred_user_config_1.npy", num_data, K, M, Nrf=N_rf)
+    ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
     model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
     for e in range(0, 200):
         out = enviroment.compute_weighted_loss(model(ds_load), ds_load)
@@ -31,7 +31,7 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
             # print("the variance is ", tf.math.reduce_std(out))
         enviroment.increment()
     # enviroment.plot_activation(show=True)
-    np.save("trained_models/Feb8th/user_loc1/weighted_sumrate_gready.npy", enviroment.rates)
+    np.save("trained_models/Feb8th/user_loc0/weighted_sumrate_gready.npy", enviroment.rates)
     return store
 def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, sigma2_n=0.00001):
     config = tf.compat.v1.ConfigProto()
