@@ -59,7 +59,10 @@ class Weighted_sumrate_model():
         else:
             if weight is None:
                 weight = self.get_weight()
-            R_t = (1.0 - self.alpha) * self.rates[-2] + self.alpha * self.lossfn(local_X, G) * weight
+                R_t = (1.0 - self.alpha) * self.rates[-2] + self.alpha * self.lossfn(local_X, G) * weight
+            else:
+                rate = tf.math.log(1/weight)
+                R_t = (1.0 - self.alpha) * rate + self.alpha * self.lossfn(local_X, G) * weight
         if update:
             self.rates[-1] = R_t
         return -tf.reduce_sum(R_t, axis=1)
