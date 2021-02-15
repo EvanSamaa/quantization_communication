@@ -39,12 +39,13 @@ class Weighted_sumrate_model():
         self.N_rf = N_rf # Nrf of this
         self.K = K
         self.M = M
+        self.N = N
         # structure for saving data
         record_shape = (1, N, K)
         self.rates = np.zeros(record_shape, dtype=np.float32) # keep the cumulative rates from the past timestamp
         self.decisions = np.zeros([])
     def reset(self):
-        record_shape = (1, self.N, self.N)
+        record_shape = (1, self.N, self.K)
         self.time = 0
         self.rates = np.zeros(record_shape, dtype=np.float32)  # keep the cumulative rates from the past timestamp
     def compute_weighted_loss(self, X, G, update=True):
