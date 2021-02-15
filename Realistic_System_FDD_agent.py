@@ -206,7 +206,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                     out = tf.reduce_sum(out_raw, axis=2)
                     out = tf.reshape(out, [sample_size*N, K*M])
                     train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
-                    weight = tf.reshape(tf.tile(tf.expand_dims(env.get_weight(), axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
+                    weight = tf.reshape(tf.tile(tf.expand_dims(env.get_weight(), axis=0), [sample_size,1, 1]), [sample_size*N, K])
                     ###################### model post-processing ######################
                     loss = env.compute_weighted_loss(out, train_label, weight=weight, update=False) + mutex_loss_fn(raw_ans[:, -1])
                     env.compute_weighted_loss(ans[:, -1], train_label, update=True)
