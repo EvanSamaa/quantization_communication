@@ -33,7 +33,8 @@ class Weighted_sumrate_model():
     def __init__(self, K, M, N_rf, N, alpha:float, hard_decision = True):
         self.lossfn = Sum_rate_utility_WeiCui_seperate_user(K, M, 1) # loss function to calculate sumrate
         self.time = 0 # record time stamp
-        self.alpha = alpha # this determines the decay rate of the weighted sum
+        self.alpha = alpha  # this determines the decay rate of the weighted sum
+                            # small alpha means low delay rate, i.e. the model
         self.hard_decision = hard_decision # determine whether to harden the decision vector or not (for training)
         self.N_rf = N_rf # Nrf of this
         self.K = K
@@ -42,7 +43,11 @@ class Weighted_sumrate_model():
         record_shape = (1, N, K)
         self.rates = np.zeros(record_shape, dtype=np.float32) # keep the cumulative rates from the past timestamp
         self.decisions = np.zeros([])
-    def compute_weighted_loss(self, X, G):
+    def reset(self):
+        record_shape = (1, self.N, self.N)
+        self.time = 0
+        self.rates = np.zeros(record_shape, dtype=np.float32)  # keep the cumulative rates from the past timestamp
+    def compute_weighted_loss(self, X, G, update=True):
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule
         local_X = X
@@ -53,7 +58,8 @@ class Weighted_sumrate_model():
         else:
             weight = self.get_weight()
             R_t = (1.0 - self.alpha) * self.rates[-2] + self.alpha * self.lossfn(local_X, G) * weight
-        self.rates[-1] = R_t
+        if update:
+            self.rates[-1] = R_t
         return -tf.reduce_sum(R_t, axis=1)
     def get_weight(self):
         # this function assumes the caller will feed in the soft decision vector

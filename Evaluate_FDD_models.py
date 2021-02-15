@@ -8,7 +8,8 @@ import tensorflow as tf
 # = = = = = = = = = = = = = = = = = = on weighted Sumrates = = = = = = = = = = = = = = = = = = =
 def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
-    num_data = 20
+    num_data = 2
+    episodes = 200
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -23,15 +24,18 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
     ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
     model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
-    for e in range(0, 200):
-        out = enviroment.compute_weighted_loss(model(ds_load), ds_load)
+    for e in range(0, episodes):
+        pred = model(ds_load)
+        out = enviroment.compute_weighted_loss(pred, ds_load)
         result[0] = tf.reduce_mean(out)
+        loss = tf.reduce_mean(loss_fn1(pred, ds_load))
         if printing:
             print("the soft result is ", result)
+            print("from the robst loss fn is ", loss)
             # print("the variance is ", tf.math.reduce_std(out))
         enviroment.increment()
     # enviroment.plot_activation(show=True)
-    np.save("trained_models/Feb8th/user_loc0/weighted_sumrate_gready.npy", enviroment.rates)
+    # np.save("trained_models/Feb8th/user_loc0/weighted_sumrate_gready.npy", enviroment.rates)
     return store
 def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, sigma2_n=0.00001):
     config = tf.compat.v1.ConfigProto()
@@ -103,8 +107,6 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         #     plt.pause(0.0001)
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
-
-
 def greedy_grid_search():
     M = 64
     K = 50
@@ -116,7 +118,7 @@ def greedy_grid_search():
     for links in range(1, 19):
         for bits in bits_to_try:
             if links * (6 + bits) <= 128:
-                model = DP_partial_feedback_pure_greedy_model_new_feedback_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
+                model = DP_partial_feedback_pure_greedy_model(8, bits, links, M, K, sigma2_n, perfect_CSI=False)
                 losses = test_greedy(model, M=M, K=K, B=bits, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
                 out[links-1, bits-1, :] = losses
                 np.save("trained_models/Dec_13/greedy_save_here/grid_search_all_under128_30AOE_min_max_quantization.npy", out)
@@ -142,9 +144,9 @@ def partial_feedback_and_DNN_grid_search():
                 out[links-1, bits-1] = np.maximum(out[links-1, bits-1], -losses)
                 np.save("trained_models/Dec_13/greedy_save_here/trainedOn180_runOn30.npy", out)
                 print("{} links {} bits is done".format(links, bits))
-def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
+def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 1, printing=True):
     store=np.zeros((8,))
-    num_data = 500
+    num_data = 1
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -156,7 +158,8 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
     tf.random.set_seed(200)
     np.random.seed(200)
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
-    ds_load = gen_realistic_data("trained_models/Feb8th/one_hundred_user_config_1.npy", num_data, K, M, Nrf=1)
+    ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=1)
+    # print(ds_load.shape)
     prediction = model(ds_load)
     counter = 1
     for i in prediction:
@@ -271,7 +274,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 50
+    num_data = 20
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
 
@@ -715,11 +718,14 @@ if __name__ == "__main__":
     # plot_data(training_data, [0, 3], "-sum rate")
     mores = [8,7,6,5,4,3,2,1]
     Es = [1]
-    test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    a[2]
-    # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=True)
-    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+
+    # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=False)
+    # test_greedy(model, M, K, N_rf=8)
     # A[2]
+    # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    # A[2]
+    # model = DP_partial_feedback_pure_greedy_model(32, 2, 2, M, K, sigma2_n, perfect_CSI=True)
+    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     for i in Es:
         for j in mores:
             tf.random.set_seed(seed)
@@ -737,7 +743,7 @@ if __name__ == "__main__":
             # model = NN_Clustering(N_rf, M, reduced_dim=8)
             # model = top_N_rf_user_model(M, K, N_rf)
             # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
-            # model = partial_feedback_pure_greedy_model(N_rf, 32, i, M, K, sigma2_n)
+
             # model = relaxation_based_solver(M, K, N_rf)
             # garbage, g_max = Input_normalization_per_user(tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
             # feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)

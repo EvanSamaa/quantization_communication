@@ -551,14 +551,14 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
         G = (tf.abs(G))
-        # quantization ===
-        G, G_max= Input_normalization_per_user(G)
-        G = tf.where(G > 1, 1, G)
-        G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
-        G = tf.multiply(G, G_max)
-        # quantization ===
         top_values, top_indices = tf.math.top_k(G, k=p)
         if perfect_CSI == False:
+            # quantization ===
+            G, G_max = Input_normalization_per_user(G)
+            G = tf.where(G > 1, 1, G)
+            G = tf.round(G * (2 ** B - 1)) / (2 ** B - 1)
+            G = tf.multiply(G, G_max)
+            # quantization ===
             G_copy = np.zeros((top_indices.shape[0], K, M))
             for n in range(0, top_indices.shape[0]):
                 for i in range(0, K * p):
@@ -582,8 +582,9 @@ def DP_partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=
             out.append(prev_out)
         return out
     return model
-def DP_DNN_feedback_pure_greedy_model(N_rf, p, M, K, sigma2, encoder_decoder, perfect_CSI=False, pick_top=2):
+def DP_DNN_feedback_pure_greedy_model_past(N_rf, p, M, K, sigma2, encoder_decoder, perfect_CSI=False, pick_top=2):
     # uniformly quantize the values then pick the top Nrf to output
+    feed_back_model = max_min_k_link_feedback_model(1, B, p, M, K)
     def model(G):
         # quantization ===
         valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
@@ -592,8 +593,8 @@ def DP_DNN_feedback_pure_greedy_model(N_rf, p, M, K, sigma2, encoder_decoder, pe
         q_train_data = tf.where(q_train_data > 1.0, 1.0, q_train_data)
         q_train_data = (tf.round(q_train_data * (2 ** 6 - 1)) / (2 ** 6 - 1) + 1 / (2 ** (6 + 1))) * max_val
         # quantization ===
-        G = encoder_decoder(q_train_data)
-        print(G.shape)
+        if not encoder_decoder is None:
+            G = encoder_decoder(q_train_data)
         top_values, top_indices = tf.math.top_k(G, k=pick_top)
         # top_values_quantized = top_values
         out = []
@@ -607,7 +608,6 @@ def DP_DNN_feedback_pure_greedy_model(N_rf, p, M, K, sigma2, encoder_decoder, pe
             out.append(prev_out)
         return out
     return model
-
 def partial_feedback_pure_greedy_model_weighted_SR(N_rf, B, p, M, K, sigma2, environment):
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
@@ -711,13 +711,14 @@ def k_link_feedback_model(N_rf, B, p, M, K, g_max):
         return G
     return model
 
-def DP_partial_feedback_pure_greedy_model_new_feedback_model(N_rf, B, p, M, K, sigma2, perfect_CSI=False, pick_top=2):
+def DP_DNN_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2, perfect_CSI=False, pick_top=2):
     # uniformly quantize the values then pick the top Nrf to output
     feed_back_model = max_min_k_link_feedback_model(1, B, p, M, K)
     def model(G):
         G = (tf.abs(G))
         # quantization ===
-        G = feed_back_model(G)
+        if perfect_CSI == False:
+            G = feed_back_model(G)
         # quantization ===
         top_values, top_indices = tf.math.top_k(G, k=p)
         if p > pick_top:
