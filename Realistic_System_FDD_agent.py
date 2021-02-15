@@ -159,7 +159,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.01
+    lr = 0.001
     N = 25 # number of
     rounds = 8
     sample_size = 20
@@ -170,7 +170,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     # model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
     model = tf.keras.models.load_model("trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5".format(N_rf), custom_objects=custome_obj)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
-    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=True)
+    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=False)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # train_sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
