@@ -66,7 +66,7 @@ class Weighted_sumrate_model():
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule
         if self.time == 0:
-            return np.ones((N, K))
+            return np.ones((self.N, self.K))
         weight = np.array(1.0/np.exp(self.rates[-2, :, :]), np.float32)
         return weight
     def get_binary_weights(self):
