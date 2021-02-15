@@ -4,6 +4,107 @@ import numpy as np
 # from scipy.io import savemat
 import tensorflow as tf
 # from matplotlib import pyplot as plt
+
+# = = = = = = = = = = = = = = = = = = on weighted Sumrates = = = = = = = = = = = = = = = = = = =
+def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
+    store=np.zeros((8,))
+    num_data = 20
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    result = np.zeros((3,))
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
+    print("Testing Starts")
+    tf.random.set_seed(200)
+    np.random.seed(200)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.9, True)
+    # ds_load = generate_link_channel_data(num_data, K, M, 1)
+    ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
+    model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
+    for e in range(0, 200):
+        out = enviroment.compute_weighted_loss(model(ds_load), ds_load)
+        result[0] = tf.reduce_mean(out)
+        if printing:
+            print("the soft result is ", result)
+            # print("the variance is ", tf.math.reduce_std(out))
+        enviroment.increment()
+    # enviroment.plot_activation(show=True)
+    np.save("trained_models/Feb8th/user_loc0/weighted_sumrate_gready.npy", enviroment.rates)
+    return store
+def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, sigma2_n=0.00001):
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    num_data = 20
+    num_episodes = 50
+    result = np.zeros((3,))
+    test_env = Weighted_sumrate_model(K, M, N_rf, num_data, .05, False)
+    # loss_fn1 = tf.keras.losses.MeanSquaredError()
+    # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
+    # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
+    print("Testing Starts")
+    ds = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, N_rf)
+    for e in range(0, num_episodes):
+        # ds = generate_link_channel_data(num_data, K, M, N_rf)
+        # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
+        # print(ds)
+        ds_load = ds
+        if e > 0:
+            ds_load = ds * tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)
+        scheduled_output, raw_output = model.predict(ds_load, batch_size=50)
+        prediction = scheduled_output[:, -1]
+        # prediction = model(ds_load)[-1]
+        # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
+
+        # scheduled_output, raw_output, recon = model(ds_load)
+
+        # for i in range(0, num_data):
+        # from matplotlib import pyplot as plt
+        # for k in range(4, 5):
+        #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 64, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
+        #     for i in range(0,5):
+        #         prediction = scheduled_output[:, i]
+        #         prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
+        #         # plt.imshow(tf.reshape(prediction[k], (K, M)))
+        #         # plt.plot(np.arange(0, K*M), G_pred[-1][0])
+        #         plt.plot(np.arange(0, K*M), prediction_hard[k])
+        #         plt.plot(np.arange(0, K*M), prediction[k])
+        #
+        #         plt.show()
+        #     # tf.concat([reconstructed_input[k], tf.zeros((50, 20)), tf.abs(ds_load[k])], axis=1)
+        #
+        #     plt.show()
+        # prediction = scheduled_output[:, -1]
+        # out = test_env.compute_weighted_loss(prediction, tf.abs(ds_load))
+        # result[0] = tf.reduce_mean(out)
+        # result[1] = loss_fn2(prediction)
+        # print("the soft result for time: {} is ".format(e), result)
+        prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
+        out_hard = test_env.compute_weighted_loss(prediction_hard, ds_load)
+        result[0] = tf.reduce_mean(out_hard)
+        result[1] = loss_fn2(prediction_hard)
+        print("the top Nrf result for time: {} is ".format(e), result)
+        test_env.increment()
+    # test_env.plot_average_rates(True)
+    test_env.plot_activation(True)
+        # ========= ========= =========  plotting ========= ========= =========
+        # ds = tf.square(tf.abs(ds))
+        # # prediction = prediction[:, :, 2]
+        # unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
+        # unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        # denominator = tf.matmul(ds, unflattened_X)
+        # for i in range(0, num_data):
+        #     plt.imshow(denominator[i], cmap="gray")
+        #     plt.show(block=False)
+        #     plt.pause(0.0001)
+        #     plt.close()
+        # ========= ========= =========  plotting ========= ========= =========
+
+
 def greedy_grid_search():
     M = 64
     K = 50
@@ -173,6 +274,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     num_data = 50
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
@@ -240,8 +342,6 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
 def test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001):
-
-
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -613,8 +713,10 @@ if __name__ == "__main__":
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
-    mores = [1,2,3,4,5,6,7,8]
+    mores = [8,7,6,5,4,3,2,1]
     Es = [1]
+    test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+    a[2]
     # model = DP_partial_feedback_pure_greedy_model(8, 2, 2, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     # A[2]
@@ -642,7 +744,7 @@ if __name__ == "__main__":
             dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
             # model = DP_partial_feedback_pure_greedy_model_new_feedback_model(N_rf, 64, 10, M, K, sigma2_n, perfect_CSI=True)
             # test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-            test_performance(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^

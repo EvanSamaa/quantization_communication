@@ -488,6 +488,7 @@ def partial_feedback_pure_greedy_model(N_rf, B, p, M, K, sigma2):
     # uniformly quantize the values then pick the top Nrf to output
     def model(G):
         G = (tf.abs(G))
+        p=2
         top_values, top_indices = tf.math.top_k(G, k=p)
         return sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p)(top_values, top_indices, G)
     return model
@@ -606,6 +607,78 @@ def DP_DNN_feedback_pure_greedy_model(N_rf, p, M, K, sigma2, encoder_decoder, pe
             out.append(prev_out)
         return out
     return model
+
+def partial_feedback_pure_greedy_model_weighted_SR(N_rf, B, p, M, K, sigma2, environment):
+    # uniformly quantize the values then pick the top Nrf to output
+    def model(G):
+        G = (tf.abs(G))
+        p=2
+        top_values, top_indices = tf.math.top_k(G, k=p)
+        return sparse_pure_greedy_hueristic_weighted_SR(N_rf, sigma2, K, M, p, environment)(top_values, top_indices, G)
+    return model
+def sparse_pure_greedy_hueristic_weighted_SR(N_rf, sigma2, K, M, p, environment):
+    def model(top_val, top_indice, G=None):
+        output = np.zeros((top_indice.shape[0], K * M))
+        if G is None:
+            G_copy = np.zeros((top_indice.shape[0], K, M))
+            for n in range(0, top_indice.shape[0]):
+                for i in range(0, K * p):
+                    # print(K*p)
+                    p_i = int(i % p)
+                    user_i = int(tf.floor(i / p))
+                    G_copy[n, user_i, int(top_indice[n, user_i, p_i])] = top_val[n, user_i, p_i]
+            G_copy = tf.constant(G_copy, dtype=tf.float32)
+            G = G_copy
+        print("done generating partial information")
+        for n in range(0, G.shape[0]):
+            # print("==================================== type", n, "====================================")
+            combinations = []
+            for index_1 in range(0, K * p):
+                p_1 = int(index_1 % p)
+                user_1 = int(tf.floor(index_1 / p))
+                comb = np.zeros((K * M,))
+                comb[user_1 * M + top_indice[n, user_1, p_1]] = 1
+                combinations.append(comb)
+            min = 100
+            best_one = None
+            for com in combinations:
+                current_min = tf.reduce_mean(environment.compute_weighted_loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G[n:n + 1]))
+                if current_min < min:
+                    min = current_min
+                    best_one = com
+            output[n] = best_one
+            selected = set()
+            pair_index = np.nonzero(best_one)
+            selected.add(int(tf.floor(pair_index[0][0] / G.shape[2])))
+            if N_rf >= 2:
+                for n_rf in range(1, N_rf):
+                    new_comb = []
+                    for additional_i in range(0, K * p):
+                        p_i = int(additional_i % p)
+                        user_i = int(tf.floor(additional_i / p))
+                        beamformer_i = int(top_indice[n, user_i, p_i])
+                        if output[n, user_i * M + beamformer_i] != 1:
+                            if not int(tf.floor((user_i * M + beamformer_i) / M)) in selected:
+                                temp = output[n].copy()
+                                temp[user_i * M + beamformer_i] = 1
+                                new_comb.append(temp)
+                    min = 100
+                    best_comb = None
+                    for com in new_comb:
+                        current_min = tf.reduce_mean(environment.compute_weighted_loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G[n:n + 1]))
+                        if current_min < min:
+                            min = current_min
+                            best_comb = com
+                    output[n] = best_comb
+                    pair_index = np.nonzero(best_comb)[0]
+                    for each_nrf in range(0, pair_index.shape[0]):
+                        selected.add(int(tf.floor(pair_index[each_nrf] / G.shape[2])))
+        output = tf.constant(output, dtype=tf.float32)
+        return output
+
+    return model
+
+
 ############################## Misc Models ##############################
 ############################## Layers ##############################
 def relaxation_based_solver(M, K, N_rf, sigma=1.0):
@@ -661,6 +734,7 @@ def DP_partial_feedback_pure_greedy_model_new_feedback_model(N_rf, B, p, M, K, s
             out.append(prev_out)
         return out
     return model
+
 def max_min_k_link_feedback_model(N_rf, B, p, M, K):
     init_ds = generate_link_channel_data(1000, K, M, N_rf)
     G = (tf.abs(init_ds))

@@ -29,6 +29,74 @@ class ModelTrainer():
     def save(self):
         self.data
         np.save(self.save_dir, self.data)
+class Weighted_sumrate_model():
+    def __init__(self, K, M, N_rf, N, alpha:float, hard_decision = True):
+        self.lossfn = Sum_rate_utility_WeiCui_seperate_user(K, M, 1) # loss function to calculate sumrate
+        self.time = 0 # record time stamp
+        self.alpha = alpha # this determines the decay rate of the weighted sum
+        self.hard_decision = hard_decision # determine whether to harden the decision vector or not (for training)
+        self.N_rf = N_rf # Nrf of this
+        self.K = K
+        self.M = M
+        # structure for saving data
+        record_shape = (1, N, K)
+        self.rates = np.zeros(record_shape, dtype=np.float32) # keep the cumulative rates from the past timestamp
+        self.decisions = np.zeros([])
+    def compute_weighted_loss(self, X, G):
+        # this function assumes the caller will feed in the soft decision vector
+        # this will simply compute a loss, without applying the weighted sumrate rule
+        local_X = X
+        if self.hard_decision:
+            local_X = Harden_scheduling_user_constrained(self.N_rf, self.K, self.M)(X)
+        if self.time == 0:
+            R_t = self.lossfn(local_X, G)
+        else:
+            weight = self.get_weight()
+            R_t = (1.0 - self.alpha) * self.rates[-2] + self.alpha * self.lossfn(local_X, G) * weight
+        self.rates[-1] = R_t
+        return -tf.reduce_sum(R_t, axis=1)
+    def get_weight(self):
+        # this function assumes the caller will feed in the soft decision vector
+        # this will simply compute a loss, without applying the weighted sumrate rule
+        if self.time == 0:
+            return np.ones((N, K))
+        weight = np.array(1.0/np.exp(self.rates[-2, :, :]), np.float32)
+        return weight
+    def get_binary_weights(self):
+        # this function assumes the caller will feed in the soft decision vector
+        # this will simply compute a loss, without applying the weighted sumrate rule
+        return np.array(np.where(1.0/self.rates[-2, :, :] > 0.1, 1.0, 0.0), np.float32)
+    def compute_raw_loss(self, X, G):
+        # this function assumes the caller will feed in the soft decision vector
+        # this will simply compute a loss, without applying the weighted sumrate rule
+        local_X = X
+        if self.hard_decision:
+            local_X = Harden_scheduling(self.N_rf, self.K, self.M)(X)
+            R_t = self.lossfn(local_X, G)
+        return -tf.reduce_sum(R_t, axis=1)
+    def plot_average_rates(self, show=True):
+        from matplotlib import pyplot as plt
+        rate = tf.reduce_sum(self.rates, axis=2)
+        rate = -tf.reduce_mean(rate, axis=1)
+        plt.plot(rate)
+        plt.title("weighted sumrate over time")
+        plt.xlabel("episodes")
+        plt.ylabel("Weighted Sumrate")
+        if show:
+            plt.show()
+    def plot_activation(self, show=True):
+        from matplotlib import pyplot as plt
+        rate = tf.reduce_sum(self.rates, axis=0)
+        rate = tf.reduce_sum(rate, axis=0)
+        plt.bar(np.arange(0, self.rates.shape[2]), rate)
+        plt.show()
+    def increment(self):
+        self.time = self.time + 1
+        self.rates = np.concatenate([self.rates, np.zeros([1, self.rates.shape[1], self.rates.shape[2]])], axis=0)
+
+
+
+
 
 def rebar_loss(logits, Nrf, M, K):
     # logit shape = (N, passes, M*K, N_rf)
@@ -244,10 +312,6 @@ def obtain_channel_distributions(N, K, M, Nrf, sigma2_h=0.1, sigma2_n=0.1):
     plt.hist(tf.abs(upper).numpy(), bins=100)
     plt.show()
     return max_G
-def weight_generator(K, M, hard = True):
-    def weight_gen_hard(X, G, K = K, M = M):
-        return 0
-    return 0
 
 
 # ============================  Metrics  ============================
@@ -677,6 +741,28 @@ def Sum_rate_utility_WeiCui(K, M, sigma2):
         utility = tf.math.log(numerator/denominator + 1)/log_2
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
+    return sum_rate_utility
+def Sum_rate_utility_WeiCui_seperate_user(K, M, sigma2):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
+    def sum_rate_utility(y_pred, G, display=False):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, M)
+        G = tf.square(tf.abs(G))
+        unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
+        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        denominator = tf.matmul(G, unflattened_X)
+        if display:
+            plt.imshow(denominator[0])
+            plt.show(block=False)
+            plt.pause(0.0001)
+            plt.close()
+        numerator = tf.multiply(denominator, tf.eye(K))
+        denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
+        numerator = tf.matmul(numerator, tf.ones((K, 1)))
+        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
+        utility = tf.math.log(numerator/denominator + 1)/log_2
+        return utility
     return sum_rate_utility
 def Sum_rate_interference(K, M, sigma2):
     # sigma2 here is the variance of the noise
