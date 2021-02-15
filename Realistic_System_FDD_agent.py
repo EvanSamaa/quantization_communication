@@ -142,7 +142,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
     fname_template_template = "trained_models/Feb8th/user_loc0/weighted_sumrate/weigh_inputs_Nrf={}".format(N_rf)
     fname_template = fname_template_template + "{}"
-    check = 250
+    check = 30
     SUPERVISE_TIME = 0
     training_mode = 2
     swap_delay = check / 2
@@ -226,7 +226,6 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
             train_hard_loss(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2), axis=1)[0])
             print("\n===============overall=================\n",
                   train_hard_loss.result(),train_loss.result())
-            del tape
         ###################### testing with validation set ######################
         if i%check == 0:
             scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
