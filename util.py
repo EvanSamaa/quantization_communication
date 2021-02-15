@@ -72,7 +72,7 @@ class Weighted_sumrate_model():
         local_X = X
         if self.hard_decision:
             local_X = Harden_scheduling(self.N_rf, self.K, self.M)(X)
-            R_t = self.lossfn(local_X, G)
+        R_t = self.lossfn(local_X, G)
         return -tf.reduce_sum(R_t, axis=1)
     def plot_average_rates(self, show=True):
         from matplotlib import pyplot as plt
