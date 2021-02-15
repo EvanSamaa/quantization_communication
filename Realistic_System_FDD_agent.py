@@ -215,7 +215,8 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                 print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
                 # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
                 if len(gradients) == 0:
-                    gradients = tape.gradient(loss, model.trainable_variables)/episodes
+                    for i in range(0, len(gradients)):
+                        gradients += [curr[i]/episodes]
                 else:
                     curr = tape.gradient(loss, model.trainable_variables)
                     for i in range(0, len(gradients)):
