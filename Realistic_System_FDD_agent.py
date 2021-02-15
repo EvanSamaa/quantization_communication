@@ -112,6 +112,30 @@ def grid_search_with_mutex_loss(N_rf = 8):
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
 def grid_search_with_mutex_loss_episodic(N_rf = 8):
+    custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
+                   'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
+                   "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
+                   "Closest_embedding_layer_moving_avg":Closest_embedding_layer_moving_avg,
+                   "Per_link_Input_modification_more_G":Per_link_Input_modification_more_G,
+                   "Per_link_Input_modification_more_G_less_X":Per_link_Input_modification_more_G_less_X,
+                   "Per_link_Input_modification_even_more_G":Per_link_Input_modification_even_more_G,
+                   "Per_link_Input_modification_compress_XG":Per_link_Input_modification_compress_XG,
+                   "Per_link_Input_modification_compress_XG_alt": Per_link_Input_modification_compress_XG_alt,
+                   "Per_link_Input_modification_more_G_alt_2":Per_link_Input_modification_more_G_alt_2,
+                   "Per_link_Input_modification_compress_XG_alt_2":Per_link_Input_modification_compress_XG_alt_2,
+                   "Per_link_Input_modification_most_G":Per_link_Input_modification_most_G,
+                   "Per_link_sequential_modification": Per_link_sequential_modification,
+                   "Per_link_sequential_modification_compressedX":Per_link_sequential_modification_compressedX,
+                   "Per_link_Input_modification_most_G_raw_self":Per_link_Input_modification_most_G_raw_self,
+                   "Reduced_output_input_mod":Reduced_output_input_mod,
+                   "TopPrecoderPerUserInputMod":TopPrecoderPerUserInputMod,
+                   "X_extends":X_extends,
+                   "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
+                   "Sparsemax":Sparsemax,
+                   "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
+                   "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid,
+                   "Per_link_Input_modification_most_G_raw_self_more_interference":Per_link_Input_modification_most_G_raw_self_more_interference,
+                   "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum":Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum}
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -143,7 +167,8 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     check = 100
     episodes = 50
     alpha = .05
-    model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
+    # model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
+    model = tf.keras.models.load_model("trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5".format(N_rf), custom_objects=custome_obj)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=True)
     ################################ Metrics  ###############################
