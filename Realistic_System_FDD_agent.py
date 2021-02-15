@@ -166,7 +166,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     temp = 0.1
     check = 100
     episodes = 50
-    alpha = .05
+    alpha = .3
     # model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
     model = tf.keras.models.load_model("trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5".format(N_rf), custom_objects=custome_obj)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
@@ -191,6 +191,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
             env.reset()
             gradients = []
             for episode in range(episodes):
+                loss = 0
                 with tf.GradientTape(persistent=True) as tape:
                     temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
                     temp = np.float32(temp)
@@ -216,8 +217,8 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                 if len(gradients) == 0:
                     gradients = tape.gradient(loss, model.trainable_variables)
                 else:
+                    curr = tape.gradient(loss, model.trainable_variables)
                     for i in range(0, len(gradients)):
-                        curr = tape.gradient(loss, model.trainable_variables)
                         gradients[i] += curr[i]
                 del tape
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))

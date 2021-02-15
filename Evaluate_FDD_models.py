@@ -20,7 +20,7 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.1, True)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.2, True)
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
     ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
     model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
@@ -719,7 +719,9 @@ if __name__ == "__main__":
     mores = [8,7,6,5,4,3,2,1]
     Es = [1]
 
-    # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=False)
+    model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
+    test_greedy_weighted_SR(model, M, K, B, N_rf, sigma2_n, sigma2_n)
+    A[2]
     # test_greedy(model, M, K, N_rf=8)
     # A[2]
     # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
