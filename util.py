@@ -48,7 +48,7 @@ class Weighted_sumrate_model():
         record_shape = (1, self.N, self.K)
         self.time = 0
         self.rates = np.zeros(record_shape, dtype=np.float32)  # keep the cumulative rates from the past timestamp
-    def compute_weighted_loss(self, X, G, update=True):
+    def compute_weighted_loss(self, X, G, weight=None, update=True):
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule
         local_X = X
@@ -57,7 +57,8 @@ class Weighted_sumrate_model():
         if self.time == 0:
             R_t = self.lossfn(local_X, G)
         else:
-            weight = self.get_weight()
+            if weight is None:
+                weight = self.get_weight()
             R_t = (1.0 - self.alpha) * self.rates[-2] + self.alpha * self.lossfn(local_X, G) * weight
         if update:
             self.rates[-1] = R_t
