@@ -166,7 +166,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
             env.reset()
             with tf.GradientTape(persistent=True) as tape:
                 loss = 0
-                for episode in episodes:
+                for episode in range(episodes):
                     temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
                     temp = np.float32(temp)
                     train_hard_loss.reset_states()
@@ -184,13 +184,15 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                     ###################### model post-processing ######################
                     loss = env.compute_weighted_loss(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
                     env.increment()
+                    print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
                     # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
             train_hard_loss(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2), axis=1)[0])
-            print(train_hard_loss.result(),train_loss.result())
+            print("\n===============overall=================\n",
+                  train_hard_loss.result(),train_loss.result())
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:
