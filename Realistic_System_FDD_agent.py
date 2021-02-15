@@ -145,7 +145,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     alpha = .05
     model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
-    env = Weighted_sumrate_model(K, M, N_rf, alpha, hard_decision=True)
+    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=True)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # train_sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
