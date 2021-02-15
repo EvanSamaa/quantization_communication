@@ -145,7 +145,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     alpha = .05
     model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
-    env = Weighted_sumrate_model(K, M, N_rf, N*sample_size, alpha, hard_decision=True)
+    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=True)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # train_sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -182,7 +182,8 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                     out = tf.reshape(out, [sample_size*N, K*M])
                     train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
                     ###################### model post-processing ######################
-                    loss = env.compute_weighted_loss(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
+                    loss = env.compute_weighted_loss(out, train_label, update=False) + mutex_loss_fn(raw_ans[:, -1])
+                    env.compute_weighted_loss(ans[:, -1], train_label, update=True)
                     env.increment()
                     print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
                     # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
