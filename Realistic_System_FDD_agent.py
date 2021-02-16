@@ -159,7 +159,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.01
+    lr = 0.001
     N = 25 # number of
     rounds = 8
     sample_size = 20
@@ -223,10 +223,12 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                 del tape
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
-            train_loss(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
-            train_hard_loss(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2), axis=1)[0])
+            l1 = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2))
+            lh = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2), axis=1)[0]
+            train_loss(l1)
+            train_hard_loss(lh)
             print("\n===============overall=================\n",
-                  train_hard_loss.result(),train_loss.result())
+                  l1,lh)
         ###################### testing with validation set ######################
         if i%check == 0:
             scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
