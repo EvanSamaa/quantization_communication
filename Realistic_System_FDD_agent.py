@@ -220,7 +220,6 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                 else:
                     for i in range(0, len(curr)):
                         gradients[i] += curr[i]/episodes
-                print(gradients)
                 del tape
 
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
