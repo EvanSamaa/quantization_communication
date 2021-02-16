@@ -76,7 +76,7 @@ class Weighted_sumrate_model():
     def get_binary_weights(self):
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule
-        return np.array(np.where(1.0/self.rates[-2, :, :] > 0.1, 1.0, 0.0), np.float32)
+        return np.array(np.where(self.get_weight() > 0.5, 1.0, 0.0), np.float32)
     def compute_raw_loss(self, X, G):
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule

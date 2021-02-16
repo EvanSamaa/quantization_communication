@@ -43,9 +43,11 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
     num_data = 20
-    num_episodes = 50
+    num_episodes = 200
+    tf.random.set_seed(200)
+    np.random.seed(200)
     result = np.zeros((3,))
-    test_env = Weighted_sumrate_model(K, M, N_rf, num_data, .05, False)
+    test_env = Weighted_sumrate_model(K, M, N_rf, num_data, .2, True)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
@@ -58,7 +60,7 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         # print(ds)
         ds_load = ds
         if e > 0:
-            ds_load = ds * tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)
+            ds_load = ds * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
         scheduled_output, raw_output = model.predict(ds_load, batch_size=50)
         prediction = scheduled_output[:, -1]
         # prediction = model(ds_load)[-1]
@@ -94,6 +96,11 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         print("the top Nrf result for time: {} is ".format(e), result)
         test_env.increment()
     # test_env.plot_average_rates(True)
+    data = test_env.rates
+    np.load("trained_models/Feb8th/user_loc0/weighted_sumrate_gready.npy")
+    data = tf.reduce_mean(tf.reduce_sum(data[:-1], axis=2))
+    print(data)
+    A[2]
     test_env.plot_activation(True)
         # ========= ========= =========  plotting ========= ========= =========
         # ds = tf.square(tf.abs(ds))
@@ -717,16 +724,15 @@ if __name__ == "__main__":
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
-    data = np.load("trained_models/Feb8th/user_loc0/weighted_sumrate/weigh_inputs_Nrf=8.npy")
-    plot_data(data, [0, 1], "weighted sumrate", ["mean", "first"])
-    A[2]
+    data = np.load("trained_models/Feb8th/user_loc0/weighted_sumrate_gready.npy")
+    data = tf.reduce_mean(tf.reduce_sum(data[:-1], axis=2))
+    print(data)
 
     mores = [8,7,6,5,4,3,2,1]
     Es = [1]
-
-    model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
-    test_greedy_weighted_SR(model, M, K, B, N_rf, sigma2_n, sigma2_n)
-    A[2]
+    #
+    # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
+    # test_greedy_weighted_SR(model, M, K, B, N_rf, sigma2_n, sigma2_n)
     # test_greedy(model, M, K, N_rf=8)
     # A[2]
     # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)

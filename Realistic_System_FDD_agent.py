@@ -140,7 +140,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Feb8th/user_loc0/weighted_sumrate/weigh_inputs_Nrf={}".format(N_rf)
+    fname_template_template = "trained_models/Feb8th/user_loc0/weighted_sumrate/binary_weighted_inputs_Nrf={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 30
     SUPERVISE_TIME = 0
@@ -197,7 +197,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                     train_hard_loss.reset_states()
                     train_loss.reset_states()
                         ###################### model post-processing ######################
-                    ans, raw_ans = model(train_data * tf.complex(tf.expand_dims(env.get_weight(), axis=2), 0.0)) # raw_ans is in the shape of (N, passes, M*K, N_rf)
+                    ans, raw_ans = model(train_data * tf.complex(tf.expand_dims(env.get_binary_weights(), axis=2), 0.0)) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                     out_raw = tf.transpose(raw_ans, [0, 1, 3, 2])
                     out_raw = tf.reshape(out_raw[:,-1], [N * N_rf, K*M])
                     sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw)
@@ -206,7 +206,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                     out = tf.reduce_sum(out_raw, axis=2)
                     out = tf.reshape(out, [sample_size*N, K*M])
                     train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
-                    weight = tf.reshape(tf.tile(tf.expand_dims(env.get_weight(), axis=0), [sample_size,1, 1]), [sample_size*N, K])
+                    weight = tf.reshape(tf.tile(tf.expand_dims(env.get_binary_weights(), axis=0), [sample_size,1, 1]), [sample_size*N, K])
                     ###################### model post-processing ######################
                     loss = env.compute_weighted_loss(out, train_label, weight=weight, update=False) + mutex_loss_fn(raw_ans[:, -1])
                     env.compute_weighted_loss(ans[:, -1], train_data, update=True)
@@ -421,4 +421,4 @@ if __name__ == "__main__":
     # np.random.seed(2)
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_2.npy")
     for N_rf_to_search in [8,7,6,5,4,3,2,1]:
-        grid_search_with_mutex_loss_episodic_new_archi(N_rf_to_search)
+        grid_search_with_mutex_loss_episodic(N_rf_to_search)
