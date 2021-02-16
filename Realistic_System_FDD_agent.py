@@ -218,7 +218,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                     for i in range(0, len(curr)):
                         gradients += [curr[i]/episodes]
                 else:
-                    for i in range(0, len(gradients)):
+                    for i in range(0, len(curr)):
                         gradients[i] += curr[i]/episodes
                 print(gradients)
                 del tape
