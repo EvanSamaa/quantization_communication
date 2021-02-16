@@ -2000,7 +2000,7 @@ class Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_wit
         col_choice = tf.matmul(self.Mm, col_choice)
         col_choice = col_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
-        weights = tf.tile(weights, [1, 1, M])
+        weights = tf.tile(weights, [1, 1, self.M])
         input_i = input_concatnator(
             [input_reshaper(input_mod), selected, weights,
              G_mean,
