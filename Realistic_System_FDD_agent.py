@@ -191,7 +191,6 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
             env.reset()
             gradients = []
             for episode in range(episodes):
-                loss = 0
                 with tf.GradientTape(persistent=True) as tape:
                     temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
                     temp = np.float32(temp)
