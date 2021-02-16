@@ -426,4 +426,4 @@ if __name__ == "__main__":
     # np.random.seed(2)
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_2.npy")
     for N_rf_to_search in [8]:
-        grid_search_with_mutex_loss_episodic(N_rf_to_search)
+        grid_search_with_mutex_loss_episodic_new_archi(N_rf_to_search)
