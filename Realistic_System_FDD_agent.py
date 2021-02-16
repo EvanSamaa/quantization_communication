@@ -260,8 +260,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
-
-def grid_search_with_mutex_loss_episodic_new_arcitecture(N_rf = 8):
+def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -290,7 +289,7 @@ def grid_search_with_mutex_loss_episodic_new_arcitecture(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Feb8th/user_loc0/weighted_sumrate/weigh_inputs_Nrf={}".format(N_rf)
+    fname_template_template = "trained_models/Feb8th/user_loc0/weighted_sumrate/weight_as_sep_input_Nrf={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 30
     SUPERVISE_TIME = 0
@@ -317,8 +316,8 @@ def grid_search_with_mutex_loss_episodic_new_arcitecture(N_rf = 8):
     check = 100
     episodes = 50
     alpha = .3
-    # model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
-    model = tf.keras.models.load_model("trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5".format(N_rf), custom_objects=custome_obj)
+    model = FDD_agent_more_G_with_weights(M, K, 5, N_rf, True, max_val)
+    # model = tf.keras.models.load_model("trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5".format(N_rf), custom_objects=custome_obj)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=False)
     ################################ Metrics  ###############################
@@ -341,14 +340,14 @@ def grid_search_with_mutex_loss_episodic_new_arcitecture(N_rf = 8):
             env.reset()
             gradients = []
             for episode in range(episodes):
-                loss = 0
                 with tf.GradientTape(persistent=True) as tape:
                     temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
                     temp = np.float32(temp)
                     train_hard_loss.reset_states()
                     train_loss.reset_states()
                         ###################### model post-processing ######################
-                    ans, raw_ans = model(train_data * tf.complex(tf.expand_dims(env.get_weight(), axis=2), 0.0)) # raw_ans is in the shape of (N, passes, M*K, N_rf)
+                    input_mod = tf.concat([train_data, tf.complex(tf.expand_dims(env.get_weight(), axis=2), 0.0)], axis = 2)
+                    ans, raw_ans = model(input_mod) # raw_ans is in the shape of (N, passes, M*K, N_rf)
                     out_raw = tf.transpose(raw_ans, [0, 1, 3, 2])
                     out_raw = tf.reshape(out_raw[:,-1], [N * N_rf, K*M])
                     sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw)
@@ -364,22 +363,26 @@ def grid_search_with_mutex_loss_episodic_new_arcitecture(N_rf = 8):
                     env.increment()
                 print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
                 # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
+                curr = tape.gradient(loss, model.trainable_variables)
                 if len(gradients) == 0:
-                    for i in range(0, len(gradients)):
+                    for i in range(0, len(curr)):
                         gradients += [curr[i]/episodes]
                 else:
-                    curr = tape.gradient(loss, model.trainable_variables)
-                    for i in range(0, len(gradients)):
+                    for i in range(0, len(curr)):
                         gradients[i] += curr[i]/episodes
                 del tape
+
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
-            train_loss(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
-            train_hard_loss(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2), axis=1)[0])
+            l1 = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2))
+            lh = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2), axis=1)[0]
+            train_loss(l1)
+            train_hard_loss(lh)
             print("\n===============overall=================\n",
-                  train_hard_loss.result(),train_loss.result())
+                  l1,lh)
         ###################### testing with validation set ######################
         if i%check == 0:
+            input_mod=tf.concat([valid_data, tf.ones([valid_data.shape[0], K, 1])], axis=22)
             scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
@@ -408,6 +411,7 @@ def grid_search_with_mutex_loss_episodic_new_arcitecture(N_rf = 8):
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
+
 if __name__ == "__main__":
     M = 64
     K = 50
