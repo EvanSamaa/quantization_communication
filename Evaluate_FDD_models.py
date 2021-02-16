@@ -476,7 +476,7 @@ def plot_data(arr, col=[], title="loss", series_name = None):
     plt.xlabel("epochs")
     plt.ylabel("sum rate")
     plt.title(title)
-    # plt.show()
+    plt.show()
 def garsons_method(model_path):
     from matplotlib import pyplot as plt
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
@@ -717,6 +717,10 @@ if __name__ == "__main__":
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
+    data = np.load("trained_models/Feb8th/user_loc0/weighted_sumrate/weigh_inputs_Nrf=8.npy")
+    plot_data(data, [0, 1], "weighted sumrate", ["mean", "first"])
+    A[2]
+
     mores = [8,7,6,5,4,3,2,1]
     Es = [1]
 
