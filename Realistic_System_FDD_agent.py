@@ -291,10 +291,6 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
     fname_template_template = "trained_models/Feb8th/user_loc0/weighted_sumrate/weight_as_sep_input_Nrf={}".format(N_rf)
     fname_template = fname_template_template + "{}"
-    SUPERVISE_TIME = 0
-    training_mode = 2
-    swap_delay = check / 2
-
     # problem Definition
     M = 64
     K = 100
