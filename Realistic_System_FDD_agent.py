@@ -159,7 +159,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.001
+    lr = 0.0001
     N = 25 # number of
     rounds = 8
     sample_size = 20
@@ -211,7 +211,7 @@ def grid_search_with_mutex_loss_episodic(N_rf = 8):
                     loss = env.compute_weighted_loss(out, train_label, weight=weight, update=False) + mutex_loss_fn(raw_ans[:, -1])
                     env.compute_weighted_loss(ans[:, -1], train_data, update=True)
                     env.increment()
-                # print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
+                print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
                 # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
                 curr = tape.gradient(loss, model.trainable_variables)
                 if len(gradients) == 0:
