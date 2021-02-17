@@ -331,7 +331,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
         train_hard_loss.reset_states()
         # generate training data
         train_data = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", N, K, M, Nrf=N_rf)
-        if i < pre_train:
+        if i >= pre_train:
             ###################### training happens here ######################
             for e in range(0, rounds):
                 env.reset()
