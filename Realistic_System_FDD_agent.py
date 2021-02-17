@@ -403,7 +403,9 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
                                              [sample_size * N, K, M])
                     ###################### model post-processing ######################
                     # loss = train_label(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
-                    loss = sum_rate(out, train_label) + mutex_loss_fn(out)
+                    print(train_label.shape)
+                    print(out.shape)
+                    loss = sum_rate(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
                 gradients = tape.gradient(loss, model.trainable_variables)
 
                 optimizer.apply_gradients(zip(gradients, model.trainable_variables))
