@@ -403,8 +403,6 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
                                              [sample_size * N, K, M])
                     ###################### model post-processing ######################
                     # loss = train_label(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
-                    print(train_label.shape)
-                    print(out.shape)
                     loss = sum_rate(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
                 gradients = tape.gradient(loss, model.trainable_variables)
 
@@ -414,8 +412,9 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
                 print(train_hard_loss.result(), train_loss.result())
         ###################### testing with validation set ######################
         if i%check == 0:
-            input_mod=tf.concat([valid_data, tf.ones([valid_data.shape[0], K, 1])], axis=22)
-            scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
+            input_mod=tf.concat([valid_data, tf.complex(tf.ones([valid_data.shape[0], K, 1], dtype=tf.float32), 0.0)],
+                                          axis=2)
+            scheduled_output, raw_output = model.predict(input_mod, batch_size=N)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
             print("============================================================\n")
