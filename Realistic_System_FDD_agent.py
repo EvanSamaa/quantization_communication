@@ -292,6 +292,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
     fname_template_template = "trained_models/Feb8th/user_loc0/weighted_sumrate/weight_as_sep_input_Nrf={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     # problem Definition
+    pre_train = 600
     M = 64
     K = 100
     seed = 100
@@ -308,7 +309,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
     rounds = 8
     sample_size = 20
     temp = 0.1
-    check = 30
+    check = 100
     episodes = 50
     alpha = .3
     model = FDD_agent_more_G_with_weights(M, K, 5, N_rf, True, max_val)
@@ -330,51 +331,85 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
         train_hard_loss.reset_states()
         # generate training data
         train_data = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", N, K, M, Nrf=N_rf)
-        ###################### training happens here ######################
-        for e in range(0, rounds):
-            env.reset()
-            gradients = []
-            for episode in range(episodes):
+        if i < pre_train:
+            ###################### training happens here ######################
+            for e in range(0, rounds):
+                env.reset()
+                gradients = []
+                for episode in range(episodes):
+                    with tf.GradientTape(persistent=True) as tape:
+                        temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
+                        temp = np.float32(temp)
+                        train_hard_loss.reset_states()
+                        train_loss.reset_states()
+                        ###################### model post-processing ######################
+                        input_mod = tf.concat([train_data, tf.complex(tf.expand_dims(env.get_weight(), axis=2), 0.0)], axis = 2)
+                        ans, raw_ans = model(input_mod) # raw_ans is in the shape of (N, passes, M*K, N_rf)
+                        out_raw = tf.transpose(raw_ans, [0, 1, 3, 2])
+                        out_raw = tf.reshape(out_raw[:,-1], [N * N_rf, K*M])
+                        sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw)
+                        out_raw = sm.sample(sample_size)
+                        out_raw = tf.reshape(out_raw, [sample_size, N, N_rf, K*M])
+                        out = tf.reduce_sum(out_raw, axis=2)
+                        out = tf.reshape(out, [sample_size*N, K*M])
+                        train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
+                        weight = tf.reshape(tf.tile(tf.expand_dims(env.get_weight(), axis=0), [sample_size,1, 1]), [sample_size*N, K])
+                        ###################### model post-processing ######################
+                        loss = env.compute_weighted_loss(out, train_label, weight=weight, update=False) + mutex_loss_fn(raw_ans[:, -1])
+                        env.compute_weighted_loss(ans[:, -1], train_data, update=True)
+                        env.increment()
+                    print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
+                    # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
+                    curr = tape.gradient(loss, model.trainable_variables)
+                    if len(gradients) == 0:
+                        for i in range(0, len(curr)):
+                            gradients += [curr[i]/episodes]
+                    else:
+                        for i in range(0, len(curr)):
+                            gradients[i] += curr[i]/episodes
+                    del tape
+
+                optimizer.apply_gradients(zip(gradients,model.trainable_variables))
+                # optimizer.minimize(loss, ans)
+                l1 = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2))
+                lh = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2), axis=1)[0]
+                train_loss(l1)
+                train_hard_loss(lh)
+                print("\n===============overall=================\n",
+                      l1,lh)
+        else:
+            check = 30
+            train_hard_loss.reset_states()
+            # generate training data
+            ###################### training happens here ######################
+            for e in range(0, rounds):
                 with tf.GradientTape(persistent=True) as tape:
-                    temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
+                    temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0 - i) / 200.0)) + 0.1
                     temp = np.float32(temp)
                     train_hard_loss.reset_states()
                     train_loss.reset_states()
-                        ###################### model post-processing ######################
-                    input_mod = tf.concat([train_data, tf.complex(tf.expand_dims(env.get_weight(), axis=2), 0.0)], axis = 2)
-                    ans, raw_ans = model(input_mod) # raw_ans is in the shape of (N, passes, M*K, N_rf)
+                    ###################### model post-processing ######################
+                    input_mod = tf.concat([train_data, tf.complex(tf.ones([N, K, 1]))],
+                                          axis=2)
+                    ans, raw_ans = model(input_mod)  # raw_ans is in the shape of (N, passes, M*K, N_rf)
                     out_raw = tf.transpose(raw_ans, [0, 1, 3, 2])
-                    out_raw = tf.reshape(out_raw[:,-1], [N * N_rf, K*M])
+                    out_raw = tf.reshape(out_raw[:, -1], [N * N_rf, K * M])
                     sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw)
                     out_raw = sm.sample(sample_size)
-                    out_raw = tf.reshape(out_raw, [sample_size, N, N_rf, K*M])
+                    out_raw = tf.reshape(out_raw, [sample_size, N, N_rf, K * M])
                     out = tf.reduce_sum(out_raw, axis=2)
-                    out = tf.reshape(out, [sample_size*N, K*M])
-                    train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
-                    weight = tf.reshape(tf.tile(tf.expand_dims(env.get_weight(), axis=0), [sample_size,1, 1]), [sample_size*N, K])
+                    out = tf.reshape(out, [sample_size * N, K * M])
+                    train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size, 1, 1, 1]),
+                                             [sample_size * N, K, M])
                     ###################### model post-processing ######################
-                    loss = env.compute_weighted_loss(out, train_label, weight=weight, update=False) + mutex_loss_fn(raw_ans[:, -1])
-                    env.compute_weighted_loss(ans[:, -1], train_data, update=True)
-                    env.increment()
-                print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
-                # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
-                curr = tape.gradient(loss, model.trainable_variables)
-                if len(gradients) == 0:
-                    for i in range(0, len(curr)):
-                        gradients += [curr[i]/episodes]
-                else:
-                    for i in range(0, len(curr)):
-                        gradients[i] += curr[i]/episodes
-                del tape
+                    # loss = train_label(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
+                    loss = sum_rate(out, train_label) + mutex_loss_fn(out)
+                gradients = tape.gradient(loss, model.trainable_variables)
 
-            optimizer.apply_gradients(zip(gradients,model.trainable_variables))
-            # optimizer.minimize(loss, ans)
-            l1 = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2))
-            lh = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2), axis=1)[0]
-            train_loss(l1)
-            train_hard_loss(lh)
-            print("\n===============overall=================\n",
-                  l1,lh)
+                optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+                train_loss(loss)
+                train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:, -1]), train_data))
+                print(train_hard_loss.result(), train_loss.result())
         ###################### testing with validation set ######################
         if i%check == 0:
             input_mod=tf.concat([valid_data, tf.ones([valid_data.shape[0], K, 1])], axis=22)
@@ -389,8 +424,8 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
             if i >= (check * 2):
                 graphing_data = np_data.data
                 improvement = graphing_data[i + 1 - (check * 2): i - check + 1, -1].min() - graphing_data[
-                                                                                                   i - check + 1: i + 1,
-                                                                                                   -1].min()
+                                                                                            i - check + 1: i + 1,
+                                                                                            -1].min()
                 counter = 0
                 for asldk in graphing_data[0:i + 1, -1]:
                     if asldk != 0:

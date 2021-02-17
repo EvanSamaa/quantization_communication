@@ -8,7 +8,7 @@ import tensorflow as tf
 # = = = = = = = = = = = = = = = = = = on weighted Sumrates = = = = = = = = = = = = = = = = = = =
 def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
-    num_data = 2
+    num_data = 20
     episodes = 200
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -35,7 +35,7 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
             # print("the variance is ", tf.math.reduce_std(out))
         enviroment.increment()
     # enviroment.plot_activation(show=True)
-    # np.save("trained_models/Feb8th/user_loc0/weighted_sumrate_gready.npy", enviroment.rates)
+        np.save("trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf={}.npy".format(N_rf), enviroment.rates)
     return store
 def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, sigma2_n=0.00001):
     config = tf.compat.v1.ConfigProto()
@@ -97,11 +97,8 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         test_env.increment()
     # test_env.plot_average_rates(True)
     data = test_env.rates
-    np.load("trained_models/Feb8th/user_loc0/weighted_sumrate_gready.npy")
-    data = tf.reduce_mean(tf.reduce_sum(data[:-1], axis=2))
-    print(data)
-    A[2]
-    test_env.plot_activation(True)
+    np.save("trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf), data)
+    # test_env.plot_activation(True)
         # ========= ========= =========  plotting ========= ========= =========
         # ds = tf.square(tf.abs(ds))
         # # prediction = prediction[:, :, 2]
@@ -724,15 +721,15 @@ if __name__ == "__main__":
     # training_data_path = file + ".npy"
     # training_data = np.load(training_data_path)
     # plot_data(training_data, [0, 3], "-sum rate")
-    data = np.load("trained_models/Feb8th/user_loc0/weighted_sumrate_gready.npy")
-    data = tf.reduce_mean(tf.reduce_sum(data[:-1], axis=2))
-    print(data)
 
     mores = [8,7,6,5,4,3,2,1]
     Es = [1]
     #
     # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
-    # test_greedy_weighted_SR(model, M, K, B, N_rf, sigma2_n, sigma2_n)
+    for N_rf in mores:
+        data = np.load("trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf))
+        data = tf.reduce_mean(tf.reduce_sum(data[:-1], axis=2))
+        print(data)
     # test_greedy(model, M, K, N_rf=8)
     # A[2]
     # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
