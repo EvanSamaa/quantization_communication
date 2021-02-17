@@ -389,7 +389,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
                     train_hard_loss.reset_states()
                     train_loss.reset_states()
                     ###################### model post-processing ######################
-                    input_mod = tf.concat([train_data, tf.complex(tf.ones([N, K, 1]), 0)],
+                    input_mod = tf.concat([train_data, tf.complex(tf.ones([N, K, 1], dtype=tf.float32), 0.0)],
                                           axis=2)
                     ans, raw_ans = model(input_mod)  # raw_ans is in the shape of (N, passes, M*K, N_rf)
                     out_raw = tf.transpose(raw_ans, [0, 1, 3, 2])
