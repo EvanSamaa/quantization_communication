@@ -304,7 +304,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.0001
+    lr = 0.001
     N = 25 # number of
     rounds = 8
     sample_size = 20
@@ -333,6 +333,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
         train_data = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", N, K, M, Nrf=N_rf)
         if i >= pre_train:
             ###################### training happens here ######################
+            check = 30
             for e in range(0, rounds):
                 env.reset()
                 gradients = []
@@ -378,7 +379,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
                 print("\n===============overall=================\n",
                       l1,lh)
         else:
-            check = 30
+
             train_hard_loss.reset_states()
             # generate training data
             ###################### training happens here ######################
