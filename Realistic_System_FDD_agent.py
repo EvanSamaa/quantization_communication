@@ -304,7 +304,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.001
+    lr = 0.0001
     N = 25 # number of
     rounds = 8
     sample_size = 20
