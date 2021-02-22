@@ -289,7 +289,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Feb8th/user_loc0/weighted_sumrate/with_prior_weight_as_sep_input_Nrf={}".format(N_rf)
+    fname_template_template = "trained_models/Feb8th/user_loc0/weighted_sumrate/prior_weight_then_RF_training={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 600
