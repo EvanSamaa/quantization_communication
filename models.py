@@ -1956,33 +1956,41 @@ class Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_wit
         x = tf.keras.layers.Reshape((self.K, self.M))(x)
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
-        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod # interference from each node
         interference_f = tf.multiply(power, x)
+        # add weight related modification
+        interference_f = tf.multiply(interference_f, tf.tile(weights, [1, 1, self.M]))
         up = tf.multiply(input_mod, x)
+        # add weight related modification
+        up = tf.multiply(up, tf.tile(weights, [1, 1, self.M]))
         interference_t_2 = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), [1,self.K,1])
         interference_t_2 = tf.divide(up, interference_t_2 - up + 1)
         interference_t_2 = input_reshaper(interference_t_2)
         interference_f_2 = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
         selected = tf.keras.layers.Reshape((self.M*self.K, 1))(tf.multiply(x, input_mod))
         unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
-        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        weighted_input_mod = tf.multiply(input_mod, tf.tile(weights, [1, 1, self.M]))
+
+
+        interference_t = tf.matmul(weighted_input_mod, unflattened_output_0)
         interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
         interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
         interference_t = input_reshaper(interference_t)
         interference_f = input_reshaper(interference_f)
         interference_f_2 = input_reshaper(interference_f_2)
-        G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
+
+        G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(weighted_input_mod), axis=1, keepdims=True)
         G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
-        G_user_tiled = tf.matmul(self.Mk, input_mod)
+        G_user_tiled = tf.matmul(self.Mk, weighted_input_mod)
         G_user_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.M), (self.K, 1)), G_user_tiled)
         G_user_mean = tf.reduce_mean(G_user_tiled, axis=2, keepdims=True)
         G_user_max = tf.reduce_max(G_user_tiled, axis=2, keepdims=True)
         G_user_min = tf.reduce_min(G_user_tiled, axis=2, keepdims=True)
-        GX_user_mean = tf.reduce_sum(tf.multiply(input_mod, x), axis=2, keepdims=True)
+        GX_user_mean = tf.reduce_sum(tf.multiply(weighted_input_mod, x), axis=2, keepdims=True)
         GX_user_mean = tf.matmul(self.Mk, GX_user_mean) - selected
-        GX_col_mean = tf.transpose(tf.reduce_sum(tf.multiply(input_mod, x), axis=1, keepdims=True), perm=[0, 2, 1])
+        GX_col_mean = tf.transpose(tf.reduce_sum(tf.multiply(weighted_input_mod, x), axis=1, keepdims=True), perm=[0, 2, 1])
         GX_col_mean = tf.matmul(self.Mm, GX_col_mean) - selected
-        G_col_tiled = tf.matmul(self.Mm, tf.transpose(input_mod, perm=[0, 2, 1]))
+        G_col_tiled = tf.matmul(self.Mm, tf.transpose(weighted_input_mod, perm=[0, 2, 1]))
         G_col_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.K), (self.M, 1)), G_col_tiled)
         G_col_mean = tf.reduce_mean(G_col_tiled, axis=2, keepdims=True)
         G_col_min = tf.reduce_min(G_col_tiled, axis=2, keepdims=True)

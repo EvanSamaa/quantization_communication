@@ -379,7 +379,6 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
                 print("\n===============overall=================\n",
                       l1,lh)
         else:
-
             train_hard_loss.reset_states()
             # generate training data
             ###################### training happens here ######################
