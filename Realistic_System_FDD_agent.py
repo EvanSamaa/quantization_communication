@@ -304,7 +304,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.0001
+    lr = 0.001
     N = 25 # number of
     rounds = 8
     sample_size = 20
@@ -336,7 +336,6 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
             check = 30
             for e in range(0, rounds):
                 env.reset()
-                gradients = []
                 for episode in range(episodes):
                     with tf.GradientTape(persistent=True) as tape:
                         temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
