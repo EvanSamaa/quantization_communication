@@ -437,7 +437,7 @@ def grid_search_with_mutex_loss_episodic_new_archi(N_rf = 8):
                 if improvement <= 0.0001 and lr == 0.001:
                     lr = 0.0001
                     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-                elif improvement <= 0.0001 and lr < 0.001:
+                elif improvement <= 0.0001 and lr < 0.001 and i > pre_train:
                     break
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
