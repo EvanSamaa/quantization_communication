@@ -515,10 +515,12 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
         train_hard_loss.reset_states()
         # generate training data
         train_data = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", N, K, M, Nrf=N_rf)
-            ###################### training happens here ######################
-        for e in range(0, rounds):
-            env.reset()
-            for episode in range(episodes):
+        ###################### training happens here ######################
+        env.reset()
+        ###################### testing with validation set ######################
+        for episode in range(episodes):
+            env.increment()
+            for e in range(0, rounds):
                 with tf.GradientTape(persistent=True) as tape:
                     temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
                     temp = np.float32(temp)
@@ -538,9 +540,8 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
                     weight = tf.reshape(tf.tile(tf.expand_dims(env.get_weight(), axis=0), [sample_size,1, 1]), [sample_size*N, K])
                     ###################### model post-processing ######################
                     loss = env.compute_weighted_loss(out, train_label, weight=weight, update=False) + mutex_loss_fn(raw_ans[:, -1])
-                    env.increment()
                     env.compute_weighted_loss(ans[:, -1], train_data, update=True)
-                print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
+            print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
                 # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
@@ -552,10 +553,9 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
             del tape
             print("\n===============overall=================\n",
                   l1,lh)
-        ###################### testing with validation set ######################
         if i%check == 0:
             input_mod=tf.concat([valid_data, tf.complex(tf.ones([valid_data.shape[0], K, 1], dtype=tf.float32), 0.0)],
-                                          axis=2)
+                                axis=2)
             scheduled_output, raw_output = model.predict(input_mod, batch_size=N)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
