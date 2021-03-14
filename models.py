@@ -2139,9 +2139,12 @@ class Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_wit
         weights_min = tf.reduce_min(tiled_weights, axis=2)
         weights_mean = tf.reduce_mean(tiled_weights, axis=2)
         self_weights = tf.matmul(self.Mk, weights)
+        weights_max = tf.matmul(self.Mk, weights_max)
+        weights_min = tf.matmul(self.Mk, weights_min)
+        weights_mean = tf.matmul(self.Mk, weights_mean)
 
         input_i = input_concatnator(
-            [input_reshaper(input_mod), selected, weights,
+            [input_reshaper(input_mod), selected, self_weights,
              weights_max, weights_min, weights_mean,
              G_mean,
              G_user_mean, G_user_max, G_user_min,
