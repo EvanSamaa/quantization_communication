@@ -54,6 +54,8 @@ class Weighted_sumrate_model():
         # this function assumes the caller will feed in the soft decision vector
         # must call increment before this step to obtain the correct loss and make the correct update
         # this will simply compute a loss, without applying the weighted sumrate rule
+
+        ###########################################   R_t is alwayus positive, loss function returns positive too  ###############################################
         local_X = X
         if self.hard_decision:
             local_X = Harden_scheduling_user_constrained(self.N_rf, self.K, self.M)(X)
