@@ -48,6 +48,8 @@ class Weighted_sumrate_model():
         record_shape = (1, self.N, self.K)
         self.time = 0
         self.rates = np.zeros(record_shape, dtype=np.float32)  # keep the cumulative rates from the past timestamp
+    def get_rates(self):
+        return -self.rates
     def compute_weighted_loss(self, X, G, weight=None, update=True):
         # this function assumes the caller will feed in the soft decision vector
         # must call increment before this step to obtain the correct loss and make the correct update

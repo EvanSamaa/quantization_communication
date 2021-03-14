@@ -543,11 +543,11 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
                     env.compute_weighted_loss(ans[:, -1], train_data, update=True)
                     gradients = tape.gradient(loss, model.trainable_variables)
                     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-            print(tf.reduce_mean(tf.reduce_sum(env.rates, axis=2)))
+            print(tf.reduce_mean(tf.reduce_sum(env.get_rates(), axis=2)))
                 # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
             # optimizer.minimize(loss, ans)
-            l1 = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2))
-            lh = tf.reduce_mean(tf.reduce_sum(env.rates, axis=2), axis=1)[0]
+            l1 = tf.reduce_mean(tf.reduce_sum(env.get_rates(), axis=2))
+            lh = tf.reduce_mean(tf.reduce_sum(env.get_rates(), axis=2), axis=1)[0]
             train_loss(l1)
             train_hard_loss(lh)
             del tape
