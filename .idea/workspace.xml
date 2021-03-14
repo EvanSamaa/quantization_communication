@@ -19,12 +19,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Evaluate_FDD_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Evaluate_FDD_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=3.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=3.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util.py" afterDir="false" />
-    </list>
+    <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
