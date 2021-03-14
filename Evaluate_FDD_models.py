@@ -6,6 +6,72 @@ import tensorflow as tf
 # from matplotlib import pyplot as plt
 
 # = = = = = = = = = = = = = = = = = = on weighted Sumrates = = = = = = = = = = = = = = = = = = =
+def test_BestWeight_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
+    store=np.zeros((8,))
+    num_data = 20
+    episodes = 200
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    result = np.zeros((3,))
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
+    print("Testing Starts")
+    tf.random.set_seed(200)
+    np.random.seed(200)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.95, True)
+    # ds_load = generate_link_channel_data(num_data, K, M, 1)
+    ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
+    model = best_weight_model(N_rf, K, M)
+    pred_tot = 0
+    for e in range(0, episodes):
+        enviroment.increment()
+        pred = model(enviroment, ds_load)
+        pred_tot = pred_tot + pred
+        out = enviroment.compute_weighted_loss(pred, ds_load)
+        result[0] = tf.reduce_mean(out)
+        loss = tf.reduce_mean(loss_fn1(pred, ds_load))
+        if printing:
+            print("from the robst loss fn is ", loss)
+            # print("the variance is ", tf.math.reduce_std(out))
+        np.save("trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf), enviroment.rates)
+    return store
+def test_random_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
+    store=np.zeros((8,))
+    num_data = 20
+    episodes = 200
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    result = np.zeros((3,))
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
+    print("Testing Starts")
+    tf.random.set_seed(200)
+    np.random.seed(200)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.95, True)
+    # ds_load = generate_link_channel_data(num_data, K, M, 1)
+    ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
+    model_rand_shape = [num_data, K*M, N_rf]
+    for e in range(0, episodes):
+        model_rand = np.random.uniform(0, 20, model_rand_shape)
+        model_rand = np.array(model_rand, dtype=np.float32)
+        model_rand = tf.nn.softmax(model_rand, axis=1)
+        model_rand = tf.reduce_sum(model_rand, axis=2)
+        pred = model_rand
+        enviroment.increment()
+        out = enviroment.compute_weighted_loss(pred, ds_load)
+        result[0] = tf.reduce_mean(out)
+        loss = tf.reduce_mean(loss_fn1(pred, ds_load))
+        if printing:
+            print("from the robst loss fn is ", loss)
+            # print("the variance is ", tf.math.reduce_std(out))
+        enviroment.increment()
+    # enviroment.plot_activation(show=True)
+        np.save("trained_models/Feb8th/user_loc0/random/weighted_sumrate_random_Nrf={}.npy".format(N_rf), enviroment.rates)
+    return store
 def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
     num_data = 20
@@ -20,20 +86,21 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.2, True)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.95, True)
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
     ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
     model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
     for e in range(0, episodes):
+        enviroment.increment()
         pred = model(ds_load)
-        out = enviroment.compute_weighted_loss(pred, ds_load)
+        out = enviroment.compute_weighted_loss(pred, ds_load, update=True)
         result[0] = tf.reduce_mean(out)
         loss = tf.reduce_mean(loss_fn1(pred, ds_load))
         if printing:
             print("the soft result is ", result)
             print("from the robst loss fn is ", loss)
             # print("the variance is ", tf.math.reduce_std(out))
-        enviroment.increment()
+
     # enviroment.plot_activation(show=True)
         np.save("trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf={}.npy".format(N_rf), enviroment.rates)
     return store
@@ -111,6 +178,7 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         #     plt.pause(0.0001)
         #     plt.close()
         # ========= ========= =========  plotting ========= ========= =========
+
 def greedy_grid_search():
     M = 64
     K = 50
@@ -480,7 +548,7 @@ def plot_data(arr, col=[], title="loss", series_name = None):
     plt.xlabel("epochs")
     plt.ylabel("sum rate")
     plt.title(title)
-    plt.show()
+    # plt.show()
 def garsons_method(model_path):
     from matplotlib import pyplot as plt
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
@@ -652,10 +720,22 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.legend()
     plt.show()
 if __name__ == "__main__":
-    # from matplotlib import pyplot as plt
-    # thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=65+limit_res=6.h5.npy"
-    # thing = np.load(thing)
-    # plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Pretrained feedback model"])
+    from matplotlib import pyplot as plt
+    thing = "trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=1.npy"
+    thing2 = "trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf=1.npy"
+    ting = "trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf=1.npy"
+    thing = np.load(thing)
+    thing2 = np.load(thing2)
+    ting = np.load(ting)
+    print(thing.shape)
+    for i in range(0, 0):
+        plot_data(-thing.sum(axis=2)[:, i:i+1], col=[0], title="Training Sum rate of the system", series_name=["greedy"])
+        plot_data(-thing2.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
+                  series_name=["best_weight"])
+        plot_data(-ting.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
+                  series_name=["DNN"])
+        plt.show()
+    # A[2]
     # thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=69+limit_res=6.h5.npy"
     # thing = np.load(thing)
     # plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Jointly trained feedback model"])
@@ -717,19 +797,10 @@ if __name__ == "__main__":
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
     model_path = "trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5"
-    # model_path = file + ".h5"
-    # training_data_path = file + ".npy"
-    # training_data = np.load(training_data_path)
-    # plot_data(training_data, [0, 3], "-sum rate")
-
     mores = [8,7,6,5,4,3,2,1]
     Es = [1]
     #
     # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
-    for N_rf in mores:
-        data = np.load("trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf))
-        data = tf.reduce_mean(tf.reduce_sum(data[:-1], axis=2))
-        print(data)
     # test_greedy(model, M, K, N_rf=8)
     # A[2]
     # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
@@ -757,10 +828,15 @@ if __name__ == "__main__":
             # model = relaxation_based_solver(M, K, N_rf)
             # garbage, g_max = Input_normalization_per_user(tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
             # feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)
-            dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+
+            # test_random_weighted_SR(None, M, K, B, N_rf, 6.3, 1, printing=True)
             # model = DP_partial_feedback_pure_greedy_model_new_feedback_model(N_rf, 64, 10, M, K, sigma2_n, perfect_CSI=True)
             # test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-            test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+
+            test_greedy_weighted_SR(None, M, K, B, N_rf, 6.3, 1, printing=True)
+            # dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            # test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^

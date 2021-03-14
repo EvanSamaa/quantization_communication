@@ -254,6 +254,18 @@ def sparse_pure_greedy_hueristic(N_rf, sigma2, K, M, p):
         return output
 
     return model
+def best_weight_model(N_rf, K, M):
+    def model(env:Weighted_sumrate_model, G,N_rf=N_rf, K=K, M=M):
+        weights = env.get_weight()
+        top_values_k, top_indices_k = tf.math.top_k(weights, k=N_rf)
+        top_values_m, top_indices_m = tf.math.top_k(np.abs(G), k=1)
+        out = np.zeros((G.shape)).reshape(G.shape[0], K*M)
+        for n in range(0, G.shape[0]):
+            for i in range(0, N_rf):
+                out[n, top_indices_k[n, i] * M + top_indices_m[n, top_indices_k[n, i]]] = 1
+        out = np.array(out, dtype = np.float32)
+        return tf.convert_to_tensor(out, dtype=tf.float32)
+    return model
 # this one do an exhastive for Nrf = 2, then do Greedy upwards
 def sparse_greedy_hueristic(N_rf, sigma2, K, M, p):
     def model(top_val, top_indice):
@@ -2009,6 +2021,7 @@ class Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_wit
         col_choice = col_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
         weights = tf.matmul(self.Mk, weights)
+
         input_i = input_concatnator(
             [input_reshaper(input_mod), selected, weights,
              G_mean,
@@ -2040,6 +2053,126 @@ class Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_wit
             'Mm': None
         })
         return config
+class Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights_different_weights(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights_different_weights, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        self.Mk = None
+        self.Mm = None
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x_raw, input_mod, weights):
+        if self.Mk is None:
+            self.Mk = np.zeros((self.K*self.M, self.K), dtype=np.float32)
+            self.Mm = np.zeros((self.K*self.M, self.M), dtype=np.float32)
+            for i in range(0, self.K):
+                for j in range(0, self.M):
+                    self.Mk[i*self.M+j, i] = 1.0
+            for i in range(0, self.M):
+                for j in range(0, self.K):
+                    self.Mm[i*self.K+j, i] = 1.0
+            # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
+            # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+        x = tf.reduce_sum(tf.keras.layers.Softmax(axis=1)(x_raw), axis=2)
+        x = tf.keras.layers.Reshape((self.K, self.M))(x)
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod # interference from each node
+        interference_f = tf.multiply(power, x)
+        # add weight related modification
+        interference_f = tf.multiply(interference_f, tf.tile(weights, [1, 1, self.M]))
+        up = tf.multiply(input_mod, x)
+        # add weight related modification
+        up = tf.multiply(up, tf.tile(weights, [1, 1, self.M]))
+        interference_t_2 = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), [1,self.K,1])
+        interference_t_2 = tf.divide(up, interference_t_2 - up + 1)
+        interference_t_2 = input_reshaper(interference_t_2)
+        interference_f_2 = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
+        selected = tf.keras.layers.Reshape((self.M*self.K, 1))(tf.multiply(x, input_mod))
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        weighted_input_mod = tf.multiply(input_mod, tf.tile(weights, [1, 1, self.M]))
+
+
+        interference_t = tf.matmul(weighted_input_mod, unflattened_output_0)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
+        interference_t = input_reshaper(interference_t)
+        interference_f = input_reshaper(interference_f)
+        interference_f_2 = input_reshaper(interference_f_2)
+
+        G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(weighted_input_mod), axis=1, keepdims=True)
+        G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
+        G_user_tiled = tf.matmul(self.Mk, weighted_input_mod)
+        G_user_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.M), (self.K, 1)), G_user_tiled)
+        G_user_mean = tf.reduce_mean(G_user_tiled, axis=2, keepdims=True)
+        G_user_max = tf.reduce_max(G_user_tiled, axis=2, keepdims=True)
+        G_user_min = tf.reduce_min(G_user_tiled, axis=2, keepdims=True)
+        GX_user_mean = tf.reduce_sum(tf.multiply(weighted_input_mod, x), axis=2, keepdims=True)
+        GX_user_mean = tf.matmul(self.Mk, GX_user_mean) - selected
+        GX_col_mean = tf.transpose(tf.reduce_sum(tf.multiply(weighted_input_mod, x), axis=1, keepdims=True), perm=[0, 2, 1])
+        GX_col_mean = tf.matmul(self.Mm, GX_col_mean) - selected
+        G_col_tiled = tf.matmul(self.Mm, tf.transpose(weighted_input_mod, perm=[0, 2, 1]))
+        G_col_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.K), (self.M, 1)), G_col_tiled)
+        G_col_mean = tf.reduce_mean(G_col_tiled, axis=2, keepdims=True)
+        G_col_min = tf.reduce_min(G_col_tiled, axis=2, keepdims=True)
+        G_col_max = tf.reduce_max(G_col_tiled, axis=2, keepdims=True)
+        # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)))
+        # print(iteration_num.shape)
+        # x = tf.reduce_sum(x, axis=2)
+        # x = tf.keras.layers.Reshape((self.K*self.M, ))(x)
+        # x = tf.reduce_sum(x, axis=1, keepdims=True)
+        # x = tf.tile(tf.expand_dims(x, axis=1), (1, self.K * self.M, 1))
+        row_choice = tf.reduce_sum(x, axis=2, keepdims=True)
+        row_choice = tf.matmul(self.Mk, row_choice)
+        row_choice = row_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
+        col_choice = tf.transpose(tf.reduce_sum(x, axis=1, keepdims=True), perm=[0,2,1])
+        col_choice = tf.matmul(self.Mm, col_choice)
+        col_choice = col_choice - tf.keras.layers.Reshape((self.M*self.K, 1))(x)
+        # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)) + tf.constant(step))
+        # assuming weights are of shape (N, K, 1)
+        tiled_weights = tf.tile(tf.expand_dims(weights, axis=1), [1, self.K, 1, 1])
+        onesK = tf.expand_dims(tf.expand_dims(tf.eye(self.K), axis=0), axis=3) # this has the shape of (1, K, K, 1)
+        tiled_weights = tiled_weights - tf.multiply(onesK, tiled_weights) # reduce the own link from it
+        weights_max = tf.reduce_max(tiled_weights, axis=2) # (N, K, 1)
+        weights_min = tf.reduce_min(tiled_weights, axis=2)
+        weights_mean = tf.reduce_mean(tiled_weights, axis=2)
+        self_weights = tf.matmul(self.Mk, weights)
+
+        input_i = input_concatnator(
+            [input_reshaper(input_mod), selected, weights,
+             weights_max, weights_min, weights_mean,
+             G_mean,
+             G_user_mean, G_user_max, G_user_min,
+             # G_user_max, G_user_min,
+             G_col_mean, G_col_max, G_col_min,
+             interference_t, interference_f, interference_f_2, interference_t_2,
+             GX_user_mean, GX_col_mean,
+             col_choice, row_choice,
+             x_raw])
+        # print(input_i[:, 0, 4])
+        # print(input_i[:, 0, 5])
+        # print(input_i[:, 0, 6])
+        # print(input_i[:, 0, 10])
+        # print(input_i[:, 0, 11])
+        # print(input_i[:, 0, 12])
+
+        return input_i
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'name': "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights_different_weights",
+            'Mk': None,
+            'Mm': None
+        })
+        return config
+
 class Per_link_Input_modification_most_G_raw_self_more_choice(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Per_link_Input_modification_most_G_raw_self_more_choice, self).__init__()
@@ -4708,10 +4841,10 @@ def FDD_agent_more_G_with_weights(M, K, k=2, N_rf=3, normalization=True, avg_max
     if normalization:
         input_mod = tf.divide(input_mod, avg_max)
     input_mod = tf.square(input_mod)
-    input_modder = Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights(K, M, N_rf, k)
+    input_modder = Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights_different_weights(K, M, N_rf, k)
     sm = tf.keras.layers.Softmax(axis=1)
     # sm = sigmoid
-    dnns = self_agent_dnn((M * K ,18 + N_rf))
+    dnns = self_agent_dnn((M * K ,21 + N_rf))
     raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
     raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
     raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
