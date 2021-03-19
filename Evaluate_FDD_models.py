@@ -721,21 +721,28 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.show()
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
-    thing = "trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=1.npy"
-    thing2 = "trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf=1.npy"
-    ting = "trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf=1.npy"
+    N_rf = 8
+    thing = "trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf={}.npy".format(N_rf)
+    thing2 = "trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf)
+    ting = "trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf)
     thing = np.load(thing)
     thing2 = np.load(thing2)
     ting = np.load(ting)
     print(thing.shape)
-    for i in range(0, 0):
+    plt.plot(ting.sum(axis=0).sum(axis=0), label="dnn")
+    plt.plot(thing.sum(axis=0).sum(axis=0), label="greedy")
+    plt.plot(thing2.sum(axis=0).sum(axis=0), label="best_weight")
+    plt.legend()
+    plt.show()
+    A[2]
+    for i in range(0, 10):
         plot_data(-thing.sum(axis=2)[:, i:i+1], col=[0], title="Training Sum rate of the system", series_name=["greedy"])
         plot_data(-thing2.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
                   series_name=["best_weight"])
         plot_data(-ting.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
                   series_name=["DNN"])
         plt.show()
-    # A[2]
+    A[2]
     # thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=69+limit_res=6.h5.npy"
     # thing = np.load(thing)
     # plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Jointly trained feedback model"])
@@ -833,7 +840,7 @@ if __name__ == "__main__":
             # model = DP_partial_feedback_pure_greedy_model_new_feedback_model(N_rf, 64, 10, M, K, sigma2_n, perfect_CSI=True)
             # test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
 
-            test_greedy_weighted_SR(None, M, K, B, N_rf, 6.3, 1, printing=True)
+            # test_greedy_weighted_SR(None, M, K, B, N_rf, 6.3, 1, printing=True)
             # dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
             # test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
 
