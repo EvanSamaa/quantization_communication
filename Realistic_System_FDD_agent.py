@@ -488,7 +488,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
-    lr = 0.001
+    lr = 0.0001
     N = 25 # number of
     rounds = 8
     sample_size = 20
@@ -576,10 +576,10 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
                     counter = counter + 1
                 print("the improvement in the past 500 epochs is: ", improvement)
                 print("the validation SR is: ", valid_loss)
-                if improvement <= 0.0001 and lr == 0.001:
-                    lr = 0.0001
-                    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-                elif improvement <= 0.0001 and lr < 0.001 and i > pre_train:
+                if improvement <= 0.0001 and lr == 0.0001:
+                    lr = 0.00003
+                    optimizer = tf.keras.optimizers.Adam(lr=lr)
+                elif improvement <= 0.0001 and lr < 0.0001 and i > pre_train:
                     break
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
