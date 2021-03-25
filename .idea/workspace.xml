@@ -20,11 +20,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/quantization_communication.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/quantization_communication.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Evaluate_FDD_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Evaluate_FDD_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=1.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=1.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=2.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=2.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=3.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=3.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,7 +51,9 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/trained_models/Feb8th/user_loc0" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -62,7 +65,7 @@
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Jan_18\30AOA" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.Evaluate_FDD_models">
+  <component name="RunManager" selected="Python.scratch_1">
     <configuration name="Evaluate_FDD_models" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="quantization_communication" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -76,27 +79,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Evaluate_FDD_models.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="FDD_agent" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="quantization_communication" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\evansamaa\anaconda3\envs\quantization\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/FDD_agent.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -147,6 +129,27 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="scratch_1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="quantization_communication" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="util" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="quantization_communication" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -170,18 +173,18 @@
     </configuration>
     <list>
       <item itemvalue="Python.Evaluate_FDD_models" />
-      <item itemvalue="Python.FDD_agent" />
       <item itemvalue="Python.Realistic_System_FDD_agent" />
       <item itemvalue="Python.display" />
+      <item itemvalue="Python.scratch_1" />
       <item itemvalue="Python.util" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.scratch_1" />
         <item itemvalue="Python.Evaluate_FDD_models" />
-        <item itemvalue="Python.Realistic_System_FDD_agent" />
         <item itemvalue="Python.util" />
+        <item itemvalue="Python.Realistic_System_FDD_agent" />
         <item itemvalue="Python.display" />
-        <item itemvalue="Python.FDD_agent" />
       </list>
     </recent_temporary>
   </component>
@@ -219,10 +222,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="669" y="115" key="#FDD_agent/0.0.1920.1040@0.0.1920.1040" timestamp="1611108406582" />
-    <state x="414" y="175" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1612767966354">
+    <state x="414" y="175" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1616599987611">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="414" y="175" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1612767966354" />
+    <state x="414" y="175" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1616599987611" />
     <state x="706" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1612803000845">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -231,26 +234,26 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="669" y="115" key="#display/0.0.1920.1040@0.0.1920.1040" timestamp="1611722558788" />
-    <state x="739" y="262" key="FileChooserDialogImpl" timestamp="1614978345890">
+    <state x="739" y="262" key="FileChooserDialogImpl" timestamp="1616623823976">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="739" y="262" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1614978345890" />
-    <state width="1899" height="515" key="GridCell.Tab.0.bottom" timestamp="1615770963519">
+    <state x="739" y="262" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1616623823976" />
+    <state width="1899" height="210" key="GridCell.Tab.0.bottom" timestamp="1616624410835">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="515" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1615770963519" />
-    <state width="1899" height="515" key="GridCell.Tab.0.center" timestamp="1615770963519">
+    <state width="1899" height="210" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1616624410835" />
+    <state width="1899" height="210" key="GridCell.Tab.0.center" timestamp="1616624410835">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="515" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1615770963519" />
-    <state width="1899" height="515" key="GridCell.Tab.0.left" timestamp="1615770963519">
+    <state width="1899" height="210" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1616624410835" />
+    <state width="1899" height="210" key="GridCell.Tab.0.left" timestamp="1616624410835">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="515" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1615770963519" />
-    <state width="1899" height="515" key="GridCell.Tab.0.right" timestamp="1615770963519">
+    <state width="1899" height="210" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1616624410835" />
+    <state width="1899" height="210" key="GridCell.Tab.0.right" timestamp="1616624410835">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="515" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1615770963519" />
+    <state width="1899" height="210" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1616624410835" />
     <state width="949" height="348" key="GridCell.Tab.1.bottom" timestamp="1613420259452">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -271,6 +274,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="716" y="222" key="RollbackChangesDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1611754477519" />
+    <state x="461" y="165" key="SettingsEditor" timestamp="1616637473071">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="461" y="165" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1616637473071" />
     <state x="565" y="130" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1610814558720">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>

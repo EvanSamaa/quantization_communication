@@ -49,6 +49,7 @@ class Weighted_sumrate_model():
         self.time = 0
         self.rates = np.zeros(record_shape, dtype=np.float32)  # keep the cumulative rates from the past timestamp
     def get_rates(self):
+        # the rates
         return -self.rates
     def compute_weighted_loss(self, X, G, weight=None, update=True):
         # this function assumes the caller will feed in the soft decision vector
@@ -58,19 +59,19 @@ class Weighted_sumrate_model():
         ###########################################   R_t is alwayus positive, loss function returns positive too  ###############################################
         local_X = X
         if self.hard_decision:
-            local_X = Harden_scheduling_user_constrained(self.N_rf, self.K, self.M)(X)
+            local_X = X + tf.stop_gradient(Harden_scheduling_user_constrained(self.N_rf, self.K, self.M)(X) - X)
         if self.time == 0:
             R_t = self.lossfn(local_X, G)
         else:
             if weight is None:
                 weight = self.get_weight()
-                R_t = (1.0 - self.alpha) * self.rates[-2] + self.alpha * self.lossfn(local_X, G) * weight
+                R_t = (1.0 - self.alpha) * self.rates[-2] + self.alpha * self.lossfn(local_X, G)
             else:
                 rate = tf.math.log(1/weight)
-                R_t = (1.0 - self.alpha) * rate + self.alpha * self.lossfn(local_X, G) * weight
+                R_t = (1.0 - self.alpha) * rate + self.alpha * self.lossfn(local_X, G)
         if update:
             self.rates[-1] = R_t
-        return -tf.reduce_sum(R_t, axis=1)
+        return -tf.reduce_sum(R_t * weight, axis=1)
     def get_weight(self):
         # this function assumes the caller will feed in the soft decision vector
         # must call increment before this step to obtain the correct weight
@@ -1639,7 +1640,6 @@ if __name__ == "__main__":
     K = 50
     B = 5
     Nrf = 7
-    gen_realistic_data("space_file", K, N, M, Nrf)
     sigma2 = 0
     data = generate_link_channel_data(1, K, M, Nrf=1)
     A[2]

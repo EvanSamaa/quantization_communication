@@ -4839,7 +4839,7 @@ def FDD_agent_more_G_with_weights(M, K, k=2, N_rf=3, normalization=True, avg_max
     inputs = Input(shape=(K, M + 1), dtype=tf.complex64)
     input_mod = inputs[:, :, :M]
     weights = tf.abs(inputs[:, :, M:])
-
+    weights = weights/tf.reduce_max(weights, axis=1, keepdims=True)
     input_mod = tf.abs(input_mod)
     if normalization:
         input_mod = tf.divide(input_mod, avg_max)

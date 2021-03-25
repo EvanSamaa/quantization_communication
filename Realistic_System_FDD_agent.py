@@ -473,7 +473,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Feb8th/user_loc0/as_if_non_episodic/alpha=0p95_NRF={}".format(N_rf)
+    fname_template_template = "trained_models/Feb8th/user_loc0/as_if_non_episodic/alpha=0p95_NRF={}_fixed_loss".format(N_rf)
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 0
