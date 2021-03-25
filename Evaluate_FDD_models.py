@@ -720,29 +720,31 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.legend()
     plt.show()
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-    N_rf = 8
-    thing = "trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf={}.npy".format(N_rf)
-    thing2 = "trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf)
-    ting = "trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf)
-    thing = np.load(thing)
-    thing2 = np.load(thing2)
-    ting = np.load(ting)
-    print(thing.shape)
-    plt.plot(ting.sum(axis=0).sum(axis=0), label="dnn")
-    plt.plot(thing.sum(axis=0).sum(axis=0), label="greedy")
-    plt.plot(thing2.sum(axis=0).sum(axis=0), label="best_weight")
-    plt.legend()
-    plt.show()
-    A[2]
-    for i in range(0, 10):
-        plot_data(-thing.sum(axis=2)[:, i:i+1], col=[0], title="Training Sum rate of the system", series_name=["greedy"])
-        plot_data(-thing2.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
-                  series_name=["best_weight"])
-        plot_data(-ting.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
-                  series_name=["DNN"])
-        plt.show()
-    A[2]
+    # from matplotlib import pyplot as plt
+    # N_rf = 8
+    # thing = "trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf={}.npy".format(N_rf)
+    # thing2 = "trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf)
+    # ting = "trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf)
+    # thing = np.load(thing)
+    # thing2 = np.load(thing2)
+    # ting = np.load(ting)
+    # print(thing.shape)
+    # plt.plot(ting.sum(axis=0).sum(axis=0), label="dnn")
+    # plt.plot(thing.sum(axis=0).sum(axis=0), label="greedy")
+    # plt.plot(thing2.sum(axis=0).sum(axis=0), label="best_weight")
+    # plt.legend()
+    # plt.show()
+    # A[2]
+    # for i in range(0, 10):
+    #     plot_data(-thing.sum(axis=2)[:, i:i+1], col=[0], title="Training Sum rate of the system", series_name=["greedy"])
+    #     plot_data(-thing2.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
+    #               series_name=["best_weight"])
+    #     plot_data(-ting.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
+    #               series_name=["DNN"])
+    #     plt.show()
+    # A[2]
+
+
     # thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=69+limit_res=6.h5.npy"
     # thing = np.load(thing)
     # plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Jointly trained feedback model"])
@@ -804,7 +806,7 @@ if __name__ == "__main__":
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
     model_path = "trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5"
-    mores = [3,2,1]
+    mores = [7,6,5,4,3,2,1]
     Es = [1]
     #
     # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
@@ -822,7 +824,7 @@ if __name__ == "__main__":
             links = j
             bits = i
             print("========================================== links =", j, "bits = ", i)
-
+            test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
             # print(model.get_layer("model_2").get_layer("model_1").summary())
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
