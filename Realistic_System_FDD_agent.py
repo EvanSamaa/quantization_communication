@@ -491,7 +491,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
     lr = 0.001
     N = 25 # number of
     rounds = 8
-    sample_size = 20
+    sample_size = 15
     temp = 0.1
     check = 100
     episodes = 50
@@ -543,6 +543,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
                     env.compute_weighted_loss(ans[:, -1], train_data, update=True)
                     gradients = tape.gradient(loss, model.trainable_variables)
                     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+                del tape
             print(tf.reduce_mean(tf.reduce_sum(env.get_rates(), axis=2)))
                 # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
             # optimizer.minimize(loss, ans)
@@ -550,7 +551,6 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
             lh = tf.reduce_mean(tf.reduce_sum(env.get_rates(), axis=2), axis=1)[0]
             train_loss(l1)
             train_hard_loss(lh)
-            del tape
             print("\n===============overall=================\n",
                   l1,lh)
         if i%check == 0:
