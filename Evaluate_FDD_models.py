@@ -538,8 +538,8 @@ def plot_data(arr, col=[], title="loss", series_name = None):
         if arr[i,0] != 0:
             cut = i
             break
-    arr = arr[:cut, :]
     print(arr.shape)
+    arr = arr[:cut, :]
     x = np.arange(0, arr.shape[0])
     for i in range(len(col)):
         plt.plot(x, arr[:, col[i]], '+', label=series_name[i])
@@ -548,7 +548,7 @@ def plot_data(arr, col=[], title="loss", series_name = None):
     plt.xlabel("epochs")
     plt.ylabel("sum rate")
     plt.title(title)
-    # plt.show()
+    plt.show()
 def garsons_method(model_path):
     from matplotlib import pyplot as plt
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
