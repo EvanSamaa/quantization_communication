@@ -794,7 +794,7 @@ def Sum_rate_utility_WeiCui_seperate_user_stable(K, M, sigma2, constant=0.1):
         numerator = tf.multiply(denominator, tf.eye(K))
         denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
         numerator = tf.matmul(numerator, tf.ones((K, 1)))
-        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]) + constant)
+        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1])) + constant
         utility = tf.math.log(numerator/denominator + 1)/log_2
         return utility
     return sum_rate_utility
