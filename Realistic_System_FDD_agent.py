@@ -518,7 +518,8 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
         ###################### training happens here ######################
         env.reset()
         ###################### testing with validation set ######################
-        for episode in range(episodes):
+        # for episode in range(episodes):
+        for episode in range(0):
             env.increment()
             for e in range(0, rounds):
                 with tf.GradientTape(persistent=True) as tape:
