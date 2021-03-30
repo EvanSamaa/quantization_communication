@@ -20,6 +20,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=7_0p5_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf=7_0p5_alpha.npy" afterDir="false" />
     </list>
