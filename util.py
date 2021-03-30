@@ -30,8 +30,11 @@ class ModelTrainer():
         self.data
         np.save(self.save_dir, self.data)
 class Weighted_sumrate_model():
-    def __init__(self, K, M, N_rf, N, alpha:float, hard_decision = True):
-        self.lossfn = Sum_rate_utility_WeiCui_seperate_user(K, M, 1) # loss function to calculate sumrate
+    def __init__(self, K, M, N_rf, N, alpha:float, hard_decision = True, loss_fn=None):
+        if (loss_fn==None):
+            self.lossfn = Sum_rate_utility_WeiCui_seperate_user(K, M, 1) # loss function to calculate sumrate
+        else:
+            self.lossfn = loss_fn
         self.time = 0 # record time stamp
         self.alpha = alpha  # this determines the decay rate of the weighted sum
                             # small alpha means low delay rate, i.e. the model
@@ -773,7 +776,28 @@ def Sum_rate_utility_WeiCui_stable(K, M, sigma2, constant=0.1):
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
-
+def Sum_rate_utility_WeiCui_seperate_user_stable(K, M, sigma2, constant=0.1):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
+    def sum_rate_utility(y_pred, G, display=False):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, M)
+        G = tf.square(tf.abs(G))
+        unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
+        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        denominator = tf.matmul(G, unflattened_X)
+        if display:
+            plt.imshow(denominator[0])
+            plt.show(block=False)
+            plt.pause(0.0001)
+            plt.close()
+        numerator = tf.multiply(denominator, tf.eye(K))
+        denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
+        numerator = tf.matmul(numerator, tf.ones((K, 1)))
+        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]) + constant)
+        utility = tf.math.log(numerator/denominator + 1)/log_2
+        return utility
+    return sum_rate_utility
 def Sum_rate_utility_WeiCui_seperate_user(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))

@@ -499,7 +499,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
     model = FDD_agent_more_G_with_weights(M, K, 5, N_rf, True, max_val)
     # model = tf.keras.models.load_model("trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5".format(N_rf), custom_objects=custome_obj)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
-    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=False)
+    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=False, loss_fn=Sum_rate_utility_WeiCui_seperate_user_stable(K, M, 1))
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
     # train_sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -556,7 +556,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
         if i%check == 0:
             input_mod=tf.concat([valid_data, tf.complex(tf.ones([valid_data.shape[0], K, 1], dtype=tf.float32), 0.0)],
                                 axis=2)
-            scheduled_output, raw_output = model.predict(input_mod, batch_size=N)
+            scheduled_output, raw_output = model.predict(input_mod, batch_size=N/2)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
             print("============================================================\n")
