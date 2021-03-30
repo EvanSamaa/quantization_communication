@@ -557,7 +557,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
         if i%check == 0:
             input_mod=tf.concat([valid_data, tf.complex(tf.ones([valid_data.shape[0], K, 1], dtype=tf.float32), 0.0)],
                                 axis=2)
-            scheduled_output, raw_output = model.predict(input_mod, batch_size=N/2)
+            scheduled_output, raw_output = model(input_mod)
             print(scheduled_output.shape, raw_output.shape)
             valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
             print("failed before logging data")
