@@ -765,10 +765,10 @@ def Sum_rate_utility_WeiCui_stable(K, M, sigma2, constant=0.1):
         unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
         unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
         denominator = tf.matmul(G, unflattened_X)
-        numerator = tf.multiply(denominator, tf.eye(K)) + constant
+        numerator = tf.multiply(denominator, tf.eye(K))
         denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
         numerator = tf.matmul(numerator, tf.ones((K, 1)))
-        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
+        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1])) + constant
         utility = tf.math.log(numerator/denominator + 1)/log_2
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
