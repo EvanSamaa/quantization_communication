@@ -146,7 +146,7 @@ def grid_search_relax(N_rf = 8):
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    train_sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    train_sum_rate = Sum_rate_utility_WeiCui_stable(K, M, sigma2_n)
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
     ################################ storing train data in npy file  ##############################
@@ -182,7 +182,7 @@ def grid_search_relax(N_rf = 8):
             # optimizer.minimize(loss, ans)
             train_loss(loss)
             train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_data))
-            print(train_hard_loss.result(),train_loss.result())
+            print(train_hard_loss.result(),train_loss.result(), "stable sr =",tf.reduce_mean(loss))
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:
@@ -216,7 +216,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Jan_18/30AOA/test_dnn_Nrf={}+annealing_LR".format(N_rf)
+    fname_template_template = "trained_models/Jan_18/30AOA/test_dnn_Nrf={}+annealing_LR+stable_loss".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -246,7 +246,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
-    train_sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    train_sum_rate = Sum_rate_utility_WeiCui_stable(K, M, sigma2_n)
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
     mutex_loss_fn = mutex_loss(N_rf, M, K, N)
@@ -284,7 +284,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
             # optimizer.minimize(loss, ans)
             train_loss(loss)
             train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_data))
-            print(train_hard_loss.result(),train_loss.result())
+            print(train_hard_loss.result(),train_loss.result(), "stable sr = ", tf.reduce_mean(loss))
             del tape
         ###################### testing with validation set ######################
         if i%check == 0:

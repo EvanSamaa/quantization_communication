@@ -111,10 +111,6 @@ class Weighted_sumrate_model():
         self.time = self.time + 1
         self.rates = np.concatenate([self.rates, np.zeros([1, self.rates.shape[1], self.rates.shape[2]])], axis=0)
 
-
-
-
-
 def rebar_loss(logits, Nrf, M, K):
     # logit shape = (N, passes, M*K, N_rf)
     epsilon = 1E-12
@@ -759,6 +755,25 @@ def Sum_rate_utility_WeiCui(K, M, sigma2):
         utility = tf.reduce_sum(utility, axis=1)
         return -utility
     return sum_rate_utility
+def Sum_rate_utility_WeiCui_stable(K, M, sigma2, constant=0.1):
+    # sigma2 here is the variance of the noise
+    log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
+    def sum_rate_utility(y_pred, G, display=False):
+        # assumes the input shape is (batch, k*N) for y_pred,
+        # and the shape for G is (batch, K, M)
+        G = tf.square(tf.abs(G))
+        unflattened_X = tf.reshape(y_pred, (y_pred.shape[0], K, M))
+        unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+        denominator = tf.matmul(G, unflattened_X)
+        numerator = tf.multiply(denominator, tf.eye(K)) + constant
+        denominator = tf.reduce_sum(denominator-numerator, axis=2) + sigma2
+        numerator = tf.matmul(numerator, tf.ones((K, 1)))
+        numerator = tf.reshape(numerator, (numerator.shape[0], numerator.shape[1]))
+        utility = tf.math.log(numerator/denominator + 1)/log_2
+        utility = tf.reduce_sum(utility, axis=1)
+        return -utility
+    return sum_rate_utility
+
 def Sum_rate_utility_WeiCui_seperate_user(K, M, sigma2):
     # sigma2 here is the variance of the noise
     log_2 = tf.math.log(tf.constant(2.0, dtype=tf.float32))
