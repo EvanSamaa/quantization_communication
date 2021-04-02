@@ -76,6 +76,7 @@ class Weighted_sumrate_model():
                 weight = self.get_weight()
                 R_t_bar = (1.0 - self.alpha) * self.rates[-2] + self.alpha * R_t
             else:
+                # if you are not
                 rate = tf.math.log(1/weight)
                 R_t_bar = (1.0 - self.alpha) * rate + self.alpha * R_t
         if update:

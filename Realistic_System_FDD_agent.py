@@ -667,7 +667,11 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
         train_data = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         ###################### testing with validation set ######################
-        weight_indices = np.random.choice(K, (N, np.random.randint(10, K)))
+        weight_indices = []
+        current_iter_up_nums = np.random.randint(10, K)
+        for i in range(0, N):
+           weight_indices.append(np.random.choice(K, (1, current_iter_up_nums), replace=False))
+        weight_indices = np.concatenate(weight_indices, axis=0)
         current_weights = tf.one_hot(weight_indices, K)
         current_weights = tf.reduce_sum(current_weights, axis=1)
         for e in range(0, rounds):
@@ -705,9 +709,9 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
             loss_hard = env.compute_weighted_loss(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_data, weight=current_weights, update=False)
             train_loss(weight_sr)
             train_hard_loss(loss_hard)
-            print(train_loss.result())
-            print(train_hard_loss.result())
-            print(on_off_loss)
+            print("soft result: ", train_loss.result())
+            print("hard result: ", train_hard_loss.result())
+            print("on-off loss: ", on_off_loss)
         if i%check == 0:
             input_mod=tf.concat([valid_data, tf.complex(tf.ones([valid_data.shape[0], K, 1], dtype=tf.float32), 0.0)],
                                 axis=2)
