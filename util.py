@@ -68,17 +68,18 @@ class Weighted_sumrate_model():
         local_X = X
         if self.hard_decision:
             local_X = X + tf.stop_gradient(Harden_scheduling_user_constrained(self.N_rf, self.K, self.M)(X) - X)
+        R_t = self.lossfn(local_X, G)
         if self.time == 0:
-            R_t = self.lossfn(local_X, G)
+            R_t_bar = R_t
         else:
             if weight is None:
                 weight = self.get_weight()
-                R_t = (1.0 - self.alpha) * self.rates[-2] + self.alpha * self.lossfn(local_X, G)
+                R_t_bar = (1.0 - self.alpha) * self.rates[-2] + self.alpha * R_t
             else:
                 rate = tf.math.log(1/weight)
-                R_t = (1.0 - self.alpha) * rate + self.alpha * self.lossfn(local_X, G)
+                R_t_bar = (1.0 - self.alpha) * rate + self.alpha * R_t
         if update:
-            self.rates[-1] = R_t
+            self.rates[-1] = R_t_bar
             self.weighted_rates[-1] = R_t * weight
         return -tf.reduce_sum(R_t * weight, axis=1)
     def get_weight(self):
