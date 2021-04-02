@@ -4822,6 +4822,30 @@ def FDD_ensemble_model(M, K, k=2, N_rf=3, normalization=True, avg_max=None):
     out_2 = model_2(inputs)
     model = Model(inputs, [out_1[0], out_1[1], out_2[0], out_2[1]], name="ensemble")
     return model
+
+def train_with_pretrai():
+    model1 = tf.keras.layers.Dense(out_size1, name="dense1")
+    model2 = tf.keras.layers.Dense(out_size2, name="dense2")
+
+    # train model 2
+    # ...
+    # ...
+    model2.save("name.h5")
+
+    # now to build a new model with model1 and model2
+    # load model:
+    model2_trained = tf.keras.models.load_model("name.h5")
+    model2_trained
+    # build new model:
+    newmodel_input = Input(shape=(input_size, ))
+    out = model2(model1(newmodel_input))
+    end_to_end_model = Model(newmodel_input, out, name="endtoendModel")
+    end_to_end_model.get_layer("dense2").trainable = False
+    # if trainable is set to False Dense2 would not be updated
+
+
+
+
 def FDD_agent_more_G_with_weights(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     def self_agent_dnn(input_shape, i=i):
         inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))

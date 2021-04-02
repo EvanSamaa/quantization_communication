@@ -46,14 +46,19 @@ class Weighted_sumrate_model():
         # structure for saving data
         record_shape = (1, N, K)
         self.rates = np.zeros(record_shape, dtype=np.float32) # keep the cumulative rates from the past timestamp
+        self.weighted_rates = np.zeros(record_shape, dtype=np.float32)
         self.decisions = np.zeros([])
     def reset(self):
         record_shape = (1, self.N, self.K)
         self.time = 0
         self.rates = np.zeros(record_shape, dtype=np.float32)  # keep the cumulative rates from the past timestamp
+        self.weighted_rates = np.zeros(record_shape, dtype=np.float32)
     def get_rates(self):
         # the rates
         return -self.rates
+    def get_weighted_rates(self):
+        # the rates
+        return -self.weighted_rates
     def compute_weighted_loss(self, X, G, weight=None, update=True):
         # this function assumes the caller will feed in the soft decision vector
         # must call increment before this step to obtain the correct loss and make the correct update
@@ -74,6 +79,7 @@ class Weighted_sumrate_model():
                 R_t = (1.0 - self.alpha) * rate + self.alpha * self.lossfn(local_X, G)
         if update:
             self.rates[-1] = R_t
+            self.weighted_rates[-1] = R_t * weight
         return -tf.reduce_sum(R_t * weight, axis=1)
     def get_weight(self):
         # this function assumes the caller will feed in the soft decision vector
@@ -113,6 +119,7 @@ class Weighted_sumrate_model():
     def increment(self):
         self.time = self.time + 1
         self.rates = np.concatenate([self.rates, np.zeros([1, self.rates.shape[1], self.rates.shape[2]])], axis=0)
+        self.weighted_rates = np.concatenate([self.weighted_rates, np.zeros([1, self.weighted_rates.shape[1], self.weighted_rates.shape[2]])], axis=0)
 
 def rebar_loss(logits, Nrf, M, K):
     # logit shape = (N, passes, M*K, N_rf)

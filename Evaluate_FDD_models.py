@@ -20,7 +20,7 @@ def test_BestWeight_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.95, True)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.05, True)
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
     ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
     model = best_weight_model(N_rf, K, M)
@@ -34,8 +34,11 @@ def test_BestWeight_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h
         loss = tf.reduce_mean(loss_fn1(pred, ds_load))
         if printing:
             print("from the robst loss fn is ", loss)
+            print("from the weighted sum rate fn is ", tf.reduce_mean(out))
             # print("the variance is ", tf.math.reduce_std(out))
-        np.save("trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf), enviroment.rates)
+        np.save("trained_models/Feb8th/user_loc0/best_weight/exp_avg_sumrate_best_weight_Nrf={}.npy".format(N_rf), enviroment.get_rates())
+        np.save("trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf),
+                enviroment.get_weighted_rates())
     return store
 def test_random_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
@@ -114,7 +117,7 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
     tf.random.set_seed(200)
     np.random.seed(200)
     result = np.zeros((3,))
-    test_env = Weighted_sumrate_model(K, M, N_rf, num_data, .2, True)
+    test_env = Weighted_sumrate_model(K, M, N_rf, num_data, .95, hard_decision=True)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
@@ -122,13 +125,16 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
     print("Testing Starts")
     ds = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, N_rf)
     for e in range(0, num_episodes):
+        test_env.increment()
         # ds = generate_link_channel_data(num_data, K, M, N_rf)
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
-        if e > 0:
-            ds_load = ds * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
-        scheduled_output, raw_output = model.predict(ds_load, batch_size=50)
+        # if e > 0:
+        #     ds_load = ds * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
+        input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)],
+                              axis=2)
+        scheduled_output, raw_output = model.predict(input_mod, batch_size=50)
         prediction = scheduled_output[:, -1]
         # prediction = model(ds_load)[-1]
         # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
@@ -157,14 +163,15 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         # result[1] = loss_fn2(prediction)
         # print("the soft result for time: {} is ".format(e), result)
         prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
-        out_hard = test_env.compute_weighted_loss(prediction_hard, ds_load)
+        out_hard = test_env.compute_weighted_loss(prediction, ds_load, update=True)
+        sr = test_env.compute_raw_loss(prediction, ds_load)
         result[0] = tf.reduce_mean(out_hard)
+        result_2 = tf.reduce_mean(tf.reduce_sum(test_env.get_rates(), axis=2))
         result[1] = loss_fn2(prediction_hard)
-        print("the top Nrf result for time: {} is ".format(e), result)
-        test_env.increment()
+        print("the top Nrf result for time: {} is ".format(e), result[0], result_2, "and without the weight it is ", tf.reduce_mean(sr))
     # test_env.plot_average_rates(True)
     data = test_env.rates
-    np.save("trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf), data)
+    np.save("trained_models/Feb8th/user_loc0/as_if_non_episodic/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf), data)
     # test_env.plot_activation(True)
         # ========= ========= =========  plotting ========= ========= =========
         # ds = tf.square(tf.abs(ds))
@@ -532,14 +539,15 @@ def test_performance_partial_feedback_and_DNN_all_Nrf(feed_back_model, dnn_model
         tf.keras.backend.clear_session()
         return rtv
 def plot_data(arr, col=[], title="loss", series_name = None):
-    from matplotlib import pyplot as plt
+    # from matplotlib import pyplot as plt
     cut = 0
     for i in range(arr.shape[0]-1, 0, -1):
-        if arr[i,0] != 0:
-            cut = i
-            break
-    print(arr.shape)
+        for k in range(0, arr.shape[1]):
+            if arr[i,k] != 0:
+                cut = i
+                break
     arr = arr[:cut, :]
+
     x = np.arange(0, arr.shape[0])
     for i in range(len(col)):
         plt.plot(x, arr[:, col[i]], '+', label=series_name[i])
@@ -548,7 +556,7 @@ def plot_data(arr, col=[], title="loss", series_name = None):
     plt.xlabel("epochs")
     plt.ylabel("sum rate")
     plt.title(title)
-    plt.show()
+    # plt.show()
 def garsons_method(model_path):
     from matplotlib import pyplot as plt
     model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
@@ -720,15 +728,23 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.legend()
     plt.show()
 if __name__ == "__main__":
-    # from matplotlib import pyplot as plt
+    from matplotlib import pyplot as plt
+
+    # thing = "trained_models/Feb8th/user_loc0/as_if_non_episodic/alpha=0p95_NRF=8_fixed_loss.npy"
+    # thing = np.load(thing)
+    # plot_data(thing, col=[2], title="Training Sum rate of the system", series_name=["greedy"])
+    # plt.plot(thing[:, 2])
     # N_rf = 8
     # thing = "trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf={}.npy".format(N_rf)
     # thing2 = "trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf)
     # ting = "trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf)
+    # ting = "trained_models/Feb8th/user_loc0/as_if_non_episodic/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf)
     # thing = np.load(thing)
     # thing2 = np.load(thing2)
     # ting = np.load(ting)
-    # print(thing.shape)
+    # print("greedy", thing.sum(axis=2).mean())
+    # print("best weight", thing2.sum(axis=2).mean())
+    # print("dnn", ting.sum(axis=2).mean())
     # plt.plot(ting.sum(axis=0).sum(axis=0), label="dnn")
     # plt.plot(thing.sum(axis=0).sum(axis=0), label="greedy")
     # plt.plot(thing2.sum(axis=0).sum(axis=0), label="best_weight")
@@ -779,7 +795,9 @@ if __name__ == "__main__":
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid,
                    "Per_link_Input_modification_most_G_raw_self_more_interference":Per_link_Input_modification_most_G_raw_self_more_interference,
                    "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum":Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum,
-                   "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights":Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights}
+                   "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights":Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights,
+                   "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights_different_weights":Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_with_weights_different_weights}
+
     # greedy_grid_search()
     # training_data = np.load("trained_models\Dec_13\GNN_grid_search_temp=0.1.npy")
     # plot_dat
@@ -805,8 +823,8 @@ if __name__ == "__main__":
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5"
-    mores = [8,7,6,5,4,3,2,1]
+    model_path = "trained_models/Feb8th/user_loc0/as_if_non_episodic/alpha=0p95_NRF={}_fixed_loss.h5"
+    mores = [7,6,5,4,3,2,1 ]
     Es = [1]
     #
     # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
@@ -824,7 +842,7 @@ if __name__ == "__main__":
             links = j
             bits = i
             print("========================================== links =", j, "bits = ", i)
-            test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+            # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
             # print(model.get_layer("model_2").get_layer("model_1").summary())
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
@@ -845,7 +863,7 @@ if __name__ == "__main__":
             # test_greedy_weighted_SR(None, M, K, B, N_rf, 6.3, 1, printing=True)
             # dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
             # test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
-
+            test_BestWeight_weighted_SR(None, M, K, B, N_rf)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
             # ^^^^^^^^^^^^^^^^^^ using dynamic programming to do N_rf sweep of Greedy faster ^^^^^^^^^^^^^^^^^^
