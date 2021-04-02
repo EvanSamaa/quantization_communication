@@ -20,7 +20,7 @@ def test_BestWeight_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.05, True)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.01, True)
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
     ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
     model = best_weight_model(N_rf, K, M)
@@ -36,8 +36,8 @@ def test_BestWeight_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h
             print("from the robst loss fn is ", loss)
             print("from the weighted sum rate fn is ", tf.reduce_mean(out))
             # print("the variance is ", tf.math.reduce_std(out))
-        np.save("trained_models/Feb8th/user_loc0/best_weight/exp_avg_sumrate_best_weight_Nrf={}.npy".format(N_rf), enviroment.get_rates())
-        np.save("trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf),
+        np.save("trained_models/Feb8th/user_loc0/best_weight/alpha=0p01/exp_avg_sumrate_best_weight_Nrf={}.npy".format(N_rf), enviroment.get_rates())
+        np.save("trained_models/Feb8th/user_loc0/best_weight/alpha=0p01/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf),
                 enviroment.get_weighted_rates())
     return store
 def test_random_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
@@ -729,47 +729,23 @@ def all_bits_compare_with_greedy_plot_link_seperately():
     plt.show()
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
+    file1 = "trained_models/Feb8th/user_loc0/best_weight/alpha=0p01/exp_avg_sumrate_best_weight_Nrf=8.npy"
+    file2 = "trained_models/Feb8th/user_loc0/best_weight/exp_avg_sumrate_best_weight_Nrf=8.npy"
+    a0p01 = np.load(file1).sum(axis=1).sum(axis=0)
+    a0p05 = np.load(file2).sum(axis=1).sum(axis=0)
+    plt.subplot(1, 2, 1)
+    plt.plot(a0p01)
+    plt.plot(a0p05)
+    plt.subplot(1, 2, 2)
+    file1 = "trained_models/Feb8th/user_loc0/best_weight/alpha=0p01/weighted_sumrate_best_weight_Nrf=8.npy"
+    file2 = "trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf=8.npy"
+    a0p01 = np.load(file1).sum(axis=1).sum(axis=0)
+    a0p05 = np.load(file2).sum(axis=1).sum(axis=0)
+    plt.plot(a0p01)
+    plt.plot(a0p05)
 
-    # thing = "trained_models/Feb8th/user_loc0/as_if_non_episodic/alpha=0p95_NRF=8_fixed_loss.npy"
-    # thing = np.load(thing)
-    # plot_data(thing, col=[2], title="Training Sum rate of the system", series_name=["greedy"])
-    # plt.plot(thing[:, 2])
-    # N_rf = 8
-    # thing = "trained_models/Feb8th/user_loc0/greedy/weighted_sumrate_gready_Nrf={}.npy".format(N_rf)
-    # thing2 = "trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf={}.npy".format(N_rf)
-    # ting = "trained_models/Feb8th/user_loc0/Dnn/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf)
-    # ting = "trained_models/Feb8th/user_loc0/as_if_non_episodic/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf)
-    # thing = np.load(thing)
-    # thing2 = np.load(thing2)
-    # ting = np.load(ting)
-    # print("greedy", thing.sum(axis=2).mean())
-    # print("best weight", thing2.sum(axis=2).mean())
-    # print("dnn", ting.sum(axis=2).mean())
-    # plt.plot(ting.sum(axis=0).sum(axis=0), label="dnn")
-    # plt.plot(thing.sum(axis=0).sum(axis=0), label="greedy")
-    # plt.plot(thing2.sum(axis=0).sum(axis=0), label="best_weight")
-    # plt.legend()
-    # plt.show()
-    # A[2]
-    # for i in range(0, 10):
-    #     plot_data(-thing.sum(axis=2)[:, i:i+1], col=[0], title="Training Sum rate of the system", series_name=["greedy"])
-    #     plot_data(-thing2.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
-    #               series_name=["best_weight"])
-    #     plot_data(-ting.sum(axis=2)[:, i:i + 1], col=[0], title="Training Sum rate of the system",
-    #               series_name=["DNN"])
-    #     plt.show()
-    # A[2]
-
-
-    # thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=69+limit_res=6.h5.npy"
-    # thing = np.load(thing)
-    # plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Jointly trained feedback model"])
-    # thing = "trained_models/Dec28/NRF=8/GNN_annealing_temp_B=71+limit_res=6.h5.npy"
-    # thing = np.load(thing)
-    # plot_data(-thing, col=[0], title="Training Sum rate of the system", series_name=["Train with MSE regularization"])
-    # plt.show()
-    # A[2]
-
+    plt.show()
+    A[2]
     # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
@@ -824,7 +800,7 @@ if __name__ == "__main__":
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
     model_path = "trained_models/Feb8th/user_loc0/as_if_non_episodic/alpha=0p95_NRF={}_fixed_loss.h5"
-    mores = [7,6,5,4,3,2,1 ]
+    mores = [8,7,6,5,4,3,2,1 ]
     Es = [1]
     #
     # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)

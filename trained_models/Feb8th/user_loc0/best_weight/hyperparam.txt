@@ -1,0 +1,1 @@
+alpha = 0.05 i.e. smoothing = 2, rounds = 20

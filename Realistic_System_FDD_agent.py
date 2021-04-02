@@ -642,8 +642,8 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
     rounds = 8
     sample_size = 15
     temp = 0.1
-    check = 40
-    episodes = 50
+    check = 200
+    # episodes = 50
     alpha = .01
     model = FDD_agent_more_G_with_weights(M, K, 5, N_rf, True, max_val)
     # model = tf.keras.models.load_model("trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5".format(N_rf), custom_objects=custome_obj)
@@ -691,7 +691,9 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
                 ###################### model post-processing ######################
                 weight_sr = env.compute_weighted_loss(out, train_label, weight=weight, update=False)
                 tiled_weight = tf.reshape(tf.tile(tf.expand_dims(weight, axis=2), (1, 1, M)), (sample_size*N, K*M))
-                loss = weight_sr + mutex_loss_fn(raw_ans[:, -1]) + 0.5 * tf.reduce_mean(tf.square(tiled_weight - out) * (1.0 - tiled_weight))
+                on_off_loss = tf.reduce_sum(tf.square(tiled_weight - out) * (1.0 - tiled_weight), axis=1)
+                on_off_loss = tf.reduce_mean(on_off_loss)
+                loss = weight_sr + mutex_loss_fn(raw_ans[:, -1]) + on_off_loss
                 # loss = env.compute_weighted_loss(ans[:, -1], train_data, update=True, weight=current_weights) + mutex_loss_fn(raw_ans[:, -1])
                 gradients = tape.gradient(loss, model.trainable_variables)
                 optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -705,6 +707,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
             train_hard_loss(loss_hard)
             print(train_loss.result())
             print(train_hard_loss.result())
+            print(on_off_loss)
         if i%check == 0:
             input_mod=tf.concat([valid_data, tf.complex(tf.ones([valid_data.shape[0], K, 1], dtype=tf.float32), 0.0)],
                                 axis=2)
