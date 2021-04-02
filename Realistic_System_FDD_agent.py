@@ -690,7 +690,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
                 weight = tf.reshape(tf.tile(tf.expand_dims(current_weights, axis=0), [sample_size,1, 1]), [sample_size*N, K])
                 ###################### model post-processing ######################
                 weight_sr = env.compute_weighted_loss(out, train_label, weight=weight, update=False)
-                tiled_weight = tf.tile(tf.expand_dims(weight, axis=2), (1, 1, M))
+                tiled_weight = tf.reshape(tf.tile(tf.expand_dims(weight, axis=2), (1, 1, M)), (sample_size*N, K*M))
                 loss = weight_sr + mutex_loss_fn(raw_ans[:, -1]) + 0.5 * tf.reduce_mean(tf.square(tiled_weight - out) * (1.0 - tiled_weight))
                 # loss = env.compute_weighted_loss(ans[:, -1], train_data, update=True, weight=current_weights) + mutex_loss_fn(raw_ans[:, -1])
                 gradients = tape.gradient(loss, model.trainable_variables)
@@ -927,5 +927,5 @@ if __name__ == "__main__":
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_1.npy")
     # np.random.seed(2)
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_2.npy")
-    for N_rf_to_search in [7,6,5,4,3,2,1]:
+    for N_rf_to_search in [8,7,6,5,4,3,2,1]:
         grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf_to_search)
