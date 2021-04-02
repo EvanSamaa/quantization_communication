@@ -703,6 +703,8 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
             loss_hard = env.compute_weighted_loss(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_data, weight=current_weights, update=False)
             train_loss(weight_sr)
             train_hard_loss(loss_hard)
+            print(train_loss.result())
+            print(train_hard_loss.result())
         if i%check == 0:
             input_mod=tf.concat([valid_data, tf.complex(tf.ones([valid_data.shape[0], K, 1], dtype=tf.float32), 0.0)],
                                 axis=2)
