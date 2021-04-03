@@ -4877,12 +4877,12 @@ def train_with_pretrai():
 def FDD_agent_more_G_with_weights(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     def self_agent_dnn(input_shape, i=i):
         inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
-        x = Dense(128, name="Dense1_inside_DNN{}".format(i))(inputs)
+        x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
         # x = tf.keras.layers.Dropout(0.1)(x)
         x = sigmoid(x)
         # x = tf.math.log(1+tf.exp(x))
-        x = Dense(128, name="Dense2_inside_DNN{}".format(i))(x)
+        x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
         # x = tf.keras.layers.Dropout(0.1)(x)
         x = sigmoid(x)
