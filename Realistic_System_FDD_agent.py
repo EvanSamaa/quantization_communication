@@ -669,7 +669,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
         ###################### testing with validation set ######################
         weight_indices = []
         current_iter_up_nums = np.random.randint(10, K)
-        for i in range(0, N):
+        for h in range(0, N):
            weight_indices.append(np.random.choice(K, (1, current_iter_up_nums), replace=False))
         weight_indices = np.concatenate(weight_indices, axis=0)
         current_weights = tf.one_hot(weight_indices, K)

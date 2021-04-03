@@ -142,6 +142,37 @@ def top_N_rf_user_model(M, K, N_rf):
         return tf.constant(out_2, dtype=tf.float32)
 
     return model
+def PF_DFT_model(M, K, N_rf , sigma2):
+    def model(G, weight):
+        # G = tf.reshape(G, (G.shape[0], M * K))
+        G_flat = tf.square(tf.abs(G)).numpy()
+        out = np.zeros((G.shape[0], M * K))
+
+        G_best_precoder = np.argmax(G_flat, axis=2)
+        for n in range(0, G.shape[0]):
+            choices = {}
+            for k in range(0, K):
+                try:
+                    current_best_k, current_best, m = choices[G_best_precoder[n, k]]
+                    val = np.log2(1 + G_flat[n, k, G_best_precoder[n, k]]/sigma2) * weight[n, k]
+                    if (val > current_best):
+                        choices[G_best_precoder[n, k]] = [k, val, G_best_precoder[n, k]]
+                except:
+                    choices[G_best_precoder[n, k]] = [k, np.log2(1 + G_flat[n, k, G_best_precoder[n, k]]/sigma2) * weight[n, k], G_best_precoder[n, k]]
+            vals = list(choices.values())
+            vals = sorted(vals, key=lambda tup: tup[1], reverse=True)
+            for i in range(0, min(N_rf, len(vals))):
+                out[n, vals[i][0] * M + vals[i][2]] = 1
+        # for i in range(0, K): # for each user, set
+        #     max = np.argmax(G_flat[:, M * i:M * (i + 1)], axis=1)
+        #     out[:, M * i + max] = 1
+        # G_with_precoder = out * G_flat
+        # out_2 = np.zeros(out.shape)
+        # values, index = tf.math.top_k(G_with_precoder, k=N_rf)
+        # for i in range(0, G_with_precoder.shape[0]):
+        #     out_2[i, index[i]] = 1
+        return tf.constant(out, dtype=tf.float32)
+    return model
 def greedy_hieristic(N_rf, sigma2):
     def model(G):
         combinations = []
@@ -4842,9 +4873,6 @@ def train_with_pretrai():
     end_to_end_model = Model(newmodel_input, out, name="endtoendModel")
     end_to_end_model.get_layer("dense2").trainable = False
     # if trainable is set to False Dense2 would not be updated
-
-
-
 
 def FDD_agent_more_G_with_weights(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     def self_agent_dnn(input_shape, i=i):
