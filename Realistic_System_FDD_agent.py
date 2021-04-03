@@ -622,7 +622,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF={}_withDropout".format(N_rf)
+    fname_template_template = "trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 0
