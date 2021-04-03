@@ -111,7 +111,7 @@ class Weighted_sumrate_model():
         plt.xlabel("episodes")
         plt.ylabel("Weighted Sumrate")
         if show:
-            plt.show()
+             plt.show()
     def plot_activation(self, show=True):
         from matplotlib import pyplot as plt
         rate = tf.reduce_sum(self.rates, axis=0)

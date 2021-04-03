@@ -685,7 +685,7 @@ def sparse_pure_greedy_hueristic_weighted_SR(N_rf, sigma2, K, M, p, environment)
             min = 100
             best_one = None
             for com in combinations:
-                current_min = tf.reduce_mean(environment.compute_weighted_loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G[n:n + 1]))
+                current_min = tf.reduce_mean(environment.compute_weighted_loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G[n:n + 1], update=False))
                 if current_min < min:
                     min = current_min
                     best_one = com
@@ -708,7 +708,7 @@ def sparse_pure_greedy_hueristic_weighted_SR(N_rf, sigma2, K, M, p, environment)
                     min = 100
                     best_comb = None
                     for com in new_comb:
-                        current_min = tf.reduce_mean(environment.compute_weighted_loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G[n:n + 1]))
+                        current_min = tf.reduce_mean(environment.compute_weighted_loss(tf.expand_dims(tf.constant(com, tf.float32), 0), G[n:n + 1], update=False))
                         if current_min < min:
                             min = current_min
                             best_comb = com
@@ -4879,12 +4879,12 @@ def FDD_agent_more_G_with_weights(M, K, k=2, N_rf=3, normalization=True, avg_max
         inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
         x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
-        x = tf.keras.layers.Dropout(0.1)(x)
+        # x = tf.keras.layers.Dropout(0.1)(x)
         x = sigmoid(x)
         # x = tf.math.log(1+tf.exp(x))
         x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
-        x = tf.keras.layers.Dropout(0.1)(x)
+        # x = tf.keras.layers.Dropout(0.1)(x)
         x = sigmoid(x)
         # x = tf.math.log(1+tf.exp(x))
         x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)

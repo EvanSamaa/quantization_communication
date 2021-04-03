@@ -90,13 +90,13 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.01, True)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.05, True)
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
     ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
-    model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
+    # model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
     for e in range(0, episodes):
         enviroment.increment()
-        pred = model(ds_load)
+        pred = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)(ds_load)
         out = enviroment.compute_weighted_loss(pred, ds_load, update=True)
         result[0] = tf.reduce_mean(out)
         loss = tf.reduce_mean(loss_fn1(pred, ds_load))
@@ -105,8 +105,8 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
             print("from the robst loss fn is ", loss)
             # print("the variance is ", tf.math.reduce_std(out))
     # enviroment.plot_activation(show=True)
-        np.save("trained_models/Feb8th/user_loc0/greedy/alpha0p01/exp_avg_sumrate_greedy_Nrf={}_0p01_alpha.npy".format(N_rf), enviroment.rates)
-        np.save("trained_models/Feb8th/user_loc0/greedy/alpha0p01/weighted_sumrate_greedy_Nrf={}_0p01_alpha.npy".format(N_rf),
+        np.save("trained_models/Feb8th/user_loc0/greedy/alpha0p01/exp_avg_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf), enviroment.rates)
+        np.save("trained_models/Feb8th/user_loc0/greedy/alpha0p01/weighted_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf),
                 enviroment.weighted_rates)
     return store
 def test_PF_DFT_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True, alpha = 0.1):
@@ -876,8 +876,8 @@ if __name__ == "__main__":
             bits = i
             print("========================================== links =", j, "bits = ", i)
             # test_random_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            test_PF_DFT_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha = 0.01)
+            test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+            # test_PF_DFT_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha = 0.01)
             # test_BestWeight_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
 
             # print(model.get_layer("model_2").get_layer("model_1").summary())
