@@ -23,9 +23,9 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Evaluate_FDD_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Evaluate_FDD_models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/alpha0p01/exp_avg_sumrate_greedy_Nrf=7_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/alpha0p01/exp_avg_sumrate_greedy_Nrf=7_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/alpha0p01/weighted_sumrate_greedy_Nrf=7_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/greedy/alpha0p01/weighted_sumrate_greedy_Nrf=7_0p05_alpha.npy" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF=8_withDropOut.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF=8_withDropOut.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -176,8 +176,8 @@
       <item itemvalue="Python.Evaluate_FDD_models" />
       <item itemvalue="Python.Realistic_System_FDD_agent" />
       <item itemvalue="Python.display" />
-      <item itemvalue="Python.util" />
       <item itemvalue="Python.scratch_1" />
+      <item itemvalue="Python.util" />
     </list>
     <recent_temporary>
       <list>

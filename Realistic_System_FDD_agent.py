@@ -622,7 +622,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF={}".format(N_rf)
+    fname_template_template = "trained_models/Feb8th/user_loc0/train_with_0_1_weight/random_binary_NRF={}".format(N_rf)
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 0
@@ -640,11 +640,11 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
     lr = 0.001
     N = 15 # number of
     rounds = 8
-    sample_size = 15
+    sample_size = 10
     temp = 0.1
     check = 200
     # episodes = 50
-    alpha = .01
+    alpha = .05
     model = FDD_agent_more_G_with_weights(M, K, 5, N_rf, True, max_val)
     # model = tf.keras.models.load_model("trained_models/Feb8th/user_loc0/on_user_loc_0_Nrf={}.h5".format(N_rf), custom_objects=custome_obj)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
@@ -925,7 +925,7 @@ def grid_search_with_mutex_loss_episodic_new_archi_fast_train(N_rf = 8):
     np_data.save()
 if __name__ == "__main__":
     M = 64
-    K = 50
+    K = 100
     seed = 100
     # N_rf = 8
     sigma2_h = 6.3

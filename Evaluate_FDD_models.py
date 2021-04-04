@@ -152,7 +152,7 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
     tf.random.set_seed(200)
     np.random.seed(200)
     result = np.zeros((3,))
-    test_env = Weighted_sumrate_model(K, M, N_rf, num_data, .95, hard_decision=True)
+    test_env = Weighted_sumrate_model(K, M, N_rf, num_data, .05, hard_decision=True)
     # loss_fn1 = tf.keras.losses.MeanSquaredError()
     # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
     # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
@@ -167,36 +167,10 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         ds_load = ds
         # if e > 0:
         #     ds_load = ds * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
-        input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)],
+        input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)],
                               axis=2)
         scheduled_output, raw_output = model.predict(input_mod, batch_size=50)
         prediction = scheduled_output[:, -1]
-        # prediction = model(ds_load)[-1]
-        # scheduled_output, raw_output, input_mod, input_reconstructed_mod, reconstructed_input = model.predict_on_batch(ds_load)
-
-        # scheduled_output, raw_output, recon = model(ds_load)
-
-        # for i in range(0, num_data):
-        # from matplotlib import pyplot as plt
-        # for k in range(4, 5):
-        #     G_pred = DP_partial_feedback_pure_greedy_model(N_rf, 64, 10, M, K, sigma2_n, True)(ds_load[k:k+1])
-        #     for i in range(0,5):
-        #         prediction = scheduled_output[:, i]
-        #         prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
-        #         # plt.imshow(tf.reshape(prediction[k], (K, M)))
-        #         # plt.plot(np.arange(0, K*M), G_pred[-1][0])
-        #         plt.plot(np.arange(0, K*M), prediction_hard[k])
-        #         plt.plot(np.arange(0, K*M), prediction[k])
-        #
-        #         plt.show()
-        #     # tf.concat([reconstructed_input[k], tf.zeros((50, 20)), tf.abs(ds_load[k])], axis=1)
-        #
-        #     plt.show()
-        # prediction = scheduled_output[:, -1]
-        # out = test_env.compute_weighted_loss(prediction, tf.abs(ds_load))
-        # result[0] = tf.reduce_mean(out)
-        # result[1] = loss_fn2(prediction)
-        # print("the soft result for time: {} is ".format(e), result)
         prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
         out_hard = test_env.compute_weighted_loss(prediction, ds_load, update=True)
         sr = test_env.compute_raw_loss(prediction, ds_load)
@@ -206,7 +180,13 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         print("the top Nrf result for time: {} is ".format(e), result[0], result_2, "and without the weight it is ", tf.reduce_mean(sr))
     # test_env.plot_average_rates(True)
     data = test_env.rates
-    np.save("trained_models/Feb8th/user_loc0/as_if_non_episodic/weighted_sumrate_DNN_Nrf={}.npy".format(N_rf), data)
+    np.save(
+        "trained_models/Feb8th/user_loc0/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf={}_0p05_alpha.npy".format(N_rf),
+        test_env.rates)
+    np.save(
+        "trained_models/Feb8th/user_loc0/train_with_0_1_weight/weighted_sumrate_dnn_Nrf={}_0p05_alpha.npy".format(N_rf),
+        test_env.weighted_rates)
+
     # test_env.plot_activation(True)
         # ========= ========= =========  plotting ========= ========= =========
         # ds = tf.square(tf.abs(ds))
@@ -856,7 +836,7 @@ if __name__ == "__main__":
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/Feb8th/user_loc0/as_if_non_episodic/alpha=0p95_NRF={}_fixed_loss.h5"
+    model_path = "trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF={}.h5"
     mores = [8,7,6,5,4,3,2,1]
     Es = [1]
     #
@@ -876,10 +856,11 @@ if __name__ == "__main__":
             bits = i
             print("========================================== links =", j, "bits = ", i)
             # test_random_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+            # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
             # test_PF_DFT_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha = 0.01)
             # test_BestWeight_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-
+            dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
             # print(model.get_layer("model_2").get_layer("model_1").summary())
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
