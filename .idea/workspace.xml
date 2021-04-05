@@ -20,9 +20,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Evaluate_FDD_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Evaluate_FDD_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF=8_withDropOut.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF=8_withDropOut.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF=8_withDropout.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Feb8th/user_loc0/train_with_0_1_weight/alpha=0p01_NRF=8_withDropout.h5" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,14 +51,14 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th\user_loc0" />
-      <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Jan_18\30AOA" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th\user_loc0" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th\user_loc1" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th\user_loc0" />
+      <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Jan_18\30AOA" />
     </key>
   </component>
   <component name="RunManager" selected="Python.Evaluate_FDD_models">
@@ -232,26 +230,30 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="669" y="115" key="#display/0.0.1920.1040@0.0.1920.1040" timestamp="1611722558788" />
+    <state x="92" y="92" width="1736" height="856" key="DiffContextDialog" timestamp="1617658265966">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="92" y="92" width="1736" height="856" key="DiffContextDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1617658265966" />
     <state x="739" y="262" key="FileChooserDialogImpl" timestamp="1616623823976">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="739" y="262" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1616623823976" />
-    <state width="1246" height="398" key="GridCell.Tab.0.bottom" timestamp="1617562396876">
+    <state width="1246" height="237" key="GridCell.Tab.0.bottom" timestamp="1617658290206">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1246" height="398" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617562396876" />
-    <state width="1246" height="398" key="GridCell.Tab.0.center" timestamp="1617562396875">
+    <state width="1246" height="237" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617658290206" />
+    <state width="1246" height="237" key="GridCell.Tab.0.center" timestamp="1617658290205">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1246" height="398" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617562396875" />
-    <state width="1246" height="398" key="GridCell.Tab.0.left" timestamp="1617562396875">
+    <state width="1246" height="237" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617658290205" />
+    <state width="1246" height="237" key="GridCell.Tab.0.left" timestamp="1617658290205">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1246" height="398" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617562396875" />
-    <state width="1246" height="398" key="GridCell.Tab.0.right" timestamp="1617562396875">
+    <state width="1246" height="237" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617658290205" />
+    <state width="1246" height="237" key="GridCell.Tab.0.right" timestamp="1617658290206">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1246" height="398" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617562396875" />
+    <state width="1246" height="237" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617658290206" />
     <state width="949" height="348" key="GridCell.Tab.1.bottom" timestamp="1613420259452">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
