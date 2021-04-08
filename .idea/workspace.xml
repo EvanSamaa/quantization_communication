@@ -20,10 +20,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/trained_models/Apr5th/K40/train_with_0_1_weight_withOldModel/placeholder.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/trained_models/Apr5th/K60/train_with_0_1_weight_withOldModel/placeholder.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Evaluate_FDD_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Evaluate_FDD_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,11 +54,11 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th\K60\train_with_0_1_weight_withOldModel" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th\K20\evolving_weights" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th\K20\random_weight_result" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th\K20" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th\K100" />
-      <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th\user_loc0" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th" />
