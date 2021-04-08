@@ -621,7 +621,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(K, N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Apr5th/K20/train_with_0_1_weight/random_binary_NRF={}".format(N_rf)
+    fname_template_template = "trained_models/Apr5th/K20/train_with_0_1_weight/random_binary_NRF={}_biggerbatch".format(N_rf)
     positional_config = "trained_models/Apr5th/K20/twenty_user_positions_1.npy"
     fname_template = fname_template_template + "{}"
     # problem Definition
@@ -637,7 +637,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(K, N_rf = 8):
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 15 # number of
+    N = 50 # number of
     rounds = 8
     sample_size = 10
     temp = 0.1
@@ -659,7 +659,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(K, N_rf = 8):
     max_acc = 0
     np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=3, epoch=EPOCHS)
     # training loop
-    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=False, loss_fn=Sum_rate_utility_WeiCui_seperate_user_stable(K, M, sigma2_n))
+    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=False)
     for i in range(0, EPOCHS):
         train_hard_loss.reset_states()
         # generate training data
@@ -779,7 +779,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(K,
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Apr5th/K20/train_with_0_1_weight_withOldModel/random_binary_NRF={}".format(N_rf)
+    fname_template_template = "trained_models/Apr5th/K20/train_with_0_1_weight_withOldModel/random_binary_NRF={}_biggerbatch".format(N_rf)
     positional_config = "trained_models/Apr5th/K20/twenty_user_positions_1.npy"
     fname_template = fname_template_template + "{}"
     # problem Definition
@@ -796,7 +796,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(K,
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 15 # number of
+    N = 50 # number of
     rounds = 8
     sample_size = 10
     temp = 0.1
@@ -1097,5 +1097,5 @@ if __name__ == "__main__":
     # np.random.seed(2)
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_2.npy")
     for N_rf_to_search in [4]:
-        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf_to_search)
-        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(N_rf_to_search)
+        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(20, N_rf_to_search)
+        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(20, N_rf_to_search)
