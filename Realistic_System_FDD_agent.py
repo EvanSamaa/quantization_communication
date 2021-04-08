@@ -591,7 +591,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_as_if_non_episodic(N_rf =
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
-def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
+def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(K, N_rf = 8):
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -621,18 +621,18 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF={}".format(N_rf)
+    fname_template_template = "trained_models/Apr5th/K20/train_with_0_1_weight/random_binary_NRF={}".format(N_rf)
+    positional_config = "trained_models/Apr5th/K20/twenty_user_positions_1.npy"
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 0
     M = 64
-    K = 100
     seed = 100
     # N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1.0
     ############################### generate data ###############################
-    valid_data = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", 1000, K, M, Nrf=N_rf)
+    valid_data = gen_realistic_data(positional_config, 1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
@@ -663,7 +663,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
     for i in range(0, EPOCHS):
         train_hard_loss.reset_states()
         # generate training data
-        train_data = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", N, K, M, Nrf=N_rf)
+        train_data = gen_realistic_data(positional_config, N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         ###################### testing with validation set ######################
         weight_indices = []
@@ -749,7 +749,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf = 8):
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
-def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(N_rf = 8):
+def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(K, N_rf = 8):
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -779,18 +779,19 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(N_
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF={}".format(N_rf)
+    fname_template_template = "trained_models/Apr5th/K20/train_with_0_1_weight_withOldModel/random_binary_NRF={}".format(N_rf)
+    positional_config = "trained_models/Apr5th/K20/twenty_user_positions_1.npy"
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 0
     M = 64
-    K = 100
+    # K = 100
     seed = 100
     # N_rf = 8
     sigma2_h = 6.3
     sigma2_n = 1.0
     ############################### generate data ###############################
-    valid_data = gen_realistic_data("trained_models/Apr5th/one_hundred_user_config_0.npy", 1000, K, M, Nrf=N_rf)
+    valid_data = gen_realistic_data(positional_config, 1000, K, M, Nrf=N_rf)
     garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
     ################################ hyperparameters ###############################
     EPOCHS = 100000
@@ -822,7 +823,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(N_
     for i in range(0, EPOCHS):
         train_hard_loss.reset_states()
         # generate training data
-        train_data = gen_realistic_data("trained_models/Apr5th/one_hundred_user_config_0.npy", N, K, M, Nrf=N_rf)
+        train_data = gen_realistic_data(positional_config, N, K, M, Nrf=N_rf)
         ###################### training happens here ######################
         ###################### testing with validation set ######################
         weight_indices = []
@@ -1084,7 +1085,7 @@ def grid_search_with_mutex_loss_episodic_new_archi_fast_train(N_rf = 8):
     np_data.save()
 if __name__ == "__main__":
     M = 64
-    K = 100
+    K = 20
     seed = 100
     # N_rf = 8
     sigma2_h = 6.3
@@ -1095,6 +1096,6 @@ if __name__ == "__main__":
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_1.npy")
     # np.random.seed(2)
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_2.npy")
-    for N_rf_to_search in [6,7,8]:
+    for N_rf_to_search in [4]:
         grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(N_rf_to_search)
         grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(N_rf_to_search)

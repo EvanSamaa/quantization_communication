@@ -20,9 +20,55 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/trained_models/Apr5th/K20/train_with_0_1_weight/placeholder.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/trained_models/Apr5th/K20/train_with_0_1_weight_withOldModel/placeholder.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Evaluate_FDD_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Evaluate_FDD_models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/one_hundred_user_config_0.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/one_hundred_user_config_0.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=1_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=4_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=2_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=2_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=3_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=3_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=5_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=5_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=1.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=1.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=1.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=1.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=2.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=2.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=2.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=2.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=3.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=3.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=3.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=3.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=4.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=4.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=4.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=4.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=5.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=5.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=5.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=5.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=6.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=6.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=6.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=6.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=7.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=7.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=7.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=7.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=8.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=8.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/random_binary_NRF=8.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/random_binary_NRF=8.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=1_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=1_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=2_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=2_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=3_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=3_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=4_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/exp_avg_sumrate_dnn_Nrf=1_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=5_0p05_alpha.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight/weighted_sumrate_dnn_Nrf=5_0p05_alpha.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=1.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=1.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=1.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=1.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=2.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=2.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=2.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=2.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=3.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=3.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=3.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=3.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=4.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=4.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=4.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=4.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=5.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=5.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=5.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=5.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=6.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=6.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=6.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=6.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=7.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=7.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=7.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=7.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=8.h5" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=8.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trained_models/Apr5th/train_with_0_1_weight_withOldModel/random_binary_NRF=8.npy" beforeDir="false" afterPath="$PROJECT_DIR$/trained_models/Apr5th/K100/train_with_0_1_weight_withOldModel/random_binary_NRF=8.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,6 +100,7 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th\K100" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th\user_loc0" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th\user_loc1" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th" />
@@ -64,7 +111,7 @@
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Jan_18\30AOA" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.Evaluate_FDD_models">
+  <component name="RunManager" selected="Python.util">
     <configuration name="Evaluate_FDD_models" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="quantization_communication" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -107,27 +154,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="display" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="quantization_communication" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\evansamaa\anaconda3\envs\quantization\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/trained_models/Dec_13/greedy_save_here" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/trained_models/Dec_13/greedy_save_here/display.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="scratch_1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="quantization_communication" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -141,6 +167,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="scratch_2" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="quantization_communication" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_2.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -173,17 +220,17 @@
     <list>
       <item itemvalue="Python.Evaluate_FDD_models" />
       <item itemvalue="Python.Realistic_System_FDD_agent" />
-      <item itemvalue="Python.display" />
       <item itemvalue="Python.scratch_1" />
       <item itemvalue="Python.util" />
+      <item itemvalue="Python.scratch_2" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.util" />
         <item itemvalue="Python.Evaluate_FDD_models" />
+        <item itemvalue="Python.scratch_2" />
         <item itemvalue="Python.Realistic_System_FDD_agent" />
         <item itemvalue="Python.scratch_1" />
-        <item itemvalue="Python.util" />
-        <item itemvalue="Python.display" />
       </list>
     </recent_temporary>
   </component>
@@ -241,38 +288,38 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="739" y="262" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1616623823976" />
-    <state width="1899" height="354" key="GridCell.Tab.0.bottom" timestamp="1617750323201">
+    <state width="1899" height="357" key="GridCell.Tab.0.bottom" timestamp="1617851678043">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="354" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617750323201" />
-    <state width="1899" height="354" key="GridCell.Tab.0.center" timestamp="1617750323201">
+    <state width="1899" height="357" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617851678043" />
+    <state width="1899" height="357" key="GridCell.Tab.0.center" timestamp="1617851678043">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="354" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617750323201" />
-    <state width="1899" height="354" key="GridCell.Tab.0.left" timestamp="1617750323201">
+    <state width="1899" height="357" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617851678043" />
+    <state width="1899" height="357" key="GridCell.Tab.0.left" timestamp="1617851678042">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="354" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617750323201" />
-    <state width="1899" height="354" key="GridCell.Tab.0.right" timestamp="1617750323201">
+    <state width="1899" height="357" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617851678042" />
+    <state width="1899" height="357" key="GridCell.Tab.0.right" timestamp="1617851678043">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="354" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617750323201" />
-    <state width="949" height="348" key="GridCell.Tab.1.bottom" timestamp="1613420259452">
+    <state width="1899" height="357" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617851678043" />
+    <state width="1899" height="309" key="GridCell.Tab.1.bottom" timestamp="1617837791368">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="949" height="348" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1613420259452" />
-    <state width="949" height="348" key="GridCell.Tab.1.center" timestamp="1613420259451">
+    <state width="1899" height="309" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1617837791368" />
+    <state width="1899" height="309" key="GridCell.Tab.1.center" timestamp="1617837791368">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="949" height="348" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1613420259451" />
-    <state width="949" height="348" key="GridCell.Tab.1.left" timestamp="1613420259451">
+    <state width="1899" height="309" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1617837791368" />
+    <state width="1899" height="309" key="GridCell.Tab.1.left" timestamp="1617837791368">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="949" height="348" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1613420259451" />
-    <state width="949" height="348" key="GridCell.Tab.1.right" timestamp="1613420259452">
+    <state width="1899" height="309" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1617837791368" />
+    <state width="1899" height="309" key="GridCell.Tab.1.right" timestamp="1617837791368">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="949" height="348" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1613420259452" />
+    <state width="1899" height="309" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1617837791368" />
     <state x="716" y="222" key="RollbackChangesDialog" timestamp="1611754477519">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -289,10 +336,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="521" y="249" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/0.0.1920.1040@0.0.1920.1040" timestamp="1612768709278" />
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1617409228872">
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1617750759860">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1617409228872" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1617750759860" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

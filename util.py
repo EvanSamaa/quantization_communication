@@ -248,7 +248,7 @@ def gen_pathloss(L, S, K, B2Bdist, inn_ratio, out_ratio, save_loc = ""):
     pathloss = np.power(10, -path_loss_dB / 20)
     if save_loc != "":
         np.save(save_loc, pathloss)
-    pathloss = tf.constant(pathloss, dtype = tf.complex64)
+    # pathloss = tf.constant(pathloss, dtype = tf.complex64)
     # from matplotlib import pyplot as plt
     # plt.plot(np.real(MULoc), np.imag(MULoc), 'bo')
     # plt.plot(0, 0, 'ro')
@@ -1683,6 +1683,11 @@ def sparse_matrix_from_full(G, p):
     # A[2]
     return G_copy
 if __name__ == "__main__":
+    # data = gen_realistic_data("", 1000, 20, 64, 1)
+    out = gen_pathloss(0, 1, 20, 0.3, 0.1, 1, "trained_models/Apr5th/K20/twenty_user_positions_1.npy")
+    print(np.load("trained_models/Feb8th/one_hundred_user_config_2.npy").mean())
+    A[2]
+
     N = 500
     M = 64
     K = 50
