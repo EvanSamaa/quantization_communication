@@ -621,8 +621,8 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(K, N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Apr5th/K20/train_with_0_1_weight/random_binary_NRF={}_biggerbatch".format(N_rf)
-    positional_config = "trained_models/Apr5th/K20/twenty_user_positions_1.npy"
+    fname_template_template = "trained_models/Apr5th/K40/train_with_0_1_weight_withOldModel/random_binary_NRF={}_biggerbatch".format(N_rf)
+    positional_config = "trained_models/Apr5th/K40/user_positions.npy"
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 0
@@ -779,8 +779,8 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(K,
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Apr5th/K20/train_with_0_1_weight_withOldModel/random_binary_NRF={}_biggerbatch".format(N_rf)
-    positional_config = "trained_models/Apr5th/K20/twenty_user_positions_1.npy"
+    fname_template_template = "trained_models/Apr5th/K{}/train_with_0_1_weight_withOldModel/random_binary_NRF={}_biggerbatch".format(K, N_rf)
+    positional_config = "trained_models/Apr5th/K{}/user_positions.npy".format(K)
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 0
@@ -1096,6 +1096,7 @@ if __name__ == "__main__":
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_1.npy")
     # np.random.seed(2)
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_2.npy")
-    for N_rf_to_search in [4]:
-        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(20, N_rf_to_search)
-        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(20, N_rf_to_search)
+    for N_rf_to_search in [4,8]:
+        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(40, N_rf_to_search)
+        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(60, N_rf_to_search)
+        # grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(40, N_rf_to_search)

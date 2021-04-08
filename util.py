@@ -1684,7 +1684,7 @@ def sparse_matrix_from_full(G, p):
     return G_copy
 if __name__ == "__main__":
     # data = gen_realistic_data("", 1000, 20, 64, 1)
-    out = gen_pathloss(0, 1, 20, 0.3, 0.1, 1, "trained_models/Apr5th/K20/twenty_user_positions_1.npy")
+    out = gen_pathloss(0, 1, 40, 0.3, 0.1, 1, "trained_models/Apr5th/K40/user_positions.npy")
     print(np.load("trained_models/Feb8th/one_hundred_user_config_2.npy").mean())
     A[2]
 
