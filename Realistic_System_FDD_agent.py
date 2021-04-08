@@ -1097,6 +1097,6 @@ if __name__ == "__main__":
     # np.random.seed(2)
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_2.npy")
     for N_rf_to_search in [4,8]:
-        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(40, N_rf_to_search)
-        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1(60, N_rf_to_search)
+        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(40, N_rf_to_search)
+        grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(60, N_rf_to_search)
         # grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(40, N_rf_to_search)
