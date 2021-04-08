@@ -819,7 +819,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(K,
     max_acc = 0
     np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=3, epoch=EPOCHS)
     # training loop
-    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=False, loss_fn=Sum_rate_utility_WeiCui_seperate_user_stable(K, M, sigma2_n))
+    env = Weighted_sumrate_model(K, M, N_rf, N, alpha, hard_decision=False)
     for i in range(0, EPOCHS):
         train_hard_loss.reset_states()
         # generate training data
