@@ -780,7 +780,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_normal0_1(K, N_rf = 8):
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
     fname_template_template = "trained_models/Apr5th/K20/dnn_with_random_normal_weight/random_binary_NRF={}_biggerbatch_penalize_small_weight".format(N_rf)
-    positional_config = "trained_models/Apr5th/K20/user_positions.npy"
+    positional_config = "trained_models/Apr5th/K20/twenty_user_positions_1.npy"
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 0
