@@ -4981,6 +4981,92 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     model = Model(inputs, output, name="scheduler{}".format(i))
     return model
+def FDD_agent_more_G_duel_network(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
+    def self_agent_dnn(input_shape, i=i):
+        inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
+        x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
+        x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
+        x = sigmoid(x)
+        # x = tf.math.log(1+tf.exp(x))
+        x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
+        x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
+        x = sigmoid(x)
+        # x = tf.math.log(1+tf.exp(x))
+        x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)
+        model = Model(inputs, x, name="DNN_within_model{}".format(i))
+        return model
+    def weight_network_dnn():
+        Mk = np.zeros((K*M, K), dtype=np.float32)
+        for i in range(0, K):
+            for j in range(0, M):
+                Mk[i*M+j, i] = 1.0
+        sub_inputs = Input(shape=(K, M + 1), dtype=tf.complex64)
+        input_mod = tf.abs(sub_inputs[:, :, :M])
+        weights = tf.abs(sub_inputs[:, :, M:])
+        weights = weights / tf.reduce_max(weights, axis=1, keepdims=True)
+        tiled_weights = tf.tile(tf.expand_dims(weights, axis=1), [1, K, 1, 1])
+        onesK = tf.expand_dims(tf.expand_dims(tf.eye(K), axis=0), axis=3)  # this has the shape of (1, K, K, 1)
+        tiled_weights = tiled_weights - tf.multiply(onesK, tiled_weights)  # reduce the own link from it
+        weights_max = tf.reduce_max(tiled_weights, axis=2)  # (N, K, 1)
+        weights_min = tf.reduce_min(tiled_weights, axis=2)
+        weights_mean = tf.reduce_mean(tiled_weights, axis=2)
+        self_weights = tf.matmul(Mk, weights)
+        weights_max = tf.matmul(Mk, weights_max)
+        weights_min = tf.matmul(Mk, weights_min)
+        weights_mean = tf.matmul(Mk, weights_mean)
+
+        weighted_rates = input_mod*tf.math.log(weights+1)
+        input_mod = tf.keras.layers.Reshape((M*K, 1))(input_mod)
+        weighted_rates = tf.keras.layers.Reshape((M*K, 1))(weighted_rates)
+        input_final = tf.keras.layers.Concatenate(axis=2)([input_mod, weighted_rates, self_weights, weights_max, weights_min, weights_mean])
+        x = tf.sigmoid(tf.keras.layers.BatchNormalization()(Dense(16, name="Dense1_inside_Weight_network".format(i))(input_final)))
+        x = tf.sigmoid(tf.keras.layers.BatchNormalization()(
+            Dense(16, name="Dense2_inside_Weight_network".format(i))(x)))
+        x = tf.sigmoid(tf.keras.layers.BatchNormalization()(
+            Dense(1, name="Dense3_inside_Weight_network".format(i))(x)))
+        model = Model(sub_inputs, x, name="Weight_network")
+        return model
+
+    inputs = Input(shape=(K, M + 1), dtype=tf.complex64)
+    input_mod = inputs[:, :, :M]
+    input_mod = tf.abs(input_mod)
+    if normalization:
+        input_mod = tf.divide(input_mod, avg_max)
+    input_mod = tf.square(input_mod)
+    input_modder = Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum(K, M, N_rf, k)
+    sm = tf.keras.layers.Softmax(axis=1)
+    # sm = sigmoid
+    dnns = self_agent_dnn((M * K ,17 + N_rf))
+    weight_net = weight_network_dnn()
+    raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
+    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
+    input_i = input_modder(raw_out_put_0, input_mod, k - 1.0)
+    # input_i = input_modder(output_0, input_mod, k - 1.0)
+    raw_out_put_i = dnns(input_i)
+
+    out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2) # (None, K*M)
+    # out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)  # (None, K*M)
+
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1), weight_net(inputs)[:,:,0]]
+    # begin the second - kth iteration
+    for times in range(1, k):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
+        input_i = input_modder(raw_out_put_i, input_mod, k - times - 1.0)
+        # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        raw_out_put_i = dnns(input_i)
+        # if times == k-1:
+        out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
+        out_put_i = out_put_i * output[-1]
+        # else:
+        #     out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)
+        # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+    model = Model(inputs, output, name="scheduler{}".format(i))
+    return model
 def FDD_agent_more_G_with_moderator(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     def self_agent_dnn(input_shape, i=i):
         inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
