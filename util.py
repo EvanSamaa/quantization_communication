@@ -30,7 +30,7 @@ class ModelTrainer():
         self.data
         np.save(self.save_dir, self.data)
 class Weighted_sumrate_model():
-    def __init__(self, K, M, N_rf, N, alpha:float, hard_decision = True, loss_fn=None):
+    def __init__(self, K, M, N_rf, N, alpha:float, hard_decision = True, loss_fn=None, binarizatoin_threshold=0.5):
         if (loss_fn==None):
             self.lossfn = Sum_rate_utility_WeiCui_seperate_user(K, M, 1) # loss function to calculate sumrate
         else:
@@ -48,6 +48,7 @@ class Weighted_sumrate_model():
         self.rates = np.zeros(record_shape, dtype=np.float32) # keep the cumulative rates from the past timestamp
         self.weighted_rates = np.zeros(record_shape, dtype=np.float32)
         self.decisions = np.zeros([])
+        self.binarizatoin_threshold = binarizatoin_threshold
     def reset(self):
         record_shape = (1, self.N, self.K)
         self.time = 0
@@ -93,7 +94,7 @@ class Weighted_sumrate_model():
     def get_binary_weights(self):
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule
-        return np.array(np.where(self.get_weight() > 0.5, 1.0, 0.0), np.float32)
+        return np.array(np.where(self.get_weight() > self.binarizatoin_threshold, 1.0, 0.0), np.float32)
     def compute_raw_loss(self, X, G):
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule
