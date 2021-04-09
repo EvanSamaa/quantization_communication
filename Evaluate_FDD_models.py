@@ -94,7 +94,7 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
     # model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
     for e in range(0, episodes):
-        ds_load = gen_realistic_data("trained_models/Apr5th/K20/twenty_user_positions_1.npy", num_data, K, M, Nrf=N_rf)
+        ds_load = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, Nrf=N_rf)
         enviroment.increment()
 
 
@@ -129,7 +129,7 @@ def test_PF_DFT_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
     # ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=N_rf)
     model = PF_DFT_model(M, K, N_rf, sigma2_n)
     for e in range(0, episodes):
-        ds_load = gen_realistic_data("trained_models/Apr5th/K20/twenty_user_positions_1.npy", num_data, K, M,
+        ds_load = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M,
                                      Nrf=N_rf)
 
         weight_indices = []
@@ -172,7 +172,7 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
     # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
     print("Testing Starts")
-    ds = gen_realistic_data("trained_models/Apr5th/K20/twenty_user_positions_1.npy", num_data, K, M, N_rf)
+    ds = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, N_rf)
     for e in range(0, num_episodes):
         test_env.increment()
         # ds = generate_link_channel_data(num_data, K, M, N_rf)
@@ -196,7 +196,7 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         # input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(current_weights, axis=2), 0.0)],
         #                       axis=2)
         # pred = model(ds_load, enviroment.get_weight())
-        scheduled_output, raw_output = model.predict(input_mod, batch_size=50)
+        scheduled_output, raw_output, _garb= model.predict(input_mod, batch_size=50)
         prediction = scheduled_output[:, -1]
         prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
         out_hard = test_env.compute_weighted_loss(prediction, ds_load, weight=test_env.get_weight(), update=True)
@@ -208,11 +208,11 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
     # test_env.plot_average_rates(True)
     data = test_env.rates
     np.save(
-        "trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/exp_avg_sumrate_dnn_Nrf={}_0p05_alpha_binary_threshold=0p{}.npy".format(N_rf, threshold*10),
+        "trained_models/Apr5th/K20/evolving_weights/duel_dnn/exp_avg_sumrate_dnn_Nrf={}_0p05_alpha.npy".format(N_rf),
         test_env.rates)
 
     np.save(
-        "trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/weighted_sumrate_dnn_Nrf={}_0p05_alpha_binary_threshold=0p{}.npy".format(N_rf, threshold*10),
+        "trained_models/Apr5th/K20/evolving_weights/duel_dnn/weighted_sumrate_dnn_Nrf={}_0p05_alpha.npy".format(N_rf),
         test_env.weighted_rates)
 
     # test_env.plot_activation(True)
@@ -876,7 +876,7 @@ if __name__ == "__main__":
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/Apr5th/K20/train_dnn_with_random_normal_weight/random_binary_NRF={}_biggerbatch_penalize_small_weight.h5"
+    model_path = "trained_models/Apr5th/K20/duel_dnn_with_random_normal_weight/random_binary_NRF={}_biggerbatch_penalize_small_weight.h5"
     mores = [4]
     Es = [2]
     #
