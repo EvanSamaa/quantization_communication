@@ -927,7 +927,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(K,
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
     fname_template_template = "trained_models/Apr5th/K{}/train_with_0_1_weight_withOldModel/random_binary_NRF={}_biggerbatch".format(K, N_rf)
-    positional_config = "trained_models/Apr5th/K{}/user_positions.npy".format(K)
+    positional_config = "trained_models/Apr5th/K{}/twenty_user_positions_1.npy".format(K)
     fname_template = fname_template_template + "{}"
     # problem Definition
     pre_train = 0
