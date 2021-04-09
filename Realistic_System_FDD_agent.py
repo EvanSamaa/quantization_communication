@@ -1254,7 +1254,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(K,
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 100 # number of
+    N = 60 # number of
     rounds = 8
     sample_size = 10
     temp = 0.1
@@ -1552,9 +1552,9 @@ if __name__ == "__main__":
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_1.npy")
     # np.random.seed(2)
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_2.npy")
-    for N_rf_to_search in [8, 10]:
+    for N_rf_to_search in [8, 4]:
+        grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(60, N_rf_to_search)
         grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(20, N_rf_to_search)
         grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(40, N_rf_to_search)
-        grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(60, N_rf_to_search)
         # grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(60, N_rf_to_search)
         # grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(40, N_rf_to_search)
