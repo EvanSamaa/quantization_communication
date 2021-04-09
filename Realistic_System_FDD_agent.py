@@ -995,7 +995,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_normal0_1_duel_network(K,
                 weight = tf.reshape(tf.tile(tf.expand_dims(current_weights, axis=0), [sample_size,1, 1]), [sample_size*N, K])
 
                 ###################### model post-processing ######################
-                weight_sr = env.compute_weighted_loss(out, train_label, weight=2*(weight-0.5), update=False)
+                weight_sr = env.compute_weighted_loss(out, train_label, weight=weight, update=False)
                 loss = weight_sr + mutex_loss_fn(raw_ans[:, -1])
                 # loss = env.compute_weighted_loss(ans[:, -1], train_data, update=True, weight=current_weights) + mutex_loss_fn(raw_ans[:, -1])
                 gradients = tape.gradient(loss, model.trainable_variables)
