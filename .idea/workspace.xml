@@ -20,6 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b4830ba-c5b7-4b4f-8949-7b914001c4ef" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/trained_models/Apr5th/K40/trained_with_0_1_weights_8_on/txt.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/Realistic_System_FDD_agent.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -47,7 +49,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/trained_models/Apr5th" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/trained_models/Apr5th/K60" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -59,6 +61,7 @@
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th\K100" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th\K60" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Apr5th" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Feb8th\user_loc0" />
       <recent name="C:\Users\evansamaa\Desktop\quantization_communication\trained_models\Jan_18\30AOA" />

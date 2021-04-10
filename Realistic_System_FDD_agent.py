@@ -1207,7 +1207,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(K,
         else:
             np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
     np_data.save()
-def grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(K, N_rf = 8):
+def grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(K, N_rf = 8, Kon=8):
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -1237,7 +1237,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(K,
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Apr5th/K{}/trained_with_0_1_weights_8_on/random_binary_NRF={}_biggerbatch".format(K, N_rf)
+    fname_template_template = "trained_models/Apr5th/K{}/trained_with_0_1_weights_8_on/random_binary_NRF={}_biggerbatch_Kon={}".format(K, N_rf, Kon)
     positional_config = "trained_models/Apr5th/K{}/user_positions.npy".format(K)
     fname_template = fname_template_template + "{}"
     # problem Definition
@@ -1286,7 +1286,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(K,
         ###################### testing with validation set ######################
         weight_indices = []
         for h in range(0, N):
-           weight_indices.append(np.random.choice(K, (1, max(N_rf, 8)), replace=False))
+           weight_indices.append(np.random.choice(K, (1, max(N_rf, Kon)), replace=False))
         weight_indices = np.concatenate(weight_indices, axis=0)
         current_weights = tf.one_hot(weight_indices, K)
         current_weights = tf.reduce_sum(current_weights, axis=1)
@@ -1552,8 +1552,8 @@ if __name__ == "__main__":
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_1.npy")
     # np.random.seed(2)
     # gen_pathloss(1, 1, 100, 0.6, 0.1, 1, "trained_models/Feb8th/one_hundred_user_config_2.npy")
-    for N_rf_to_search in [8, 4]:
-        grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(40, N_rf_to_search)
-        grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(20, N_rf_to_search)
+    for N_rf_to_search in [6, 4]:
+        grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(40, N_rf_to_search, 15)
+        grid_search_with_mutex_loss_weighted_sumrate_train_random_K1s_modify_gain(20, N_rf_to_search, 8)
         # grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(60, N_rf_to_search)
         # grid_search_with_mutex_loss_weighted_sumrate_train_random_0_1_modify_gain(40, N_rf_to_search)
