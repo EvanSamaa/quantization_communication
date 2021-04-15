@@ -21,6 +21,8 @@ import tensorflow as tf
 def get_realistic_weight_distribution(G):
     top_values, top_indices = tf.math.top_k(-tf.reduce_max(tf.abs(G), axis=2), k=2)
     weights = np.random.power(0.2, (G.shape[0], G.shape[1]))
+    if np.random.randint(0, 2) >= 1:
+        weights = np.random.power(5, (G.shape[0], G.shape[1]))
     weights = np.array(weights, dtype=np.float32)
     for i in range(0, weights.shape[0]):
         for k in range(0, top_indices.shape[1]):

@@ -165,7 +165,6 @@ def test_PF_DFT_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
     for e in range(0, episodes):
         ds_load = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M,
                                      Nrf=N_rf)
-
         weight_indices = []
         current_iter_up_nums = np.random.randint(10, K)
         for h in range(0, num_data):
@@ -185,7 +184,7 @@ def test_PF_DFT_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
             print("the soft result is ", result)
             print("from the robst loss fn is ", loss)
             # print("the variance is ", tf.math.reduce_std(out))
-    # enviroment.plot_activation(show=True)
+        # enviroment.plot_activation(show=True)
         np.save("trained_models/Apr5th/K20/evolving_weights/PFDFT/exp_avg_sumrate_PFDFT_Nrf={}_0p05_alpha.npy".format(N_rf), enviroment.rates)
         np.save("trained_models/Apr5th/K20/evolving_weights/PFDFT/weighted_sumrate_PFDFT_Nrf={}_0p05_alpha.npy".format(N_rf),
                 enviroment.weighted_rates)
@@ -222,12 +221,15 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         # current_weights = tf.one_hot(weight_indices, K)
         # current_weights = tf.reduce_sum(current_weights, axis=1)
 
-        input_mod = ds_load * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
+        # input_mod = ds_load * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
         # input_mod = ds * tf.complex(tf.expand_dims(current_weights, axis=2), 0.0)
         # input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)],
         #                       axis=2)
-        # input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)],
-        #                       axis=2)
+        input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)],
+                              axis=2)
+        from matplotlib import pyplot as plt
+        plt.hist(test_env.get_weight()[0])
+        plt.show()
         # pred = model(ds_load, enviroment.get_weight())
         scheduled_output, raw_output= model.predict(input_mod, batch_size=50)
         prediction = scheduled_output[:, -1]
@@ -240,11 +242,11 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         print("the top Nrf result for time: {} is ".format(e), result[0], result_2, "and without the weight it is ", tf.reduce_mean(sr))
     # test_env.plot_average_rates(True)
     np.save(
-        "trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
+        "trained_models/Apr5th/K20/evolving_weights/multitask_learning/exp_avg_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
         test_env.rates)
 
     np.save(
-        "trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/weighted_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
+        "trained_models/Apr5th/K20/evolving_weights/multitask_learning/weighted_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
         test_env.weighted_rates)
 
     # test_env.plot_activation(True)
@@ -810,11 +812,14 @@ def plotCDF(file_name, name):
     # plt.plot()
 
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-    import seaborn as sns
-    #
+    # from matplotlib import pyplot as plt
+    # import seaborn as sns
+    # #
+    # ds = tf.abs(gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", 100, 20, 64, 4))
+    # plt.plot(tf.reduce_max(tf.reduce_mean(ds, axis=0), axis=1))
+    # plt.show()
     # plotCDF("trained_models/Apr5th/K20/evolving_weights/greedy/exp_avg_sumrate_greedy_Nrf=4_0p05_alpha.npy", "greedy")
-    # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "dnn")
+    # plotCDF("trained_models/Apr5th/K20/evolving_weights/multitask_learning/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "dnn")
     # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "WEICUI DNN")
     # plotCDF("trained_models/Apr5th/K20/evolving_weights/PFDFT/exp_avg_sumrate_PFDFT_Nrf=4_0p05_alpha.npy",
     #         "PFDFT")
@@ -887,7 +892,7 @@ if __name__ == "__main__":
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/Apr5th/K20/train_with_0_1_weight_withOldModel/random_binary_NRF={}_biggerbatch.h5"
+    model_path = "trained_models/Apr5th/K20/multitasklearning/Nrf={}_0p1equalWeight_and_power_law_weight.h5"
     mores = [4]
     Es = [2]
     # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
@@ -901,11 +906,11 @@ if __name__ == "__main__":
             bits = i
             print("========================================== links =", j, "bits = ", i)
             # test_random_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+            # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
             # test_PF_DFT_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha = 0.05)
             # test_BestWeight_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            # dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
-            # test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha=0.05, threshold=8)
+            dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha=0.05, threshold=10)
             # print(model.get_layer("model_2").get_layer("model_1").summary())
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
@@ -914,7 +919,6 @@ if __name__ == "__main__":
             # model = NN_Clustering(N_rf, M, reduced_dim=8)
             # model = top_N_rf_user_model(M, K, N_rf)
             # model = partial_feedback_pure_greedy_model_not_perfect_CSI_available(N_rf, 32, 10, M, K, sigma2_n)
-
             # model = relaxation_based_solver(M, K, N_rf)
             # garbage, g_max = Input_normalization_per_user(tf.abs(generate_link_channel_data(1000, K, M, Nrf=N_rf)))
             # feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)
