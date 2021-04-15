@@ -18,6 +18,15 @@ from generate_batch_data import generate_batch_data, generate_batch_data_with_an
 # ==========================  Data gen ============================s
 import tensorflow as tf
 
+def get_realistic_weight_distribution(G):
+    top_values, top_indices = tf.math.top_k(-tf.abs(G), k=2)
+    weights = np.random.power(0.2, (G.shape[0], G.shape[1]), dtype=np.float32)
+    for i in range(0, weights.shape[0]):
+        for k in range(0, top_indices.shape[1]):
+            if np.random.randint(0, 15) >= 9:
+                weights[i, top_indices[i, k]] = 1.0
+    return weights
+
 class ModelTrainer():
     def __init__(self, save_dir, data_cols=2, epoch=100000):
         self.save_dir = save_dir
@@ -30,7 +39,7 @@ class ModelTrainer():
         self.data
         np.save(self.save_dir, self.data)
 class Weighted_sumrate_model():
-    def __init__(self, K, M, N_rf, N, alpha:float, hard_decision = True, loss_fn=None, binarizatoin_threshold=0.5):
+    def __init__(self, K, M, N_rf, N, alpha:float, hard_decision = True, loss_fn=None, binarizatoin_threshold=8):
         if (loss_fn==None):
             self.lossfn = Sum_rate_utility_WeiCui_seperate_user(K, M, 1) # loss function to calculate sumrate
         else:
@@ -64,7 +73,6 @@ class Weighted_sumrate_model():
         # this function assumes the caller will feed in the soft decision vector
         # must call increment before this step to obtain the correct loss and make the correct update
         # this will simply compute a loss, without applying the weighted sumrate rule
-
         ###########################################   R_t is alwayus positive, loss function returns positive too  ###############################################
         local_X = X
         if self.hard_decision:
@@ -78,7 +86,9 @@ class Weighted_sumrate_model():
                 R_t_bar = (1.0 - self.alpha) * self.rates[-2] + self.alpha * R_t
             else:
                 # if you are not
-                rate = tf.math.log(1/weight)
+                sample_size = int(weight.shape[0]/self.N)
+                rate = tf.reshape(tf.tile(tf.expand_dims(self.rates[-2], axis=0), [sample_size, 1, 1]), [sample_size * self.N, self.K]).numpy()
+
                 R_t_bar = (1.0 - self.alpha) * rate + self.alpha * R_t
         if update:
             self.rates[-1] = R_t_bar
@@ -89,12 +99,24 @@ class Weighted_sumrate_model():
         # must call increment before this step to obtain the correct weight
         if self.time == 0:
             return np.ones((self.N, self.K), dtype=np.float32)
-        weight = np.array(1.0/np.exp(self.rates[-2, :, :]), np.float32)
+        rate_mod = np.where(self.rates[-2, :, :] == 0, -1, self.rates[-2, :, :])
+        weight = np.array(1.0/rate_mod, np.float32)
+        max_val = weight.max()
+        weight = np.where(weight == -1, max_val, weight)
         return weight
     def get_binary_weights(self):
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule
-        return np.array(np.where(self.get_weight() > self.binarizatoin_threshold, 1.0, 0.0), np.float32)
+        top_values, top_indices = tf.math.top_k(self.get_weight(), k=int(self.binarizatoin_threshold))
+
+        binary_weights = np.zeros(self.get_weight().shape, dtype=np.float32)
+        for i in range(0, binary_weights.shape[0]):
+            for k in range(0, self.binarizatoin_threshold):
+                binary_weights[i, top_indices[i, k]] = 1
+        # A[2]
+        return binary_weights
+        # A[2]
+        # return np.array(np.where(self.get_weight() > self.binarizatoin_threshold, 1.0, 0.0), np.float32)
     def compute_raw_loss(self, X, G):
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule
