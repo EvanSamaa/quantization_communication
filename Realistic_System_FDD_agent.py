@@ -1238,7 +1238,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_multitask(K, N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Apr5th/K{}/multitasklearning/Nrf={}_0p1equalWeight_and_power_law_weight".format(K, N_rf)
+    fname_template_template = "trained_models/Apr5th/K{}/multitasklearning/Nrf={}_0p1equalWeight_0o5power_law_weight_0o5reverse_power_law_weight".format(K, N_rf)
     positional_config = "trained_models/Apr5th/K{}/user_positions.npy".format(K)
     fname_template = fname_template_template + "{}"
     # problem Definition
