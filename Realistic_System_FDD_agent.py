@@ -1341,7 +1341,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_multitask(K, N_rf = 8):
             raw_output = []
             for batches in range(0, math.floor(valid_data.shape[0]/10)):
                 batch_input = input_mod[batches * 10:(batches + 1) * 10, :, :]
-                scheduled_output_temp, raw_output_temp = model()
+                scheduled_output_temp, raw_output_temp = model(batch_input)
                 scheduled_output.append(scheduled_output_temp)
                 raw_output.append(raw_output_temp)
             scheduled_output = tf.concat(scheduled_output, axis = 0)
