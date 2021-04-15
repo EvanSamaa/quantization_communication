@@ -19,7 +19,7 @@ from generate_batch_data import generate_batch_data, generate_batch_data_with_an
 import tensorflow as tf
 
 def get_realistic_weight_distribution(G):
-    top_values, top_indices = tf.math.top_k(-tf.abs(G), k=2)
+    top_values, top_indices = tf.math.top_k(-tf.reduce_max(tf.abs(G), axis=2), k=2)
     weights = np.random.power(0.2, (G.shape[0], G.shape[1]))
     weights = np.array(weights, dtype=np.float32)
     for i in range(0, weights.shape[0]):
