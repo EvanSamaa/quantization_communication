@@ -1238,7 +1238,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_multitask(K, N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/Apr5th/K{}/multitasklearning/Nrf={}_equalWeight_and_power_law_weight".format(K, N_rf)
+    fname_template_template = "trained_models/Apr5th/K{}/multitasklearning/Nrf={}_0p1equalWeight_and_power_law_weight".format(K, N_rf)
     positional_config = "trained_models/Apr5th/K{}/user_positions.npy".format(K)
     fname_template = fname_template_template + "{}"
     # problem Definition
@@ -1319,7 +1319,7 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_multitask(K, N_rf = 8):
                 out2 = tf.reshape(out2, [sample_size * N, K * M])
                 weight2 = tf.ones([sample_size * N, K], dtype=tf.float32)
                 only_sr = env.compute_weighted_loss(out2, train_label, weight=weight2, update=False)
-                loss = weight_sr + only_sr + mutex_loss_fn(raw_ans[:, -1]) + mutex_loss_fn(raw_ans2[:, -1])
+                loss = weight_sr + 0.1 * only_sr + mutex_loss_fn(raw_ans[:, -1]) + mutex_loss_fn(raw_ans2[:, -1])
                 # loss = env.compute_weighted_loss(ans[:, -1], train_data, update=True, weight=current_weights) + mutex_loss_fn(raw_ans[:, -1])
                 gradients = tape.gradient(loss, model.trainable_variables)
                 optimizer.apply_gradients(zip(gradients, model.trainable_variables))
