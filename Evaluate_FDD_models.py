@@ -106,8 +106,8 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
             print("the soft result is ", result)
             print("from the robst loss fn is ", loss)
             # print("the variance is ", tf.math.reduce_std(out))
-        np.save("trained_models/Apr5th/K20/random_weight_result/greedy/exp_avg_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf), enviroment.rates)
-        np.save("trained_models/Apr5th/K20/random_weight_result/greedy/weighted_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf),
+        np.save("trained_models/Apr5th/K20/evolving_weights/greedy/exp_avg_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf), enviroment.rates)
+        np.save("trained_models/Apr5th/K20/evolving_weights/greedy/weighted_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf),
                 enviroment.weighted_rates)
     return store
 def test_greedy_weighted_SR_with_feedback(model, bits, links, M = 20, K = 5, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
@@ -190,7 +190,7 @@ def test_PF_DFT_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
         np.save("trained_models/Apr5th/K20/evolving_weights/PFDFT/weighted_sumrate_PFDFT_Nrf={}_0p05_alpha.npy".format(N_rf),
                 enviroment.weighted_rates)
     return store
-def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, sigma2_n=0.00001, alpha=0.03, threshold = 8):
+def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, sigma2_n=0.00001, alpha=0.05, threshold = 8):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -212,9 +212,8 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         # ds = generate_link_channel_data(num_data, K, M, N_rf)
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
-        ds_load = ds
         # if e > 0:
-
+        ds_load = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, N_rf)
         # weight_indices = []
         # current_iter_up_nums = np.random.randint(10, K)
         # for h in range(0, num_data):
@@ -223,12 +222,12 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         # current_weights = tf.one_hot(weight_indices, K)
         # current_weights = tf.reduce_sum(current_weights, axis=1)
 
-        # input_mod = ds * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
+        input_mod = ds_load * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
         # input_mod = ds * tf.complex(tf.expand_dims(current_weights, axis=2), 0.0)
         # input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)],
         #                       axis=2)
-        input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)],
-                              axis=2)
+        # input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)],
+        #                       axis=2)
         # pred = model(ds_load, enviroment.get_weight())
         scheduled_output, raw_output= model.predict(input_mod, batch_size=50)
         prediction = scheduled_output[:, -1]
@@ -240,13 +239,12 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         result[1] = loss_fn2(prediction_hard)
         print("the top Nrf result for time: {} is ".format(e), result[0], result_2, "and without the weight it is ", tf.reduce_mean(sr))
     # test_env.plot_average_rates(True)
-    data = test_env.rates
     np.save(
-        "trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/exp_avg_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
+        "trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
         test_env.rates)
 
     np.save(
-        "trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/weighted_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
+        "trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/weighted_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
         test_env.weighted_rates)
 
     # test_env.plot_activation(True)
@@ -812,75 +810,21 @@ def plotCDF(file_name, name):
     # plt.plot()
 
 if __name__ == "__main__":
-    # from matplotlib import pyplot as plt
-    # import seaborn as sns
-    # #
-    # greedy_file = np.load("trained_models/Apr5th/K20/evolving_weights/PFDFT/exp_avg_sumrate_PFDFT_Nrf=4_0p05_alpha.npy")
-    # greedy_file = np.where(greedy_file == 0, -1, greedy_file)
-    # greedy_file = 1/greedy_file
-    # greedy_file = np.where(greedy_file==-1, greedy_file.max(), greedy_file)
-    # plt.hist(greedy_file.flatten(), bins=100)
-    # plt.show()
+    from matplotlib import pyplot as plt
+    import seaborn as sns
     #
     # plotCDF("trained_models/Apr5th/K20/evolving_weights/greedy/exp_avg_sumrate_greedy_Nrf=4_0p05_alpha.npy", "greedy")
-    # plotCDF("trained_models/Apr5th/K20/evolving_weights/k_on_dnn/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy",
-    #         "k-ON dnn")
-    # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "WEICUI DNN")
+    # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "dnn")
+    # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "WEICUI DNN")
     # plotCDF("trained_models/Apr5th/K20/evolving_weights/PFDFT/exp_avg_sumrate_PFDFT_Nrf=4_0p05_alpha.npy",
     #         "PFDFT")
-    # #
-    # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "cts weight dnn")
-    # #
-    # # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/weighted_sumrate_dnn_Nrf=4_0p05_alpha_binary_threshold=0p5.0.npy", "train with normal weight dnn")
-    # # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/weighted_sumrate_dnn_Nrf=4_0p05_alpha.npy", "WeiCui Idea")
-    # plt.legend()
-    # plt.show()
-    # A[2]
-    # A[2]
-    # Nrf = 8
-    # file_tp = "trained_models/Apr5th/K20/random_weight_result/PFDFT/weighted_sumrate_PFDFT_Nrf=4_0p05_alpha.npy"
-    # file_tp2 = "trained_models/Apr5th/K20/random_weight_result/dnn_with_01_weight/weighted_sumrate_dnn_Nrf=4_0p05_alpha.npy"
-    # file_tp2_2 = "trained_models/Apr5th/K20/random_weight_result/dnn_with_01_weight_50batch/weighted_sumrate_dnn_Nrf=4_0p05_alpha.npy"
-    # # file_tp3 = "trained_models/Apr5th/greedy/alpha0p01/weighted_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(Nrf)
-    # fn = file_tp
-    # a0p01 = np.load(fn).sum(axis=1).mean(axis=0)
-    # plt.plot(-np.sort(-a0p01), label = "PFDFT")
-    # print("PFDFT ", np.load(fn).sum(axis=1).mean(axis=1).mean())
-    # a0p01 = np.load(file_tp2).sum(axis=1).mean(axis=0)
-    # plt.plot(-np.sort(-a0p01), label="dnn")
-    # print("dnn ", np.load(file_tp2).sum(axis=1).mean(axis=1).mean())
-    # a0p01 = np.load(file_tp2_2).sum(axis=1).mean(axis=0)
-    # plt.plot(-np.sort(-a0p01), label="dnn_larger_batch")
-    # print("dnn_larger_batch", np.load(file_tp2_2).sum(axis=1).mean(axis=1).mean())
-    # plt.legend()
-    # plt.show()
-    # A[2]
-    # file1 = "trained_models/Feb8th/user_loc0/PFDFT/0p05/exp_avg_sumrate_PFDFT_Nrf={}_0p01_alpha.npy".format(Nrf)
-    # file2 = "trained_models/Feb8th/user_loc0/random/0p05/exp_avg_sumrate_random_Nrf={}.npy".format(Nrf)
-    # file3 = "trained_models/Feb8th/user_loc0/best_weight/0p05/exp_avg_sumrate_best_weight_Nrf={}.npy".format(Nrf)
-    # # file1 = "trained_models/Feb8th/user_loc0/PFDFT/weighted_sumrate_PFDFT_Nrf=8_0p01_alpha.npy"
-    # # file2 = "trained_models/Feb8th/user_loc0/random/weighted_sumrate_random_Nrf=8.npy"
-    # # file3 = "trained_models/Feb8th/user_loc0/best_weight/alpha=0p01/weighted_sumrate_best_weight_Nrf=8.npy"
-    # a0p01 = np.load(file1).sum(axis=1).mean(axis=0)
-    # random = np.load(file2).sum(axis=1).mean(axis=0)
-    # best_weight = np.load(file3).sum(axis=1).mean(axis=0)
-    # # plt.subplot(1, 2, 1)
-    # plt.plot(-np.sort(-a0p01))
-    # plt.plot(random)
-    # plt.plot(-best_weight)
-    # plt.show()
-    # A[2]
-    # plt.subplot(1, 2, 2)
-    # file1 = "trained_models/Feb8th/user_loc0/best_weight/alpha=0p01/weighted_sumrate_best_weight_Nrf=8.npy"
-    # file2 = "trained_models/Feb8th/user_loc0/best_weight/weighted_sumrate_best_weight_Nrf=8.npy"
-    # a0p01 = np.load(file1).sum(axis=1).sum(axis=0)
-    # a0p05 = np.load(file2).sum(axis=1).sum(axis=0)
-    # plt.plot(a0p01)
-    # plt.plot(a0p05)
+    # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "cts weight dnn")
+    # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/weighted_sumrate_dnn_Nrf=4_0p05_alpha_binary_threshold=0p5.0.npy", "train with normal weight dnn")
+    # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/weighted_sumrate_dnn_Nrf=4_0p05_alpha.npy", "WeiCui Idea")
     #
+    # plt.legend()
     # plt.show()
     # A[2]
-    # Axes3D import has side effects, it enables using projection='3d' in add_subplot
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
                    'Interference_Input_modification_no_loop': Interference_Input_modification_no_loop,
                    "Interference_Input_modification_per_user":Interference_Input_modification_per_user,
@@ -929,27 +873,25 @@ if __name__ == "__main__":
     sigma2_n = 1
     tf.random.set_seed(seed)
     np.random.seed(seed)
+
+    #===================== code used to test greedy =====================
+    # bits_to_try = [1, 2, 3, 4, 5, 6, 7] + list(range(8, 32, 4))
+    # out = np.zeros((64, 32, 8))
+    # for links in range(1, 19):
+    #     for bits in bits_to_try:
+    #         if links * (6 + bits) <= 128:
+    #             test_greedy_weighted_SR_with_feedback(None, bits, links, M=M, K=K, N_rf=4)
+    #===================== code used to test greedy =====================
+
     # greedy_grid_search()
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/Apr5th/K20/train_dnn_with_random_normal_weight/random_binary_NRF={}_biggerbatch_penalize_small_weight.h5"
+    model_path = "trained_models/Apr5th/K20/train_with_0_1_weight_withOldModel/random_binary_NRF={}_biggerbatch.h5"
     mores = [4]
     Es = [2]
-    bits_to_try = [1, 2, 3, 4, 5, 6, 7] + list(range(8, 32, 4))
-    out = np.zeros((64, 32, 8))
-    for links in range(1, 19):
-        for bits in bits_to_try:
-            if links * (6 + bits) <= 128:
-                test_greedy_weighted_SR_with_feedback(None, bits, links, M=M, K=K, N_rf=4)
-    A[2]
     # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M, K, N_rf=8)
-    # A[2]
-    # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-    # A[2]
-    # model = DP_partial_feedback_pure_greedy_model(32, 2, 2, M, K, sigma2_n, perfect_CSI=True)
-    # test_greedy(model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
     for i in Es:
         for j in mores:
             tf.random.set_seed(seed)
@@ -959,7 +901,7 @@ if __name__ == "__main__":
             bits = i
             print("========================================== links =", j, "bits = ", i)
             # test_random_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+            test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
             # test_PF_DFT_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha = 0.05)
             # test_BestWeight_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
             # dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
