@@ -1255,11 +1255,11 @@ def grid_search_with_mutex_loss_weighted_sumrate_train_multitask(K, N_rf = 8):
     ################################ hyperparameters ###############################
     EPOCHS = 100000
     lr = 0.001
-    N = 30 # number of
+    N = 25 # number of
     rounds = 2
     sample_size = 10
     temp = 0.1
-    check = 200
+    check = 500
     # episodes = 50
     alpha = .05
     model = FDD_agent_more_G_with_weights(M, K, 5, N_rf, True, max_val)
