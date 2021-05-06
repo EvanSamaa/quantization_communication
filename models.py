@@ -5140,7 +5140,7 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     input_modder = Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_less_input(K, M, N_rf, k)
     sm = tf.keras.layers.Softmax(axis=1)
     # sm = sigmoid
-    dnns = self_agent_dnn((M * K ,17 + N_rf))
+    dnns = self_agent_dnn((M * K ,14 + N_rf))
     raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
     raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
     raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)
