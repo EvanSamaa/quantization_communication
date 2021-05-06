@@ -2108,11 +2108,13 @@ class Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_les
         GX_col_mean = tf.keras.layers.Reshape((self.M * self.K, 1))(
             tf.transpose(tf.keras.layers.Reshape((self.M, self.K))(GX_col_mean), perm=[0, 2, 1]))
         G_col_tiled = tf.matmul(self.Mm, tf.transpose(input_mod, perm=[0, 2, 1]))
-        G_col_tiled = tf.keras.layers.Reshape((self.M * self.K, 1))(
-            tf.transpose(tf.keras.layers.Reshape((self.M, self.K))(G_col_tiled), perm=[0, 2, 1]))
         G_col_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.K), (self.M, 1)), G_col_tiled)
         G_col_mean = tf.reduce_mean(G_col_tiled, axis=2, keepdims=True)
+        G_col_mean = tf.keras.layers.Reshape((self.M * self.K, 1))(
+            tf.transpose(tf.keras.layers.Reshape((self.M, self.K))(G_col_mean), perm=[0, 2, 1]))
         G_col_max = tf.reduce_max(G_col_tiled, axis=2, keepdims=True)
+        G_col_max = tf.keras.layers.Reshape((self.M * self.K, 1))(
+            tf.transpose(tf.keras.layers.Reshape((self.M, self.K))(G_col_max), perm=[0, 2, 1]))
         # iteration_num = tf.stop_gradient(tf.multiply(tf.constant(0.0), input_reshaper(input_mod)))
         # print(iteration_num.shape)
         # x = tf.reduce_sum(x, axis=2)
