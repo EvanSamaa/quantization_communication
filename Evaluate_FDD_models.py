@@ -110,6 +110,90 @@ def test_greedy_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
         np.save("trained_models/Apr5th/K20/evolving_weights/greedy/weighted_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf),
                 enviroment.weighted_rates)
     return store
+def test_greedy_weighted_SR_random(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
+    store=np.zeros((8,))
+    num_data = 20
+    episodes = 200
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    result = np.zeros((3,))
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
+    print("Testing Starts")
+    tf.random.set_seed(200)
+    np.random.seed(200)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.05, True)
+    # ds_load = generate_link_channel_data(num_data, K, M, 1)
+    # model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
+    for e in range(0, episodes):
+
+        weight_indices = []
+        current_iter_up_nums = np.random.randint(10, K)
+        for h in range(0, num_data):
+            weight_indices.append(np.random.choice(K, (1, current_iter_up_nums), replace=False))
+        weight_indices = np.concatenate(weight_indices, axis=0)
+        current_weights = tf.one_hot(weight_indices, K)
+        current_weights = tf.reduce_sum(current_weights, axis=1)
+
+
+        ds_load = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, Nrf=N_rf)
+        enviroment.increment()
+        pred = partial_feedback_pure_greedy_model_weighted_SR_no_environment(N_rf, 0, 2, M, K, 1, enviroment)(ds_load, current_weights)
+        out = enviroment.compute_weighted_loss(pred, ds_load, weight=current_weights, update=True)
+        result[0] = tf.reduce_mean(out)
+        loss = tf.reduce_mean(loss_fn1(pred, ds_load))
+        if printing:
+            print("the soft result is ", result)
+            print("from the robst loss fn is ", loss)
+            # print("the variance is ", tf.math.reduce_std(out))
+        np.save("trained_models/Apr5th/K20/random_weight_result/greedy/exp_avg_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf), enviroment.rates)
+        np.save("trained_models/Apr5th/K20/random_weight_result/greedy/weighted_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf),
+                enviroment.weighted_rates)
+    return store
+def test_greedy_weighted_SR_random_with_feedback(model, bits, links, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
+    store=np.zeros((8,))
+    num_data = 20
+    episodes = 200
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    result = np.zeros((3,))
+    loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
+    print("Testing Starts")
+    tf.random.set_seed(200)
+    np.random.seed(200)
+    enviroment = Weighted_sumrate_model(K, M, N_rf, num_data, 0.05, True)
+    # ds_load = generate_link_channel_data(num_data, K, M, 1)
+    # model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
+    for e in range(0, episodes):
+
+        weight_indices = []
+        current_iter_up_nums = np.random.randint(10, K)
+        for h in range(0, num_data):
+            weight_indices.append(np.random.choice(K, (1, current_iter_up_nums), replace=False))
+        weight_indices = np.concatenate(weight_indices, axis=0)
+        current_weights = tf.one_hot(weight_indices, K)
+        current_weights = tf.reduce_sum(current_weights, axis=1)
+
+
+        ds_load = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, Nrf=N_rf)
+        enviroment.increment()
+        pred = partial_feedback_pure_greedy_model_weighted_SR_no_environment(N_rf, 0, 2, M, K, 1, enviroment)(ds_load, current_weights)
+        out = enviroment.compute_weighted_loss(pred, ds_load, weight=current_weights, update=True)
+        result[0] = tf.reduce_mean(out)
+        loss = tf.reduce_mean(loss_fn1(pred, ds_load))
+        if printing:
+            print("the soft result is ", result)
+            print("from the robst loss fn is ", loss)
+            # print("the variance is ", tf.math.reduce_std(out))
+        np.save("trained_models/Apr5th/K20/random_weight_result/greedy/exp_avg_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf), enviroment.rates)
+        np.save("trained_models/Apr5th/K20/random_weight_result/greedy/weighted_sumrate_greedy_Nrf={}_0p05_alpha.npy".format(N_rf),
+                enviroment.weighted_rates)
+    return store
 def test_greedy_weighted_SR_with_feedback(model, bits, links, M = 20, K = 5, N_rf = 5, sigma2_h = 6.3, sigma2_n = 0.00001, printing=True):
     store=np.zeros((8,))
     num_data = 20
@@ -128,6 +212,7 @@ def test_greedy_weighted_SR_with_feedback(model, bits, links, M = 20, K = 5, N_r
     # ds_load = generate_link_channel_data(num_data, K, M, 1)
     # model = partial_feedback_pure_greedy_model_weighted_SR(N_rf, 0, 2, M, K, 1, enviroment)
     feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)
+    ds_load_mod = feed_back_model(ds_load)
     for e in range(0, episodes):
         ds_load = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, Nrf=N_rf)
         enviroment.increment()
@@ -189,6 +274,77 @@ def test_PF_DFT_weighted_SR(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6
         np.save("trained_models/Apr5th/K20/evolving_weights/PFDFT/weighted_sumrate_PFDFT_Nrf={}_0p05_alpha.npy".format(N_rf),
                 enviroment.weighted_rates)
     return store
+def test_performance_weighted_SR_with_feedback(model, bits, links, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, sigma2_n=0.00001, alpha=0.05, threshold = 8):
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # tp_fn = ExpectedThroughput(name = "throughput")
+    num_data = 20
+    num_episodes = 200
+    tf.random.set_seed(200)
+    np.random.seed(200)
+    result = np.zeros((3,))
+    test_env = Weighted_sumrate_model(K, M, N_rf, num_data, alpha, hard_decision=True, binarizatoin_threshold=threshold)
+    # loss_fn1 = tf.keras.losses.MeanSquaredError()
+    # loss_fn1 = Sum_rate_utility_RANKING_hard(K, M, sigma2_n, N_rf, True)
+    # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
+    loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
+    print("Testing Starts")
+    ds = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, N_rf)
+    feed_back_model = max_min_k_link_feedback_model(N_rf, bits, links, M, K)
+    for e in range(0, num_episodes):
+        test_env.increment()
+        # ds = generate_link_channel_data(num_data, K, M, N_rf)
+        # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
+        # print(ds)
+        # if e > 0:
+        ds_load = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, N_rf)
+        ds_load_mod = feed_back_model(ds_load)
+        # weight_indices = []
+        # current_iter_up_nums = np.random.randint(10, K)
+        # for h in range(0, num_data):
+        #     weight_indices.append(np.random.choice(K, (1, current_iter_up_nums), replace=False))
+        # weight_indices = np.concatenate(weight_indices, axis=0)
+        # current_weights = tf.one_hot(weight_indices, K)
+        # current_weights = tf.reduce_sum(current_weights, axis=1)
+        input_mod =  tf.complex(ds_load_mod, 0.0) * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
+        # input_mod = ds * tf.complex(tf.expand_dims(current_weights, axis=2), 0.0)
+        # input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)],
+        #                       axis=2)
+        # input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)],
+        #                       axis=2)
+        # pred = model(ds_load, enviroment.get_weight())
+        scheduled_output, raw_output= model.predict(input_mod, batch_size=50)
+        prediction = scheduled_output[:, -1]
+        prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
+        out_hard = test_env.compute_weighted_loss(prediction, ds_load, update=True)
+        sr = test_env.compute_raw_loss(prediction, ds_load)
+        result[0] = tf.reduce_mean(out_hard)
+        result_2 = tf.reduce_mean(tf.reduce_sum(test_env.get_rates(), axis=2))
+        result[1] = loss_fn2(prediction_hard)
+        print("the top Nrf result for time: {} is ".format(e), result[0], result_2, "and without the weight it is ", tf.reduce_mean(sr))
+    # test_env.plot_average_rates(True)
+    np.save(
+        "trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf={}_0p0{}_alpha_with_feedback_b={}_link={}.npy".format(N_rf, int(alpha*100), bits, links),
+        test_env.rates)
+
+    np.save(
+        "trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/weighted_sumrate_dnn_Nrf={}_0p0{}_alpha_with_feedback_b={}_link={}.npy".format(N_rf, int(alpha*100), bits, links),
+        test_env.weighted_rates)
+
+    # test_env.plot_activation(True)
+    # ========= ========= =========  plotting ========= ========= =========
+    # ds = tf.square(tf.abs(ds))
+    # # prediction = prediction[:, :, 2]
+    # unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
+    # unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+    # denominator = tf.matmul(ds, unflattened_X)
+    # for i in range(0, num_data):
+    #     plt.imshow(denominator[i], cmap="gray")
+    #     plt.show(block=False)
+    #     plt.pause(0.0001)
+    #     plt.close()
+    # ========= ========= =========  plotting ========= ========= =========
 def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, sigma2_n=0.00001, alpha=0.05, threshold = 8):
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -220,18 +376,16 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         # weight_indices = np.concatenate(weight_indices, axis=0)
         # current_weights = tf.one_hot(weight_indices, K)
         # current_weights = tf.reduce_sum(current_weights, axis=1)
-
-        # input_mod = ds_load * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
+        # input_mod = ds_load * tf.complex(tf.expand_dims(current_weights, axis=2), 0.0)
+        input_mod = ds_load * tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)
         # input_mod = ds * tf.complex(tf.expand_dims(current_weights, axis=2), 0.0)
         # input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_binary_weights(), axis=2), 0.0)],
         #                       axis=2)
-        input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)],
-                              axis=2)
-        from matplotlib import pyplot as plt
-        plt.hist(test_env.get_weight()[0])
-        plt.show()
+        # input_mod = tf.concat([ds_load, tf.complex(tf.expand_dims(test_env.get_weight(), axis=2), 0.0)],
+        #                       axis=2)
         # pred = model(ds_load, enviroment.get_weight())
         scheduled_output, raw_output= model.predict(input_mod, batch_size=50)
+        plot_input_box_graph(model, input_mod, K, M, N_rf)
         prediction = scheduled_output[:, -1]
         prediction_hard = Harden_scheduling_user_constrained(N_rf, K, M)(prediction)
         out_hard = test_env.compute_weighted_loss(prediction, ds_load, update=True)
@@ -242,26 +396,76 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         print("the top Nrf result for time: {} is ".format(e), result[0], result_2, "and without the weight it is ", tf.reduce_mean(sr))
     # test_env.plot_average_rates(True)
     np.save(
-        "trained_models/Apr5th/K20/evolving_weights/multitask_learning/exp_avg_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
+        "trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/pool_check/exp_avg_sumrate_dnn_Nrf={}_picked={}.npy".format(N_rf, threshold),
         test_env.rates)
 
     np.save(
-        "trained_models/Apr5th/K20/evolving_weights/multitask_learning/weighted_sumrate_dnn_Nrf={}_0p0{}_alpha.npy".format(N_rf, int(alpha*100)),
+        "trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/pool_check/weighted_sumrate_sumrate_dnn_Nrf={}_picked={}.npy".format(N_rf, threshold),
         test_env.weighted_rates)
 
     # test_env.plot_activation(True)
-        # ========= ========= =========  plotting ========= ========= =========
-        # ds = tf.square(tf.abs(ds))
-        # # prediction = prediction[:, :, 2]
-        # unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
-        # unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
-        # denominator = tf.matmul(ds, unflattened_X)
-        # for i in range(0, num_data):
-        #     plt.imshow(denominator[i], cmap="gray")
-        #     plt.show(block=False)
-        #     plt.pause(0.0001)
-        #     plt.close()
-        # ========= ========= =========  plotting ========= ========= =========
+    # ========= ========= =========  plotting ========= ========= =========
+    # ds = tf.square(tf.abs(ds))
+    # # prediction = prediction[:, :, 2]
+    # unflattened_X = tf.reshape(prediction, (prediction.shape[0], K, M))
+    # unflattened_X = tf.transpose(unflattened_X, perm=[0, 2, 1])
+    # denominator = tf.matmul(ds, unflattened_X)
+    # for i in range(0, num_data):
+    #     plt.imshow(denominator[i], cmap="gray")
+    #     plt.show(block=False)
+    #     plt.pause(0.0001)
+    #     plt.close()
+    # ========= ========= =========  plotting ========= ========= =========
+
+def plot_input_box_graph(model, input_mod, K, M, N_rf):
+    import seaborn as sns
+    input_mod = tf.abs(input_mod)
+    max = tf.reduce_max(tf.reduce_max(input_mod, axis=2, keepdims=True), axis=1, keepdims=True)
+    input_mod = input_mod / max
+    input_modder = Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum(K, M, N_rf, 5)
+    raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
+    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    raw_out_put_0 = tf.keras.layers.Reshape((K * M, N_rf))(raw_out_put_0)
+    input_i = input_modder(raw_out_put_0, input_mod, 0)
+    dnns = model.get_layer("DNN_within_model0")
+    sm = tf.keras.layers.Softmax(axis=1)
+    out = []
+    plotting = [input_i]
+    raw_out_put_i = dnns(input_i)
+    out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)  # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    # begin the second - kth iteration
+    for times in range(1, 5):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
+        input_i = input_modder(raw_out_put_i, input_mod, 5 - times - 1.0)
+        plotting.append(input_i)
+        # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        raw_out_put_i = dnns(input_i)
+        # if times == k-1:
+        out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
+        # else:
+        #     out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)
+        # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+    new_plotted = []
+    for i in range(0, 5):
+        i1 = tf.reshape(plotting[i], [20 * 1280, 21])
+        print(tf.reduce_min(i1, axis=0))
+        # ax = sns.boxplot(data=i1[:,0])
+        # plt.show()
+    # ax = sns.boxplot(data=new_plotted)
+    # plt.show()
+    # _ = plt.hist(new_plotted[:,4], bins=30)
+    plt.legend()
+    plt.show()
+
+
+
+
+
 
 def greedy_grid_search():
     M = 64
@@ -812,22 +1016,24 @@ def plotCDF(file_name, name):
     # plt.plot()
 
 if __name__ == "__main__":
-    # from matplotlib import pyplot as plt
-    # import seaborn as sns
-    # #
-    # ds = tf.abs(gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", 100, 20, 64, 4))
-    # plt.plot(tf.reduce_max(tf.reduce_mean(ds, axis=0), axis=1))
-    # plt.show()
+    from matplotlib import pyplot as plt
+    import seaborn as sns
     # plotCDF("trained_models/Apr5th/K20/evolving_weights/greedy/exp_avg_sumrate_greedy_Nrf=4_0p05_alpha.npy", "greedy")
-    # plotCDF("trained_models/Apr5th/K20/evolving_weights/multitask_learning/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "dnn")
+    # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "dnn")
     # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "WEICUI DNN")
-    # plotCDF("trained_models/Apr5th/K20/evolving_weights/PFDFT/exp_avg_sumrate_PFDFT_Nrf=4_0p05_alpha.npy",
-    #         "PFDFT")
+    # # plotCDF("trained_models/Apr5th/K20/random_weight_result/PFDFT/weighted_sumrate_PFDFT_Nrf=4_0p05_alpha.npy",
+    # #         "PFDFT")
+    # print(np.load("trained_models/Apr5th/K20/random_weight_result/dnn_with_01_weight_50batch/weighted_sumrate_dnn_Nrf=4_0p05_alpha.npy").mean())
+    # print(np.load("trained_models/Apr5th/K20/random_weight_result/PFDFT/weighted_sumrate_PFDFT_Nrf=4_0p05_alpha.npy").mean())
+    # print(np.load(
+    #     "trained_models/Apr5th/K20/random_weight_result/greedy/exp_avg_sumrate_greedy_Nrf=4_0p05_alpha.npy").mean())
     # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "cts weight dnn")
     # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_random_normal_weight/weighted_sumrate_dnn_Nrf=4_0p05_alpha_binary_threshold=0p5.0.npy", "train with normal weight dnn")
     # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/weighted_sumrate_dnn_Nrf=4_0p05_alpha.npy", "WeiCui Idea")
     #
     # plt.legend()
+    # plt.xlabel("Cumulative distribution")
+    # plt.ylabel("Exponential average rate of each user")
     # plt.show()
     # A[2]
     custome_obj = {'Closest_embedding_layer': Closest_embedding_layer, 'Interference_Input_modification': Interference_Input_modification,
@@ -880,21 +1086,23 @@ if __name__ == "__main__":
     np.random.seed(seed)
 
     #===================== code used to test greedy =====================
+    # dnn_model = tf.keras.models.load_model("trained_models/Apr5th/K20/trained_with_0_1_weights_8_on/random_binary_NRF={}_biggerbatch_Kon=8.h5".format(4), custom_objects=custome_obj)
     # bits_to_try = [1, 2, 3, 4, 5, 6, 7] + list(range(8, 32, 4))
     # out = np.zeros((64, 32, 8))
     # for links in range(1, 19):
     #     for bits in bits_to_try:
     #         if links * (6 + bits) <= 128:
-    #             test_greedy_weighted_SR_with_feedback(None, bits, links, M=M, K=K, N_rf=4)
+    #             test_performance_weighted_SR_with_feedback(dnn_model, bits, links, M=M, K=K, N_rf=4, threshold=8)
     #===================== code used to test greedy =====================
 
     # greedy_grid_search()
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/Apr5th/K20/multitasklearning/Nrf={}_0p1equalWeight_and_power_law_weight.h5"
+    model_path = "trained_models/Apr5th/K20/train_with_0_1_weight_withOldModel/random_binary_NRF=4_biggerbatch.h5"
     mores = [4]
     Es = [2]
+
     # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
     # test_greedy(model, M, K, N_rf=8)
     for i in Es:
@@ -909,8 +1117,9 @@ if __name__ == "__main__":
             # test_greedy_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
             # test_PF_DFT_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha = 0.05)
             # test_BestWeight_weighted_SR(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
-            dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
-            test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha=0.05, threshold=10)
+            # test_greedy_weighted_SR_random(0, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h)
+            # dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            # test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h=sigma2_h, alpha=0.05, threshold=10)
             # print(model.get_layer("model_2").get_layer("model_1").summary())
             # model = tf.keras.models.load_model(model_path, custom_objects=custome_obj)
             # model = partial_feedback_top_N_rf_model(N_rf, B, 1, M, K, sigma2_n)
@@ -928,8 +1137,8 @@ if __name__ == "__main__":
             # test_performance_partial_feedback_and_DNN(feed_back_model, dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
 
             # test_greedy_weighted_SR(None, M, K, B, N_rf, 6.3, 1, printing=True)
-            # dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
-            # test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
+            test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_BestWeight_weighted_SR(None, M, K, B, N_rf)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv

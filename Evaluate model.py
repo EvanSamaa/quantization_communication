@@ -244,7 +244,9 @@ def plot_data(arr):
     # plt.plot(x, arr[:,2])
     plt.plot(x, arr[:, 1])
     # plt.plot(x, arr[:, 3])
-    plt.title("Accuracy")
+    # plt.title("Accuracy")
+    plt.ylabel("WSR")
+    plt.xlabel("epoches")
     # plt.legend(("Training", "Test", "Maximum"))
     # plt.legend(("loss"))
     # plt.legend(("Quantization Level Count"))
@@ -283,7 +285,83 @@ def check_multiple_models(dir_name):
     bestmodel = tf.keras.models.load_model(dir_name + max_file_name)
     quantization_evaluation(bestmodel, granuality=0.01, bitstring=True)
     return
+def get_hull(x, y):
+    new_x = []
+    new_y = []
+    x_0 = x[0]
+    y_0 = y[0]
+    new_x.append(x_0)
+    new_y.append(y_0)
+    counter = 1
+    while True:
+        if counter >= len(x)-1:
+            break
+        max_slope = -10000
+        max_index = counter
+        for i in range(counter, len(x)):
+            slope = (y[i]-y[counter-1])/(x[i]-x[counter-1])
+            if slope > max_slope:
+                max_slope = slope
+                max_index = i
+        if max_slope >= 0:
+        # if True:
+            new_x.append(x[max_index])
+            new_y.append(y[max_index])
+        new_counter = max_index + 1
+        if new_counter == counter:
+            break
+        counter = new_counter
+
+    return new_x, new_y
+def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
+    out = np.zeros((128,1))
+    bits_to_try = [1, 2, 3, 4, 5, 6, 7] + list(range(8, 32, 4))
+    for links in range(1, 19):
+        for bits in bits_to_try:
+            if links * (6 + bits) <= 80:
+                out[links * (6 + bits)-1] = np.load(
+                    "trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha_with_feedback_b={}_link={}.npy".format(
+                        bits, links)).sum(axis=2).mean()
+                np.save("trained_models/Apr5th/K20/Feedback_weighted_sumrate/dnn_wsr_feedback.npy", out)
+    out = np.zeros((128, 1))
+    bits_to_try = [1, 2, 3, 4, 5, 6, 7] + list(range(8, 32, 4))
+    for links in range(1, 19):
+        for bits in bits_to_try:
+            if links * (6 + bits) <= 80:
+                out[links * (6 + bits) - 1] = np.load(
+                    "trained_models/Apr5th/K20/Feedback_weighted_sumrate/greedy/exp_avg_sumrate_greedy_Nrf=4_0p05_alpha_bits={}_links={}.npy".format(
+                        bits, links)).sum(axis=2).mean()
+                np.save("trained_models/Apr5th/K20/Feedback_weighted_sumrate/greedy_wsr_feedback.npy", out)
+    # A[2]
+    from matplotlib import pyplot as plt
+    grid = np.load("trained_models/Apr5th/K20/Feedback_weighted_sumrate/greedy_wsr_feedback.npy")
+    greedy_up = [13.77, 23.26, 31.25, 38.16, 44.19, 49.41, 53.97, 57.97]
+    gumbel_up = [13.76, 21.94, 29.66, 36.48, 42.02, 47.1, 52.01, 55.90]
+    newx = []
+    newy = []
+    for i in range(grid.shape[0]):
+        if grid[i, 0] != 0:
+            newx.append(i + 1)
+            newy.append(grid[i, 0])
+    out_x, out_y = get_hull(newx, newy)
+    plt.plot(np.array(newx), np.array(newy), label="greedy Method")
+    grid = np.load("trained_models/Apr5th/K20/Feedback_weighted_sumrate/dnn_wsr_feedback.npy")
+    newx = []
+    newy = []
+    for i in range(grid.shape[0]):
+        if grid[i, 0] != 0:
+            newx.append(i + 1)
+            newy.append(grid[i, 0])
+    out_x, out_y = get_hull(newx, newy)
+    plt.plot(np.array(newx), np.array(newy), label="proposed Method")
+    plt.legend()
+    plt.xlabel("bits per user")
+    plt.ylabel("Average exponentially weighted sum rate")
+    plt.show()
+
 if __name__ == "__main__":
+    compare_model_with_greedy_under_partial_feedback_outer_points(4)
+    A[2]
     custome_obj = {'Closest_embedding_layer' : Closest_embedding_layer}
     model = tf.keras.models.load_model("trained_models/Jul 23rd/VAE quantization scheduling k=2,L=10.h5", custom_objects=custome_obj)
     # quantization_evaluation_regression(model)

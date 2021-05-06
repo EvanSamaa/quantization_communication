@@ -107,6 +107,22 @@ class Weighted_sumrate_model():
         max_val = weight.max()
         weight = np.where(weight == -1, max_val, weight)
         return weight
+
+    def get_binary_weights_wei(self): # the method proposed in the wei cui paper (linear search)
+        weight_normed = self.get_weight()
+        top_values, top_indices = tf.math.top_k(weight_normed, k=int(self.K))
+        weight_normed = weight_normed / tf.sqrt(tf.reduce_sum(weight_normed * weight_normed, axis=1, keepdims=True))
+        best_k = -np.inf
+        binary_weights = np.zeros(weight_normed.shape, dtype=np.float32)
+        best_weight = binary_weights.copy() # has shape of N x K
+        for k in range(0, self.K):
+            for i in range(0, binary_weights.shape[0]):
+                binary_weights[i, top_indices[i, k]] = 1
+            val = tf.reduce_sum(binary_weights/(k+1) * weight_normed)
+            if (val > best_k):
+                best_weight = binary_weights.copy()
+                best_k = val
+        return best_weight
     def get_binary_weights(self):
         # this function assumes the caller will feed in the soft decision vector
         # this will simply compute a loss, without applying the weighted sumrate rule
@@ -115,7 +131,7 @@ class Weighted_sumrate_model():
         binary_weights = np.zeros(self.get_weight().shape, dtype=np.float32)
         for i in range(0, binary_weights.shape[0]):
             for k in range(0, self.binarizatoin_threshold):
-                binary_weights[i, top_indices[i, k]] = 1
+                binary_weights[i, top_indices[i, k]] = 1.0
         # A[2]
         return binary_weights
         # A[2]

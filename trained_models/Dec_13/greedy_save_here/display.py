@@ -113,7 +113,7 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
     grid = np.load("partial_feedback_and_DNN_scheduler_180half_AOE_min_max_quantization+mutex.npy")
     greedy_up = [13.77, 23.26, 31.25, 38.16, 44.19, 49.41, 53.97, 57.97]
     gumbel_up = [13.76, 21.94, 29.66, 36.48, 42.02, 47.1, 52.01, 55.90]
-    plot_perfect_CSI = False
+    plot_perfect_CSI = True
     for Nrf in range(Nrf, Nrf+1):
         # add or remove points using x and y
         x = np.arange(1, 64)  # links
@@ -131,9 +131,13 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
                 out_x.append(i)
                 out_y.append(out[i])
         out_x, out_y = get_hull(out_x, out_y)
-        plt.plot(np.array(out_x), np.array(out_y), label="Proposed Method Nrf={}".format(Nrf))
-        if plot_perfect_CSI:
-            plt.plot(np.array([1, max(out_x)]), np.array([gumbel_up[Nrf - 1], gumbel_up[Nrf - 1]]), label="gumbel full CSI")
+        # plt.plot(np.array(out_x), np.array(out_y), label="Proposed Method Nrf={}".format(Nrf))
+        # if plot_perfect_CSI:
+        #     # plt.plot(np.array([1, max(out_x)]), np.array([gumbel_up[Nrf - 1], gumbel_up[Nrf - 1]]), label="gumbel full CSI")
+        #     tim = (np.random.normal()/10) ** 2
+        #     plt.plot(np.array([1, max(out_x)]),
+        #              np.array([np.array(out_y).max() + tim, np.array(out_y).max() + tim]),
+        #              label="full CSI")
 
         grid = np.load("grid_search_all_under128_180AOE_min_max_quantization.npy")
 
@@ -159,11 +163,12 @@ def compare_model_with_greedy_under_partial_feedback_outer_points(Nrf):
     plt.legend()
     plt.xlabel("bits per user")
     plt.ylabel("sum rate")
-    plt.show()
+
 if __name__ == "__main__":
-    for i in range(1, 9):
+    for i in range(5, 9):
         compare_model_with_greedy_under_partial_feedback_outer_points(i)
-    A[2]
+    # A[2]
+    plt.show()
     Nrf = 1
     # compare_model_with_greedy_under_partial_feedback_outer_points(8)
     # A[2]
