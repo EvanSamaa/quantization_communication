@@ -462,6 +462,61 @@ def plot_input_box_graph(model, input_mod, K, M, N_rf):
     # _ = plt.hist(new_plotted[:,4], bins=30)
     plt.legend()
     plt.show()
+def plot_input_box_graph_alt(model, input_mod, K, M, N_rf):
+    import seaborn as sns
+    from matplotlib import pyplot as plt
+    input_mod = tf.abs(input_mod)
+    max = tf.reduce_max(tf.reduce_max(input_mod, axis=2, keepdims=True), axis=1, keepdims=True)
+    input_mod = input_mod / max
+    input_modder0 = Neighbour_aggregator(K, M, N_rf, 0)
+    input_modder1 = Current_node_aggregator(K, M, N_rf, 0)
+    dnn2 = model.get_layer("DNN_within_model1")
+    dnn1 = model.get_layer("DNN_within_model0")
+
+    raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
+    raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
+    raw_out_put_0 = tf.keras.layers.Reshape((K * M, N_rf))(raw_out_put_0)
+    input_i = input_modder0(raw_out_put_0, input_mod, 0)
+
+    sm = tf.keras.layers.Softmax(axis=1)
+    feature_vec = dnn1(input_i)
+    plotting_0 = [input_i]
+    plotting_1 = [input_modder1(raw_out_put_0, input_mod, feature_vec)]
+    raw_out_put_i = dnn2(input_modder1(raw_out_put_0, input_mod, feature_vec))
+    out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)  # (None, K*M)
+    output = [tf.expand_dims(out_put_i, axis=1), tf.expand_dims(raw_out_put_i, axis=1)]
+    # begin the second - kth iteration
+    for times in range(1, 5):
+        out_put_i = tf.keras.layers.Reshape((K, M))(out_put_i)
+        # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
+        input_i = input_modder0(raw_out_put_i, input_mod, 5 - times - 1.0)
+        plotting_0.append(input_i)
+        # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
+        feature_vec = dnn1(input_i)
+        plotting_1.append(input_modder1(raw_out_put_0, input_mod, feature_vec))
+        raw_out_put_i = dnn2(input_modder1(raw_out_put_0, input_mod, feature_vec))
+        # if times == k-1:
+        out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
+        # else:
+        #     out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)
+        # raw_out_put_i = sigmoid((raw_out_put_i - 0.4) * 20.0)
+        # out_put_i = tfa.layers.Sparsemax(axis=1)(out_put_i)
+        output[0] = tf.concat([output[0], tf.expand_dims(out_put_i, axis=1)], axis=1)
+        output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
+    new_plotted = []
+    plotting = []
+    for i in range(0, 5):
+        plotting.append(tf.concat((plotting_0[i], plotting_1[i]), axis=2))
+    print(plotting[0].shape)
+    for i in range(0, 5):
+        i1 = tf.reshape(plotting[i], [plotting[i].shape[0]* 50 * 64, plotting[i].shape[2]])
+        ax = sns.boxplot(data=i1)
+        plt.show()
+    # ax = sns.boxplot(data=new_plotted)
+    # plt.show()
+    # _ = plt.hist(new_plotted[:,4], bins=30)
+    plt.legend()
+    plt.show()
 def greedy_grid_search():
     M = 64
     K = 50
@@ -629,7 +684,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 1000
+    num_data = 50
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
 
@@ -644,7 +699,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
-        plot_input_box_graph(model, ds_load, K, M, N_rf)
+        plot_input_box_graph_alt(model, ds_load, K, M, N_rf)
         scheduled_output, raw_output = model.predict(ds, batch_size=50)
         prediction = scheduled_output[:, -1]
         # prediction = model(ds_load)[-1]
@@ -1012,18 +1067,18 @@ def plotCDF(file_name, name):
     # plt.plot()
 
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-    import seaborn as sns
-    new_model = "trained_models/May/new_model_grad_vals_tanh.npy"
-    old_model = "trained_models/May/new_model_grad_vals.npy"
-    new_model = np.load(new_model)
-    old_model = np.load(old_model)
-    # print(new_model.shape, new_model.shape)
-    plt.plot(old_model[:,0], label="new_model")
-    plt.plot(new_model[:,0], label="new model + tanh")
-    plt.legend()
-    plt.show()
-    A[2]
+    # from matplotlib import pyplot as plt
+    # import seaborn as sns
+    # new_model = "trained_models/May/new_model_grad_vals_tanh.npy"
+    # old_model = "trained_models/May/new_model_grad_vals.npy"
+    # new_model = np.load(new_model)
+    # old_model = np.load(old_model)
+    # # print(new_model.shape, new_model.shape)
+    # plt.plot(old_model[:,0], label="new_model")
+    # plt.plot(new_model[:,0], label="new model + tanh")
+    # plt.legend()
+    # plt.show()
+    # A[2]
 
     # plotCDF("trained_models/Apr5th/K20/evolving_weights/greedy/exp_avg_sumrate_greedy_Nrf=4_0p05_alpha.npy", "greedy")
     # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "dnn")
@@ -1063,6 +1118,8 @@ if __name__ == "__main__":
                    "X_extends":X_extends,
                    "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
                    "Sparsemax":Sparsemax,
+                   "Neighbour_aggregator":Neighbour_aggregator,
+                   "Current_node_aggregator":Current_node_aggregator,
                    "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_less_input":Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_less_input,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid,
@@ -1107,7 +1164,7 @@ if __name__ == "__main__":
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/May/test_dnn_Nrf={}+fixed_inputMod.h5"
+    model_path = "trained_models/May/new_model_Nrf={}.h5"
     mores = [8]
     Es = [2]
     for i in Es:
