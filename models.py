@@ -2292,12 +2292,12 @@ class Neighbour_aggregator(tf.keras.layers.Layer):
         G_user_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.M), (self.K, 1)), G_user_tiled)
         G_user_mean = tf.reduce_mean(G_user_tiled, axis=2, keepdims=True)
         G_user_max = tf.reduce_max(G_user_tiled, axis=2, keepdims=True)
-        GX_user_mean = tf.reduce_sum(tf.multiply(input_mod, x), axis=2, keepdims=True)
-        GX_user_mean = tf.matmul(self.Mk, GX_user_mean) - selected
-        GX_col_mean = tf.transpose(tf.reduce_sum(tf.multiply(input_mod, x), axis=1, keepdims=True), perm=[0, 2, 1])
-        GX_col_mean = tf.matmul(self.Mm, GX_col_mean) - selected
-        GX_col_mean = tf.keras.layers.Reshape((self.M * self.K, 1))(
-            tf.transpose(tf.keras.layers.Reshape((self.M, self.K))(GX_col_mean), perm=[0, 2, 1]))
+        GX_user_max = tf.reduce_max(tf.multiply(input_mod, x), axis=2, keepdims=True)
+        GX_user_max = tf.matmul(self.Mk, GX_user_max) - selected
+        GX_col_max = tf.transpose(tf.reduce_max(tf.multiply(input_mod, x), axis=1, keepdims=True), perm=[0, 2, 1])
+        GX_col_max = tf.matmul(self.Mm, GX_col_max) - selected
+        GX_col_max = tf.keras.layers.Reshape((self.M * self.K, 1))(
+            tf.transpose(tf.keras.layers.Reshape((self.M, self.K))(GX_col_max), perm=[0, 2, 1]))
         G_col_tiled = tf.matmul(self.Mm, tf.transpose(input_mod, perm=[0, 2, 1]))
         G_col_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.K), (self.M, 1)), G_col_tiled)
         G_col_mean = tf.reduce_mean(G_col_tiled, axis=2, keepdims=True)
@@ -2313,14 +2313,14 @@ class Neighbour_aggregator(tf.keras.layers.Layer):
         row_choice = tf.matmul(self.Mk, row_choice)
         row_choice = row_choice - tf.keras.layers.Reshape((self.M*self.K, self.N_rf))(x_sm)
         col_choice = tf.reduce_max(x_sm, axis=1) # now is in shape of [N, M, N_RF]
-        col_choice = tf.matmul(self.Mm, col_choice)
-        col_choice = tf.keras.layers.Reshape((self.M*self.K, self.N_rf))(tf.transpose(tf.keras.layers.Reshape((self.M, self.K, self.N_rf))(col_choice), perm=[0,1,3,2]))
+        col_choice = tf.matmul(self.Mm, col_choice) #[N, M*K, N_RF]
+        col_choice = tf.keras.layers.Reshape((self.M*self.K, self.N_rf))(tf.transpose(tf.keras.layers.Reshape((self.M, self.K, self.N_rf))(col_choice), perm=[0,2,1,3]))
         col_choice = col_choice - tf.keras.layers.Reshape((self.M*self.K, self.N_rf))(x_sm)
         input_i = input_concatnator(
             [input_reshaper(input_mod),
              G_user_mean, G_user_max,
              G_col_mean, G_col_max,
-             GX_user_mean, GX_col_mean,
+             GX_user_max, GX_col_max,
              col_choice, row_choice, other_choice]) # (7 + 3*Nrf) inputs
         return input_i
     def get_config(self):
@@ -5412,6 +5412,7 @@ def FDD_agent_2_step(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
         x = sigmoid(x)
         # x = tf.math.log(1+tf.exp(x))
         x = Dense(N_rf*3, name="Dense4_inside_DNN{}".format(i))(x)
+        x = sigmoid(x)
         model = Model(inputs, x, name="DNN_within_model{}".format(i))
         return model
     def self_agent_dnn_2(input_shape, i=1):
