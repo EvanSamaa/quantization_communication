@@ -5350,12 +5350,15 @@ def FDD_agent_more_G_with_weights(M, K, k=2, N_rf=3, normalization=True, avg_max
 def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     def self_agent_dnn(input_shape, i=i):
         inputs = Input(shape=input_shape, name="DNN_input_insideDNN{}".format(i))
-        x = Dense(64, name="Dense1_inside_DNN{}".format(i))(inputs)
+        x = Dense(128, name="Dense1_inside_DNN{}".format(i))(inputs)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN{}".format(i))(x)
         x = sigmoid(x)
         # x = tf.math.log(1+tf.exp(x))
         x = Dense(64, name="Dense2_inside_DNN{}".format(i))(x)
         x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_2{}".format(i))(x)
+        x = sigmoid(x)
+        x = Dense(64, name="Dense3_inside_DNN{}".format(i))(x)
+        x = tf.keras.layers.BatchNormalization(name="batchnorm_inside_DNN_3{}".format(i))(x)
         x = sigmoid(x)
         # x = tf.math.log(1+tf.exp(x))
         x = Dense(N_rf, name="Dense4_inside_DNN{}".format(i))(x)
@@ -5376,8 +5379,6 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     input_i = input_modder(raw_out_put_0, input_mod, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
-    mask = tf.keras.layers.Softmax(axis=2)(raw_out_put_i)
-    raw_out_put_i = raw_out_put_i*mask
     out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2) # (None, K*M)
     # out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)  # (None, K*M)
 
@@ -5390,8 +5391,6 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         # if times == k-1:
-        mask = tf.keras.layers.Softmax(axis=2)(raw_out_put_i)
-        raw_out_put_i = raw_out_put_i*mask
         out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
         # else:
         #     out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)
