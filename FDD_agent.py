@@ -281,15 +281,15 @@ def grid_search_with_mutex_loss(N_rf = 8):
                 loss = train_sum_rate(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
                 # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
             gradients = tape.gradient(loss, model.trainable_variables)
-            grad_vals = np.zeros((len(gradients),4))
-            print(model.trainable_variables)
-            for oka in range(0, len(gradients)):
-                grad_vals[oka,0] = tf.reduce_mean(tf.abs(gradients[oka]))
-                grad_vals[oka, 1] = np.median(tf.abs(gradients[oka]))
-                grad_vals[oka, 2] = tf.reduce_max(tf.abs(gradients[oka]))
-                grad_vals[oka, 3] = tf.reduce_min(tf.abs(gradients[oka]))
-            np.save("trained_models/May/new_model_grad_vals_tanh.npy" ,grad_vals)
-            A[2]
+            # grad_vals = np.zeros((len(gradients),4))
+            # print(model.trainable_variables)
+            # for oka in range(0, len(gradients)):
+            #     grad_vals[oka,0] = tf.reduce_mean(tf.abs(gradients[oka]))
+            #     grad_vals[oka, 1] = np.median(tf.abs(gradients[oka]))
+            #     grad_vals[oka, 2] = tf.reduce_max(tf.abs(gradients[oka]))
+            #     grad_vals[oka, 3] = tf.reduce_min(tf.abs(gradients[oka]))
+            # np.save("trained_models/May/new_model_grad_vals_tanh.npy" ,grad_vals)
+            # A[2]
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)
