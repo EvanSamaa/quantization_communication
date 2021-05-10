@@ -216,7 +216,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/May/new_model_alt_topology_Nrf={}".format(N_rf)
+    fname_template_template = "trained_models/May/test_dnn_Nrf={}+fixed_inputMod+output_mask+final_edition.h5".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -242,7 +242,8 @@ def grid_search_with_mutex_loss(N_rf = 8):
     sample_size = 50
     temp = 0.1
     check = 100
-    model = FDD_agent_2_step(M, K, 5, N_rf, True, max_val)
+    # model = FDD_agent_2_step(M, K, 5, N_rf, True, max_val)
+    model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
@@ -280,6 +281,15 @@ def grid_search_with_mutex_loss(N_rf = 8):
                 loss = train_sum_rate(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
                 # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
             gradients = tape.gradient(loss, model.trainable_variables)
+            grad_vals = np.zeros((len(gradients),4))
+            print(model.trainable_variables)
+            for oka in range(0, len(gradients)):
+                grad_vals[oka,0] = tf.reduce_mean(tf.abs(gradients[oka]))
+                grad_vals[oka, 1] = np.median(tf.abs(gradients[oka]))
+                grad_vals[oka, 2] = tf.reduce_max(tf.abs(gradients[oka]))
+                grad_vals[oka, 3] = tf.reduce_min(tf.abs(gradients[oka]))
+            np.save("trained_models/May/new_model_grad_vals_tanh.npy" ,grad_vals)
+            A[2]
             optimizer.apply_gradients(zip(gradients,model.trainable_variables))
             # optimizer.minimize(loss, ans)
             train_loss(loss)

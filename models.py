@@ -2161,6 +2161,103 @@ class Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_les
         })
         return config
 
+class Old_model_aggregator_final(tf.keras.layers.Layer):
+    def __init__(self, K, M, N_rf, k, **kwargs):
+        super(Old_model_aggregator_final, self).__init__()
+        self.K = K
+        self.M = M
+        self.N_rf = N_rf
+        self.k = k
+        self.Mk = None
+        self.Mm = None
+        # self.E = tf.Variable(initializer(shape=[self.embedding_count, self.bit_count]), trainable=True)
+    def call(self, x_raw, input_mod, step):
+        if self.Mk is None:
+            self.Mk = np.zeros((self.K * self.M, self.K), dtype=np.float32)
+            self.Mm = np.zeros((self.K * self.M, self.M), dtype=np.float32)
+            for i in range(0, self.K):
+                for j in range(0, self.M):
+                    self.Mk[i * self.M + j, i] = 1.0
+            for i in range(0, self.M):
+                for j in range(0, self.K):
+                    self.Mm[i * self.K + j, i] = 1.0
+            # self.Mk = tf.Variable(self.Mk, dtype=tf.float32)
+            # self.Mm = tf.Variable(self.Mm, dtype=tf.float32)
+        x_sm = tf.keras.layers.Softmax(axis=1)(x_raw)
+        x = tf.reduce_sum(x_sm, axis=2)
+        x = tf.keras.layers.Reshape((self.K, self.M))(x)
+        input_concatnator = tf.keras.layers.Concatenate(axis=2)
+        input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
+        selected = tf.keras.layers.Reshape((self.M * self.K, 1))(tf.multiply(x, input_mod))
+        # G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
+        # G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
+        G_user_tiled = tf.matmul(self.Mk, input_mod)
+        G_user_tiled = tf.multiply(tf.tile(1.0 - tf.eye(self.M), (self.K, 1)), G_user_tiled)
+        G_user_mean = tf.reduce_mean(G_user_tiled, axis=2, keepdims=True)
+        G_user_max = tf.reduce_max(G_user_tiled, axis=2, keepdims=True)
+        GX_user_mean = tf.reduce_sum(tf.multiply(input_mod, x), axis=2, keepdims=True)
+        GX_user_mean = tf.matmul(self.Mk, GX_user_mean) - selected
+        GX_col_mean = tf.transpose(tf.reduce_sum(tf.multiply(input_mod, x), axis=1, keepdims=True), perm=[0, 2, 1])
+        GX_col_mean = tf.matmul(self.Mm, GX_col_mean) - selected
+        GX_col_mean = tf.keras.layers.Reshape((self.M * self.K, 1))(
+            tf.transpose(tf.keras.layers.Reshape((self.M, self.K))(GX_col_mean), perm=[0, 2, 1]))
+        G_col_tiled = tf.matmul(self.Mm, tf.transpose(input_mod, perm=[0, 2, 1]))
+        G_col_tiled = tf.multiply(tf.tile(1.0 - tf.eye(self.K), (self.M, 1)), G_col_tiled)
+        G_col_mean = tf.reduce_mean(G_col_tiled, axis=2, keepdims=True)
+        G_col_mean = tf.keras.layers.Reshape((self.M * self.K, 1))(
+            tf.transpose(tf.keras.layers.Reshape((self.M, self.K))(G_col_mean), perm=[0, 2, 1]))
+        G_col_max = tf.reduce_max(G_col_tiled, axis=2, keepdims=True)
+        G_col_max = tf.keras.layers.Reshape((self.M * self.K, 1))(
+            tf.transpose(tf.keras.layers.Reshape((self.M, self.K))(G_col_max), perm=[0, 2, 1]))
+        other_choice = tf.tile(tf.reduce_max(x_sm, axis=1, keepdims=True), (1, self.M * self.K, 1))
+        other_choice = other_choice - x_sm
+        x_sm = tf.keras.layers.Reshape((self.K, self.M, self.N_rf))(x_sm)
+        row_choice = tf.reduce_max(x_sm, axis=2)  # [N, K, N_RF]
+        row_choice = tf.matmul(self.Mk, row_choice)
+        row_choice = row_choice - tf.keras.layers.Reshape((self.M * self.K, self.N_rf))(x_sm)
+        col_choice = tf.reduce_max(x_sm, axis=1)  # now is in shape of [N, M, N_RF]
+        col_choice = tf.matmul(self.Mm, col_choice)
+        col_choice = tf.keras.layers.Reshape((self.M * self.K, self.N_rf))(
+            tf.transpose(tf.keras.layers.Reshape((self.M, self.K, self.N_rf))(col_choice), perm=[0, 1, 3, 2]))
+        col_choice = col_choice - tf.keras.layers.Reshape((self.M * self.K, self.N_rf))(x_sm)
+        power = tf.tile(tf.expand_dims(tf.reduce_sum(input_mod, axis=1), 1), (1, self.K, 1)) - input_mod
+        interference_f = tf.multiply(power, x)
+        up = tf.multiply(input_mod, x)
+        interference_t_2 = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), [1, self.K, 1])
+        interference_t_2 = tf.divide(up, interference_t_2 - up + 1)
+        interference_t_2 = input_reshaper(interference_t_2)
+        interference_f_2 = tf.tile(tf.reduce_sum(up, axis=1, keepdims=True), (1, self.K, 1)) - up
+        selected = tf.keras.layers.Reshape((self.M * self.K, 1))(tf.multiply(x, input_mod))
+        unflattened_output_0 = tf.transpose(x, perm=[0, 2, 1])
+        interference_t = tf.matmul(input_mod, unflattened_output_0)
+        interference_t = tf.reduce_sum(interference_t - tf.multiply(interference_t, tf.eye(self.K)), axis=2)
+        interference_t = tf.tile(tf.expand_dims(interference_t, 2), (1, 1, self.M))
+        interference_t = input_reshaper(interference_t)
+        interference_f = input_reshaper(interference_f)
+        interference_f_2 = input_reshaper(interference_f_2)
+        input_i = input_concatnator(
+            [input_reshaper(input_mod),
+             G_user_mean, G_user_max,
+             G_col_mean, G_col_max,
+             GX_user_mean, GX_col_mean,
+             col_choice, row_choice, other_choice,
+             interference_t, interference_f, interference_f_2, interference_t_2,
+             tf.keras.layers.Softmax(axis=1)(x_raw),
+             ])  # (11 + 4*Nrf) inputs
+
+        return input_i
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'K': self.K,
+            'M': self.M,
+            'N_rf': self.N_rf,
+            'k': self.k,
+            'name': "Old_model_aggregator_final",
+            'Mk': None,
+            'Mm': None
+        })
+        return config
 class Neighbour_aggregator(tf.keras.layers.Layer):
     def __init__(self, K, M, N_rf, k, **kwargs):
         super(Neighbour_aggregator, self).__init__()
@@ -5269,10 +5366,10 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     if normalization:
         input_mod = tf.divide(input_mod, avg_max)
     input_mod = tf.square(input_mod)
-    input_modder = Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_less_input(K, M, N_rf, k)
+    input_modder = Old_model_aggregator_final(K, M, N_rf, k)
     sm = tf.keras.layers.Softmax(axis=1)
     # sm = sigmoid
-    dnns = self_agent_dnn((M * K ,14 + N_rf))
+    dnns = self_agent_dnn((M * K ,11 + 4*N_rf))
     raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
     raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
     raw_out_put_0 = tf.keras.layers.Reshape((K*M, N_rf))(raw_out_put_0)

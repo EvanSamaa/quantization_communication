@@ -1014,6 +1014,17 @@ def plotCDF(file_name, name):
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
     import seaborn as sns
+    new_model = "trained_models/May/new_model_grad_vals_tanh.npy"
+    old_model = "trained_models/May/new_model_grad_vals.npy"
+    new_model = np.load(new_model)
+    old_model = np.load(old_model)
+    # print(new_model.shape, new_model.shape)
+    plt.plot(old_model[:,0], label="new_model")
+    plt.plot(new_model[:,0], label="new model + tanh")
+    plt.legend()
+    plt.show()
+    A[2]
+
     # plotCDF("trained_models/Apr5th/K20/evolving_weights/greedy/exp_avg_sumrate_greedy_Nrf=4_0p05_alpha.npy", "greedy")
     # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "dnn")
     # # plotCDF("trained_models/Apr5th/K20/evolving_weights/dnn_with_01_weight_50_batch/exp_avg_sumrate_dnn_Nrf=4_0p05_alpha.npy", "WEICUI DNN")
