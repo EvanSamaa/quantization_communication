@@ -5376,8 +5376,6 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     input_i = input_modder(raw_out_put_0, input_mod, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     raw_out_put_i = dnns(input_i)
-    mask = tf.keras.layers.Softmax(axis=2)(raw_out_put_i)
-    raw_out_put_i = raw_out_put_i*mask
     out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2) # (None, K*M)
     # out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)  # (None, K*M)
 
@@ -5390,8 +5388,6 @@ def FDD_agent_more_G(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         raw_out_put_i = dnns(input_i)
         # if times == k-1:
-        mask = tf.keras.layers.Softmax(axis=2)(raw_out_put_i)
-        raw_out_put_i = raw_out_put_i*mask
         out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
         # else:
         #     out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)
