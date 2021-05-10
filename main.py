@@ -1,162 +1,119 @@
-import tensorflow as tf
-import numpy as np
-from tensorflow.data import Dataset
-from tensorflow.keras import Model
-from tensorflow.keras.layers import Dense, LeakyReLU, Softmax, Input, ThresholdedReLU, Flatten
-from tensorflow.keras.activations import sigmoid
+from tf_agents.distributions import gumbel_softmax
 from util import *
-from BinaryEncodingModel import *
 from models import *
+import numpy as np
+import scipy as sp
+from relaxflow.reparam import CategoricalReparam
+from relaxflow.relax import RELAX
 
-def freeze_encoder_layers(model):
-    for layer in model.layers:
-        if layer.name[0:7] == "encoder":
-            layer.trainable = False
-        elif layer.name[0:7] == "decoder":
-            layer.trainable = True
-    return model
-def freeze_decoder_layers(model):
-    for layer in model.layers:
-        if layer.name[0:7] == "decoder":
-            layer.trainable = False
-        elif layer.name[0:7] == "encoder":
-            layer.trainable = True
-    return model
-def unfreeze_all(model):
-    for layer in model.layers:
-        layer.trainable = True
-    return model
-def train_step(features, labels, N=None, encode_only=False):
-    if N != None:
-        return train_step_with_annealing(features, labels, N, encode_only)
-    with tf.GradientTape() as tape:
-        predictions = model(features)
-        logits = predictions[:, :k]
-        vae_loss = vector_quantization_loss(predictions)
-        ce_loss = classification_loss(labels, logits)
-        # ce_loss = regression_loss(labels, logits)
-        loss = ce_loss + vae_loss
-    gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(ce_loss)
-    train_accuracy(labels, logits)
-    # train_accuracy(vae_loss)
-def test_step(features, labels, N=None):
-    if N != None:
-        return test_step_with_annealing(features, labels, N)
-    predictions = model(features)
-    logits = predictions[:, :k]
-    vae_loss = vector_quantization_loss(predictions)
-    ce_loss = classification_loss(labels, logits)
-    # ce_loss = regression_loss(labels, logits)
-    t_loss = ce_loss + vae_loss
-    test_loss(t_loss)
-    # test_accuracy(labels, logits)
-    test_accuracy(t_loss)
-    # test_throughput(labels, predictions, features)
-def train_step_with_annealing(features, labels, N, encode_only=False):
-    features_mod = tf.ones((features.shape[0], 1)) * N
-    features_mod = tf.concat((features_mod, features), axis=1)
-    # print(feature)
-    if encode_only == False:
-        with tf.GradientTape() as tape:
-            predictions = model(features_mod)
-            # predictions = model(ranking_transform(features))
-            quantization = submodel(features_mod)[0:1000, :]
-            quantization0 = quantization + tf.stop_gradient(tf.sign(quantization) - quantization)
-            loss = loss_object(labels, predictions)
-            # quantization0 = tf.reshape(quantization, (1, 1000, 3))
-            # loss = -loss_model(quantization0)
-    gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    train_loss(loss)
-    gradient_record(tf.reduce_mean(tf.square(gradients[0])))
-    quantization_count(Quantization_count(tf.sign(quantization)))
-    # train_throughput(labels, predictions, features)
-    train_accuracy(labels, predictions)
-def test_step_with_annealing(features, labels, N):
-    features_mod = tf.ones((features.shape[0], 1)) * N
-    features_mod = tf.concat((features_mod, features), axis=1)
-    predictions = model(features_mod)
-    t_loss = loss_object(labels, predictions)
-    test_loss(t_loss)
-    test_accuracy(labels, predictions)
-    # test_throughput(labels, predictions, features)
-if __name__ == "__main__":
-    # test_model()
-    # A[2]
-    fname_template_template = "./trained_models/Jul 23rd/VAE quantization scheduling k=30,L=3_{}"
-    N = 5000
-    k = 30
-    L = 3
-    switch = 20
-    EPOCHS = 20000
-    code_size = 4
-    for seed in range(0, 1):
-        tf.keras.backend.clear_session()
-        fname_template = fname_template_template.format(seed) + "{}"
-        tf.random.set_seed(seed)
-        graphing_data = np.zeros((EPOCHS, 8))
-        # model = Recover_uniform_quantization(input_shape = [24,], L=3)
-        model = DiscreteVAE(k, L, (k, ), code_size)
-        model = DiscreteVAE_diff_scheduler(k, L, (k, ), code_size)
-        # model = DiscreteVAE_regression(L, (k, ), code_size)
-        classification_loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-        regression_loss = tf.keras.losses.MeanSquaredError()
-        vector_quantization_loss = VAE_encoding_loss(k, code_size)
+def no_path_loss_DNN_training(save_loc, M, K, N_rf, sigma2_h = 6.3, sigma2_n = 1.0):
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    session = tf.compat.v1.Session(config=config)
+    # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
+    fname_template_template = save_loc + "DNN_Nrf={}".format(N_rf)
+    fname_template = fname_template_template + "{}"
+    check = 250
+    SUPERVISE_TIME = 0
+    training_mode = 2
+    swap_delay = check / 2
 
-        optimizer = tf.keras.optimizers.Adam(lr=0.0001)
-        train_loss = tf.keras.metrics.Mean(name='train_loss')
-        train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
-        # train_accuracy = tf.keras.metrics.Mean(name='train_loss')
-        test_loss = tf.keras.metrics.Mean(name='test_loss')
-        # test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name="test_acc")
-        test_accuracy = tf.keras.metrics.Mean(name='train_loss')
-        quantization_count = tf.keras.metrics.Mean(name='test_loss')
-        # test_ds = gen_encoding_data(N=100, Sequence_length=1000, batchsize=100)
-        # test_ds = gen_regression_data(N=1000, batchsize=1000, reduncancy=1)
-        test_ds = gen_channel_quality_data_float_encoded(100, k)
-        min_loss = -100
-        encode_onlyy = False
-        for epoch in range(EPOCHS):
-            # Reset the metrics at the start of the next epoch
-            # train_ds = gen_encoding_data(N=1000, Sequence_length=1000, batchsize=1000)
-            # train_ds = gen_regression_data(reduncancy=1)
-            train_ds = gen_channel_quality_data_float_encoded(N, k)
+    # problem Definition
+    seed = 100
+    # N_rf = 8
+
+    ############################### generate data ###############################
+    valid_data = generate_link_channel_data(1000, K, M, Nrf=N_rf)
+    garbage, max_val = Input_normalization_per_user(tf.abs(valid_data))
+    ################################ hyperparameters ###############################
+    EPOCHS = 100000
+    lr = 0.001
+    N = 50 # number of
+    rounds = 15
+    sample_size = 50
+    temp = 0.1
+    check = 100
+    model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
+    optimizer = tf.keras.optimizers.Adam(lr=lr)
+    ################################ Metrics  ###############################
+    sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
+    train_sum_rate = Sum_rate_utility_WeiCui_stable(K, M, sigma2_n)
+    train_loss = tf.keras.metrics.Mean(name='train_loss')
+    train_hard_loss = tf.keras.metrics.Mean(name='train_loss')
+    mutex_loss_fn = mutex_loss(N_rf, M, K, N)
+    ################################ storing train data in npy file  ##############################
+    # the three would be first train_loss, Hardloss, and the validation loss, every 50 iterations
+    max_acc = 0
+    np_data = ModelTrainer(save_dir=fname_template.format(".npy"), data_cols=3, epoch=EPOCHS)
+    # training loop
+    for i in range(0, EPOCHS):
+        train_hard_loss.reset_states()
+        # generate training data
+        train_data = generate_link_channel_data(N, K, M, Nrf=N_rf)
+        ###################### training happens here ######################
+        for e in range(0, rounds):
+            temp = 0.5 * np.exp(-4.5 / rounds * e) * tf.maximum(0.0, ((200.0-i)/200.0)) + 0.1
+            temp = np.float32(temp)
+            train_hard_loss.reset_states()
             train_loss.reset_states()
-            quantization_count.reset_states()
-            train_accuracy.reset_states()
-            test_loss.reset_states()
-            test_accuracy.reset_states()
-            for features, labels in train_ds:
-                train_step(features, labels)
-                # train_step(features, labels, epoch, encode_onlyy)
-            for features, labels in test_ds:
-                test_step(features, labels)
-                # test_step(features, labels, epoch)
-            template = 'Epoch {}, Loss: {}, Accuracy:{}, Test Loss: {}, Test Accuracy: {}'
-            print(template.format(epoch + 1,
-                                  train_loss.result(),
-                                  train_accuracy.result(),
-                                  test_loss.result(),
-                                  test_accuracy.result()))
-            graphing_data[epoch, 0] = train_loss.result()
-            graphing_data[epoch, 1] = train_accuracy.result()
-            graphing_data[epoch, 4] = test_loss.result()
-            graphing_data[epoch, 5] = test_accuracy.result()
-            if train_accuracy.result() > min_loss:
-                # model = replace_tanh_with_sign(model, binary_encoding_model_regularization, k=8)
+            with tf.GradientTape(persistent=True) as tape:
+                ###################### model post-processing ######################
+                ans, raw_ans = model(train_data) # raw_ans is in the shape of (N, passes, M*K, N_rf)
+                out_raw = tf.transpose(raw_ans, [0, 1, 3, 2])
+                out_raw = tf.reshape(out_raw[:,-1], [N * N_rf, K*M])
+                sm = gumbel_softmax.GumbelSoftmax(temperature=temp, logits=out_raw)
+                out_raw = sm.sample(sample_size)
+                out_raw = tf.reshape(out_raw, [sample_size, N, N_rf, K*M])
+                out = tf.reduce_sum(out_raw, axis=2)
+                out = tf.reshape(out, [sample_size*N, K*M])
+                train_label = tf.reshape(tf.tile(tf.expand_dims(train_data, axis=0), [sample_size,1, 1, 1]), [sample_size*N, K, M])
+                ###################### model post-processing ######################
+                loss = train_sum_rate(out, train_label) + mutex_loss_fn(raw_ans[:, -1])
+                # loss = train_sum_rate(out, train_label) + 0.01 *mutex_loss_fn(out)
+            gradients = tape.gradient(loss, model.trainable_variables)
+            optimizer.apply_gradients(zip(gradients,model.trainable_variables))
+            # optimizer.minimize(loss, ans)
+            train_loss(loss)
+            train_hard_loss(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(ans[:,-1]), train_data))
+            print(train_hard_loss.result(),train_loss.result(), "stable sr = ", tf.reduce_mean(loss))
+            del tape
+        ###################### testing with validation set ######################
+        if i%check == 0:
+            scheduled_output, raw_output = model.predict(valid_data, batch_size=N)
+            valid_loss = tf.reduce_mean(sum_rate(Harden_scheduling_user_constrained(N_rf, K, M)(scheduled_output[:, -1]), valid_data))
+            np_data.log(i, [train_hard_loss.result(), train_loss.result(), valid_loss])
+            print("============================================================\n")
+            print(valid_loss)
+            if valid_loss < max_acc:
+                max_acc = valid_loss
                 model.save(fname_template.format(".h5"))
-                min_loss = train_accuracy.result()
-            if epoch%500 == 0:
-                # print(model.get_layer("closest_embedding_layer").E)
-                if epoch >= 1000:
-                    improvement = graphing_data[epoch-1000: epoch-500, 0].mean() - graphing_data[epoch-500: epoch, 0].mean()
-                    print("the accuracy improvement in the past 500 epochs is ", improvement)
-                    if improvement <= 0.000001:
-                        break
-        np.save(fname_template.format(".npy"), graphing_data)
-        # fname_template = "~/quantization_communication/trained_models/Sept 25th/Data_gen_encoder_L10_hard_tanh{}"
-    print("Training data end ")
+            if i >= (check * 2):
+                graphing_data = np_data.data
+                improvement = graphing_data[i + 1 - (check * 2): i - check + 1, -1].min() - graphing_data[
+                                                                                                   i - check + 1: i + 1,
+                                                                                                   -1].min()
+                counter = 0
+                for asldk in graphing_data[0:i + 1, -1]:
+                    if asldk != 0:
+                        print(counter, asldk)
+                    counter = counter + 1
+                print("the improvement in the past 500 epochs is: ", improvement)
+                print("the validation SR is: ", valid_loss)
+                if improvement <= 0.0001 and lr == 0.001:
+                    lr = 0.0001
+                    optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+                elif improvement <= 0.0001 and lr < 0.001:
+                    break
+        else:
+            np_data.log(i, [train_hard_loss.result(), train_loss.result(), 0])
+    np_data.save()
 
+
+if __name__ == "__main__":
+    save_loc = "trained_models/May/new_vs_old_input_feature_vector/"
+    M = 64
+    K = 50
+    N_rf = 8
+
+    # e.g.: no_path_loss_DNN_training(save_loc, M, K, N_rf)
 

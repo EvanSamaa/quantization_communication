@@ -361,7 +361,7 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
     # loss_fn2 = Bin arization_regularization(K, num_data, M, k=N_rf)
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf=0)
     print("Testing Starts")
-    ds = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, N_rf)
+    # ds = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, N_rf)
     for e in range(0, num_episodes):
         test_env.increment()
         # ds = generate_link_channel_data(num_data, K, M, N_rf)
@@ -369,6 +369,7 @@ def test_performance_weighted_SR(model, M=20, K=5, B=10, N_rf=5, sigma2_h=6.3, s
         # print(ds)
         # if e > 0:
         ds_load = gen_realistic_data("trained_models/Apr5th/K20/user_positions.npy", num_data, K, M, N_rf)
+
         # weight_indices = []
         # current_iter_up_nums = np.random.randint(10, K)
         # for h in range(0, num_data):
@@ -422,7 +423,7 @@ def plot_input_box_graph(model, input_mod, K, M, N_rf):
     input_mod = tf.abs(input_mod)
     max = tf.reduce_max(tf.reduce_max(input_mod, axis=2, keepdims=True), axis=1, keepdims=True)
     input_mod = input_mod / max
-    input_modder = Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum(K, M, N_rf, 5)
+    input_modder = Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_less_input(K, M, N_rf, 5)
     raw_out_put_0 = tf.stop_gradient(tf.multiply(tf.zeros((K, M)), input_mod[:, :, :]) + 1.0)
     raw_out_put_0 = tf.tile(tf.expand_dims(raw_out_put_0, axis=3), (1, 1, 1, N_rf))
     raw_out_put_0 = tf.keras.layers.Reshape((K * M, N_rf))(raw_out_put_0)
@@ -452,21 +453,15 @@ def plot_input_box_graph(model, input_mod, K, M, N_rf):
         output[1] = tf.concat([output[1], tf.expand_dims(raw_out_put_i, axis=1)], axis=1)
     new_plotted = []
     for i in range(0, 5):
-        i1 = tf.reshape(plotting[i], [20 * 1280, 21])
+        i1 = tf.reshape(plotting[i][0], [1* 50 * 64, 8+14])
         print(tf.reduce_min(i1, axis=0))
-        # ax = sns.boxplot(data=i1[:,0])
-        # plt.show()
+        ax = sns.boxplot(data=i1)
+        plt.show()
     # ax = sns.boxplot(data=new_plotted)
     # plt.show()
     # _ = plt.hist(new_plotted[:,4], bins=30)
     plt.legend()
     plt.show()
-
-
-
-
-
-
 def greedy_grid_search():
     M = 64
     K = 50
@@ -506,7 +501,7 @@ def partial_feedback_and_DNN_grid_search():
                 print("{} links {} bits is done".format(links, bits))
 def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n = 1, printing=True):
     store=np.zeros((8,))
-    num_data = 1
+    num_data = 50
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
@@ -517,8 +512,8 @@ def test_greedy(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sigma2_n
     print("Testing Starts")
     tf.random.set_seed(200)
     np.random.seed(200)
-    # ds_load = generate_link_channel_data(num_data, K, M, 1)
-    ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=1)
+    ds_load = generate_link_channel_data(num_data, K, M, 1)
+    # ds_load = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, Nrf=1)
     # print(ds_load.shape)
     prediction = model(ds_load)
     counter = 1
@@ -634,7 +629,7 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # tp_fn = ExpectedThroughput(name = "throughput")
-    num_data = 20
+    num_data = 1000
     result = np.zeros((3, ))
     loss_fn1 = Sum_rate_utility_WeiCui(K, M, sigma2_n)
 
@@ -644,11 +639,12 @@ def test_performance(model, M = 20, K = 5, B = 10, N_rf = 5, sigma2_h = 6.3, sig
     loss_fn2 = Total_activation_limit_hard(K, M, N_rf = 0)
     print("Testing Starts")
     for e in range(0, 1):
-        # ds = generate_link_channel_data(num_data, K, M, N_rf)
-        ds = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, N_rf)
+        ds = generate_link_channel_data(num_data, K, M, N_rf)
+        # ds = gen_realistic_data("trained_models/Feb8th/user_loc0/one_hundred_user_config_0.npy", num_data, K, M, N_rf)
         # ds, angle = generate_link_channel_data_with_angle(num_data, K, M)
         # print(ds)
         ds_load = ds
+        plot_input_box_graph(model, ds_load, K, M, N_rf)
         scheduled_output, raw_output = model.predict(ds, batch_size=50)
         prediction = scheduled_output[:, -1]
         # prediction = model(ds_load)[-1]
@@ -1056,6 +1052,7 @@ if __name__ == "__main__":
                    "X_extends":X_extends,
                    "Per_link_Input_modification_most_G_col":Per_link_Input_modification_most_G_col,
                    "Sparsemax":Sparsemax,
+                   "Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_less_input":Per_link_Input_modification_most_G_raw_self_more_interference_mean2sum_less_input,
                    "Sequential_Per_link_Input_modification_most_G_raw_self":Sequential_Per_link_Input_modification_most_G_raw_self,
                    "Per_link_Input_modification_most_G_raw_self_sigmoid":Per_link_Input_modification_most_G_raw_self_sigmoid,
                    "Per_link_Input_modification_most_G_raw_self_more_interference":Per_link_Input_modification_most_G_raw_self_more_interference,
@@ -1075,7 +1072,7 @@ if __name__ == "__main__":
     # A[2]
     N = 1
     M = 64
-    K = 20
+    K = 50
     B = 32
     seed = 200
     check = 100
@@ -1099,12 +1096,9 @@ if __name__ == "__main__":
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/Apr5th/K20/train_with_0_1_weight_withOldModel/random_binary_NRF=4_biggerbatch.h5"
-    mores = [4]
+    model_path = "trained_models/May/test_dnn_Nrf={}+fixed_inputMod.h5"
+    mores = [8]
     Es = [2]
-
-    # model = DP_DNN_feedback_pure_greedy_model(N_rf, 32, 2, M, K, sigma2_n, perfect_CSI=True)
-    # test_greedy(model, M, K, N_rf=8)
     for i in Es:
         for j in mores:
             tf.random.set_seed(seed)
@@ -1138,7 +1132,7 @@ if __name__ == "__main__":
 
             # test_greedy_weighted_SR(None, M, K, B, N_rf, 6.3, 1, printing=True)
             dnn_model = tf.keras.models.load_model(model_path.format(N_rf), custom_objects=custome_obj)
-            test_performance_weighted_SR(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
+            test_performance(dnn_model, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # test_BestWeight_weighted_SR(None, M, K, B, N_rf)
             # test_DNN_different_K(model_path, M=M, K=K, B=B, N_rf=N_rf, sigma2_n=sigma2_n, sigma2_h = sigma2_h)
             # vvvvvvvvvvvvvvvvvv using dynamic programming to do N_rf sweep of Greedy faster vvvvvvvvvvvvvvvvvv
