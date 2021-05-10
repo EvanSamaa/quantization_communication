@@ -216,7 +216,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/May/new_model_Nrf={}Large".format(N_rf)
+    fname_template_template = "test_dnn_Nrf={}+fixed_inputMod+output_mask+final_edition".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
@@ -242,8 +242,8 @@ def grid_search_with_mutex_loss(N_rf = 8):
     sample_size = 40
     temp = 0.1
     check = 100
-    model = FDD_agent_2_step(M, K, 5, N_rf, True, max_val)
-    # model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
+    # model = FDD_agent_2_step(M, K, 5, N_rf, True, max_val)
+    model = FDD_agent_more_G(M, K, 5, N_rf, True, max_val)
     optimizer = tf.keras.optimizers.Adam(lr=lr)
     ################################ Metrics  ###############################
     sum_rate = Sum_rate_utility_WeiCui(K, M, sigma2_n)
