@@ -2285,7 +2285,7 @@ class Neighbour_aggregator(tf.keras.layers.Layer):
         x = tf.keras.layers.Reshape((self.K, self.M))(x)
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
-        selected = tf.keras.layers.Reshape((self.M*self.K, 1))(tf.multiply(x, input_mod))
+        selected = tf.keras.layers.Reshape((self.M*self.K, 1))(tf.multiply(x_sm_sum, input_mod))
         # G_mean = tf.reduce_mean(tf.keras.layers.Reshape((self.M*self.K, ))(input_mod), axis=1, keepdims=True)
         # G_mean = tf.tile(tf.expand_dims(G_mean, axis=1), (1, self.K * self.M, 1))
         G_user_tiled = tf.matmul(self.Mk, input_mod)

@@ -1164,7 +1164,7 @@ if __name__ == "__main__":
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/May/new_model_Nrf={}_fixed_a_bunch.h5.h5"
+    model_path = "trained_models/May/new_model_Nrf={}_fixed_a_bunch+more_fixes.h5"
     mores = [8]
     Es = [2]
     for i in Es:
