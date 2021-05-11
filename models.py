@@ -2283,6 +2283,7 @@ class Neighbour_aggregator(tf.keras.layers.Layer):
         x_sm = tf.keras.layers.Softmax(axis=1)(x_raw)
         x = tf.reduce_sum(x_sm, axis=2)
         x = tf.keras.layers.Reshape((self.K, self.M))(x)
+        x_sm_sum = tf.keras.layers.Reshape((self.K, self.M))(tf.reduce_sum(x_sm, axis=2))
         input_concatnator = tf.keras.layers.Concatenate(axis=2)
         input_reshaper = tf.keras.layers.Reshape((self.M * self.K, 1))
         selected = tf.keras.layers.Reshape((self.M*self.K, 1))(tf.multiply(x_sm_sum, input_mod))
@@ -2292,7 +2293,6 @@ class Neighbour_aggregator(tf.keras.layers.Layer):
         G_user_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.M), (self.K, 1)), G_user_tiled)
         G_user_mean = tf.reduce_mean(G_user_tiled, axis=2, keepdims=True)
         G_user_max = tf.reduce_max(G_user_tiled, axis=2, keepdims=True)
-        x_sm_sum = tf.keras.layers.Reshape((self.K, self.M))(tf.reduce_sum(x_sm, axis=2))
         GX_user_max = tf.reduce_max(tf.multiply(input_mod, x_sm_sum), axis=2, keepdims=True)
         GX_user_max = tf.matmul(self.Mk, GX_user_max) - selected
         GX_col_max = tf.transpose(tf.reduce_max(tf.multiply(input_mod, x_sm_sum), axis=1, keepdims=True), perm=[0, 2, 1])
