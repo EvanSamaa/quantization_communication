@@ -493,8 +493,8 @@ def plot_input_box_graph_alt(model, input_mod, K, M, N_rf):
         plotting_0.append(input_i)
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         feature_vec = dnn1(input_i)
-        plotting_1.append(input_modder1(raw_out_put_0, input_mod, feature_vec))
-        raw_out_put_i = dnn2(input_modder1(raw_out_put_0, input_mod, feature_vec))
+        plotting_1.append(input_modder1(raw_out_put_i, input_mod, feature_vec))
+        raw_out_put_i = dnn2(input_modder1(raw_out_put_i, input_mod, feature_vec))
         # if times == k-1:
         out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)
         # else:
@@ -1164,7 +1164,7 @@ if __name__ == "__main__":
     # A[2]
     # partial_feedback_and_DNN_grid_search()
     # compare_quantizers(1)
-    model_path = "trained_models/May/new_model_Nrf={}.h5"
+    model_path = "trained_models/May/new_model_Nrf={}_fixed_a_bunch.h5.h5"
     mores = [8]
     Es = [2]
     for i in Es:

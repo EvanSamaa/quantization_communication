@@ -2292,7 +2292,7 @@ class Neighbour_aggregator(tf.keras.layers.Layer):
         G_user_tiled = tf.multiply(tf.tile(1.0-tf.eye(self.M), (self.K, 1)), G_user_tiled)
         G_user_mean = tf.reduce_mean(G_user_tiled, axis=2, keepdims=True)
         G_user_max = tf.reduce_max(G_user_tiled, axis=2, keepdims=True)
-        GX_user_max = tf.reduce_max(tf.multiply(input_mod, x), axis=2, keepdims=True)
+        GX_user_max = tf.reduce_max(tf.multiply(input_mod, tf.keras.layers.Reshape((self.K, self.M))(x_sm)), axis=2, keepdims=True)
         GX_user_max = tf.matmul(self.Mk, GX_user_max) - selected
         GX_col_max = tf.transpose(tf.reduce_max(tf.multiply(input_mod, x), axis=1, keepdims=True), perm=[0, 2, 1])
         GX_col_max = tf.matmul(self.Mm, GX_col_max) - selected
@@ -5435,6 +5435,7 @@ def FDD_agent_2_step(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     input_mod = tf.square(input_mod)
     input_modder1 = Neighbour_aggregator(K, M, N_rf, k)
     input_modder2 = Current_node_aggregator(K, M, N_rf, k)
+    bn = tf.keras.layers.BatchNormalization()
     sm = tf.keras.layers.Softmax(axis=1)
     # sm = sigmoid
     dnn1 = self_agent_dnn_1((M * K ,7 + 3 * N_rf))
@@ -5445,7 +5446,7 @@ def FDD_agent_2_step(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
     input_i = input_modder1(raw_out_put_0, input_mod, k - 1.0)
     # input_i = input_modder(output_0, input_mod, k - 1.0)
     feature_vec = dnn1(input_i)
-    raw_out_put_i = dnn2(input_modder2(raw_out_put_0, input_mod, feature_vec))
+    raw_out_put_i = dnn2(bn(input_modder2(raw_out_put_0, input_mod, feature_vec)))
 
     out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2) # (None, K*M)
     # out_put_i = tf.reduce_sum(sigmoid(raw_out_put_i), axis=2)  # (None, K*M)
@@ -5457,7 +5458,7 @@ def FDD_agent_2_step(M, K, k=2, N_rf=3, normalization=True, avg_max=None, i=0):
         # input_mod_temp = tf.multiply(out_put_i, input_mod) + input_mod
         input_i = input_modder1(raw_out_put_i, input_mod, k - times - 1.0)
         feature_vec = dnn1(input_i)
-        raw_out_put_i = dnn2(input_modder2(raw_out_put_0, input_mod, feature_vec))
+        raw_out_put_i = dnn2(bn(input_modder2(raw_out_put_0, input_mod, feature_vec)))
         # input_i = input_modder(out_put_i, input_mod, k - times - 1.0)
         # if times == k-1:
         out_put_i = tf.reduce_sum(sm(raw_out_put_i), axis=2)

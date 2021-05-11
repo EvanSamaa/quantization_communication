@@ -216,7 +216,7 @@ def grid_search_with_mutex_loss(N_rf = 8):
     config.gpu_options.allow_growth = True
     session = tf.compat.v1.Session(config=config)
     # fname_template = "trained_models/Sept23rd/Nrf=4/Nrf={}normaliza_input_0p25CE+residual_more_G{}"
-    fname_template_template = "trained_models/May/new_model_Nrf={}_fixed_a_bunch.h5".format(N_rf)
+    fname_template_template = "trained_models/May/new_model_Nrf={}_fixed_a_bunch+more_fixes".format(N_rf)
     fname_template = fname_template_template + "{}"
     check = 250
     SUPERVISE_TIME = 0
